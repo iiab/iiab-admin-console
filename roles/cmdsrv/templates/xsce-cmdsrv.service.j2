@@ -1,0 +1,17 @@
+[Unit]
+Description=Provides the XSCE Command Server
+After=syslog.target network.target local-fs.target
+
+[Service]
+Type=forking
+Environment="CMDSRV_DIR={{ cmdsrv_dir }}"
+PIDFile={{ cmdsrv_pid_file }}
+{% if is_debuntu %}
+ExecStart=/etc/init.d/xsce-cmdsrv-init  start
+{% else %}
+ExecStart=/usr/libexec/xsce-cmdsrv-init  start
+{% endif %}
+ExecStop=/usr/bin/xsce-cmdsrv-ctl STOP
+
+[Install]
+WantedBy=multi-user.target

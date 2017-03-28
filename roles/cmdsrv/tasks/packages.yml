@@ -1,0 +1,44 @@
+- name: Install packages for cmdsrv
+  package: name={{ item }}
+           state=present
+  with_items:
+    - apache2
+    - php{{ php_version }}
+    - php{{ php_version }}-mysql
+    - php{{ php_version }}-dev
+    - build-essential
+    - php-pear
+    - python-dev
+    - python-pip
+
+  tags:
+    - download
+  when: is_debuntu
+
+- name: install ubuntu connector apache to php
+  package: name=libapache2-mod-php
+           state=present
+  tags:
+    - download
+  when: is_ubuntu
+
+- name: Install packages for cmdsrv
+  package: name={{ item }}
+           state=present
+  with_items:
+    - httpd
+    - php
+    - mod_ssl
+    - mod_authnz_external
+    - pwauth
+    - gcc
+    - gcc-c++
+    - php-devel
+    - php-pear
+    - python-devel
+    - python-pip
+
+  tags:
+    - download
+  when: is_redhat
+
