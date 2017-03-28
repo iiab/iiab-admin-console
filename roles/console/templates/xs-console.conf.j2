@@ -1,0 +1,16 @@
+Alias /admin "{{ admin_console_dir }}"
+
+<Directory "{{ admin_console_dir }}">
+    AuthType Basic
+    AuthName "Admin Console"
+    AuthBasicProvider external
+    AuthExternal pwauth
+    require valid-user
+</Directory>
+
+{% if is_debuntu %}
+<IfModule mod_authnz_external.c>
+    AddExternalAuth pwauth /usr/sbin/pwauth
+    SetExternalAuthMethod pwauth pipe
+</IfModule>
+{% endif %}
