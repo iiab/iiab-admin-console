@@ -1,0 +1,35 @@
+#!/bin/bash -x
+
+if [ -f /etc/xsce/xsce.env ]
+then
+  . /etc/xsce/xsce.env
+else
+ echo "IIAB Config not found."
+ echo "Please install Internet in a Box before installing the Admin Console."
+ echo "Exiting."
+ exit
+fi
+
+PLAYBOOK="iiab-admin.yml"
+INVENTORY="ansible_hosts"
+
+IIAB_ADMIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+if [ ! -f $IIAB_ADMIN_DIR/$PLAYBOOK ]; then
+ echo "Admin Console Playbook not found."
+ echo "Please make sure you have cloned the iiab-admin git repo."
+ echo "Exiting."
+ exit
+fi
+
+cd $IIAB_ADMIN_DIR
+
+echo "Running local playbooks! "
+
+# ARGS="--extra-vars '{\"target_base\":\"$XSCE_DIR\"}'"
+#ARGS="target_base=$XSCE_DIR"
+
+export ANSIBLE_LOG_PATH="$IIAB_ADMIN_DIR/admin-install.log"
+
+#ansible-playbook -i $INVENTORY $PLAYBOOK --extra-vars "${ARGS}" --connection=local
+ansible-playbook -i $INVENTORY $PLAYBOOK --connection=local

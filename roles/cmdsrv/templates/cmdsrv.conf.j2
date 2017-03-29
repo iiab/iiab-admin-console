@@ -1,0 +1,28 @@
+{
+    "_comments": "xsce-cmdsrv.conf - runtime parameters for the XSCE Command Server",
+    "cmdsrv_conf": {
+
+        "iiab_base" : "{{ iiab_base }}",
+        "iiab_repo" : "{{ iiab_repo }}",
+        "iiab_config_dir" : "{{ iiab_config_dir }}",
+        "iiab_config_file" : "{{ iiab_config_file }}",
+        "iiab_ini_file" : "{{ service_filelist }}",
+        "cmdsrv_no_workers" : 5,
+        "cmdsrv_job_poll_sleep_interval" : 1,
+        "cmdsrv_max_concurrent_jobs" : 7,
+        "cmdsrv_pid_file" : "{{ cmdsrv_pid_file }}",
+        "kiwix_catalog_file" : "{{ iiab_config_dir }}/kiwix_catalog.json",
+        "zim_dir" : "/library/zims/",
+        "zim_downloads_dir" : "/library/downloads/zims/",
+        "zim_working_dir" : "/library/working/zims/",
+        "zim_download_prefix" : "kiwix-0.9+",
+        "rachel_downloads_dir" : "/library/downloads/rachel/",
+        "rachel_working_dir" : "/library/working/rachel/",
+        "cmdsrv_dbname" : "{{ cmdsrv_dbname }}",
+        "ansible_playbook_program" : "{{ ansible_playbook_program }}",
+        "ansible_program" : "{{ ansible_program }}",
+        "apache_data" : "{{ apache_data }}",
+        "squid_service" : "{{ squid_service }}",
+        "df_program" : "{{ df_program }}"
+        }
+}
