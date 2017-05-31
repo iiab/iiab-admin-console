@@ -8,6 +8,7 @@
     - libzmq3-dev
     - python-cracklib
     - pkg-config
+    - sqlite3
   tags:
     - download
   when: is_debuntu

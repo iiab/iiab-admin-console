@@ -1,5 +1,4 @@
 ansible_playbook_program: /usr/bin/ansible-playbook
 ansible_program: /usr/bin/ansible
-apache_data: apache
 squid_service: squid
-df_program: "/usr/bin/df
+df_program: /usr/bin/df
