@@ -10,7 +10,7 @@ import sys
 import urllib2
 import time
 
-WWROOT = "{{ doc_root }}
+WWROOT = "{{ doc_root }}"
 jsonPath = "{{ iiab_config_dir }}"
 
 zimCat = {}
