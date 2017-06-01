@@ -940,12 +940,11 @@ def get_white_list(cmd_info):
     except IOError:
         whlist = "[]"
 
-    #resp = '{"iiab_whitelist": "' + whlist + '"}'
-    resp = json_array("iiab_whitelist", whlist)
+    resp = json_array("xsce_whitelist", whlist)
     return (resp)
 
 def set_white_list(cmd_info):
-    whlist = cmd_info['cmd_args']['iiab_whitelist']
+    whlist = cmd_info['cmd_args']['xsce_whitelist']
     whlist = filter(None, whlist) # remove blank lines
     resp = cmd_success(cmd_info['cmd'])
     try:
