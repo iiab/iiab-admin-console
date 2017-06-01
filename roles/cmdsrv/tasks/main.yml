@@ -126,13 +126,22 @@
         state=touch
 
 - name: Copy scripts
-  template: src={{ item }}
-        dest="{{ cmdsrv_dir }}/scripts"
-        mode=0755
-        owner=root
-        group=root
+  copy: src={{ item }}
+            dest="{{ cmdsrv_dir }}/scripts"
+            mode=0755
+            owner=root
+            group=root
   with_fileglob:
-        - scripts/*
+            - scripts/*
+
+- name: Copy templated scripts
+  template: src={{ item }}
+            dest="{{ cmdsrv_dir }}/scripts"
+            mode=0755
+            owner=root
+            group=root
+  with_items:
+            - scripts/get_kiwix_catalog
 
 - name: Copy json files
   copy: src={{ item }}
