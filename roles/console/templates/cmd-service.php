@@ -14,7 +14,7 @@ $alert_param = ',"Alert": "True"';
 
 $read = $write = array();
 
-$cmdsrv_dir = "{{ cmdsrv_dir }}"
+$cmdsrv_dir = "{{ cmdsrv_dir }}";
 
 // See if XSCE-CMDSRV is running
 

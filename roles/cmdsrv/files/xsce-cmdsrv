@@ -42,8 +42,8 @@ else:
     cmdsrv_dir = "."
 
 cmdsrv_config_file = cmdsrv_dir + "/cmdsrv.conf"
-cmdsrv_pid_file = cmdsrv_dir + "/cmdsrv.pid"
-cmdsrv_ready_file = cmdsrv_dir + "/cmdsrv-ready"
+cmdsrv_pid_file = "/run/cmdsrv.pid"
+cmdsrv_ready_file = "/run/cmdsrv-ready"
 
 # IIAB Config Files
 iiab_config_file = None
@@ -1922,6 +1922,7 @@ def app_config():
     cmdsrv_job_poll_sleep_interval = conf['cmdsrv_job_poll_sleep_interval']
     cmdsrv_max_concurrent_jobs = conf['cmdsrv_max_concurrent_jobs']
     cmdsrv_pid_file = conf['cmdsrv_pid_file']
+    cmdsrv_ready_file = conf['cmdsrv_ready_file']
     kiwix_catalog_file = conf['kiwix_catalog_file']
     zim_dir = conf['zim_dir']
     zim_downloads_dir = conf['zim_downloads_dir']
