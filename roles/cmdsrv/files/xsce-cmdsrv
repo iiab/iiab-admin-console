@@ -31,6 +31,7 @@ import string
 import crypt
 import spwd
 import cracklib
+# import cgi keep to escape html in future
 
 # cmdsrv config file
 # if run standalone is in current directory
@@ -457,7 +458,7 @@ def end_job(job_id, job_info, status):
     file = open(output_file, 'r')
     job_output = file.read()
     # make html safe
-    job_output = escape_html(job_output)
+    #job_output = escape_html(job_output)
     jobs_running[job_id]['job_output'] = job_output
     file.close()
 
@@ -1399,7 +1400,7 @@ def get_last_jobs_stat(cmd_info):
                 output_file = jobs_running[job_id]['output_file']
                 file = open(output_file, 'r')
                 job_output = file.read()
-                job_output = escape_html(job_output)
+                #job_output = escape_html(job_output)
                 file.close()
                 #print "job output" + job_output
 
