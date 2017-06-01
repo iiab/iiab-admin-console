@@ -33,7 +33,7 @@ zimKiwixPrefix = "kiwix-0.9+"
 
 # output files
 
-kiwix_catalog = jsonPath + "kiwix_catalog.json"
+kiwix_catalog = jsonPath + "/kiwix_catalog.json"
 
 try:
     xmlsrc = urllib2.urlopen(kiwixLibUrl)
