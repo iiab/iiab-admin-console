@@ -9,10 +9,9 @@ import os.path
 import sys
 import urllib2
 import time
-XSCE_PATH='/etc/xsce'
-if not XSCE_PATH in sys.path:
-   sys.path.append(XSCE_PATH)
-from xsce_env import get_xsce_env
+
+WWROOT = "{{ doc_root }}
+jsonPath = "{{ iiab_config_dir }}"
 
 zimCat = {}
 zims = {}
@@ -25,14 +24,6 @@ problemUrlMap = {"http://download.kiwix.org/zim/0.9/wikipedia_en_ray_charles_03_
     "http://download.kiwix.org/zim/0.9/wikipedia_es_venezuela_11_2012.zim.meta4":"http://download.kiwix.org/portable/wikipedia/kiwix-0.9+wikipedia_es_venezuela_11_2012.zip", \
     "http://download.kiwix.org/zim/wikispecies/wikispecies_en_all_nopic_2015-03.zim.meta4":"http://download.kiwix.org/portable/wikispecies/kiwix-+wikispecies_en_all_nopic_2015-03.zip", \
     "http://download.kiwix.org/zim/wikispecies/wikispecies_en_all_2015-03.zim.meta4":"http://download.kiwix.org/portable/wikispecies/kiwix-+wikispecies_en_all_2015-03.zip"}
-
-# get the document root
-WWWROOT=get_xsce_env('WWWROOT')
-consolePath = WWWROOT + "/devel/"
-
-assetsPath = consolePath + "assets/"
-imgPath = consolePath + "images/"
-jsonPath = "/etc/xsce/"
 
 # input file
 
