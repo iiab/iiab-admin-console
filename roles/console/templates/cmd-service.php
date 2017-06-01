@@ -14,12 +14,13 @@ $alert_param = ',"Alert": "True"';
 
 $read = $write = array();
 
-$cmdsrv_dir = "{{ cmdsrv_dir }}";
+$cmdsrv_pid_file = "{{ cmdsrv_pid_file }}";
+$cmdsrv_ready_file = "{{ cmdsrv_ready_file }}";
 
 // See if XSCE-CMDSRV is running
 
-if (file_exists($cmdsrv_dir . "/cmdsrv.pid")) {
-	if (file_exists($cmdsrv_dir . "/cmdsrv-ready")) {
+if (file_exists($cmdsrv_pid_file)) {
+	if (file_exists($cmdsrv_ready_file)) {
     try {
       $context = new ZMQContext();
       $requester = new ZMQSocket($context, ZMQ::SOCKET_DEALER);
