@@ -1,0 +1,8 @@
+- name: Create admin directory
+  file: path={{ item }}
+        mode=0755
+        owner=root
+        group=root
+        state=directory
+  with_items:
+    - "{{ admin_install_base }}"

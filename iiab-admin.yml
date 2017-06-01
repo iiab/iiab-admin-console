@@ -27,5 +27,6 @@
   - vars/{{ ansible_distribution }}.yml
 
   roles:
+      - { role: common }
       - { role: cmdsrv }
       - { role: console }
