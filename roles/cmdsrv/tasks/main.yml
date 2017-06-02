@@ -219,6 +219,9 @@
     - { src: 'zmq.ini', dest: '/etc/php.d/20-zmq.ini', mode: '0755'}
   when: is_redhat
 
+- name: ask systemd to reread the unit files, picks up changes done
+  shell: systemctl daemon-reload
+
 - name: Enable xsce-cmdsrv service
   service: name=xsce-cmdsrv
            enabled=yes
