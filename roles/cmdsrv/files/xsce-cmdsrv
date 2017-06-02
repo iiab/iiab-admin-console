@@ -459,6 +459,10 @@ def end_job(job_id, job_info, status):
     job_output = file.read()
     # make html safe
     #job_output = escape_html(job_output)
+
+    # remove non-printing chars as an alternative
+    job_output = filter(lambda x: x in string.printable, job_output)
+
     jobs_running[job_id]['job_output'] = job_output
     file.close()
 
