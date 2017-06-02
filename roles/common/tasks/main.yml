@@ -14,9 +14,9 @@
   ignore_errors: True
 
 - name: Remove old cmdsrv
-  file: path: /opt/schoolserver/xsce_cmdsrv
+  file: path=/opt/schoolserver/xsce_cmdsrv
         state: absent
 
 - name: Remove old console
-  file: path: /opt/schoolserver/admin_console
+  file: path=/opt/schoolserver/admin_console
         state: absent
