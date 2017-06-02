@@ -1893,8 +1893,11 @@ def app_config():
     global cmdsrv_ready_file
     global kiwix_catalog_file
     global zim_downloads_dir
+    global zim_working_dir
     global zim_dir
     global zim_download_prefix
+    global zim_content_dir
+    global zim_index_dir
     global rachel_downloads_dir
     global rachel_working_dir
     global rachel_version
@@ -1927,7 +1930,10 @@ def app_config():
     cmdsrv_ready_file = conf['cmdsrv_ready_file']
     kiwix_catalog_file = conf['kiwix_catalog_file']
     zim_dir = conf['zim_dir']
+    zim_content_dir = zim_dir + "content/"
+    zim_index_dir = zim_dir + "index/"
     zim_downloads_dir = conf['zim_downloads_dir']
+    zim_working_dir = conf['zim_working_dir']
     zim_download_prefix = conf['zim_download_prefix']
     rachel_downloads_dir = conf['rachel_downloads_dir']
     rachel_working_dir = conf['rachel_working_dir']
