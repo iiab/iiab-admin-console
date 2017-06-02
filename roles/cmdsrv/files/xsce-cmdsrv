@@ -723,7 +723,7 @@ def del_downloads(cmd_info):
     except:
         return cmd_malformed(cmd_info['cmd'])
 
-    cmdstr = "/usr/bin/rm " + target_dir + "/"
+    cmdstr = "rm " + target_dir + "/"
 
     for file in file_list:
         try:
