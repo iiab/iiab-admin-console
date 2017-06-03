@@ -1,0 +1,22 @@
+- name: Create admin directory
+  file: path={{ item }}
+        mode=0755
+        owner=root
+        group=root
+        state=directory
+  with_items:
+    - "{{ admin_install_base }}"
+
+- name: Stop xsce-cmdsrv
+  service: name=xsce-cmdsrv
+           state=stopped
+           enabled=no
+  ignore_errors: True
+
+- name: Remove old cmdsrv
+  file: path=/opt/schoolserver/xsce_cmdsrv
+        state=absent
+
+- name: Remove old console
+  file: path=/opt/schoolserver/admin_console
+        state=absent

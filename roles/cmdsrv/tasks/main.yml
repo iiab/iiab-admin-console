@@ -8,6 +8,7 @@
     - libzmq3-dev
     - python-cracklib
     - pkg-config
+    - sqlite3
   tags:
     - download
   when: is_debuntu
@@ -126,12 +127,21 @@
 
 - name: Copy scripts
   copy: src={{ item }}
-        dest="{{ cmdsrv_dir }}/scripts"
-        mode=0755
-        owner=root
-        group=root
+            dest="{{ cmdsrv_dir }}/scripts"
+            mode=0755
+            owner=root
+            group=root
   with_fileglob:
-        - scripts/*
+            - scripts/*
+
+- name: Copy templated scripts
+  template: src={{ item }}
+            dest="{{ cmdsrv_dir }}/scripts"
+            mode=0755
+            owner=root
+            group=root
+  with_items:
+            - scripts/get_kiwix_catalog
 
 - name: Copy json files
   copy: src={{ item }}
@@ -208,6 +218,9 @@
     - { src: 'xsce-cmdsrv-init.j2', dest: '/usr/libexec/xsce-cmdsrv-init', mode: '0755'}
     - { src: 'zmq.ini', dest: '/etc/php.d/20-zmq.ini', mode: '0755'}
   when: is_redhat
+
+- name: ask systemd to reread the unit files, picks up changes done
+  shell: systemctl daemon-reload
 
 - name: Enable xsce-cmdsrv service
   service: name=xsce-cmdsrv

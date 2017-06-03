@@ -138,3 +138,7 @@
         owner=root
         group=root
         mode=0644
+
+- name: Restart web server
+  service: name={{ apache_service }}
+           state=restarted

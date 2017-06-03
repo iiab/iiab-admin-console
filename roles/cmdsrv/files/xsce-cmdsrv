@@ -31,6 +31,7 @@ import string
 import crypt
 import spwd
 import cracklib
+# import cgi keep to escape html in future
 
 # cmdsrv config file
 # if run standalone is in current directory
@@ -42,8 +43,8 @@ else:
     cmdsrv_dir = "."
 
 cmdsrv_config_file = cmdsrv_dir + "/cmdsrv.conf"
-cmdsrv_pid_file = cmdsrv_dir + "/cmdsrv.pid"
-cmdsrv_ready_file = cmdsrv_dir + "/cmdsrv-ready"
+cmdsrv_pid_file = "/run/xsce-cmdsrv.pid"
+cmdsrv_ready_file = "/run/xsce-cmdsrv-ready"
 
 # IIAB Config Files
 iiab_config_file = None
@@ -456,8 +457,12 @@ def end_job(job_id, job_info, status):
     output_file = jobs_running[job_id]['output_file']
     file = open(output_file, 'r')
     job_output = file.read()
-    # remove non-printing chars
+    # make html safe
+    #job_output = escape_html(job_output)
+
+    # remove non-printing chars as an alternative
     job_output = filter(lambda x: x in string.printable, job_output)
+
     jobs_running[job_id]['job_output'] = job_output
     file.close()
 
@@ -722,7 +727,7 @@ def del_downloads(cmd_info):
     except:
         return cmd_malformed(cmd_info['cmd'])
 
-    cmdstr = "/usr/bin/rm " + target_dir + "/"
+    cmdstr = "rm " + target_dir + "/"
 
     for file in file_list:
         try:
@@ -940,12 +945,11 @@ def get_white_list(cmd_info):
     except IOError:
         whlist = "[]"
 
-    #resp = '{"iiab_whitelist": "' + whlist + '"}'
-    resp = json_array("iiab_whitelist", whlist)
+    resp = json_array("xsce_whitelist", whlist)
     return (resp)
 
 def set_white_list(cmd_info):
-    whlist = cmd_info['cmd_args']['iiab_whitelist']
+    whlist = cmd_info['cmd_args']['xsce_whitelist']
     whlist = filter(None, whlist) # remove blank lines
     resp = cmd_success(cmd_info['cmd'])
     try:
@@ -1400,6 +1404,7 @@ def get_last_jobs_stat(cmd_info):
                 output_file = jobs_running[job_id]['output_file']
                 file = open(output_file, 'r')
                 job_output = file.read()
+                #job_output = escape_html(job_output)
                 file.close()
                 #print "job output" + job_output
 
@@ -1587,6 +1592,13 @@ def get_job_id():
         lock.release() # release lock, no matter what
 
     return(job_id)
+
+def escape_html(text):
+    """escape strings for display in HTML"""
+    return cgi.escape(text, quote=True).\
+           replace(u'\n', u'<br />').\
+           replace(u'\t', u'&emsp;').\
+           replace(u'  ', u' &nbsp;')
 
 def init():
     global last_command_rowid
@@ -1881,10 +1893,15 @@ def app_config():
     global cmdsrv_no_workers
     global cmdsrv_job_poll_sleep_interval
     global cmdsrv_max_concurrent_jobs
+    global cmdsrv_pid_file
+    global cmdsrv_ready_file
     global kiwix_catalog_file
     global zim_downloads_dir
+    global zim_working_dir
     global zim_dir
     global zim_download_prefix
+    global zim_content_dir
+    global zim_index_dir
     global rachel_downloads_dir
     global rachel_working_dir
     global rachel_version
@@ -1914,9 +1931,13 @@ def app_config():
     cmdsrv_job_poll_sleep_interval = conf['cmdsrv_job_poll_sleep_interval']
     cmdsrv_max_concurrent_jobs = conf['cmdsrv_max_concurrent_jobs']
     cmdsrv_pid_file = conf['cmdsrv_pid_file']
+    cmdsrv_ready_file = conf['cmdsrv_ready_file']
     kiwix_catalog_file = conf['kiwix_catalog_file']
     zim_dir = conf['zim_dir']
+    zim_content_dir = zim_dir + "content/"
+    zim_index_dir = zim_dir + "index/"
     zim_downloads_dir = conf['zim_downloads_dir']
+    zim_working_dir = conf['zim_working_dir']
     zim_download_prefix = conf['zim_download_prefix']
     rachel_downloads_dir = conf['rachel_downloads_dir']
     rachel_working_dir = conf['rachel_working_dir']

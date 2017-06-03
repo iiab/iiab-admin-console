@@ -3,9 +3,11 @@
 
 admin_console_dir : "{{ admin_install_base }}/console"
 cmdsrv_dir : "{{ admin_install_base }}/cmdsrv"
-cmdsrv_pid_file : "{{ cmdsrv_dir }}/cmdsrv.pid"
 cmdsrv_conf_file : "{{ cmdsrv_dir }}/cmdsrv.conf"
 cmdsrv_dbname : "cmdsrv.0.2.db"
-service_filelist : "{ iiab_config_dir }}/xsce.ini"
-iiab_config_file : "{ iiab_config_dir }}/xsce.env"
+cmdsrv_rundir  : "/run"
+cmdsrv_pid_file : "{{ cmdsrv_rundir }}/xsce-cmdsrv.pid"
+cmdsrv_ready_file : "{{ cmdsrv_rundir }}/xsce-cmdsrv-ready"
+service_filelist : "{{ iiab_config_dir }}/xsce.ini"
+iiab_config_file : "{{ iiab_config_dir }}/xsce.env"
 phplib_dir : '{{ ansible_local["local_facts"]["phplib_dir"] }}'
