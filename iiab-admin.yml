@@ -21,6 +21,7 @@
 
 
   vars_files:
+  - "{{ iiab_repo }}/vars/default_vars.yml"
   - "{{ iiab_repo }}/vars/{{ ansible_lsb.id }}.yml"
   - "{{ iiab_repo }}/vars/local_vars.yml"
   - vars/default_vars.yml
