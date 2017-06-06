@@ -1907,7 +1907,7 @@ def app_config():
     global rachel_version
     global ansible_playbook_program
     global ansible_program
-    global apache_user_
+    global apache_user
     global squid_service
     global df_program
     global squid_whitelist
