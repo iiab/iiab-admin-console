@@ -136,7 +136,7 @@ def main():
     ipc_sock = "/run/cmdsrv_sock"
     client_url = "ipc://" + ipc_sock
 
-    owner = pwd.getpwnam(apache_data)
+    owner = pwd.getpwnam(apache_user)
     group = grp.getgrnam("xsce-admin")
 
     # Prepare our context and sockets
@@ -1907,7 +1907,7 @@ def app_config():
     global rachel_version
     global ansible_playbook_program
     global ansible_program
-    global apache_data
+    global apache_user
     global squid_service
     global df_program
     global squid_whitelist
@@ -1945,7 +1945,7 @@ def app_config():
     squid_whitelist = "/etc/%s/sites.whitelist.txt" % squid_service
     ansible_playbook_program = conf['ansible_playbook_program']
     ansible_program = conf['ansible_program']
-    apache_data = conf['apache_data']
+    apache_user = conf['apache_user']
     df_program = conf['df_program']
 
 # These two were taken from the OLPC idmgr application
