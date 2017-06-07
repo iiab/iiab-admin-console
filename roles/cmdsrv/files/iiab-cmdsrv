@@ -188,7 +188,7 @@ def main():
             else:
                 # if in daemon mode report and init failed alwasy return same error message
                 if daemon_mode == True and init_error == True:
-                    msg = '{"Error": "XSCE-CMDSRV failed to initialize","Alert": "True"}'
+                    msg = '{"Error": "IIAB-CMDSRV failed to initialize","Alert": "True"}'
                     clients.send_multipart([ident, msg])
                 else:
                     tprint('sending data message server received from client to worker %s id %s' % (msg, ident))
@@ -260,7 +260,7 @@ def job_minder_thread(client_url, worker_control_url, context=None):
 
     thread_run = True
 
-    # Main loop of XSCE-CMDSRV
+    # Main loop of IIAB-CMDSRV
 
     while thread_run == True:
         lock.acquire() # will block if lock is already held
@@ -571,7 +571,7 @@ def cmd_handler(cmd_msg):
         "GET-ANS": get_ans_facts,
         "GET-ANS-TAGS": get_ans_tags,
         "GET-VARS": get_install_vars,
-        "GET-XSCE-INI": get_iiab_ini,
+        "GET-IIAB-INI": get_iiab_ini,
         "GET-CONF": get_config_vars,
         "SET-CONF": set_config_vars,
         "GET-MEM-INFO": get_mem_info,

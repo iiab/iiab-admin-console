@@ -10,9 +10,9 @@ import base64
 import os.path
 import sys
 import urllib2
-XSCE_PATH='/etc/iiab'
-if not XSCE_PATH in sys.path:
-   sys.path.append(XSCE_PATH)
+IIAB_PATH='/etc/iiab'
+if not IIAB_PATH in sys.path:
+   sys.path.append(IIAB_PATH)
 from iiab_env import get_iiab_env
 
 zimLangCodes = []

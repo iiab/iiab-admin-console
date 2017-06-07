@@ -17,7 +17,7 @@ $read = $write = array();
 $cmdsrv_pid_file = "{{ cmdsrv_pid_file }}";
 $cmdsrv_ready_file = "{{ cmdsrv_ready_file }}";
 
-// See if XSCE-CMDSRV is running
+// See if IIAB-CMDSRV is running
 
 if (file_exists($cmdsrv_pid_file)) {
 	if (file_exists($cmdsrv_ready_file)) {
@@ -40,17 +40,17 @@ if (file_exists($cmdsrv_pid_file)) {
           $reply = '{"Data": ' . $reply;
         }
       } else {
-      	$reply = '{"Error": "No Response from XSCE-CMDSRV in ' . $request_timeout . ' milliseconds"' . $alert_param;
+      	$reply = '{"Error": "No Response from IIAB-CMDSRV in ' . $request_timeout . ' milliseconds"' . $alert_param;
       }
     } catch (Exception $e) {
       $reply = '{"Error": "' . $e->getMessage() . '"' . $alert_param;
     }
   } else {
-  	$reply = '{"Error": "XSCE-CMDSRV has started but is not ready."' . $alert_param;
+  	$reply = '{"Error": "IIAB-CMDSRV has started but is not ready."' . $alert_param;
   }
 
 } else {
-    $reply = '{"Error": "XSCE-CMDSRV is not running."' . $alert_param;
+    $reply = '{"Error": "IIAB-CMDSRV is not running."' . $alert_param;
 }
 
 $time_end = microtime(true);

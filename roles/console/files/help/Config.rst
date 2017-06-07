@@ -1,7 +1,7 @@
-XSCE Admin Console - Configure
+IIAB Admin Console - Configure
 ==============================
 
-When you installed the XSCE School Server, a great deal of software was included, but much of it was not turned on.
+When you installed the IIAB School Server, a great deal of software was included, but much of it was not turned on.
 
 These configuration options allow you to turn various features on or off to suit the needs of your school.
 

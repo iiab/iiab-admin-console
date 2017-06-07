@@ -1,4 +1,4 @@
-XSCE Admin Console - Overview
+IIAB Admin Console - Overview
 =============================
 
 The purpose of this Admin Console is to assist an administrator in configuring, adding content to, and generally managing
@@ -46,7 +46,7 @@ Utilities
 * Display Job Status
 * Display Commands Log
 * Display Ansible Facts
-* Display XSCE.INI File
+* Display IIAB.INI File
 * Display System Memory
 * Display System Storage
 * Perform Internet Speed Test

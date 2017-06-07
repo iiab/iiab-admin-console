@@ -685,7 +685,7 @@ function changePasswordSuccess ()
   function getXsceIni ()
   {
     //alert ("in getXsceIni");
-    sendCmdSrvCmd("GET-XSCE-INI", procXsceIni);
+    sendCmdSrvCmd("GET-IIAB-INI", procXsceIni);
     return true;
   }
 
@@ -1568,8 +1568,8 @@ function getServerInfo() {
 
     consoleLog(serverInfo);
     if (serverInfo.iiab_cmdsrv_running == "FALSE"){
-      displayServerCommandStatus("XSCE-CMDSRV is not running");
-      alert ("XSCE-CMDSRV is not running on the server");
+      displayServerCommandStatus("IIAB-CMDSRV is not running");
+      alert ("IIAB-CMDSRV is not running on the server");
     }
     else
       displayServerCommandStatus("Successfully connected to Server");
@@ -1784,7 +1784,7 @@ function init ()
   $.when(
     sendCmdSrvCmd("GET-ANS-TAGS", getAnsibleTags),
     sendCmdSrvCmd("GET-WHLIST", getWhitelist),
-    $.when(sendCmdSrvCmd("GET-VARS", getInstallVars), sendCmdSrvCmd("GET-ANS", getAnsibleFacts),sendCmdSrvCmd("GET-CONF", getConfigVars),sendCmdSrvCmd("GET-XSCE-INI", procXsceIni)).done(initConfigVars),
+    $.when(sendCmdSrvCmd("GET-VARS", getInstallVars), sendCmdSrvCmd("GET-ANS", getAnsibleFacts),sendCmdSrvCmd("GET-CONF", getConfigVars),sendCmdSrvCmd("GET-IIAB-INI", procXsceIni)).done(initConfigVars),
     $.when(getLangCodes(),readKiwixCatalog(),sendCmdSrvCmd("GET-ZIM-STAT", procZimStatInit)).done(procZimCatalog),
     getSpaceAvail(),
     waitDeferred(3000))

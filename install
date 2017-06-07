@@ -26,8 +26,8 @@ cd $IIAB_ADMIN_DIR
 
 echo "Running local playbooks! "
 
-# ARGS="--extra-vars '{\"target_base\":\"$XSCE_DIR\"}'"
-#ARGS="target_base=$XSCE_DIR"
+# ARGS="--extra-vars '{\"target_base\":\"$IIAB_DIR\"}'"
+#ARGS="target_base=$IIAB_DIR"
 
 export ANSIBLE_LOG_PATH="$IIAB_ADMIN_DIR/admin-install.log"
 
