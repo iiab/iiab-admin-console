@@ -43,8 +43,8 @@ else:
     cmdsrv_dir = "."
 
 cmdsrv_config_file = cmdsrv_dir + "/cmdsrv.conf"
-cmdsrv_pid_file = "/run/xsce-cmdsrv.pid"
-cmdsrv_ready_file = "/run/xsce-cmdsrv-ready"
+cmdsrv_pid_file = "/run/iiab-cmdsrv.pid"
+cmdsrv_ready_file = "/run/iiab-cmdsrv-ready"
 
 # IIAB Config Files
 iiab_config_file = None
@@ -136,8 +136,8 @@ def main():
     ipc_sock = "/run/cmdsrv_sock"
     client_url = "ipc://" + ipc_sock
 
-    owner = pwd.getpwnam(apache_data)
-    group = grp.getgrnam("xsce-admin")
+    owner = pwd.getpwnam(apache_user)
+    group = grp.getgrnam("iiab-admin")
 
     # Prepare our context and sockets
     context = zmq.Context.instance()
@@ -945,11 +945,11 @@ def get_white_list(cmd_info):
     except IOError:
         whlist = "[]"
 
-    resp = json_array("xsce_whitelist", whlist)
+    resp = json_array("iiab_whitelist", whlist)
     return (resp)
 
 def set_white_list(cmd_info):
-    whlist = cmd_info['cmd_args']['xsce_whitelist']
+    whlist = cmd_info['cmd_args']['iiab_whitelist']
     whlist = filter(None, whlist) # remove blank lines
     resp = cmd_success(cmd_info['cmd'])
     try:
@@ -1021,7 +1021,7 @@ def run_ansible(cmd_info): # create multiple jobs to run in succession
 
     if cmd_info['cmd'] == "RUN-ANSIBLE":
 
-        job_command = ansible_playbook_program + " -i " + iiab_repo + "/ansible_hosts " + iiab_repo + "/xsce-from-console.yml --connection=local"
+        job_command = ansible_playbook_program + " -i " + iiab_repo + "/ansible_hosts " + iiab_repo + "/iiab-from-console.yml --connection=local"
 
         if 'cmd_args' in cmd_info:
             tags = cmd_info['cmd_args']['tags']
@@ -1032,7 +1032,7 @@ def run_ansible(cmd_info): # create multiple jobs to run in succession
 
     else: # cmd is "RESET-NETWORK"
 
-        job_command = iiab_repo + "/xsce-network"
+        job_command = iiab_repo + "/iiab-network"
 
     resp = request_job(cmd_info, job_command)
     return resp
@@ -1202,7 +1202,7 @@ def install_rachel(cmd_info):
     return resp
 
 def restart_kiwix(cmd_info):
-    rc = subprocess.call(["/usr/bin/xsce-make-kiwix-lib"])
+    rc = subprocess.call(["/usr/bin/iiab-make-kiwix-lib"])
     #print rc
     if rc == 0:
         resp = cmd_success(cmd_info['cmd'])
@@ -1746,10 +1746,10 @@ def get_ansible_tags():
     global ansible_tags
 
     if (get_ansible_version() < '2'):
-        command = ansible_playbook_program + " -i " + iiab_repo + "/ansible_hosts " + iiab_repo + "/xsce-from-console.yml --connection=local --tags=???"
+        command = ansible_playbook_program + " -i " + iiab_repo + "/ansible_hosts " + iiab_repo + "/iiab-from-console.yml --connection=local --tags=???"
         splitter = 'values: '
     else:
-        command = ansible_playbook_program + " -i " + iiab_repo + "/ansible_hosts " + iiab_repo + "/xsce-from-console.yml --connection=local --list-tags"
+        command = ansible_playbook_program + " -i " + iiab_repo + "/ansible_hosts " + iiab_repo + "/iiab-from-console.yml --connection=local --list-tags"
         splitter = 'TASK TAGS: '
 
     args = shlex.split(command)
@@ -1907,7 +1907,7 @@ def app_config():
     global rachel_version
     global ansible_playbook_program
     global ansible_program
-    global apache_data
+    global apache_user
     global squid_service
     global df_program
     global squid_whitelist
@@ -1945,7 +1945,7 @@ def app_config():
     squid_whitelist = "/etc/%s/sites.whitelist.txt" % squid_service
     ansible_playbook_program = conf['ansible_playbook_program']
     ansible_program = conf['ansible_program']
-    apache_data = conf['apache_data']
+    apache_user = conf['apache_user']
     df_program = conf['df_program']
 
 # These two were taken from the OLPC idmgr application
@@ -1965,7 +1965,7 @@ def set_ready_flag(on_off):
             ready_file.write( "\n" );
             ready_file.close();
         except OSError, e:
-            syslog.openlog( 'xsce_cmdsrv', 0, syslog.LOG_USER )
+            syslog.openlog( 'iiab_cmdsrv', 0, syslog.LOG_USER )
             syslog.syslog( syslog.LOG_ALERT, "Writing Ready file: %s [%d]" % (e.strerror, e.errno) )
             syslog.closelog()
             raise
@@ -1973,7 +1973,7 @@ def set_ready_flag(on_off):
         try:
             os.remove(cmdsrv_ready_file)
         except OSError, e:
-            syslog.openlog( 'xsce_cmdsrv', 0, syslog.LOG_USER )
+            syslog.openlog( 'iiab_cmdsrv', 0, syslog.LOG_USER )
             syslog.syslog( syslog.LOG_ALERT, "Removing Ready file: %s [%d]" % (e.strerror, e.errno) )
             syslog.closelog()
             pass # log and keep going; we're just trying to shut down
@@ -1999,7 +1999,7 @@ def createDaemon(pidfilename):
                 pidfile.write( "\n" );
                 pidfile.close();
             except OSError, e:
-                syslog.openlog( 'xsce_cmdsrv', 0, syslog.LOG_USER )
+                syslog.openlog( 'iiab_cmdsrv', 0, syslog.LOG_USER )
                 syslog.syslog( syslog.LOG_ALERT, "Writing PID file: %s [%d]" % (e.strerror, e.errno) )
                 syslog.closelog()
                 raise
@@ -2056,12 +2056,12 @@ if __name__ == "__main__":
             pidfile.write( "\n" );
             pidfile.close();
         except OSError, e:
-            syslog.openlog( 'xsce_cmdsrv', 0, syslog.LOG_USER )
+            syslog.openlog( 'iiab_cmdsrv', 0, syslog.LOG_USER )
             syslog.syslog( syslog.LOG_ALERT, "Writing PID file: %s [%d]" % (e.strerror, e.errno) )
             syslog.closelog()
             raise
 
-    syslog.openlog( 'xsce_cmdsrv', 0, syslog.LOG_USER )
+    syslog.openlog( 'iiab_cmdsrv', 0, syslog.LOG_USER )
     log = syslog.syslog
     log(syslog.LOG_INFO, 'Starting Command Server')
 

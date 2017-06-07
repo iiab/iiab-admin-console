@@ -9,10 +9,10 @@
     admin_install_base : /opt/admin
     #admin_install_base : /opt/schoolserver/admin
 
-    iiab_base: "{{ iiab_base }}"
-    pip_packages_dir: "{{ iiab_base }}/pip-packages"
-    yum_packages_dir: "{{ iiab_base }}/yum-packages"
-    downloads_dir: "{{ iiab_base }}/downloads"
+    xsce_base: "{{ iiab_base }}"
+    pip_packages_dir: "{{ xsce_base }}/pip-packages"
+    yum_packages_dir: "{{ xsce_base }}/yum-packages"
+    downloads_dir: "{{ xsce_base }}/downloads"
     use_cache: False
     no_network: False
     doc_root: /library/www/html
