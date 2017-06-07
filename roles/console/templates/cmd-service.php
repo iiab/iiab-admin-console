@@ -1,6 +1,6 @@
 <?php
 /*
-*  xsce-cmdsrv service handler
+*  iiab-cmdsrv service handler
 *  Connects DEALER socket to ipc:///run/cmdsrv_sock
 *  Sends command, expects response json back
 */

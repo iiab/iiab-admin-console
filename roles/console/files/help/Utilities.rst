@@ -30,7 +30,7 @@ All software on the server has been installed using a product called ansible.  T
 
 ###Display XSCE.INI File
 
-The xsce.ini file is where the School Server stores information about what is installed and enabled.  You can view it here.
+The iiab.ini file is where the School Server stores information about what is installed and enabled.  You can view it here.
 
 ###Display System Memory
 

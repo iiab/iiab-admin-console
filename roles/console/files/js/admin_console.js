@@ -4,14 +4,14 @@
 var today = new Date();
 var dayInMs = 1000*60*60*24;
 
-var xsceContrDir = "/etc/xsce/";
+var iiabContrDir = "/etc/iiab/";
 var consoleJsonDir = "/common/assets/";
-var xsceCmdService = "cmd-service.php";
+var iiabCmdService = "cmd-service.php";
 var ansibleFacts = {};
 var ansibleTagsStr = "";
 var effective_vars = {};
 var config_vars = {};
-var xsce_ini = {};
+var iiab_ini = {};
 var job_status = {};
 var langCodes = {}; // iso code, local name and English name for all languages we support, read from file
 var zimCatalog = {}; // working composite catalog of kiwix, installed, and wip zims
@@ -44,7 +44,7 @@ sysStorage.zims_selected_size = 0;
 // flag must be set to false before use
 
 // defaults for ip addr of server and other info returned from server-info.php
-var serverInfo = {"xsce_server_ip":"","xsce_client_ip":"","xsce_server_found":"TRUE","xsce_cmdsrv_running":"FALSE"};
+var serverInfo = {"iiab_server_ip":"","iiab_client_ip":"","iiab_server_found":"TRUE","iiab_cmdsrv_running":"FALSE"};
 var initStat = {};
 
 // MAIN ()
@@ -121,7 +121,7 @@ function configButtonsEvents() {
   });
 
   $("#List-CMD").click(function(){
-  	// xsce-cmdsrv-ctl LIST-LIBR '{"sub_dir":"downloads/zims"}'
+  	// iiab-cmdsrv-ctl LIST-LIBR '{"sub_dir":"downloads/zims"}'
     sendCmdSrvCmd("LIST", listCmdHandler);
   });
 
@@ -339,27 +339,27 @@ function make_button_disabled(id, grey_out) {
 
 // Field Validations
 
-function xsce_hostnameVal()
+function iiab_hostnameVal()
 {
-  //alert ("in xsce_hostnameVal");
-  var xsce_hostname = $("#xsce_hostname").val();
-  consoleLog(xsce_hostname);
-  if (xsce_hostname == ""){
+  //alert ("in iiab_hostnameVal");
+  var iiab_hostname = $("#iiab_hostname").val();
+  consoleLog(iiab_hostname);
+  if (iiab_hostname == ""){
     alert ("Host Name can not be blank.");
-    $("#xsce_hostname").val(config_vars['xsce_hostname'])
+    $("#iiab_hostname").val(config_vars['iiab_hostname'])
     setTimeout(function () {
-      $("#xsce_hostname").focus(); // hack for IE
+      $("#iiab_hostname").focus(); // hack for IE
     }, 100);
     return false;
   }
   // regex must match to be valid
   //var hostRegex = new RegExp("^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*))$");
   var hostRegex = /^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*))$/;
-  if (! hostRegex.test(xsce_hostname)) {
+  if (! hostRegex.test(iiab_hostname)) {
     alert ("Host Name can only have letters, numbers, and dashes and may not start with a dash.");
-    //$("#xsce_hostname").val(config_vars['xsce_domain'])
+    //$("#iiab_hostname").val(config_vars['iiab_domain'])
     setTimeout(function () {
-      $("#xsce_hostname").focus(); // hack for IE
+      $("#iiab_hostname").focus(); // hack for IE
     }, 100);
     return false
   }
@@ -367,26 +367,26 @@ function xsce_hostnameVal()
   return true;
 }
 
-function xsce_domainVal()
+function iiab_domainVal()
 {
-  //alert ("in xsce_domainVal");
-  var xsce_domain = $("#xsce_domain").val();
-  consoleLog(xsce_domain);
-  if (xsce_domain == ""){
+  //alert ("in iiab_domainVal");
+  var iiab_domain = $("#iiab_domain").val();
+  consoleLog(iiab_domain);
+  if (iiab_domain == ""){
     alert ("Domain Name can not be blank.");
-    $("#xsce_domain").val(config_vars['xsce_domain'])
+    $("#iiab_domain").val(config_vars['iiab_domain'])
     setTimeout(function () {
-      $("#xsce_domain").focus(); // hack for IE
+      $("#iiab_domain").focus(); // hack for IE
     }, 100);
     return false;
   }
   // any regex match is invalid
   var domainRegex = /^[\.\-]|[\.\-]$|[^\.a-zA-Z0-9-]/;
-  if (domainRegex.test(xsce_domain)) {
+  if (domainRegex.test(iiab_domain)) {
     alert ("Domain Name can only have letters, numbers, dashes, and dots and may not have a dot or dash at beginning or end.");
-    //$("#xsce_domain").val(config_vars['xsce_domain'])
+    //$("#iiab_domain").val(config_vars['iiab_domain'])
     setTimeout(function () {
-      $("#xsce_domain").focus(); // hack for IE
+      $("#iiab_domain").focus(); // hack for IE
     }, 100);
     return false
   }
@@ -589,7 +589,7 @@ function setRadioButton(name, value){
 function initConfigVars()
 {
   if ($.isEmptyObject(ansibleFacts)
-      || $.isEmptyObject(xsce_ini)
+      || $.isEmptyObject(iiab_ini)
       || $.isEmptyObject(effective_vars)
       // || $.isEmptyObject(config_vars) is empty the first time
       ){
@@ -614,11 +614,11 @@ function initConfigVars()
     html += "WAN: " + ansibleFacts.ansible_default_ipv4.address + " on " + ansibleFacts.ansible_default_ipv4.alias + "<BR>";
   }
   //consoleLog(config_vars);
-  html += "LAN: on " + xsce_ini.network.computed_lan  + "<BR>";
-  html += "Network Mode: " + xsce_ini.network.xsce_network_mode + "<BR>";
+  html += "LAN: on " + iiab_ini.network.computed_lan  + "<BR>";
+  html += "Network Mode: " + iiab_ini.network.iiab_network_mode + "<BR>";
   $("#discoveredNetwork").html(html);
   if (typeof config_vars.gui_desired_network_role === "undefined")
-  setRadioButton("gui_desired_network_role", xsce_ini.network.xsce_network_mode)
+  setRadioButton("gui_desired_network_role", iiab_ini.network.iiab_network_mode)
   initStaticWanVars();
 }
 
@@ -658,18 +658,18 @@ function setConfigVars ()
 
 function changePassword ()
 {
-	if ($("#xsce_admin_new_password").val() != $("#xsce_admin_new_password2").val()){
+	if ($("#iiab_admin_new_password").val() != $("#iiab_admin_new_password2").val()){
     	alert ("Invalid: New Password and Repeat New Password do NOT Match.");
       setTimeout(function () {
-        $("#xsce_admin_new_password").focus(); // hack for IE
+        $("#iiab_admin_new_password").focus(); // hack for IE
       }, 100);
       return false;
     }
 
   var cmd_args = {}
-  cmd_args['user'] = $("#xsce_admin_user").val();
-  cmd_args['oldpasswd'] = $("#xsce_admin_old_password").val();
-  cmd_args['newpasswd'] = $("#xsce_admin_new_password").val();
+  cmd_args['user'] = $("#iiab_admin_user").val();
+  cmd_args['oldpasswd'] = $("#iiab_admin_old_password").val();
+  cmd_args['newpasswd'] = $("#iiab_admin_new_password").val();
 
   var cmd = "CHGPW " + JSON.stringify(cmd_args);
   sendCmdSrvCmd(cmd, changePasswordSuccess, "CHGPW");
@@ -693,27 +693,27 @@ function changePasswordSuccess ()
   {
     //alert ("in procXsceIni");
     consoleLog(data);
-    xsce_ini = data;
-    var jstr = JSON.stringify(xsce_ini, undefined, 2);
+    iiab_ini = data;
+    var jstr = JSON.stringify(iiab_ini, undefined, 2);
     var html = jstr.replace(/\n/g, "<br>").replace(/[ ]/g, "&nbsp;");
-    $( "#xsceIni" ).html(html);
+    $( "#iiabIni" ).html(html);
     //consoleLog(jqXHR);
 
     // Set Password Fields
-    $( "#xsce_admin_user").val(xsce_ini['xsce-admin']['xsce_admin_user']);
+    $( "#iiab_admin_user").val(iiab_ini['iiab-admin']['iiab_admin_user']);
     return true;
   }
   function getWhitelist (data)
   {
     //alert ("in getWhitelist");
     //consoleLog(data);
-    var whlist_array = data['xsce_whitelist'];
+    var whlist_array = data['iiab_whitelist'];
     var whlist_str = whlist_array[0];
     for (var i = 1; i < whlist_array.length; i++) {
       whlist_str += '\n' + whlist_array[i];
     }
-    //$('#xsce_whitelist').val(data['xsce_whitelist']);
-    $('#xsce_whitelist').val(whlist_str);
+    //$('#iiab_whitelist').val(data['iiab_whitelist']);
+    $('#iiab_whitelist').val(whlist_str);
     return true;
   }
 
@@ -721,8 +721,8 @@ function changePasswordSuccess ()
   {
     //consoleLog ("in setWhitelist");
     var whlist_ret = {}
-    var whlist_array = $('#xsce_whitelist').val().split('\n');
-    whlist_ret['xsce_whitelist'] = whlist_array;
+    var whlist_array = $('#iiab_whitelist').val().split('\n');
+    whlist_ret['iiab_whitelist'] = whlist_array;
     var cmd = "SET-WHLIST " + JSON.stringify(whlist_ret);
     //consoleLog(cmd);
     sendCmdSrvCmd(cmd, genericCmdHandler);
@@ -1541,11 +1541,11 @@ function showAboutSummary()
   var html = '<table>';
 
   html += '<tr><td ><b>Version:</b></td>';
-  html += '<td>' + xsce_ini.runtime.runtime_branch + '</td></tr>';
+  html += '<td>' + iiab_ini.runtime.runtime_branch + '</td></tr>';
   html += '<td><b>Date Installed:</b></td>';
-  html += '<td>' + xsce_ini.runtime.runtime_date + '</td></tr>';
+  html += '<td>' + iiab_ini.runtime.runtime_date + '</td></tr>';
   html += '<td><b>Commit ID:</b></td>';
-  html += '<td>' + xsce_ini.runtime.runtime_commit + '</td></tr>';
+  html += '<td>' + iiab_ini.runtime.runtime_commit + '</td></tr>';
 
   html += "</tr></table>";
 
@@ -1562,12 +1562,12 @@ function getServerInfo() {
     dataType: 'json'
   })
   .done(function( data ) {
-    serverInfo.xsce_server_ip = data.xsce_server_ip;
-    serverInfo.xsce_client_ip = data.xsce_client_ip;
-    serverInfo.xsce_cmdsrv_running = data.xsce_cmdsrv_running;
+    serverInfo.iiab_server_ip = data.iiab_server_ip;
+    serverInfo.iiab_client_ip = data.iiab_client_ip;
+    serverInfo.iiab_cmdsrv_running = data.iiab_cmdsrv_running;
 
     consoleLog(serverInfo);
-    if (serverInfo.xsce_cmdsrv_running == "FALSE"){
+    if (serverInfo.iiab_cmdsrv_running == "FALSE"){
       displayServerCommandStatus("XSCE-CMDSRV is not running");
       alert ("XSCE-CMDSRV is not running on the server");
     }
@@ -1581,7 +1581,7 @@ function getServerInfo() {
 
 function getServerInfoError (jqXHR, textStatus, errorThrown){
   jsonErrhandler (jqXHR, textStatus, errorThrown); //check for json errors
-  serverInfo.xsce_server_found = "FALSE";
+  serverInfo.iiab_server_found = "FALSE";
   consoleLog("Connection to Server failed.");
   displayServerCommandStatus('Connection to Server <span style="color:red">FAILED</span>.');
   alert ("Connection to Server failed.\n Please make sure your network settings are correct,\n that the server is turned on,\n and that the web server is running.");
@@ -1630,7 +1630,7 @@ function sendCmdSrvCmd(command, callback, buttonId, errCallback, cmdArgs) {
 
     var resp = $.ajax({
       type: 'POST',
-      url: xsceCmdService,
+      url: iiabCmdService,
       data: {
         command: command
       },
@@ -1696,14 +1696,14 @@ function ajaxErrhandler (event, jqxhr, settings, thrownError) {
   consoleLog(thrownError);
 
   // For commands sent to command server
-  if (settings.url == xsceCmdService){
+  if (settings.url == iiabCmdService){
     var cmdstr = settings.data.split("command=")[1];
     var cmdVerb = cmdstr.split(/[ +]/)[0];
     consoleLog(cmdVerb);
     logServerCommands (cmdVerb, "failed", jqxhr.statusText);
     // see if we are connected to server
-    consoleLog(jqxhr.statusText, serverInfo.xsce_server_found);
-    //if (jqxhr.statusText == "error" && serverInfo.xsce_server_found == "TRUE"){
+    consoleLog(jqxhr.statusText, serverInfo.iiab_server_found);
+    //if (jqxhr.statusText == "error" && serverInfo.iiab_server_found == "TRUE"){
     if (jqxhr.statusText == "error"){
       consoleLog("calling getServerInfo");
       getServerInfo();
