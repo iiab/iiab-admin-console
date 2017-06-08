@@ -3,7 +3,7 @@
   become: yes
 
   vars:
-    iiab_base: /opt/schoolserver
+    iiab_base: /opt/iiab
     iiab_repo: "{{ iiab_base }}/iiab"
     iiab_config_dir: /etc/iiab
     admin_install_base : /opt/admin
