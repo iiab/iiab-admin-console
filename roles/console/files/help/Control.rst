@@ -1,4 +1,4 @@
-XSCE Admin Console - Control
+IIAB Admin Console - Control
 ============================
 
 The options in this menu are for immediate control of the School Server.

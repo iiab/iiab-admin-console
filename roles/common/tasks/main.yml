@@ -7,14 +7,14 @@
   with_items:
     - "{{ admin_install_base }}"
 
-- name: Stop xsce-cmdsrv
-  service: name=xsce-cmdsrv
+- name: Stop iiab-cmdsrv
+  service: name=iiab-cmdsrv
            state=stopped
            enabled=no
   ignore_errors: True
 
 - name: Remove old cmdsrv
-  file: path=/opt/schoolserver/xsce_cmdsrv
+  file: path=/opt/schoolserver/iiab_cmdsrv
         state=absent
 
 - name: Remove old console

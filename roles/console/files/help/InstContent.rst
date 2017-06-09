@@ -1,4 +1,4 @@
-XSCE Admin Console - Install Content
+IIAB Admin Console - Install Content
 ====================================
 
 The options on this menu allow you to download and install content onto the School Server.  As of this release all of this content comes from the internet, but in the future there will be menu options to copy from a portable hard disk drive.

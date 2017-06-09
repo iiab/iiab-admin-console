@@ -36,7 +36,7 @@ if socket in socks and socks[socket] == zmq.POLLIN:
     #  Get the reply
     reply_msg = socket.recv()
 else:
-    reply_msg = '{"Error": "No Response from XSCE-CMDSRV"}'
+    reply_msg = '{"Error": "No Response from IIAB-CMDSRV"}'
 
 socket.setsockopt(zmq.LINGER, 0)
 socket.close()

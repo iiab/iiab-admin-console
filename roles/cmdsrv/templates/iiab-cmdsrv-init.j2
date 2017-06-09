@@ -1,6 +1,6 @@
 #! /bin/sh
 ### BEGIN INIT INFO
-# Provides:          xsce-cmdsrv
+# Provides:          iiab-cmdsrv
 # Required-Start:    $local_fs $network $syslog $named
 # Required-Stop:     $local_fs  $network $syslog $named
 # Default-Start:     2 3 4 5
@@ -27,8 +27,8 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 # 02111-1307, USA.
 
-#  xsce-cmdsrv  This is the script that starts up the
-#               Command Server on the XSCE School server
+#  iiab-cmdsrv  This is the script that starts up the
+#               Command Server on the IIAB School server
 #
 #  Source function library
 {% if is_debuntu %}
@@ -41,8 +41,8 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 PID_FILE="{{ cmdsrv_pid_file }}"
 #OPTS="$PID_FILE "
 OPTS="--daemon "
-prog=xsce-cmdsrv
-SERVER={{ cmdsrv_dir }}/xsce-cmdsrv
+prog=iiab-cmdsrv
+SERVER={{ cmdsrv_dir }}/iiab-cmdsrv
 RETVAL=0
 
 start() {
@@ -64,7 +64,7 @@ start() {
 }
 
 stop() {
-        # Stop is handled by /usr/bin/xsce-cmdsrv-ctl STOP
+        # Stop is handled by /usr/bin/iiab-cmdsrv-ctl STOP
         /usr/bin/xscd-cmdsrv-ctl < STOP > /dev/null
         RETVAL=$?
         return $RETVAL
@@ -80,7 +80,7 @@ case "$1" in
         ;;
 
   status)
-        status xsce-cmdsrv $PID_FILE
+        status iiab-cmdsrv $PID_FILE
         RETVAL=$?
         ;;
   *)

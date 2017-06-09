@@ -1,10 +1,10 @@
-XSCE Admin Console - Utilities
+IIAB Admin Console - Utilities
 ==============================
 The options on this menu serve to monitor and diagnose problems on the School Server and to maintain some core data.
 
 ###Change Password
 
-Use this menu option to change the XSCE Admin Password.
+Use this menu option to change the IIAB Admin Password.
 
 The password should be at least 8 characters in length and include a mix of Upper Case, Lower Case, Numbers, and Symbols.  The server will also impose restrictions based the use of simple patterns like 123 and some words.
 
@@ -28,9 +28,9 @@ Use these tools to administer, monitor, and evaluate server usage.
 
 All software on the server has been installed using a product called ansible.  This option will tell you more than you probably wanted to know about its variables.
 
-###Display XSCE.INI File
+###Display IIAB.INI File
 
-The xsce.ini file is where the School Server stores information about what is installed and enabled.  You can view it here.
+The iiab.ini file is where the School Server stores information about what is installed and enabled.  You can view it here.
 
 ###Display System Memory
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. /etc/xsce/xsce.env
+. /etc/iiab/iiab.env
 
 if [ "$OS" = "Debian" ] || [ "$OS" = "raspbian" ]; then
   /bin/sleep 3

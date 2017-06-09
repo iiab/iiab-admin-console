@@ -5,12 +5,12 @@
 */
 // phpinfo();
 
-exec("pgrep xsce-cmdsrv", $pids);
+exec("pgrep iiab-cmdsrv", $pids);
 if(empty($pids))
   $cmdsrv_running = "FALSE";
 else
   $cmdsrv_running = "TRUE";
 
 header('Content-type: application/json');
-echo '{"xsce_server_ip":"'.$_SERVER['SERVER_ADDR'].'","xsce_client_ip":"'.$_SERVER['REMOTE_ADDR'].'","cmdsrv_running":"'.$cmdsrv_running.'"}';
+echo '{"iiab_server_ip":"'.$_SERVER['SERVER_ADDR'].'","iiab_client_ip":"'.$_SERVER['REMOTE_ADDR'].'","cmdsrv_running":"'.$cmdsrv_running.'"}';
 ?>

@@ -1,5 +1,5 @@
 [Unit]
-Description=Provides the XSCE Command Server
+Description=Provides the IIAB Command Server
 After=syslog.target network.target local-fs.target
 
 [Service]
@@ -7,11 +7,11 @@ Type=forking
 Environment="CMDSRV_DIR={{ cmdsrv_dir }}"
 PIDFile={{ cmdsrv_pid_file }}
 {% if is_debuntu %}
-ExecStart=/etc/init.d/xsce-cmdsrv-init  start
+ExecStart=/etc/init.d/iiab-cmdsrv-init  start
 {% else %}
-ExecStart=/usr/libexec/xsce-cmdsrv-init  start
+ExecStart=/usr/libexec/iiab-cmdsrv-init  start
 {% endif %}
-ExecStop=/usr/bin/xsce-cmdsrv-ctl STOP
+ExecStop=/usr/bin/iiab-cmdsrv-ctl STOP
 
 [Install]
 WantedBy=multi-user.target

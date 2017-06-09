@@ -3,9 +3,9 @@
   become: yes
 
   vars:
-    iiab_base: /opt/schoolserver
+    iiab_base: /opt/iiab
     iiab_repo: "{{ iiab_base }}/iiab"
-    iiab_config_dir: /etc/xsce
+    iiab_config_dir: /etc/iiab
     admin_install_base : /opt/admin
     #admin_install_base : /opt/schoolserver/admin
 
@@ -17,7 +17,7 @@
     no_network: False
     doc_root: /library/www/html
     adm_cons_force_ssl: False
-    xsce_home_url: /home
+    iiab_home_url: /home
 
 
   vars_files:

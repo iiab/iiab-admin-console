@@ -62,6 +62,6 @@ echo "Removing $WORKINGDIR"
 rm -Rf $WORKINGDIR
 
 echo "Re-indexing Kiwix Library"
-/usr/bin/xsce-make-kiwix-lib
+/usr/bin/iiab-make-kiwix-lib
 
 exit 0
