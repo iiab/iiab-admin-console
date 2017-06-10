@@ -1,6 +1,6 @@
 IIAB Admin Console - Utilities
 ==============================
-The options on this menu serve to monitor and diagnose problems on the School Server and to maintain some core data.
+The options on this menu serve to monitor and diagnose problems on Internet-in-a-Box and to maintain some core data.
 
 ###Change Password
 
@@ -30,7 +30,7 @@ All software on the server has been installed using a product called ansible.  T
 
 ###Display IIAB.INI File
 
-The iiab.ini file is where the School Server stores information about what is installed and enabled.  You can view it here.
+The iiab.ini file is where the Server stores information about what is installed and enabled.  You can view it here.
 
 ###Display System Memory
 

@@ -2,7 +2,7 @@ IIAB Admin Console - Overview
 =============================
 
 The purpose of this Admin Console is to assist an administrator in configuring, adding content to, and generally managing
-the School Server.
+Internet-in-a-Box.
 
 ### Caution
 
