@@ -7,8 +7,9 @@
   with_items:
     - "{{ admin_install_base }}"
 
-- name: Stop iiab-cmdsrv
-  service: name=iiab-cmdsrv
+# Remove old xsce-cmdsrv and admin_console
+- name: Stop old xsce-cmdsrv
+  service: name=xsce-cmdsrv
            state=stopped
            enabled=no
   ignore_errors: True
