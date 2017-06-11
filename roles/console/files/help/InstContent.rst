@@ -1,7 +1,7 @@
 IIAB Admin Console - Install Content
 ====================================
 
-The options on this menu allow you to download and install content onto the School Server.  As of this release all of this content comes from the internet, but in the future there will be menu options to copy from a portable hard disk drive.
+The options on this menu allow you to download and install content onto Internet-in-a-Box.  As of this release all of this content comes from the internet, but in the future there will be menu options to copy from a portable hard disk drive.
 
 These options are aimed at people who plan to set up the server in a location where there is a relatively high bandwidth connection and then deploy it where there is little or no connectivity.
 
@@ -22,7 +22,7 @@ The words Zim and Kiwix are probably unfamiliar, but the content is very familia
 * Wikivoyage
 * Others
 
-Kiwix.org supplies a server that is installed on the School Server and also hosts all of this content.
+Kiwix.org supplies a server that is installed on Internet-in-a-Box and also hosts all of this content.
 
 ### Do this First
 
@@ -49,7 +49,7 @@ Download Khan Academy Videos
 
 ### How it works
 
-KA Lite from the Learning Equality Foundation is installed on the School Server for offline viewing of Khan Academy videos and exercises.  It has its own options to select language and download videos.  To access this functionality simply click **Launch KA Lite** and another tab will open where you can login and manage content.
+KA Lite from the Learning Equality Foundation is installed on Internet-in-a-Box for offline viewing of Khan Academy videos and exercises.  It has its own options to select language and download videos.  To access this functionality simply click **Launch KA Lite** and another tab will open where you can login and manage content.
 
 ### Don't Forget
 
@@ -101,7 +101,7 @@ After you are sure that everything has been installed successfully you can remov
 Here is how to verify that an item has been installed:
 
 * Look at the installation page and ensure that the item is marked as installed.
-* Look at the School Server menu to see it the item is accessible and brings up content.
+* Look at the Server menu to see if the item is accessible and brings up content.
 
 Actions
 -------

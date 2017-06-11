@@ -1,9 +1,9 @@
 IIAB Admin Console - Configure
 ==============================
 
-When you installed the IIAB School Server, a great deal of software was included, but much of it was not turned on.
+When you installed Internet-in-a-Box, a great deal of software was included, but much of it was not turned on.
 
-These configuration options allow you to turn various features on or off to suit the needs of your school.
+These configuration options allow you to turn various features on or off to suit the needs of your organization.
 
 Configuration is divided into the following sections:
 
@@ -27,7 +27,7 @@ client machines to the internet.
 
 ### Appliance
 
-This means that the School Server is just another machine on the network and usually that its content can be reached by a browser with the URL http://schoolserver or http://schoolserver.lan.
+This means that Internet-in-a-Box is just another machine on the network and usually that its content can be reached by a browser with the URL http://box or http://box.lan.
 
 ### Lan Controller
 
@@ -49,13 +49,13 @@ There may be times when in order to fit into an existing network you need to cha
 
 ### Internet Access for Installations
 
-During the installation of the School Server all of the software packages were stored for future use when you might not have an Internet connection. But as long as you do have an Internet connection any future installations or updates still cause packages to download from the Internet.  If you want to use the stored packages even when you have an Internet connection you can check this box.
+During the installation of the Server all of the software packages were stored for future use when you might not have an Internet connection. But as long as you do have an Internet connection any future installations or updates still cause packages to download from the Internet.  If you want to use the stored packages even when you have an Internet connection you can check this box.
 
 **Please Note:** This parameter will only be rarely changed.
 
 ### Admin Console Security
 
-The Admin Console, this program, is password protected.  You can further protect it by requiring an encrypted connection to the School Server. This less convenient because of the questions it will cause the browser to ask, but may be necessary if you think someone might spy on traffic on the network.
+The Admin Console, this program, is password protected.  You can further protect it by requiring an encrypted connection to the Server. This less convenient because of the questions it will cause the browser to ask, but may be necessary if you think someone might spy on traffic on the network.
 
 Internet Caching/Filtering
 --------------------------
@@ -70,7 +70,7 @@ Internet Caching/Filtering
 
 * Restrict Web Page Access according to Words in the Content (dansguardian)
 
-When the School Server acts as a **Gateway** between school users and the internet it can provide two main types of services.  The first is that it can make the connection to the Internet more efficient by caching or storing responses on the server so that the next request does not need to go to the Internet. You will usually want this.
+When the Server acts as a **Gateway** between users and the internet it can provide two main types of services.  The first is that it can make the connection to the Internet more efficient by caching or storing responses on the server so that the next request does not need to go to the Internet. You will usually want this.
 
 In addition, it can filter the sites that students are permitted to access in three ways.  The first is to only allow pages in the **Permitted URLs** list to be accessed; see below.  The second is that all sites accessed with https security can be blocked to prevent users from by-passing the previous filter.
 
@@ -81,7 +81,7 @@ Use your local policy to decide which of these filters to enable.
 Server Portal
 -------------
 
-The School Server portal or home page is the main menu for accessing the various content modules on the server.
+The Server portal or home page is the main menu for accessing the various content modules on the server.
 
 This is an aspect of the server that many wish to customize based on content choices, so we have included several alternative home pages.
 
@@ -96,7 +96,7 @@ This is an aspect of the server that many wish to customize based on content cho
 Services Enabled
 ----------------
 
-The School Server has many individual pieces of software that incorporated into it when it is set up so that they do not have to be installed later when you might have a slow internet connection. Many of these are not turned on initially, but may be turned on or enabled by checking the box beside the name. Applications that are not used may also be turned off.
+The Server has many individual pieces of software that incorporated into it when it is set up so that they do not have to be installed later when you might have a slow internet connection. Many of these are not turned on initially, but may be turned on or enabled by checking the box beside the name. Applications that are not used may also be turned off.
 
 You should **note** that a number of items below require content to be useful.  Enabling them turns them on, but you must also optain content using the **Install Content** menu or from a portable hard disk.
 
@@ -146,7 +146,7 @@ Note some services listed below may not be installed and will not have a checkbo
 
 ### For Monitoring and Administration
 
-The options below are intended for administrators and people who may help with or support the installatiion of this School Server. It is best to consult with someone who set up the server to decide which of these to turn on.
+The options below are intended for administrators and people who may help with or support the installatiion of this Server. It is best to consult with someone who set up the server to decide which of these to turn on.
 
 * **SchoolTool** - a School Administration System.
 

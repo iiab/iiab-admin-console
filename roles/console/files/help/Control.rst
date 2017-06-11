@@ -1,7 +1,7 @@
 IIAB Admin Console - Control
 ============================
 
-The options in this menu are for immediate control of the School Server.
+The options in this menu are for immediate control of the Server.
 
 **Note:** You can reboot or power off the server before the start up finishes, as soon as the buttons become solid red.
 

@@ -4,7 +4,7 @@ RewriteRule ^/admin(.*) https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 
 Alias /admin "{{ admin_console_dir }}"
 <VirtualHost *:443>
-  ServerName "schoolserver.lan"
+  ServerName "{{ iiab_hostname }}.{{ iiab_domain }}"
   AddExternalAuth pwauth /usr/sbin/pwauth
   SetExternalAuthMethod pwauth pipe
   SSLEngine on
