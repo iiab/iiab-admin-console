@@ -5,7 +5,7 @@ Alias /admin "{{ admin_console_dir }}"
     AuthName "Admin Console"
     AuthBasicProvider external
     AuthExternal pwauth
-    require valid-user
+    require user {{ iiab_admin_user }}
 </Directory>
 
 {% if is_debuntu %}
