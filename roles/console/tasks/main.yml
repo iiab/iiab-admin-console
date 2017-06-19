@@ -132,6 +132,12 @@
             group=root
             mode=0644
 
+- name: Make the admin-console service enabled in apache2
+  file: state=link
+        dest=/etc/apache2/sites-enabled/cmd-service.conf
+        src=/etc/{{ apache_config_dir }}/cmd-service.conf
+  when: is_debuntu
+
 - name: Install admin-console server info service
   template: src=server-info.php
             dest="{{ admin_console_dir }}/server-info.php"
