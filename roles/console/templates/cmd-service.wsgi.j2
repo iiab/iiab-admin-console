@@ -1,6 +1,7 @@
 import zmq
 import os.path
 import time
+import urllib2
 
 cmdsrv_pid_file = "{{ cmdsrv_pid_file }}"
 cmdsrv_ready_file = "{{ cmdsrv_ready_file }}"
@@ -21,7 +22,9 @@ def application(environ, start_response):
 
         if os.path.exists(cmdsrv_pid_file):
             if os.path.exists(cmdsrv_ready_file):
-                cmd = request_body.split('=')[1]
+                # unpack cmd, urldecode, and substitute space for plus between command verb and json argument
+                cmd = urllib2.unquote(request_body.split('=')[1]).decode('utf8')
+                cmd = cmd.replace('+', ' ', 1)
                 response_body = send_command(cmd, start_ms)
             else:
                 response_body = '{"Error": "CMDSRV has started but is not ready."' + alert_param
