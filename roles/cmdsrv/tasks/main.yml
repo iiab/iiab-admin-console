@@ -74,6 +74,8 @@
   tags:
     - download2
 
+# Next two should not be needed now
+
 - name: Download php binding for zeromq
   shell: yes '' | pecl download zmq-beta
   when: not {{ use_cache }} and not {{ no_network }}
