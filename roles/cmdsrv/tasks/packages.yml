@@ -10,7 +10,7 @@
     - php-pear
     - python-dev
     - python-pip
-
+    - libapache2-mod-wsgi
   tags:
     - download
   when: is_debuntu
@@ -37,6 +37,7 @@
     - php-pear
     - python-devel
     - python-pip
+    - mod-wsgi
 
   tags:
     - download
