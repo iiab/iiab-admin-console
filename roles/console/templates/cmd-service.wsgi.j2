@@ -62,7 +62,7 @@ def send_command(cmd, start_ms):
         poll = zmq.Poller()
         poll.register(socket, zmq.POLLIN)
 
-        socket.send (send_msg)
+        socket.send_string (send_msg)
         socks = dict(poll.poll(REQUEST_TIMEOUT))
 
         if socket in socks and socks[socket] == zmq.POLLIN:
