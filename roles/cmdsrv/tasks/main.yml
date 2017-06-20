@@ -194,7 +194,7 @@
             mode={{ item.mode }}
   with_items:
     - { src: 'iiab-cmdsrv-init.j2', dest: '/etc/init.d/iiab-cmdsrv-init', mode: '0755'}
-    - { src: 'zmq.ini', dest: '/etc/php5/apache2/conf.d/20-zmq.ini', mode: '0755'}
+#    - { src: 'zmq.ini', dest: '/etc/php5/apache2/conf.d/20-zmq.ini', mode: '0755'}
   when: is_debian
 
 - name: Create iiab-cmdsrv service
@@ -204,12 +204,12 @@
             mode={{ item.mode }}
   with_items:
     - { src: 'iiab-cmdsrv-init.j2', dest: '/etc/init.d/iiab-cmdsrv-init', mode: '0755'}
-    - { src: 'zmq.ini', dest: '/etc/php/7.0/mods-available/20-zmq.ini', mode: '0755'}
+#    - { src: 'zmq.ini', dest: '/etc/php/7.0/mods-available/20-zmq.ini', mode: '0755'}
   when: is_ubuntu
 
-- name: Enable the ubuntu php config file
-  command: phpenmod 20-zmq
-  when: is_ubuntu
+#- name: Enable the ubuntu php config file
+#  command: phpenmod 20-zmq
+#  when: is_ubuntu
 
 - name: Create iiab-cmdsrv service
   template: backup=yes
@@ -218,7 +218,7 @@
             mode={{ item.mode }}
   with_items:
     - { src: 'iiab-cmdsrv-init.j2', dest: '/usr/libexec/iiab-cmdsrv-init', mode: '0755'}
-    - { src: 'zmq.ini', dest: '/etc/php.d/20-zmq.ini', mode: '0755'}
+#    - { src: 'zmq.ini', dest: '/etc/php.d/20-zmq.ini', mode: '0755'}
   when: is_redhat
 
 - name: ask systemd to reread the unit files, picks up changes done
