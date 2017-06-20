@@ -1,0 +1,6 @@
+#!/bin/bash -x
+# 6/18/2017
+
+rm /opt/admin/console/cmd-service.php
+rm /etc/apache2/sites-available/xs-console.conf
+rm /etc/apache2/sites-enabled/xs-console.conf

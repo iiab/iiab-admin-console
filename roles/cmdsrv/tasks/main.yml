@@ -74,16 +74,18 @@
   tags:
     - download2
 
-- name: Download php binding for zeromq
-  shell: yes '' | pecl download zmq-beta
-  when: not {{ use_cache }} and not {{ no_network }}
-  tags:
-    - download2
+# Next two should not be needed now
 
-- name: Install php binding for zeromq
-  shell: pecl install -f zmq*tgz
-  args:
-    creates: "{{ phplib_dir }}/modules/zmq.so"
+#- name: Download php binding for zeromq
+#  shell: yes '' | pecl download zmq-beta
+#  when: not {{ use_cache }} and not {{ no_network }}
+#  tags:
+#    - download2
+
+#- name: Install php binding for zeromq
+#  shell: pecl install -f zmq*tgz
+#  args:
+#    creates: "{{ phplib_dir }}/modules/zmq.so"
 
 - name: Download speedtest-cli
   pip: name=speedtest-cli

@@ -62,28 +62,28 @@
         - htmlf/*
 
 - name: Install admin-console config file
-  template: src=xs-console.conf.j2
-            dest=/etc/{{ apache_config_dir }}/xs-console.conf
+  template: src=admin-console.conf.j2
+            dest=/etc/{{ apache_config_dir }}/admin-console.conf
             owner=root
             group=root
             mode=0644
   when: not adm_cons_force_ssl
 
 - name: Delete admin-console config file
-  file: dest=/etc/{{ apache_config_dir }}/xs-console.conf
+  file: dest=/etc/{{ apache_config_dir }}/admin-console.conf
         state=absent
   when: adm_cons_force_ssl
 
 - name: Install admin-console ssl config file
-  template: src=xs-console-ssl.conf.j2
-            dest=/etc/{{ apache_config_dir }}/xs-console-ssl.conf
+  template: src=admin-console-ssl.conf.j2
+            dest=/etc/{{ apache_config_dir }}/admin-console-ssl.conf
             owner=root
             group=root
             mode=0644
   when: adm_cons_force_ssl
 
 - name: Delete admin-console ssl config file
-  file: dest=/etc/{{ apache_config_dir }}/xs-console-ssl.conf
+  file: dest=/etc/{{ apache_config_dir }}/admin-console-ssl.conf
         state=absent
   when: not adm_cons_force_ssl
 
@@ -93,37 +93,50 @@
   when: is_debuntu
 
 # without ssl
-- name: Make the xs-console enabled in apache2
+- name: Make the admin-console enabled in apache2
   file: state=link
-        dest=/etc/apache2/sites-enabled/xs-console.conf
-        src=/etc/{{ apache_config_dir }}/xs-console.conf
+        dest=/etc/apache2/sites-enabled/admin-console.conf
+        src=/etc/{{ apache_config_dir }}/admin-console.conf
   when: is_debuntu and not adm_cons_force_ssl
 
-- name: Make the xs-console ssl version disabled in apache2
+- name: Make the admin-console ssl version disabled in apache2
   file: state=absent
-        dest=/etc/apache2/sites-enabled/xs-console-ssl.conf
-        src=/etc/{{ apache_config_dir }}/xs-console-ssl.conf
+        dest=/etc/apache2/sites-enabled/admin-console-ssl.conf
+        src=/etc/{{ apache_config_dir }}/admin-console-ssl.conf
   when: is_debuntu and not adm_cons_force_ssl
 
 # with ssl
 - name: add link for admin-console config file with ssl support
-  file: path=/etc/apache2/sites-enabled/xs-console-ssl.conf
-        src=/etc/{{ apache_config_dir }}/xs-console-ssl.conf
+  file: path=/etc/apache2/sites-enabled/admin-console-ssl.conf
+        src=/etc/{{ apache_config_dir }}/admin-console-ssl.conf
         state=link
   when: is_debuntu and adm_cons_force_ssl
 
 - name: remove link for admin-console config file with ssl support
-  file: path=/etc/apache2/sites-enabled/xs-console.conf
-        src=/etc/{{ apache_config_dir }}/xs-console.conf
+  file: path=/etc/apache2/sites-enabled/admin-console.conf
+        src=/etc/{{ apache_config_dir }}/admin-console.conf
         state=absent
   when: adm_cons_force_ssl and is_debuntu
 
 - name: Install admin-console service
-  template: src=cmd-service.php
-            dest="{{ admin_console_dir }}/cmd-service.php"
+  template: src=cmd-service.wsgi.j2
+            dest="{{ admin_console_dir }}/cmd-service.wsgi"
             owner=root
             group=root
             mode=0644
+
+- name: Install admin-console service config file
+  template: src=cmd-service.conf.j2
+            dest=/etc/{{ apache_config_dir }}/cmd-service.conf
+            owner=root
+            group=root
+            mode=0644
+
+- name: Make the admin-console service enabled in apache2
+  file: state=link
+        dest=/etc/apache2/sites-enabled/cmd-service.conf
+        src=/etc/{{ apache_config_dir }}/cmd-service.conf
+  when: is_debuntu
 
 - name: Install admin-console server info service
   template: src=server-info.php
