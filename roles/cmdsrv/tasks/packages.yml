@@ -37,7 +37,7 @@
     - php-pear
     - python-devel
     - python-pip
-    - mod-wsgi
+    - mod_wsgi
 
   tags:
     - download
