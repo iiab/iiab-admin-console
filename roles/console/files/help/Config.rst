@@ -96,7 +96,7 @@ This is an aspect of the server that many wish to customize based on content cho
 Services Enabled
 ----------------
 
-The Server has many individual pieces of software that incorporated into it when it is set up so that they do not have to be installed later when you might have a slow internet connection. Many of these are not turned on initially, but may be turned on or enabled by checking the box beside the name. Applications that are not used may also be turned off.
+The Server has many individual pieces of software that are incorporated into it when it is set up so that they do not have to be installed later when you might have a slow internet connection. Many of these are not turned on initially, but may be turned on or enabled by checking the box beside the name. Applications that are not used may also be turned off.
 
 You should **note** that a number of items below require content to be useful.  Enabling them turns them on, but you must also optain content using the **Install Content** menu or from a portable hard disk.
 
@@ -126,8 +126,6 @@ Note some services listed below may not be installed and will not have a checkbo
 
 * **Open Street Maps** -  from the original Internet in a Box, this is a world map to 13 or 16 levels of zoom depending on the tiles you install. You must also install content.
 
-* **RACHEL** -  another collection of popular content from World Possible. You must also install content.
-
 * **Calibre** - an E-Book Platform. You must also install content.
 
 * **Pathagar** -  another E-Book Platform. You must also install content.
@@ -136,7 +134,7 @@ Note some services listed below may not be installed and will not have a checkbo
 
 * **ELGG** -  a Social Networking Platform for Student Blogging, File Sharing, and Collaboration
 
-* **OwnCloud** - a local server-based facility for sharing files, photos, contacts, calendars, etc.
+* **NextCloud** - a local server-based facility for sharing files, photos, contacts, calendars, etc.
 
 * **SAMBA** provides Network File Sharing
 
