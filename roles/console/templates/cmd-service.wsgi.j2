@@ -22,9 +22,10 @@ def application(environ, start_response):
 
         if os.path.exists(cmdsrv_pid_file):
             if os.path.exists(cmdsrv_ready_file):
-                # unpack cmd, urldecode, and substitute space for plus between command verb and json argument
+                # unpack cmd, urldecode, and substitute space for %20
                 cmd = urllib2.unquote(request_body.split('=')[1]).decode('utf8')
-                cmd = cmd.replace('+', ' ', 1)
+                cmd = cmd.replace('%20', ' ')
+
                 response_body = send_command(cmd, start_ms)
             else:
                 response_body = '{"Error": "CMDSRV has started but is not ready."' + alert_param
