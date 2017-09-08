@@ -1618,9 +1618,16 @@ function sendCmdSrvCmd(command, callback, buttonId, errCallback, cmdArgs) {
   	return deferredObject.reject();
   }
 
-  //consoleLog ("command: " + command);
-
   var cmdVerb = command.split(" ")[0];
+  // the ajax call escapes special characters, but converts space to plus sign
+  // convert space to %20
+
+  // var enCommand = encodeURIComponent(command); - perhaps preferred in future if it can be made to work
+  // var enCommand = command.replace(" ", "%20"); - only does the first one
+  var enCommand = command.replace(/ /g, "%20");
+  //consoleLog ("command: " + command);
+  //consoleLog ("enCommand: " + enCommand);
+
   logServerCommands (cmdVerb, "sent");
 
   if (buttonId === undefined)
@@ -1632,7 +1639,7 @@ function sendCmdSrvCmd(command, callback, buttonId, errCallback, cmdArgs) {
       type: 'POST',
       url: iiabCmdService,
       data: {
-        command: command
+        command: enCommand
       },
       dataType: 'json',
       buttonId: buttonId
