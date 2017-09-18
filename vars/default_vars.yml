@@ -11,5 +11,3 @@ cmdsrv_ready_file : "{{ cmdsrv_rundir }}/iiab-cmdsrv-ready"
 service_filelist : "{{ iiab_config_dir }}/iiab.ini"
 iiab_config_file : "{{ iiab_config_dir }}/iiab.env"
 phplib_dir : '{{ ansible_local["local_facts"]["phplib_dir"] }}'
-ansible_program: {{ ansible_facts.ansible_env._ }}
-ansible_playbook_program: {{ ansible_program }}-playbook

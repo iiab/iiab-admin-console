@@ -1,0 +1,11 @@
+#!/bin/bash
+# variables for admin console
+
+ANSIBLE_PROGRAM=`which ansible`
+ANSIBLE__PLAYBOOK_PROGRAM=`which ansible-playbook`
+
+cat <<EOF
+{"ansible_program" : "$ANSIBLE_PROGRAM",
+"ansible_playbook_program"  : "$ANSIBLE__PLAYBOOK_PROGRAM"}
+
+EOF
