@@ -20,8 +20,8 @@
         "rachel_downloads_dir" : "/library/downloads/rachel/",
         "rachel_working_dir" : "/library/working/rachel/",
         "cmdsrv_dbname" : "{{ cmdsrv_dbname }}",
-        "ansible_playbook_program" : "{{ ansible_playbook_program }}",
-        "ansible_program" : "{{ ansible_program }}",
+        "ansible_playbook_program" : "{{ ansible_local.admin_facts.ansible_playbook_program }}",
+        "ansible_program" : "{{ ansible_local.admin_facts.ansible_program }}",
         "apache_user" : "{{ apache_user }}",
         "squid_service" : "{{ squid_service }}",
         "df_program" : "{{ df_program }}"

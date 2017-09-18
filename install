@@ -10,6 +10,9 @@ else
  exit
 fi
 
+# facts file for admin console, assumes iiab created directory
+cp ./scripts/admin_facts.fact /etc/ansible/facts.d/admin_facts.fact
+
 PLAYBOOK="iiab-admin.yml"
 INVENTORY="ansible_hosts"
 
