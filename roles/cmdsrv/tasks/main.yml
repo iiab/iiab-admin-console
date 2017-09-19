@@ -185,7 +185,7 @@
             mode={{ item.mode }}
   with_items:
     - { src: 'iiab-cmdsrv.service.j2', dest: '/etc/systemd/system/iiab-cmdsrv.service', mode: '0655'}
-    - { src: 'iiab-cmdsrv-ctl', dest: '/usr/bin/iiab-cmdsrv-ctl', mode: '0755'}
+    - { src: 'iiab-cmdsrv-ctl.j2', dest: '/usr/bin/iiab-cmdsrv-ctl', mode: '0755'}
 
 - name: Create iiab-cmdsrv service
   template: backup=yes
