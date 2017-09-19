@@ -763,6 +763,7 @@ def get_ans_facts(cmd_info):
     return (resp)
 
 def get_ans_tags(cmd_info):
+    get_ansible_tags()
     resp = json.dumps(ansible_tags)
     return (resp)
 
@@ -1611,9 +1612,9 @@ def init():
     read_iiab_vars()
     read_iiab_ini_file()
 
-    # Get ansible facts and tags for localhost
+    # Get ansible facts for localhost
     get_ansible_facts()
-    get_ansible_tags()
+    #get_ansible_tags()
     read_kiwix_catalog()
 
     # Compute variables derived from all of the above
