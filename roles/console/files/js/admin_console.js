@@ -1789,12 +1789,11 @@ function init ()
   getServerInfo(); // see if we can connect
 
   $.when(
-    sendCmdSrvCmd("GET-ANS-TAGS", getAnsibleTags),
+    //sendCmdSrvCmd("GET-ANS-TAGS", getAnsibleTags),
     sendCmdSrvCmd("GET-WHLIST", getWhitelist),
     $.when(sendCmdSrvCmd("GET-VARS", getInstallVars), sendCmdSrvCmd("GET-ANS", getAnsibleFacts),sendCmdSrvCmd("GET-CONF", getConfigVars),sendCmdSrvCmd("GET-IIAB-INI", procXsceIni)).done(initConfigVars),
     $.when(getLangCodes(),readKiwixCatalog(),sendCmdSrvCmd("GET-ZIM-STAT", procZimStatInit)).done(procZimCatalog),
-    getSpaceAvail(),
-    waitDeferred(3000))
+    getSpaceAvail())
     .done(initDone)
     .fail(function () {
     	displayServerCommandStatus('<span style="color:red">Init Failed</span>');
