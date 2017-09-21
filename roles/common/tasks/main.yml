@@ -7,11 +7,6 @@
   with_items:
     - "{{ admin_install_base }}"
 
-- name: Create symlink to iiab ansible.cfg
-  file: path="{{ cmdsrv_dir }}/ansible.cfg"
-        src="{{ iiab_repo }}/ansible.cfg"
-        state=link
-
 # Remove old xsce-cmdsrv and admin_console
 - name: Stop old xsce-cmdsrv
   service: name=xsce-cmdsrv
