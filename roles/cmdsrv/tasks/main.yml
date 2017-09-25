@@ -221,6 +221,11 @@
 #    - { src: 'zmq.ini', dest: '/etc/php.d/20-zmq.ini', mode: '0755'}
   when: is_redhat
 
+- name: Create symlink to iiab ansible.cfg
+  file: path="{{ cmdsrv_dir }}/ansible.cfg"
+        src="{{ iiab_repo }}/ansible.cfg"
+        state=link
+
 - name: ask systemd to reread the unit files, picks up changes done
   shell: systemctl daemon-reload
 
@@ -228,8 +233,3 @@
   service: name=iiab-cmdsrv
            enabled=yes
            state=started
-
-- name: Create symlink to iiab ansible.cfg
-  file: path="{{ cmdsrv_dir }}/ansible.cfg"
-        src="{{ iiab_repo }}/ansible.cfg"
-        state=link
