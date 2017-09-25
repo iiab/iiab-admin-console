@@ -224,12 +224,12 @@
 - name: ask systemd to reread the unit files, picks up changes done
   shell: systemctl daemon-reload
 
-- name: Enable iiab-cmdsrv service
-  service: name=iiab-cmdsrv
-           enabled=yes
-           state=started
-
 - name: Create symlink to iiab ansible.cfg
   file: path="{{ cmdsrv_dir }}/ansible.cfg"
         src="{{ iiab_repo }}/ansible.cfg"
         state=link
+
+- name: Enable iiab-cmdsrv service
+  service: name=iiab-cmdsrv
+           enabled=yes
+           state=started
