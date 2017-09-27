@@ -1,0 +1,6 @@
+#!/bin/bash
+
+CMDSRV_SCRIPTS="{{ cmdsrv_dir }}/scripts"
+$CMDSRV_SCRIPTS/get_kiwix_catalog -v
+
+exit  $?

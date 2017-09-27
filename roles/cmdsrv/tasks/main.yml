@@ -145,6 +145,13 @@
   with_items:
             - scripts/get_kiwix_catalog
 
+- name: Copy templated utilies
+  template: src="utilities/iiab-get-kiwix-cat"
+            dest="/usr/bin/iiab-get-kiwix-cat"
+            mode=0755
+            owner=root
+            group=root
+
 - name: Copy json files
   copy: src={{ item }}
         dest="/etc/iiab"
@@ -153,6 +160,9 @@
         group=root
   with_fileglob:
         - json/*
+
+- name: Create fresh kiwix_catalog.json
+  shell: "iiab-get-kiwix-cat -v"
 
 - name: Create symlink from /common/assets to kiwix_catalog.json
   file: src=/etc/iiab/kiwix_catalog.json
