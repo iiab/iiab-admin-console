@@ -152,20 +152,19 @@
             owner=root
             group=root
 
-- name: Copy json files
-  copy: src={{ item }}
-        dest="/etc/iiab"
+- name: Copy default kiwix_catalog.json
+  copy: src="json/kiwix_catalog.json"
+        dest="/etc/iiab/kiwix_catalog.json"
         mode=0644
+        force=no
         owner=root
         group=root
-  with_fileglob:
-        - json/*
 
 - name: Create fresh kiwix_catalog.json
   shell: "iiab-get-kiwix-cat -v"
-  register: kiwix-cat
+  register: kiwix_cat
 
-- debug: var=kiwix-cat.stdout_lines
+- debug: var=kiwix_cat.stdout_lines
 
 - name: Create symlink from /common/assets to kiwix_catalog.json
   file: src=/etc/iiab/kiwix_catalog.json
