@@ -163,6 +163,9 @@
 
 - name: Create fresh kiwix_catalog.json
   shell: "iiab-get-kiwix-cat -v"
+  register: kiwix-cat
+
+- debug: var=kiwix-cat.stdout_lines
 
 - name: Create symlink from /common/assets to kiwix_catalog.json
   file: src=/etc/iiab/kiwix_catalog.json
