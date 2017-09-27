@@ -73,7 +73,7 @@ def send_command(cmd, start_ms):
                 elapsed_ms = cur_ms - start_ms
                 reply_msg = '{"Data": ' + reply_msg + ',"Resp_time": "' + str(elapsed_ms) + '"}'
         else:
-            reply_msg = '{"Error": "No Response from CMDSRV in ' + REQUEST_TIMEOUT + ' milliseconds"' + alert_param
+            reply_msg = '{"Error": "No Response from CMDSRV in ' + str(REQUEST_TIMEOUT) + ' milliseconds"' + alert_param
 
         socket.setsockopt(zmq.LINGER, 0)
         socket.close()
