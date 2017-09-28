@@ -3,4 +3,8 @@
 CMDSRV_SCRIPTS="{{ cmdsrv_dir }}/scripts"
 $CMDSRV_SCRIPTS/get_kiwix_catalog -v
 
-exit  $?
+if [ $? -ne 0 ]; then
+  echo "Getting the Kiwix Catalog Failed."
+  echo "Please run iiab-get-kiwix-cat again later."
+fi
+exit
