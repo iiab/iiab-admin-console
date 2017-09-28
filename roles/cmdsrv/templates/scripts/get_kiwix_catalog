@@ -10,6 +10,15 @@ import sys
 import urllib2
 import time
 
+verbose = False
+if len(sys.argv) > 1:
+    if sys.argv[1] in ('-v'):
+        verbose = True
+
+# for testing
+#WWROOT = "/library/www/html"
+#jsonPath = "/etc/iiab"
+
 WWROOT = "{{ doc_root }}"
 jsonPath = "{{ iiab_config_dir }}"
 
@@ -35,18 +44,31 @@ zimKiwixPrefix = "kiwix-0.9+"
 
 kiwix_catalog = jsonPath + "/kiwix_catalog.json"
 
+if verbose:
+    print "Starting xml download from Kiwix"
+
 try:
     xmlsrc = urllib2.urlopen(kiwixLibUrl)
     tree = ET.parse(xmlsrc)
     xmlsrc.close()
+    if verbose:
+        print "XML received from Kiwix"
 except (urllib2.URLError) as exc:
+    if verbose:
+        print "Error getting XML from Kiwix"
     sys.stdout.write("GET-KIWIX-CAT ERROR - " + str(exc.reason))
     sys.stdout.flush()
-    sys.exit(0)
+    sys.exit(1)
 
 #tree = ET.parse("assets/test.xml")
 
+if verbose:
+    print "Parsing xml download from Kiwix"
+
 root = tree.getroot()
+
+if verbose:
+    print "Starting of processing xml download from Kiwix to " + kiwix_catalog
 
 for child in root:
    attributes = {}
@@ -86,8 +108,14 @@ for child in root:
 zimCat['download_date'] = time.strftime("%Y-%m-%d.%H:%M:%S")
 zimCat['zims'] = zims
 
+if verbose:
+    print "Ready to write " + kiwix_catalog
+
 with open(kiwix_catalog, 'w') as fp:
     json.dump(zimCat, fp)
+
+if verbose:
+    print "Finished writing to " + kiwix_catalog
 
 sys.stdout.write("SUCCESS")
 sys.stdout.flush()
