@@ -6,18 +6,3 @@
         state=directory
   with_items:
     - "{{ admin_install_base }}"
-
-# Remove old xsce-cmdsrv and admin_console
-- name: Stop old xsce-cmdsrv
-  service: name=xsce-cmdsrv
-           state=stopped
-           enabled=no
-  ignore_errors: True
-
-- name: Remove old cmdsrv
-  file: path=/opt/schoolserver/iiab_cmdsrv
-        state=absent
-
-- name: Remove old console
-  file: path=/opt/schoolserver/admin_console
-        state=absent
