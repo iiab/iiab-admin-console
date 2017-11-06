@@ -618,7 +618,7 @@ function initConfigVars()
   html += "Network Mode: " + iiab_ini.network.iiab_network_mode + "<BR>";
   $("#discoveredNetwork").html(html);
   if (typeof config_vars.gui_desired_network_role === "undefined")
-  setRadioButton("gui_desired_network_role", iiab_ini.network.iiab_network_mode)
+  setRadioButton("gui_desired_network_role", iiab_ini.computed_network.iiab_network_mode)
   initStaticWanVars();
 }
 
