@@ -1,5 +1,5 @@
-- name: include stuff that ought to be somewhere else
-  include: packages.yml
+#- name: include stuff that ought to be somewhere else
+#  include: packages.yml
 
 - name: Install packages for cmdsrv
   package: name={{ item }}
@@ -61,7 +61,7 @@
 - name: Download zeromq and python binding
   pip: name=pyzmq
        extra_args="--download {{ pip_packages_dir }}"
-  when: not {{ use_cache }} and not {{ no_network }}
+  when: not use_cache and not no_network
   tags:
     - download2
 
@@ -74,23 +74,10 @@
   tags:
     - download2
 
-# Next two should not be needed now
-
-#- name: Download php binding for zeromq
-#  shell: yes '' | pecl download zmq-beta
-#  when: not {{ use_cache }} and not {{ no_network }}
-#  tags:
-#    - download2
-
-#- name: Install php binding for zeromq
-#  shell: pecl install -f zmq*tgz
-#  args:
-#    creates: "{{ phplib_dir }}/modules/zmq.so"
-
 - name: Download speedtest-cli
   pip: name=speedtest-cli
        extra_args="--download {{ pip_packages_dir }}"
-  when: not {{ use_cache }} and not {{ no_network }}
+  when: not use_cache and not no_network
   tags:
     - download2
 
