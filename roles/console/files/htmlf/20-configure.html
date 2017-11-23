@@ -58,10 +58,10 @@
 						</div>
 						<p><b>Please Note:</b> These parameters only take effect when you have checked the box above and have the necessary Network Adapters.</p>
 
-						<div class="row"><label class="col-md-3">Static Wan IP Address</label><div class="col-md-3"><input type="text" class="form-control" name="gui_static_wan_ip" id="gui_static_wan_ip"></div></div>
-						<div class="row"><label class="col-md-3">Static Wan Mask</label><div class="col-md-3"><input type="text" class="form-control" name="gui_static_wan_netmask" id="gui_static_wan_netmask"></div></div>
-						<div class="row"><label class="col-md-3">Static Wan Gateway</label><div class="col-md-3"><input type="text" class="form-control" name="gui_static_wan_gateway" id="gui_static_wan_gateway"></div></div>
-						<div class="row"><label class="col-md-3">Static Wan Name Server</label><div class="col-md-3"><input type="text" class="form-control" name="gui_static_wan_nameserver" id="gui_static_wan_nameserver"></div></div>
+						<div class="row"><label class="col-md-3">Static WAN IP Address</label><div class="col-md-3"><input type="text" class="form-control" name="gui_static_wan_ip" id="gui_static_wan_ip"></div></div>
+						<div class="row"><label class="col-md-3">Static WAN Mask</label><div class="col-md-3"><input type="text" class="form-control" name="gui_static_wan_netmask" id="gui_static_wan_netmask"></div></div>
+						<div class="row"><label class="col-md-3">Static WAN Gateway</label><div class="col-md-3"><input type="text" class="form-control" name="gui_static_wan_gateway" id="gui_static_wan_gateway"></div></div>
+						<div class="row"><label class="col-md-3">Static WAN Name Server</label><div class="col-md-3"><input type="text" class="form-control" name="gui_static_wan_nameserver" id="gui_static_wan_nameserver"></div></div>
 
 						<h3>Internet Access for Installations</h3>
 						<p><b>Please Note:</b> This parameter will only be rarely changed.</p>
@@ -81,7 +81,7 @@
 					<form role="form" id="confNetFilterForm">
 						<div class="checkbox">
 							<label>
-								<input type="checkbox" name="squid_enabled" id="squid_enabled">Check to Enable local Web Page storage for later fast Access (Squid cache)
+								<input type="checkbox" name="squid_enabled" id="squid_enabled">Check to Enable local Web Page storage for later fast access (Squid cache)
 							</label>
 						</div>
 						<div class="checkbox">
@@ -96,13 +96,13 @@
 						</div>
 						<div class="checkbox">
 							<label>
-								<input type="checkbox" name="dansguardian_enabled" id="dansguardian_enabled">Check to Restrict Web Page Access according to Words in the Content (dansguardian)
+								<input type="checkbox" name="dansguardian_enabled" id="dansguardian_enabled">Check to Restrict Web Page Access according to Words in the Content (DansGuardian)
 							</label>
 						</div>
 					</form>
 				</div> <!--  network Filter pane -->
 				<div class="tab-pane" id="confHostapd"> <!-- Start Configure Hostapd Pane -->
-					<h2>Internal Wifi Access Point</h2>
+					<h2>Internal Wi-Fi Access Point</h2>
 					<p><b>Please Note:</b> These parameters only take effect if there is an internal Wi-Fi adapter and hostapd is enabled.</p>
 					<form role="form" id="confHostapdForm">
 						<div class="checkbox">
