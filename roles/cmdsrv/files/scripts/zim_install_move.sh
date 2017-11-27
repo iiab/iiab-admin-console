@@ -6,6 +6,7 @@ SRC=$WORKINGDIR/$1
 
 # ZIM File
 
+echo "Moving downloaded $1 to production"
 mv $SRC $DESTDIR
 
 echo "Re-indexing Kiwix Library"
