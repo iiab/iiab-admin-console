@@ -172,13 +172,14 @@ def parse_attr(attributes):
     else:
         # if there is a builtin index get from zims directory else from portable if it is in portable
         downloadUrl = attributes['url']
+        downloadUrl = downloadUrl.replace(".zim.meta4", ".zim")
         if not has_embedded_index:
             if attributes['id'] in portable_list:
                 url = attributes['url']
                 downloadUrl = url.replace("/zim/", "/portable/")
                 downloadUrl = downloadUrl.replace(urlEnd, zimKiwixPrefix + urlEnd)
                 source = "portable"
-        downloadUrl = downloadUrl.replace(".zim.meta4", ".zip")
+                downloadUrl = downloadUrl.replace(".zim", ".zip")
 
     fileRef = urlEnd.split('.')
     fileRef = fileRef[0]
