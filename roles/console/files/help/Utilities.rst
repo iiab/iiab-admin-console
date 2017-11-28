@@ -28,7 +28,7 @@ Use these tools to administer, monitor, and evaluate server usage.
 
 All software on the server has been installed using a product called ansible.  This option will tell you more than you probably wanted to know about its variables.
 
-###Display IIAB.INI File
+###Display /etc/iiab/iiab.ini File
 
 The iiab.ini file is where the Server stores information about what is installed and enabled.  You can view it here.
 
@@ -45,11 +45,3 @@ Just what it says, the amount of storage, allocated and unallocated in internal 
 There are two tests that can be performed.  One downloads a 10M file and the other downloads 100M and does a smaller upload. Even the 10M can take a long time on a **slow internet connection** to the point that it never returns a result to the console.
 
 **WARNING:** On mobile connections you should be careful not to consume excessive bandwidth as this **could lead to additional costs** from your network supplier.
-
-###Run Ansible by Tag
-
-This option is meant for experts mostly during testing.  It uses ansible to install software, but only installs selected items.  **Some combinations will not work together.**
-
-###Troubleshoot Networking
-
-This option is meant for experts mostly during testing and initial setup.  It clears out some of the networking parameters and runs only the networking portion of the install  **Take care as you can leave the server unreachable.**
