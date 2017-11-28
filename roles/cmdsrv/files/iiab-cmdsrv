@@ -1152,13 +1152,13 @@ def install_zims(cmd_info):
         downloadFile = zim_working_dir + zimFileRef + ".zim"
         # download zim file
         job_command = "/usr/bin/wget -c --progress=dot:giga " + downloadSrcFile + " -O " + downloadFile
-        print job_command
+        #print job_command
         job_id = request_one_job(cmd_info, job_command, 1, -1, "Y")
 
         # move to location
         job_command = "scripts/zim_install_move.sh " + zimFileRef + ".zim"
         #job_command = "mv " + downloadFile + " " + zim_content_dir
-        print job_command
+        #print job_command
         resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=2, depend_on_job_id=job_id, has_dependent="N")
         #resp = cmd_error(cmd='INST-ZIMS', msg='Just testing')
 
