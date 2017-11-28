@@ -18,14 +18,15 @@ The following menu options are available.  Please see the help for each individu
 Control
 -------
 
-* Reboot Server
-* Power Off Server
+* REBOOT Server
+* POWER OFF Server
 
-Configuration
--------------
+Configure
+---------
 
 * Network Parameters
 * Internet Caching/Filtering
+* Internal Wi-Fi AP
 * Server Portal
 * Services Enabled
 * Edit Permitted URLs
@@ -34,9 +35,8 @@ Install Content
 ---------------
 
 * Get Started
-* Get Zim Files from Kiwix
+* Get ZIM Files from Kiwix
 * Download Khan Academy Videos
-* Get RACHEL
 * Remove Downloaded Files
 
 Utilities
@@ -45,10 +45,9 @@ Utilities
 * Change Password
 * Display Job Status
 * Display Commands Log
+* Admin Tools
 * Display Ansible Facts
-* Display IIAB.INI File
+* Display /etc/iiab/iiab.ini File
 * Display System Memory
 * Display System Storage
 * Perform Internet Speed Test
-* Run Ansible by Tag
-* Troubleshoot Networking
