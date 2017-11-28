@@ -11,7 +11,7 @@
 			<ul class="nav nav-pills nav-stacked">
 				<li class="active"><a href="#confNetwork">Network Parameters</a></li>
 				<li><a href="#confNetFilter">Internet Caching/Filtering</a></li>
-				<li><a href="#confHostapd">Internal Wifi AP</a></li>
+				<li><a href="#confHostapd">Internal Wi-Fi AP</a></li>
 				<li><a href="#confPortal">Server Portal</a></li>
 				<li><a href="#confServices">Services Enabled</a></li>
 				<li><a href="#confWhitelist">Edit Permitted URLs</a></li>
@@ -58,10 +58,10 @@
 						</div>
 						<p><b>Please Note:</b> These parameters only take effect when you have checked the box above and have the necessary Network Adapters.</p>
 
-						<div class="row"><label class="col-md-3">Static Wan IP Address</label><div class="col-md-3"><input type="text" class="form-control" name="gui_static_wan_ip" id="gui_static_wan_ip"></div></div>
-						<div class="row"><label class="col-md-3">Static Wan Mask</label><div class="col-md-3"><input type="text" class="form-control" name="gui_static_wan_netmask" id="gui_static_wan_netmask"></div></div>
-						<div class="row"><label class="col-md-3">Static Wan Gateway</label><div class="col-md-3"><input type="text" class="form-control" name="gui_static_wan_gateway" id="gui_static_wan_gateway"></div></div>
-						<div class="row"><label class="col-md-3">Static Wan Name Server</label><div class="col-md-3"><input type="text" class="form-control" name="gui_static_wan_nameserver" id="gui_static_wan_nameserver"></div></div>
+						<div class="row"><label class="col-md-3">Static WAN IP Address</label><div class="col-md-3"><input type="text" class="form-control" name="gui_static_wan_ip" id="gui_static_wan_ip"></div></div>
+						<div class="row"><label class="col-md-3">Static WAN Mask</label><div class="col-md-3"><input type="text" class="form-control" name="gui_static_wan_netmask" id="gui_static_wan_netmask"></div></div>
+						<div class="row"><label class="col-md-3">Static WAN Gateway</label><div class="col-md-3"><input type="text" class="form-control" name="gui_static_wan_gateway" id="gui_static_wan_gateway"></div></div>
+						<div class="row"><label class="col-md-3">Static WAN Name Server</label><div class="col-md-3"><input type="text" class="form-control" name="gui_static_wan_nameserver" id="gui_static_wan_nameserver"></div></div>
 
 						<h3>Internet Access for Installations</h3>
 						<p><b>Please Note:</b> This parameter will only be rarely changed.</p>
@@ -71,7 +71,7 @@
 						<h3>Admin Console Security</h3>
 						<p><b>Please Note:</b> This program is password protected, so this only needs to be changed if you are worried that there could be people listening on your network.</p>
 						<div class="checkbox">
-							<label><input type="checkbox" name="adm_cons_force_ssl" id="adm_cons_force_ssl" >Check to force https (ssl) access to this program.</label>
+							<label><input type="checkbox" name="adm_cons_force_ssl" id="adm_cons_force_ssl" >Check to force https (TLS/SSL) access to this program.</label>
 						</div>
 					</form>
 				</div> <!--  network pane -->
@@ -81,7 +81,7 @@
 					<form role="form" id="confNetFilterForm">
 						<div class="checkbox">
 							<label>
-								<input type="checkbox" name="squid_enabled" id="squid_enabled">Check to Enable local Web Page storage for later fast Access (squid cache)
+								<input type="checkbox" name="squid_enabled" id="squid_enabled">Check to Enable local Web Page storage for later fast access (Squid cache)
 							</label>
 						</div>
 						<div class="checkbox">
@@ -96,23 +96,23 @@
 						</div>
 						<div class="checkbox">
 							<label>
-								<input type="checkbox" name="dansguardian_enabled" id="dansguardian_enabled">Check to Restrict Web Page Access according to Words in the Content (dansguardian)
+								<input type="checkbox" name="dansguardian_enabled" id="dansguardian_enabled">Check to Restrict Web Page Access according to Words in the Content (DansGuardian)
 							</label>
 						</div>
 					</form>
 				</div> <!--  network Filter pane -->
 				<div class="tab-pane" id="confHostapd"> <!-- Start Configure Hostapd Pane -->
-					<h2>Internal Wifi Access Point</h2>
-					<p><b>Please Note:</b> These parameters only take effect if there is an internal wifi adapter and hostapd is enabled.</p>
+					<h2>Internal Wi-Fi Access Point</h2>
+					<p><b>Please Note:</b> These parameters only take effect if there is an internal Wi-Fi adapter and hostapd is enabled.</p>
 					<form role="form" id="confHostapdForm">
 						<div class="checkbox">
 							<label>
-								<input type="checkbox" name="hostapd_enabled" id="hostapd_enabled">Check to Enable the internal wifi adapter as an Access Point.
+								<input type="checkbox" name="hostapd_enabled" id="hostapd_enabled">Check to Enable the internal Wi-Fi adapter as an Access Point.
 							</label>
 						</div>
-						<div class="row"><label class="col-md-3">Internal Wifi Access Point Name</label><div class="col-md-3"><input type="text" class="form-control" name="host_ssid" id="host_ssid"></div></div>
-						<div class="row"><label class="col-md-3">Internal Wifi Access Point Mode</label><div class="col-md-3"><input type="text" class="form-control" name="host_wifi_mode" id="host_wifi_mode"></div></div>
-						<div class="row"><label class="col-md-3">Internal Wifi Access Point Channel</label><div class="col-md-3"><input type="text" class="form-control" name="host_channel" id="host_channel"></div></div>
+						<div class="row"><label class="col-md-3">Internal Wi-Fi Access Point Name</label><div class="col-md-3"><input type="text" class="form-control" name="host_ssid" id="host_ssid"></div></div>
+						<div class="row"><label class="col-md-3">Internal Wi-Fi Access Point Mode</label><div class="col-md-3"><input type="text" class="form-control" name="host_wifi_mode" id="host_wifi_mode"></div></div>
+						<div class="row"><label class="col-md-3">Internal Wi-Fi Access Point Channel</label><div class="col-md-3"><input type="text" class="form-control" name="host_channel" id="host_channel"></div></div>
 					</form>
 				</div> <!--  Configure Hostapd pane -->
 				<div class="tab-pane" id="confPortal"> <!-- Start Configure Server Portal Pane -->
@@ -126,7 +126,7 @@
 						</div>
 						<div class="checkbox">
 							<label>
-								<input type="checkbox" name="dokuwiki_enabled" id="dokuwiki_enabled">Check to Enable Dokuwiki.
+								<input type="checkbox" name="dokuwiki_enabled" id="dokuwiki_enabled">Check to Enable DokuWiki.
 							</label>
 						</div>
 						<h3>Select Server Home Page</h3>
@@ -155,12 +155,12 @@
 						</div>
 						<div class="checkbox ejabberd_service">
 							<label>
-								<input type="checkbox" name="ejabberd_enabled" id="ejabberd_enabled">Chat and Collaboration Server for XO Laptops and Others
+								<input type="checkbox" name="ejabberd_enabled" id="ejabberd_enabled">Chat and Collaboration Server for XO Laptops and Others.
 							</label>
 						</div>
 						<div class="checkbox moodle_service">
 							<label>
-								<input type="checkbox" name="moodle_enabled" id="moodle_enabled">Moodle, a Courseware Manager and E-Learning Platform
+								<input type="checkbox" name="moodle_enabled" id="moodle_enabled">Moodle, a Courseware Manager and E-Learning Platform.
 							</label>
 						</div>
 						<div class="checkbox kiwix_service">
@@ -170,12 +170,12 @@
 						</div>
 						<div class="checkbox kalite_service">
 							<label>
-								<input type="checkbox" name="kalite_enabled" id="kalite_enabled">Khan Academy Lite, serves Khan Academy videos and Exercises.  You must also install content.
+								<input type="checkbox" name="kalite_enabled" id="kalite_enabled">KA Lite, serves Khan Academy videos and Exercises.  You must also install content.
 							</label>
 						</div>
 						<div class="checkbox kalite_cron_service">
 							<label>
-								<input type="checkbox" name="kalite_cron_enabled" id="kalite_cron_enabled">The Khan Academy Downloader.  You can turn this off if you don't plan to download videos.
+								<input type="checkbox" name="kalite_cron_enabled" id="kalite_cron_enabled">The KA Lite Downloader.  You can turn this off if you don't plan to download videos.
 							</label>
 						</div>
 						<div class="checkbox osm_service">
@@ -195,13 +195,13 @@
 						</div>
 						<div class="checkbox sugarizer_service">
 							<label>
-								<input type="checkbox" name="sugarizer_enabled" id="sugarizer_enabled">Sugarizer provides SugarLabs activities directly on the server.
+								<input type="checkbox" name="sugarizer_enabled" id="sugarizer_enabled">Sugarizer provides Sugar Labs activities directly on the server.
 							</label>
 						</div>
 						<h3>Media Sharing and Printing</h3>
 						<div class="checkbox elgg_service">
 							<label>
-								<input type="checkbox" name="elgg_enabled" id="elgg_enabled">ELGG, a Social Networking Platform for Student Blogging, File Sharing, and Collaboration
+								<input type="checkbox" name="elgg_enabled" id="elgg_enabled">Elgg, a Social Networking Platform for Student Blogging, File Sharing, and Collaboration.
 							</label>
 						</div>
 						<div class="checkbox owncloud_service">
@@ -211,12 +211,12 @@
 						</div>
 						<div class="checkbox nextcloud_service">
 							<label>
-								<input type="checkbox" name="nextcloud_enabled" id="nextcloud_enabled">NextCloud is a local server-based facility for sharing files, photos, contacts, calendars, etc.
+								<input type="checkbox" name="nextcloud_enabled" id="nextcloud_enabled">Nextcloud is a local server-based facility for sharing files, photos, contacts, calendars, etc.
 							</label>
 						</div>
 						<div class="checkbox samba_service">
 							<label>
-								<input type="checkbox" name="samba_enabled" id="samba_enabled">SAMBA provides Network File Sharing
+								<input type="checkbox" name="samba_enabled" id="samba_enabled">Samba provides Network File Sharing.
 							</label>
 						</div>
 						<div class="checkbox cups_service">
@@ -258,7 +258,7 @@
 						</div>
 						<div class="checkbox vnstat_service">
 							<label>
-								<input type="checkbox" name="vnstat_enabled" id="vnstat_enabled">VnStat gathers and displays networking statistics.
+								<input type="checkbox" name="vnstat_enabled" id="vnstat_enabled">vnStat gathers and displays networking statistics.
 							</label>
 						</div>
 						<div class="checkbox awstats_service">
@@ -268,12 +268,12 @@
 						</div>
 						<div class="checkbox phpmyadmin_service">
 							<label>
-								<input type="checkbox" name="phpmyadmin_enabled" id="phpmyadmin_enabled">PhpMyadmin allows maintenance of mysql databases.
+								<input type="checkbox" name="phpmyadmin_enabled" id="phpmyadmin_enabled">phpMyAdmin allows maintenance of mysql databases.
 							</label>
 						</div>
 						<div class="checkbox openvpn_service">
 							<label>
-								<input type="checkbox" name="openvpn_enabled" id="openvpn_enabled">Open VPN allows a secure connection between servers over the Internet for remote maintenance.
+								<input type="checkbox" name="openvpn_enabled" id="openvpn_enabled">OpenVPN allows a secure connection between servers over the Internet for remote maintenance.
 							</label>
 						</div>
 						<div class="checkbox teamviewer_service">
