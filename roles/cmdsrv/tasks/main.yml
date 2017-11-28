@@ -233,4 +233,4 @@
 - name: Enable iiab-cmdsrv service
   service: name=iiab-cmdsrv
            enabled=yes
-           state=started
+           state=restarted
