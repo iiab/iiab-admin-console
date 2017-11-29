@@ -47,7 +47,7 @@ Utilities
 * Display Commands Log
 * Admin Tools
 * Display Ansible Facts
-* Display /etc/iiab/iiab.ini File
+* Display IIAB.INI File
 * Display System Memory
 * Display System Storage
 * Perform Internet Speed Test
