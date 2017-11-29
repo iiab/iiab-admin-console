@@ -138,7 +138,7 @@ Note some services listed below may not be installed and will not have a checkbo
 
 * **Samba** - Provides Network File Sharing.
 
-    There is some overlap between these three.  **Elgg** allows blogging and other forms of social media.  Students and Teachers can use it to collaborate on projects or for journalling.  **OwnCloud** is great for sharing media. It has apps for phones and tablets that make it easy to drop photos and other materials onto the server for sharing. **Samba** gives you the ability to share directories on the server that can be accessed by Teachers and Students as if they were local to their laptops.
+    There is some overlap between these three.  **Elgg** allows blogging and other forms of social media.  Students and Teachers can use it to collaborate on projects or for journalling.  **Nextcloud** is great for sharing media. It has apps for phones and tablets that make it easy to drop photos and other materials onto the server for sharing. **Samba** gives you the ability to share directories on the server that can be accessed by Teachers and Students as if they were local to their laptops.
 
 * **CUPS** - Provides support for **Printers** either directly attached to the server or on the network.
 
