@@ -183,12 +183,10 @@ Saves the list of permitted URLs edited above and makes them active.
 
 Saves all configuration variables so that they will be used when the following button is clicked.
 
-### Install Configured Server Options
+### Install Configured Options
 
 **Warning:** This option will **Reconfigure your Server**. It runs the Ansible configuration software using all configuration variables that have been saved with the above button.
 
-### Reset Network Configuration
+While this is happening, you can monitor Ansible's execution under **Utilities** - **Display Job Status**.
 
-**Warning:** This option will **Reconfigure your Server's Networking Setup**. It clears the current network parameters and re-applies network configuration variables that have been saved with the Save Configuration button.
-
-**Note:** The last two Actions may not be run at the same time.  You should also refresh your browser after running either of them.
+*Please refresh your browser after* **Install Configured Options** *has fully completed.*
