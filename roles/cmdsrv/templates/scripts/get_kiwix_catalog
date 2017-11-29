@@ -15,17 +15,18 @@ if len(sys.argv) > 1:
     if sys.argv[1] in ('-v'):
         verbose = True
 
+WWROOT = "{{ doc_root }}"
+jsonPath = "{{ iiab_config_dir }}"
+
 # for testing
 #WWROOT = "/library/www/html"
 #jsonPath = "/etc/iiab"
 
-WWROOT = "{{ doc_root }}"
-jsonPath = "{{ iiab_config_dir }}"
+# timeframe inclusion of videos
+magicDate = "2017-07"
 
 zimCat = {}
 zims = {}
-
-zimCount = 0
 
 # as of Apr 13, 2015
 problemUrlMap = {"http://download.kiwix.org/zim/0.9/wikipedia_en_ray_charles_03_2013.zim.meta4":"http://download.kiwix.org/portable/wikipedia/kiwix-0.9+wikipedia_en_ray_charles_03_2013.zip", \
@@ -37,6 +38,7 @@ problemUrlMap = {"http://download.kiwix.org/zim/0.9/wikipedia_en_ray_charles_03_
 # input file
 
 kiwixLibUrl = 'http://download.kiwix.org/library/library.xml'
+kiwixZimLibUrl = 'http://download.kiwix.org/library/library_zim.xml'
 zimKiwixUrl = "http://download.kiwix.org/portable/"
 zimKiwixPrefix = "kiwix-0.9+"
 
@@ -49,13 +51,26 @@ if verbose:
 
 try:
     xmlsrc = urllib2.urlopen(kiwixLibUrl)
-    tree = ET.parse(xmlsrc)
+    portable_tree = ET.parse(xmlsrc)
     xmlsrc.close()
     if verbose:
-        print "XML received from Kiwix"
+        print "library.xml received from Kiwix"
 except (urllib2.URLError) as exc:
     if verbose:
-        print "Error getting XML from Kiwix"
+        print "Error getting library.xml from Kiwix"
+    sys.stdout.write("GET-KIWIX-CAT ERROR - " + str(exc.reason))
+    sys.stdout.flush()
+    sys.exit(1)
+
+try:
+    xmlsrc = urllib2.urlopen(kiwixZimLibUrl)
+    zim_tree = ET.parse(xmlsrc)
+    xmlsrc.close()
+    if verbose:
+        print "library_zim.xml received from Kiwix"
+except (urllib2.URLError) as exc:
+    if verbose:
+        print "Error getting library_zim.xml from Kiwix"
     sys.stdout.write("GET-KIWIX-CAT ERROR - " + str(exc.reason))
     sys.stdout.flush()
     sys.exit(1)
@@ -63,62 +78,131 @@ except (urllib2.URLError) as exc:
 #tree = ET.parse("assets/test.xml")
 
 if verbose:
-    print "Parsing xml download from Kiwix"
+    print "Parsing xml downloads from Kiwix"
 
-root = tree.getroot()
+portable_list = []
+zimCount = 0
 
-if verbose:
-    print "Starting of processing xml download from Kiwix to " + kiwix_catalog
+def main():
+    global portable_list, zimCount
+    zimCount = 0
+    portable_list = xml_to_list(portable_tree.getroot())
+    #zim_dict = xml_to_dict(zim_tree.getroot())
+    #portable_dict = xml_to_dict(portable_tree.getroot())
 
-for child in root:
-   attributes = {}
-   zimAttr = {}
-   attributes = child.attrib
-   if 'id' in attributes and 'language' in attributes and 'creator' in attributes:
-      id = attributes['id']
-      lang = attributes['language']
-      category = attributes['creator']
-      url = attributes['url']
-      urlSlash = url.split('/')
-      urlEnd = urlSlash[-1] # last element
-      if url in problemUrlMap:
-          downloadUrl = problemUrlMap[url]
-      else:
-          downloadUrl = url.replace("/zim/", "/portable/")
-          downloadUrl = downloadUrl.replace(urlEnd, zimKiwixPrefix + urlEnd)
-          downloadUrl = downloadUrl.replace(".zim.meta4", ".zip")
-      fileRef = urlEnd.split('.')
-      fileRef = fileRef[0]
-      permaRefParts = urlEnd.split('_')
-      permaRefParts = permaRefParts[0:len(permaRefParts) - 1]
-      permaRef = permaRefParts[0]
-      for part in permaRefParts[1:]:
-         if not part.isdigit():
-            permaRef += "_" + part
-      zimCount += 1
-      # print zimCount, attributes['language'], attributes['title'], attributes['description']
-      for key in attributes:
-          if key != 'favicon' and key != 'faviconMimeType':
-              zimAttr[key] = attributes[key]
-      zimAttr['download_url'] = downloadUrl
-      zimAttr['file_ref'] = fileRef
-      zimAttr['perma_ref'] = permaRef
-      zims[id] = zimAttr
+    if verbose:
+        print "Starting of processing xml download from Kiwix to " + kiwix_catalog
 
-zimCat['download_date'] = time.strftime("%Y-%m-%d.%H:%M:%S")
-zimCat['zims'] = zims
+    # go through zims in zim directory and change url to portable if no ftindex
+    zim_dict = {}
+    for child in zim_tree.getroot():
+        attr = child.attrib
+        if 'id' in attr and 'language' in attr and 'creator' in attr:
+            zimCount += 1
+            zim_dict[attr['id']] = parse_attr(attr)
 
-if verbose:
-    print "Ready to write " + kiwix_catalog
+    zimCat['download_date'] = time.strftime("%Y-%m-%d.%H:%M:%S")
+    zimCat['zims'] = zim_dict
 
-with open(kiwix_catalog, 'w') as fp:
-    json.dump(zimCat, fp)
+    if verbose:
+        print "Ready to write " + kiwix_catalog
 
-if verbose:
-    print "Finished writing to " + kiwix_catalog
+    with open(kiwix_catalog, 'w') as fp:
+        json.dump(zimCat, fp)
 
-sys.stdout.write("SUCCESS")
-sys.stdout.flush()
-sys.exit(0)
+    if verbose:
+        print "Finished writing to " + kiwix_catalog
 
+    sys.stdout.write("SUCCESS")
+    sys.stdout.flush()
+    sys.exit(0)
 
+def xml_to_list(root):
+    list = []
+    for child in root:
+        attr = child.attrib
+        if 'id' in attr and 'language' in attr and 'creator' in attr:
+            list.append(attr['id'])
+    return list
+
+def xml_to_dict(root):
+    zim_dict = {}
+    for child in root:
+        attr = child.attrib
+        if 'id' in attr and 'language' in attr and 'creator' in attr:
+            zim_dict[attr['id']] = attr
+    return zim_dict
+
+def parse_attr(attributes):
+
+    zimAttr = {}
+    has_embedded_index = False
+    has_details = True
+    has_pictures = True
+    has_videos = True
+    source = "zims"
+
+    lang = attributes['language']
+    category = attributes['creator']
+
+    tags = attributes['tags'].split(';') if 'tags' in attributes else []
+    if '_ftindex' in tags:
+        has_embedded_index = True
+
+    if 'nodet' in tags:
+        has_details = False
+        has_pictures = False
+        has_videos = False
+
+    if 'nopic' in tags:
+        has_pictures = False
+        has_videos = False
+
+    if 'novid' in tags:
+        has_videos = False
+    if attributes['date'] < magicDate:
+        has_videos = False
+
+    url = attributes['url']
+    urlSlash = url.split('/')
+    urlEnd = urlSlash[-1] # last element
+    fileRef = urlEnd.split('.')[0]
+    permaRefParts = urlEnd.split('_')
+    permaRefParts = permaRefParts[0:len(permaRefParts) - 1]
+    permaRef = permaRefParts[0]
+    for part in permaRefParts[1:]:
+       if not part.isdigit():
+          permaRef += "_" + part
+    category = urlSlash[4]
+    sequence = 8 - (4 * has_videos + 2 * has_pictures + 1 * has_details)
+
+    if url in problemUrlMap:
+        downloadUrl = problemUrlMap[url]
+    else:
+        # if there is a builtin index get from zims directory else from portable if it is in portable
+        downloadUrl = url.replace(".zim.meta4", ".zim")
+        if not has_embedded_index:
+            if attributes['id'] in portable_list:
+                source = "portable"
+                downloadUrl = url.replace("/zim/", "/portable/")
+                downloadUrl = downloadUrl.replace(urlEnd, zimKiwixPrefix + urlEnd)
+                downloadUrl = downloadUrl.replace(".zim.meta4", ".zip") # urlEnd still has zim.meta4
+
+    # print zimCount, attributes['language'], attributes['title'], attributes['description']
+    for key in attributes:
+        if key not in ['id','favicon','faviconMimeType']:
+            zimAttr[key] = attributes[key]
+    zimAttr['download_url'] = downloadUrl
+    zimAttr['file_ref'] = fileRef
+    zimAttr['perma_ref'] = permaRef
+    zimAttr['category'] = category
+    zimAttr['sequence'] = sequence
+    zimAttr['has_embedded_index'] = has_embedded_index
+    zimAttr['has_details'] = has_details
+    zimAttr['has_pictures'] = has_pictures
+    zimAttr['has_videos'] = has_videos
+    zimAttr['source'] = source
+    return(zimAttr)
+
+if __name__ == "__main__":
+    main()
