@@ -839,8 +839,13 @@ function changePasswordSuccess ()
   }
 
   function addZimStatAttr(section) {
-    for (var id in installedZimCat[section]){
-      installedZimCat[section][id]['category'] = installedZimCat[section][id]['creator']; // best we can do
+  	var creatorToCategoryMap = {"University of Colorado":"Phet"}; // we are fudging category as it is not in kiwix catalog
+    for (var id in installedZimCat[section]){                     // our fudge is not carried into local library.xml
+    	var creator = installedZimCat[section][id]['creator'];
+    	if (creator in creatorToCategoryMap)
+    	  creator = creatorToCategoryMap[creator];
+
+      installedZimCat[section][id]['category'] = creator; // best we can do
       installedZimCat[section][id]['sequence'] = 1; // put these first
     }
 
@@ -927,12 +932,8 @@ function renderZimCategory(lang, category) {
       var zimDesc = zim.title + ' (' + zim.perma_ref + ')';
       //html += '<span class="zim-desc ' + colorClass + '" >&nbsp;&nbsp;' + zimDesc + '</span>';
 
-      var zimToolTip = ' data-toggle="tooltip" data-placement="top" data-html="true" ';
-      zimToolTip += 'title="<em><b>' + zim.description + '</b></em>"';
-      //zimToolTip += 'title="<b>' + zim.description + '</b><BR>some more text that is rather long"';
-
+      var zimToolTip = genZimTooltip(zim);
       html += '<span class="zim-desc ' + colorClass + '"' + zimToolTip + '>&nbsp;&nbsp;' + zimDesc + '</span>';
-      //html += 'title="<em><b>' + zim.description + '</b></em>">&nbsp;&nbsp;' + zimDesc + '</span>';
 
       html += '<span ' + colorClass2 + 'style="display:inline-block; width:120px;"> Date: ' + zim.date + '</span>';
       html += '<span ' + colorClass2 +'> Size: ' + readableSize(zim.size);
@@ -944,6 +945,13 @@ function renderZimCategory(lang, category) {
     });
 
   return html;
+}
+
+function genZimTooltip(zim) {
+  var zimToolTip = ' data-toggle="tooltip" data-placement="top" data-html="true" ';
+  zimToolTip += 'title="<em><b>' + zim.description + '</b></em>"';
+  //zimToolTip += 'title="<b>' + zim.description + '</b><BR>some more text that is rather long"';
+  return zimToolTip;
 }
 
 function zimCatCompare(lang) {
