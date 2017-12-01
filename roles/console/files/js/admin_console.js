@@ -949,8 +949,15 @@ function renderZimCategory(lang, category) {
 
 function genZimTooltip(zim) {
   var zimToolTip = ' data-toggle="tooltip" data-placement="top" data-html="true" ';
-  zimToolTip += 'title="<em><b>' + zim.description + '</b></em>"';
-  //zimToolTip += 'title="<b>' + zim.description + '</b><BR>some more text that is rather long"';
+  zimToolTip += 'title="<b>' + zim.title + '<BR>' + zim.description + '<BR><ul>With';
+  zimToolTip += zim.has_embedded_index ? '<li>Full Text Index</li>' : '';
+  zimToolTip += zim.has_video ? '<li>Videos</li>' : '';
+  zimToolTip += zim.has_pictures ? '<li>Images</li>' : '';
+  zimToolTip += zim.has_details ? '<li>Complete Articles</li>' : '';
+  //zimToolTip += '<table><tr><td>Full Text Index</td><td>' + zim.has_video ? "&#10003;" : "X";
+  //zimToolTip += '</li></ul></b>"'
+  zimToolTip += '</ul></b>"'
+  //zimToolTip += 'title="<em><b>' + zim.description + '</b><BR>some more text that is rather long"';
   return zimToolTip;
 }
 
