@@ -20,7 +20,7 @@ var zimGroups = {}; // zim ids grouped by language and category
 var zimCategories = {}; // zim categories grouped by language and priority to allow ordering
 var kiwixCatalog = {}; // catalog of kiwix zims, read from file downloaded from kiwix.org
 var kiwixCatalogDate = new Date; // date of download, stored in json file
-var installedZimCat = {}; // catalog of installed, and wip zims
+var installedZimCatalog = {}; // catalog of installed, and wip zims
 var rachelStat = {}; // installed, enabled and whether content is installed and which is enabled
 
 var zimsInstalled = []; // list of zims already installed
@@ -824,13 +824,13 @@ function changePasswordSuccess ()
   }
 
   function procZimStatInit(data) {
-    installedZimCat = data;
+    installedZimCatalog = data;
     addZimStatAttr('INSTALLED');
     addZimStatAttr('WIP');
   }
 
   function procZimStat(data) {
-    installedZimCat = data;
+    installedZimCatalog = data;
     addZimStatAttr('INSTALLED');
     addZimStatAttr('WIP');
 
@@ -840,15 +840,18 @@ function changePasswordSuccess ()
 
   function addZimStatAttr(section) {
   	var creatorToCategoryMap = {"University of Colorado":"Phet"}; // we are fudging category as it is not in kiwix catalog
-    for (var id in installedZimCat[section]){                     // our fudge is not carried into local library.xml
-    	var creator = installedZimCat[section][id]['creator'];
+    for (var id in installedZimCatalog[section]){                 // our fudge is not carried into local library.xml
+    	var creator = installedZimCatalog[section][id]['creator'];
     	if (creator in creatorToCategoryMap)
     	  creator = creatorToCategoryMap[creator];
 
-      installedZimCat[section][id]['category'] = creator; // best we can do
-      installedZimCat[section][id]['sequence'] = 1; // put these first
+      installedZimCatalog[section][id]['category'] = creator; // best we can do
+      installedZimCatalog[section][id]['sequence'] = 1; // put these first
+      var permRef = installedZimCatalog[section][id]['path'];
+      if (permRef.indexOf('/') != -1)
+        permRef = permRef.split("/")[1]
+      installedZimCatalog[section][id]['perma_ref'] = permRef;
     }
-
   }
 
   function procZimLangs() {
@@ -1049,7 +1052,7 @@ function checkKiwixCatalogDate() {
 	}
 }
 function procZimCatalog() {
-  // Uses installedZimCat, kiwixCatalog, langCodes, and langGroups
+  // Uses installedZimCatalog, kiwixCatalog, langCodes, and langGroups
   // Calculates zimCatalog, zimGroups, langNames, zimsInstalled, zimsScheduled
 
   zimCatalog = {};
@@ -1058,23 +1061,23 @@ function procZimCatalog() {
 
   // Add to zimCatalog
 
-  procOneCatalog(installedZimCat['INSTALLED'],0); // pass priority for sorting categories
-  procOneCatalog(installedZimCat['WIP',0]);
+  procOneCatalog(installedZimCatalog['INSTALLED'],0); // pass priority for sorting categories
+  procOneCatalog(installedZimCatalog['WIP',0]);
   procOneCatalog(kiwixCatalog,1);
 
   // Create working arrays of installed and wip
   zimsInstalled = [];
   zimsScheduled = [];
 
-  for (var id in installedZimCat['INSTALLED']){
+  for (var id in installedZimCatalog['INSTALLED']){
     zimsInstalled.push(id);
-    lang = installedZimCat['INSTALLED'][id]['language'];
+    lang = installedZimCatalog['INSTALLED'][id]['language'];
     if (selectedLangs.indexOf(lang) == -1) // automatically select any language for which zim is installed
     selectedLangs.push (lang);
   }
-  for (var id in installedZimCat['WIP']){
+  for (var id in installedZimCatalog['WIP']){
     zimsScheduled.push(id);
-    lang = installedZimCat['WIP'][id]['language'];
+    lang = installedZimCatalog['WIP'][id]['language'];
     if (selectedLangs.indexOf(lang) == -1) // automatically select any language for which zim is being installed
     selectedLangs.push (lang);
   }
