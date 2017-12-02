@@ -173,7 +173,7 @@ def parse_attr(attributes):
     for part in permaRefParts[1:]:
        if not part.isdigit():
           permaRef += "_" + part
-    category = urlSlash[4]
+    category = urlSlash[4].replace('_',' ').title()
     sequence = 8 - (4 * has_videos + 2 * has_pictures + 1 * has_details)
 
     if url in problemUrlMap:

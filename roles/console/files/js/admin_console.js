@@ -17,9 +17,10 @@ var langCodes = {}; // iso code, local name and English name for all languages w
 var zimCatalog = {}; // working composite catalog of kiwix, installed, and wip zims
 var zimLangs = {}; // working list of iso codes in zimCatalog
 var zimGroups = {}; // zim ids grouped by language and category
+var zimCategories = {}; // zim categories grouped by language and priority to allow ordering
 var kiwixCatalog = {}; // catalog of kiwix zims, read from file downloaded from kiwix.org
 var kiwixCatalogDate = new Date; // date of download, stored in json file
-var installedZimCat = {}; // catalog of installed, and wip zims
+var installedZimCatalog = {}; // catalog of installed, and wip zims
 var rachelStat = {}; // installed, enabled and whether content is installed and which is enabled
 
 var zimsInstalled = []; // list of zims already installed
@@ -823,13 +824,34 @@ function changePasswordSuccess ()
   }
 
   function procZimStatInit(data) {
-    installedZimCat = data;
+    installedZimCatalog = data;
+    addZimStatAttr('INSTALLED');
+    addZimStatAttr('WIP');
   }
 
   function procZimStat(data) {
-    installedZimCat = data;
+    installedZimCatalog = data;
+    addZimStatAttr('INSTALLED');
+    addZimStatAttr('WIP');
+
     procZimCatalog();
     procDiskSpace();
+  }
+
+  function addZimStatAttr(section) {
+  	var creatorToCategoryMap = {"University of Colorado":"Phet"}; // we are fudging category as it is not in kiwix catalog
+    for (var id in installedZimCatalog[section]){                 // our fudge is not carried into local library.xml
+    	var creator = installedZimCatalog[section][id]['creator'];
+    	if (creator in creatorToCategoryMap)
+    	  creator = creatorToCategoryMap[creator];
+
+      installedZimCatalog[section][id]['category'] = creator; // best we can do
+      installedZimCatalog[section][id]['sequence'] = 1; // put these first
+      var permRef = installedZimCatalog[section][id]['path'];
+      if (permRef.indexOf('/') != -1)
+        permRef = permRef.split("/")[1]
+      installedZimCatalog[section][id]['perma_ref'] = permRef;
+    }
   }
 
   function procZimLangs() {
@@ -863,46 +885,129 @@ function procZimGroups() {
     }
   });
   var html = "<br>";
+
   $.each(selectedLangs, function(index, lang) {
     //consoleLog(index);
     if (lang in zimGroups){
       //consoleLog (lang);
       html += "<h2>" + langCodes[lang]['locname'] + ' (' + langCodes[lang]['engname'] + ")</h2>";
-      $.each(zimGroups[lang], function(key, zimList) {
-        html += "<h3>" + key + "</h3>";
-        $.each(zimList, function(key, zimId) {
-          var zim = zimCatalog[zimId];
-          var colorClass = "";
-          var colorClass2 = "";
-          if (zimsInstalled.indexOf(zimId) >= 0){
-            colorClass = "installed";
-            colorClass2 = 'class="installed"';
-          }
-          if (zimsScheduled.indexOf(zimId) >= 0){
-            colorClass = "scheduled";
-            colorClass2 = 'class="scheduled"';
-          }
-          html += '<label ';
-          html += '><input type="checkbox" name="' + zimId + '"';
-          //html += '><img src="images/' + zimId + '.png' + '"><input type="checkbox" name="' + zimId + '"';
-          if ((zimsInstalled.indexOf(zimId) >= 0) || (zimsScheduled.indexOf(zimId) >= 0))
-          html += 'disabled="disabled" checked="checked"';
-          html += 'onChange="updateZimDiskSpace(this)"></label>'; // end input
-          var zimDesc = zim.title + ' (' + zim.description + ') [' + zim.perma_ref + ']';
-          html += '<span class="zim-desc ' + colorClass + '" >&nbsp;&nbsp;' + zimDesc + '</span>';
-          html += '<span ' + colorClass2 + 'style="display:inline-block; width:120px;"> Date: ' + zim.date + '</span>';
-          html += '<span ' + colorClass2 +'> Size: ' + readableSize(zim.size);
-          if (zimsInstalled.indexOf(zimId) >= 0)
-          html += ' - INSTALLED';
-          if (zimsScheduled.indexOf(zimId) >= 0)
-          html += ' - WORKING ON IT';
-          html += '</span><BR>';
-        });
+      var catList = Object.keys(zimGroups[lang]);
+	    catList.sort(zimCatCompare(lang));
+      $.each(catList, function(index,category) {
+    	  html += renderZimCategory(lang, category);
       });
     }
   });
   //consoleLog (html);
   $( "#ZimDownload" ).html(html);
+  $(function () {
+  $('[data-toggle="tooltip"]').tooltip()
+  });
+}
+
+function renderZimCategory(lang, category) {
+
+  var html = "<h3>" + category + "</h3>";
+  var zimList = zimGroups[lang][category]
+    if (lang == 'eng')
+      consoleLog (category);
+    zimList.sort(zimCompare);
+
+    $.each(zimList, function(key, zimId) {
+      var zim = zimCatalog[zimId];
+      var colorClass = "";
+      var colorClass2 = "";
+      if (zimsInstalled.indexOf(zimId) >= 0){
+        colorClass = "installed";
+        colorClass2 = 'class="installed"';
+      }
+      if (zimsScheduled.indexOf(zimId) >= 0){
+        colorClass = "scheduled";
+        colorClass2 = 'class="scheduled"';
+      }
+      html += '<label ';
+      html += '><input type="checkbox" name="' + zimId + '"';
+      //html += '><img src="images/' + zimId + '.png' + '"><input type="checkbox" name="' + zimId + '"';
+      if ((zimsInstalled.indexOf(zimId) >= 0) || (zimsScheduled.indexOf(zimId) >= 0))
+      html += 'disabled="disabled" checked="checked"';
+      html += 'onChange="updateZimDiskSpace(this)"></label>'; // end input
+      //var zimDesc = zim.title + ' (' + zim.description + ') [' + zim.perma_ref + ']';
+      var zimDesc = zim.title + ' (' + zim.perma_ref + ')';
+      //html += '<span class="zim-desc ' + colorClass + '" >&nbsp;&nbsp;' + zimDesc + '</span>';
+
+      var zimToolTip = genZimTooltip(zim);
+      html += '<span class="zim-desc ' + colorClass + '"' + zimToolTip + '>&nbsp;&nbsp;' + zimDesc + '</span>';
+
+      html += '<span ' + colorClass2 + 'style="display:inline-block; width:120px;"> Date: ' + zim.date + '</span>';
+      html += '<span ' + colorClass2 +'> Size: ' + readableSize(zim.size);
+      if (zimsInstalled.indexOf(zimId) >= 0)
+      html += ' - INSTALLED';
+      if (zimsScheduled.indexOf(zimId) >= 0)
+      html += ' - WORKING ON IT';
+      html += '</span><BR>';
+    });
+
+  return html;
+}
+
+function genZimTooltip(zim) {
+  var zimToolTip = ' data-toggle="tooltip" data-placement="top" data-html="true" ';
+  zimToolTip += 'title="<h3>' + zim.title + '</h3>' + zim.description + '<BR>';
+  zimToolTip += 'Articles: ' + Intl.NumberFormat().format(zim.articleCount) + '<BR>';
+  zimToolTip += 'Media: ' + Intl.NumberFormat().format(zim.mediaCount) + '<BR>';
+  zimToolTip += 'Download URL: ' + zim.download_url + '<BR>';
+  zimToolTip += 'With:<ul>';
+  zimToolTip += zim.has_embedded_index ? '<li>Internal Full Text Index</li>' : '';
+  zimToolTip += zim.has_video ? '<li>Videos</li>' : '';
+  zimToolTip += zim.has_pictures ? '<li>Images</li>' : '';
+  zimToolTip += zim.has_details ? '<li>Complete Articles</li>' : '';
+  //zimToolTip += '<table><tr><td>Full Text Index</td><td>' + zim.has_video ? "&#10003;" : "X";
+  //zimToolTip += '</li></ul></b>"'
+  zimToolTip += '</ul></b>"'
+  //zimToolTip += 'title="<em><b>' + zim.description + '</b><BR>some more text that is rather long"';
+  return zimToolTip;
+}
+
+function zimCatCompare(lang) {
+    return function(a, b) {
+    // Compare function to sort list of zim categories by priority
+    var aPriority = zimCategories[lang][a];
+    var bPriority = zimCategories[lang][b];
+
+    if (aPriority == bPriority)
+      if (a == b)
+        return 0;
+      else if (a < b)
+      	return -1;
+      else
+        return 1;
+    else if (aPriority < bPriority)
+      return -1;
+    else
+      return 1;
+  }
+}
+
+function zimCompare(a,b) {
+  // Compare function to sort list of zims by name, date, sequence
+  var zimA = zimCatalog[a];
+  var zimB = zimCatalog[b];
+  if (zimA.title == zimB.title)
+    if (zimA.date == zimB.date)
+      if (zimA.sequence == zimB.sequence)
+        return 0;
+      else if (zimA.sequence < zimB.sequence)
+      	return -1;
+      else
+      	return 1;
+    else if (zimA.date < zimB.date)
+    	return -1;
+    else
+      return 1;
+  else if (zimA.title < zimB.title)
+    return -1;
+  else
+    return 1;
 }
 
 function getLangCodes() {
@@ -951,7 +1056,7 @@ function checkKiwixCatalogDate() {
 	}
 }
 function procZimCatalog() {
-  // Uses installedZimCat, kiwixCatalog, langCodes, and langGroups
+  // Uses installedZimCatalog, kiwixCatalog, langCodes, and langGroups
   // Calculates zimCatalog, zimGroups, langNames, zimsInstalled, zimsScheduled
 
   zimCatalog = {};
@@ -960,23 +1065,23 @@ function procZimCatalog() {
 
   // Add to zimCatalog
 
-  procOneCatalog(installedZimCat['INSTALLED']);
-  procOneCatalog(installedZimCat['WIP']);
-  procOneCatalog(kiwixCatalog);
+  procOneCatalog(installedZimCatalog['INSTALLED'],0); // pass priority for sorting categories
+  procOneCatalog(installedZimCatalog['WIP',0]);
+  procOneCatalog(kiwixCatalog,1);
 
   // Create working arrays of installed and wip
   zimsInstalled = [];
   zimsScheduled = [];
 
-  for (var id in installedZimCat['INSTALLED']){
+  for (var id in installedZimCatalog['INSTALLED']){
     zimsInstalled.push(id);
-    lang = installedZimCat['INSTALLED'][id]['language'];
+    lang = installedZimCatalog['INSTALLED'][id]['language'];
     if (selectedLangs.indexOf(lang) == -1) // automatically select any language for which zim is installed
     selectedLangs.push (lang);
   }
-  for (var id in installedZimCat['WIP']){
+  for (var id in installedZimCatalog['WIP']){
     zimsScheduled.push(id);
-    lang = installedZimCat['WIP'][id]['language'];
+    lang = installedZimCatalog['WIP'][id]['language'];
     if (selectedLangs.indexOf(lang) == -1) // automatically select any language for which zim is being installed
     selectedLangs.push (lang);
   }
@@ -991,7 +1096,7 @@ function procZimCatalog() {
   return true;
 }
 
-function procOneCatalog(catalog){
+function procOneCatalog(catalog, priority){
 	  if ($.isEmptyObject(catalog)){
       consoleLog("procOneCatalog found empty data");
       displayServerCommandStatus ("procOneCatalog found empty data")
@@ -1003,13 +1108,22 @@ function procOneCatalog(catalog){
       var lang = catalog[id].language;
       if (lang in langGroups)
       lang = langGroups[lang]; // group synomyms like en/eng
-      var cat = catalog[id].creator;
+
+      //var cat = catalog[id].creator;
+      var cat = catalog[id].category;
 
       if (!(lang in zimGroups)){
         var cats = {};
         cats[cat] = [];
         zimGroups[lang] = cats;
       }
+
+      // create data structure to sort categories
+      if (!(lang in zimCategories))
+        zimCategories[lang] = {};
+      //if (zimCategories[lang].indexOf(priority) == -1)
+      if (!(cat in zimCategories[lang] ))
+        zimCategories[lang][cat] = priority;
 
       if (!(cat in zimGroups[lang]))
       zimGroups[lang][cat] = [];
