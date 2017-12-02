@@ -91,7 +91,7 @@ This is an aspect of the server that many wish to customize based on content cho
 
 * For those who want to take customization further, both WordPress and Dokuwiki are installed and may be made the home page.
 
-**Please Note**: Selecting WordPress or Dokuwiki will only take effect if you **Check its Box** titled 'Check to Enable'.
+**Please Note**: Selecting WordPress or DokuWiki will only take effect if you **Check its Box** titled 'Check to Enable'.
 
 Services Enabled
 ----------------
@@ -138,13 +138,13 @@ Note some services listed below may not be installed and will not have a checkbo
 
 * **Samba** - Provides Network File Sharing.
 
-    There is some overlap between these three.  **Elgg** allows blogging and other forms of social media.  Students and Teachers can use it to collaborate on projects or for journalling.  **OwnCloud** is great for sharing media. It has apps for phones and tablets that make it easy to drop photos and other materials onto the server for sharing. **Samba** gives you the ability to share directories on the server that can be accessed by Teachers and Students as if they were local to their laptops.
+    There is some overlap between these three.  **Elgg** allows blogging and other forms of social media.  Students and Teachers can use it to collaborate on projects or for journaling.  **Nextcloud** is great for sharing media. It has apps for phones and tablets that make it easy to drop photos and other materials onto the server for sharing. **Samba** gives you the ability to share directories on the server that can be accessed by Teachers and Students as if they were local to their laptops.
 
 * **CUPS** - Provides support for **Printers** either directly attached to the server or on the network.
 
 ### For Monitoring and Administration
 
-The options below are intended for administrators and people who may help with or support the installatiion of this Server. It is best to consult with someone who set up the server to decide which of these to turn on.
+The options below are intended for administrators and people who may help with or support the installation of this Server. It is best to consult with someone who set up the server to decide which of these to turn on.
 
 * **SchoolTool** - A School Administration System.
 
@@ -183,12 +183,10 @@ Saves the list of permitted URLs edited above and makes them active.
 
 Saves all configuration variables so that they will be used when the following button is clicked.
 
-### Install Configured Server Options
+### Install Configured Options
 
 **Warning:** This option will **Reconfigure your Server**. It runs the Ansible configuration software using all configuration variables that have been saved with the above button.
 
-### Reset Network Configuration
+While this is happening, you can monitor Ansible's execution under **Utilities** - **Display Job Status**.
 
-**Warning:** This option will **Reconfigure your Server's Networking Setup**. It clears the current network parameters and re-applies network configuration variables that have been saved with the Save Configuration button.
-
-**Note:** The last two Actions may not be run at the same time.  You should also refresh your browser after running either of them.
+*Please refresh your browser after* **Install Configured Options** *has fully completed.*
