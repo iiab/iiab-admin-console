@@ -952,11 +952,11 @@ function renderZimCategory(lang, category) {
 
 function genZimTooltip(zim) {
   var zimToolTip = ' data-toggle="tooltip" data-placement="top" data-html="true" ';
-  zimToolTip += 'title="<b>' + zim.title + '<BR>' + zim.description + '<BR>';
+  zimToolTip += 'title="<h3>' + zim.title + '</h3>' + zim.description + '<BR>';
   zimToolTip += 'Articles: ' + Intl.NumberFormat().format(zim.articleCount) + '<BR>';
   zimToolTip += 'Media: ' + Intl.NumberFormat().format(zim.mediaCount) + '<BR>';
   zimToolTip += 'Download URL: ' + zim.download_url + '<BR>';
-  zimToolTip += '<ul>With:';
+  zimToolTip += 'With:<ul>';
   zimToolTip += zim.has_embedded_index ? '<li>Full Text Index</li>' : '';
   zimToolTip += zim.has_video ? '<li>Videos</li>' : '';
   zimToolTip += zim.has_pictures ? '<li>Images</li>' : '';

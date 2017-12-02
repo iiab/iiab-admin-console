@@ -111,6 +111,17 @@ border-radius: 8px 8px 0 0;
   font-weight:bold;
 }
 
+.zim-desc + .tooltip > .tooltip-inner {
+  background-color: #333;
+  text-align: left;
+  max-width: 500px;
+}
+.zim-desc + .tooltip > .tooltip-inner h3 {
+  text-align: center;
+	font-size: 16px;
+	font-weight: 700;
+}
+
 /* Util styles */
 
 #jobStatTable {
@@ -138,14 +149,3 @@ border-radius: 8px 8px 0 0;
 #statusJobsRefreshTime {
 	padding-left:20px;
 }
-
-/* Misc Styles */
-
-.tooltip-inner {
-  max-width: 100%;
-}
-
-.tooltip-inner ul{
-  text-align: left;
-}
-
