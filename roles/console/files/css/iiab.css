@@ -107,6 +107,22 @@ border-radius: 8px 8px 0 0;
   margin-right: 8px;
 }
 
+.zim-desc:hover {
+  font-weight:bold;
+}
+
+.zim-desc + .tooltip > .tooltip-inner {
+  background-color: #333;
+  text-align: left;
+  max-width: 500px;
+  border-radius: 1.5em;
+}
+.zim-desc + .tooltip > .tooltip-inner h3 {
+  text-align: center;
+	font-size: 16px;
+	font-weight: 700;
+}
+
 /* Util styles */
 
 #jobStatTable {
