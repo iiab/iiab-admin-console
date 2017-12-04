@@ -16,7 +16,7 @@ You will not usually need to touch these, but they are here in case you do and a
 
 Both hostname and domain name can be changed, but you would normally only do this to fit into a larger networking environment.
 
-**Warning:** If you change the Host Name or Domain Name, you will need to refresh the browser after clicking Install Configured Options.
+**Warning:** If you change the Hostname or Domain Name, you will need to refresh the browser after clicking Install Configured Options.
 
 The most important parameter is the **Role of the Server** in your network.  The server can play one of three roles
 
@@ -115,7 +115,7 @@ Note some services listed below may not be installed and will not have a checkbo
 
 * **Kiwix** - Serves Wikipediae and other content from sources below. You must also install content.
 
-    If you want any Wiki content you problably want this.  Kiwix provides a server allows you to view and search a broad range of Wiki type material independent of the Internet.  This material is selected in **Install Content** - **Get Zim Files from Kiwix**
+    If you want any Wiki content you problably want this.  Kiwix provides a server allows you to view and search a broad range of Wiki type material independent of the Internet.  This material is selected in **Install Content** - **Get ZIM Files from Kiwix**
 
     The main reason you would not want this is if the server has very limited disk space.
 
