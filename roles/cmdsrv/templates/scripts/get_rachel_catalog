@@ -23,6 +23,7 @@ import uuid
 import re
 import argparse
 
+verbose = False
 jsonPath = "/etc/iiab/"
 
 rachel_duplicates = {'en': [60, 88, 5, 6, 44, 93, 22, 17, 65, 20, 50, 19, 68, 23],
@@ -57,7 +58,10 @@ php_parser = re.compile('\<\?php echo .+? \?>')
 
 def main ():
 
+    global verbose
     args = parse_args()
+    if args.verbose:
+        verbose = True
 
     # for now we will assume that old modules are still in the current catalog
     # get new rachel catalog
@@ -69,7 +73,7 @@ def main ():
     except (urllib2.URLError) as exc:
         sys.stdout.write("GET-RACHEL-CAT ERROR - " + str(exc.reason))
         sys.stdout.flush()
-        sys.exit(0)
+        sys.exit(1)
 
     os.mkdir(working_dir)
     #os.mkdir(iiab_menu_download_dir)
@@ -84,7 +88,8 @@ def main ():
                 module = proc_module(module)
         else:
             msg = "Skipping module not needed by Internet in a Box"
-            print "%s %s %s" % (msg, id, moddir)
+            if verbose:
+                print "%s %s %s" % (msg, id, moddir)
             continue
 
         iiab_rachel_catalog[id] = module
@@ -130,7 +135,8 @@ def get_status (item):
         msg = "Missing menudef for"
         get_new_menudef = True
 
-    print "%s %s %s" % (msg, id, moddir)
+    if verbose:
+        print "%s %s %s" % (msg, id, moddir)
 
     # check if module downloaded
     if os.path.exists(iiab_modules_dir + moddir):
@@ -139,7 +145,8 @@ def get_status (item):
     else:
         msg = "No download for"
 
-    print "%s %s %s" % (msg, id, moddir)
+    if verbose:
+        print "%s %s %s" % (msg, id, moddir)
 
     return(item, get_new_menudef)
 
@@ -201,6 +208,7 @@ def proc_module (module):
 def parse_args():
     parser = argparse.ArgumentParser(description="Get Rachel/OER2GO catalog. Create menu defs if not found.")
     parser.add_argument("--no_menu", help="Don't do IIAB menu processing", action="store_true")
+    parser.add_argument("--verbose", help="Print messages.", action="store_true")
     return parser.parse_args()
 
 if __name__ == "__main__":
