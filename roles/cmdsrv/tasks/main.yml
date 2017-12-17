@@ -133,13 +133,17 @@
             group=root
   with_items:
             - scripts/get_kiwix_catalog
+            - scripts/get_oer2go_catalog
 
 - name: Copy templated utilies
-  template: src="utilities/iiab-get-kiwix-cat"
-            dest="/usr/bin/iiab-get-kiwix-cat"
+  template: src={{ item }}
+            dest="/usr/bin/"
             mode=0755
             owner=root
             group=root
+  with_items:
+            - utilities/iiab-get-kiwix-cat
+            - utilities/iiab-get-oer2go-cat
 
 - name: Copy default kiwix_catalog.json
   copy: src="json/kiwix_catalog.json"

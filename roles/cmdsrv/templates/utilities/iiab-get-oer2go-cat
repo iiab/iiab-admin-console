@@ -1,0 +1,10 @@
+#!/bin/bash
+
+CMDSRV_SCRIPTS="{{ cmdsrv_dir }}/scripts"
+$CMDSRV_SCRIPTS/get_oer2go_catalog -v "$@"
+
+if [ $? -ne 0 ]; then
+  echo "Getting the OER2G)/RACHEL Catalog Failed."
+  echo "Please run iiab-get-oer2go-cat again later."
+fi
+exit
