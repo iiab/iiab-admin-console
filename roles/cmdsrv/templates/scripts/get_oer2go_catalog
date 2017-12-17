@@ -59,33 +59,53 @@ php_parser = re.compile('\<\?php echo .+? \?>')
 def main ():
 
     global verbose
+    global iiab_oer2go_catalog
+    oer2go_catalog = {}
+
     args = parse_args()
     if args.verbose:
         verbose = True
+    if args.no_download:
+        args.no_menu = True # no need to do menu processing if no download
 
     # for now we will assume that old modules are still in the current catalog
-    # get new oer2go catalog
-    try:
-        response = urllib2.urlopen(oer2go_cat_url)
-        oer2go_catalog_json = response.read()
-        oer2go_catalog = json.loads(oer2go_catalog_json)
-        response.close()
-    except (urllib2.URLError) as exc:
-        sys.stdout.write("GET-OER2GO-CAT ERROR - " + str(exc.reason))
-        sys.stdout.flush()
-        sys.exit(1)
+    # get new oer2go catalog unless told not to
+
+    if not args.no_download:
+        try:
+            url_handle = urllib2.urlopen(oer2go_cat_url)
+            oer2go_catalog_json = url_handle.read()
+            oer2go_catalog = json.loads(oer2go_catalog_json)
+            url_handle.close()
+        except (urllib2.URLError) as exc:
+            sys.stdout.write("GET-OER2GO-CAT ERROR - " + str(exc.reason))
+            sys.stdout.flush()
+            sys.exit(1)
+    else:
+        with open(oer2go_catalog_file, 'r') as infile:
+            oer2go_catalog = json.load(infile)
+
 
     os.mkdir(working_dir)
     #os.mkdir(iiab_menu_download_dir)
 
-    for item in oer2go_catalog:
-        moddir = item['moddir']
-        id = item['module_id']
+    for item in oer2go_catalog: # structure of local and remote catalogs is different
+        if args.no_download: # local
+            moddir = item
+            module = oer2go_catalog[moddir]
+            id = module['module_id']
+        else: # remote
+            moddir = item['moddir']
+            id = item['module_id']
+            module = item
 
         if id not in dup_list:
-            module, get_new_menudef = get_status (item)
+            module, get_new_menudef = get_status (module)
             if get_new_menudef and not args.no_menu:
                 module = proc_module(module)
+                msg = "Generating menu files"
+                if verbose:
+                    print "%s %s %s" % (msg, id, moddir)
         else:
             msg = "Skipping module not needed by Internet in a Box"
             if verbose:
@@ -207,8 +227,9 @@ def proc_module (module):
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Get Rachel/OER2GO catalog. Create menu defs if not found.")
+    parser.add_argument("--no_download", help="Don't download catalog just check which modules are installed", action="store_true")
     parser.add_argument("--no_menu", help="Don't do IIAB menu processing", action="store_true")
-    parser.add_argument("--verbose", help="Print messages.", action="store_true")
+    parser.add_argument("-v", "--verbose", help="Print messages.", action="store_true")
     return parser.parse_args()
 
 if __name__ == "__main__":
