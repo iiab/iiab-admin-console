@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-# Get new rachel catalog
+# Get new oer2go (rachel) catalog
 # for now we will assume that old modules are still in the current catalog
 # exclude known modules that we get by another means, such as zims
 # for modules with no menu defs create that and an extra html file under iiab-menu/local/downloads/
@@ -26,26 +26,26 @@ import argparse
 verbose = False
 jsonPath = "/etc/iiab/"
 
-rachel_duplicates = {'en': [60, 88, 5, 6, 44, 93, 22, 17, 65, 20, 50, 19, 68, 23],
+oer2go_duplicates = {'en': [60, 88, 5, 6, 44, 93, 22, 17, 65, 20, 50, 19, 68, 23],
   'es': [63, 61, 53, 58, 59, 26, 66, 94, 51, 69, 72, 75, 49],
   'fr': [],
   'misc': [98,114]}
 
 dup_list = []
-for lang in rachel_duplicates:
-    dup_list += rachel_duplicates[lang]
+for lang in oer2go_duplicates:
+    dup_list += oer2go_duplicates[lang]
 dup_list = [str(i) for i in dup_list]
 
-iiab_rachel_catalog = {}
+iiab_oer2go_catalog = {}
 
 # input file
 
-rachel_cat_url = 'http://dev.worldpossible.org/cgi/json_api_v1.pl'
+oer2go_cat_url = 'http://dev.worldpossible.org/cgi/json_api_v1.pl'
 rachel_mods_url = "rsync://dev.worldpossible.org/rachelmods/"
 
 # output files
 
-rachel_catalog_file = jsonPath + "rachel_catalog.json"
+oer2go_catalog_file = jsonPath + "oer2go_catalog.json"
 iiab_root_dir = "/library/www/html/"
 iiab_modules_dir = iiab_root_dir + "modules/"
 iiab_menu_dir = iiab_root_dir + "iiab-menu/"
@@ -64,21 +64,21 @@ def main ():
         verbose = True
 
     # for now we will assume that old modules are still in the current catalog
-    # get new rachel catalog
+    # get new oer2go catalog
     try:
-        response = urllib2.urlopen(rachel_cat_url)
-        rachel_catalog_json = response.read()
-        rachel_catalog = json.loads(rachel_catalog_json)
+        response = urllib2.urlopen(oer2go_cat_url)
+        oer2go_catalog_json = response.read()
+        oer2go_catalog = json.loads(oer2go_catalog_json)
         response.close()
     except (urllib2.URLError) as exc:
-        sys.stdout.write("GET-RACHEL-CAT ERROR - " + str(exc.reason))
+        sys.stdout.write("GET-OER2GO-CAT ERROR - " + str(exc.reason))
         sys.stdout.flush()
         sys.exit(1)
 
     os.mkdir(working_dir)
     #os.mkdir(iiab_menu_download_dir)
 
-    for item in rachel_catalog:
+    for item in oer2go_catalog:
         moddir = item['moddir']
         id = item['module_id']
 
@@ -92,11 +92,11 @@ def main ():
                 print "%s %s %s" % (msg, id, moddir)
             continue
 
-        iiab_rachel_catalog[id] = module
+        iiab_oer2go_catalog[id] = module
 
 
-    with open(rachel_catalog_file, 'w') as outfile:
-         json.dump(iiab_rachel_catalog, outfile, indent=2)
+    with open(oer2go_catalog_file, 'w') as outfile:
+         json.dump(iiab_oer2go_catalog, outfile, indent=2)
 
     shutil.rmtree(working_dir)
 
@@ -109,7 +109,7 @@ def main ():
 # download icon, html, etc to working_dir
 # parse html, cp files to iiab_menu_dir /downloads for manual processing
 # put in live?
-# create rachel_catalog.json, mark downloaded with flag, mark blacklisted duplicates
+# create oer2go_catalog.json, mark downloaded with flag, mark blacklisted duplicates
 # need to track which version of content was downloaded - new version attribute added 6/9/2017
 
 def get_status (item):

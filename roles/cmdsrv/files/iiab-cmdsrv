@@ -72,6 +72,7 @@ zim_working_dir = None
 zim_dir = None
 zim_content_dir = None
 zim_index_dir = None
+oer2go_catalog_file = None
 rachel_downloads_dir = None
 rachel_working_dir = None
 rachel_version = None
@@ -107,6 +108,7 @@ ansible_facts = {}
 ansible_tags = {}
 iiab_ini = {}
 kiwix_catalog = {}
+oer2go_catalog = {}
 
 # vars set by admin-console
 config_vars = {}
@@ -588,6 +590,7 @@ def cmd_handler(cmd_msg):
         "GET-KIWIX-CAT": get_kiwix_catalog,
         "GET-ZIM-STAT": get_zim_stat,
         "INST-ZIMS": install_zims,
+        "GET-OER2GO-CAT": get_oer2go_catalog,
         "GET-RACHEL-STAT": get_rachel_stat,
         "INST-RACHEL": install_rachel,
         "DEL-DOWNLOADS": del_downloads,
@@ -993,6 +996,15 @@ def get_zim_stat(cmd_info):
 
     resp = json.dumps(all_zims)
     return (resp)
+
+def get_oer2go_catalog(cmd_info):
+    outp = subprocess.check_output(["scripts/get_oer2go_catalog"])
+    if outp == "SUCCESS":
+        read_oer2go_catalog()
+        resp = cmd_success("GET-OER2GO-CAT")
+        return (resp)
+    else:
+        return ('{"Error": "' + outp + '."}')
 
 def get_config_vars(cmd_info):
     read_config_vars()
@@ -1633,6 +1645,7 @@ def init():
     get_ansible_facts()
     #get_ansible_tags()
     read_kiwix_catalog()
+    read_oer2go_catalog()
 
     # Compute variables derived from all of the above
     compute_vars()
@@ -1789,6 +1802,13 @@ def read_kiwix_catalog():
     kiwix_catalog = kiwix_catalog_with_date['zims']
     stream.close()
 
+def read_oer2go_catalog():
+    global oer2go_catalog
+
+    stream = open (oer2go_catalog_file,"r")
+    oer2go_catalog = json.load(stream)
+    stream.close()
+
 def get_incomplete_jobs():
     global jobs_requested
     global jobs_to_restart
@@ -1920,6 +1940,7 @@ def app_config():
     global zim_download_prefix
     global zim_content_dir
     global zim_index_dir
+    global oer2go_catalog_file
     global rachel_downloads_dir
     global rachel_working_dir
     global rachel_version
@@ -1957,6 +1978,7 @@ def app_config():
     zim_downloads_dir = conf['zim_downloads_dir']
     zim_working_dir = conf['zim_working_dir']
     zim_download_prefix = conf['zim_download_prefix']
+    oer2go_catalog_file = conf['oer2go_catalog_file']
     rachel_downloads_dir = conf['rachel_downloads_dir']
     rachel_working_dir = conf['rachel_working_dir']
     squid_service = conf['squid_service']
