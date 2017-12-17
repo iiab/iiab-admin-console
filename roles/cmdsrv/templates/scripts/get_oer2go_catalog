@@ -92,7 +92,7 @@ def main ():
                 print "%s %s %s" % (msg, id, moddir)
             continue
 
-        iiab_oer2go_catalog[id] = module
+        iiab_oer2go_catalog[moddir] = module
 
 
     with open(oer2go_catalog_file, 'w') as outfile:
