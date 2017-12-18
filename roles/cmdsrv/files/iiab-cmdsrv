@@ -76,6 +76,7 @@ oer2go_catalog_file = None
 rachel_downloads_dir = None
 rachel_working_dir = None
 rachel_version = None
+iiab_modules_dir = None
 
 # Global Variables
 last_command_rowid = 0
@@ -591,6 +592,7 @@ def cmd_handler(cmd_msg):
         "GET-ZIM-STAT": get_zim_stat,
         "INST-ZIMS": install_zims,
         "GET-OER2GO-CAT": get_oer2go_catalog,
+        "INST-OER2GO-MOD": install_oer2go_mod,
         "GET-RACHEL-STAT": get_rachel_stat,
         "INST-RACHEL": install_rachel,
         "DEL-DOWNLOADS": del_downloads,
@@ -1173,6 +1175,39 @@ def install_zims(cmd_info):
         #print job_command
         resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=2, depend_on_job_id=job_id, has_dependent="N")
         #resp = cmd_error(cmd='INST-ZIMS', msg='Just testing')
+
+    return resp
+
+def install_oer2go_mod(cmd_info):
+
+    global ansible_running_flag
+    global jobs_requested
+    global oer2go_catalog
+
+    if 'cmd_args' in cmd_info:
+        moddir = cmd_info['cmd_args']['moddir']
+        if moddir in oer2go_catalog: # not really necessary as we compute the link
+            oer2go_download_src = oer2go_mods_url + moddir
+        else:
+            resp = cmd_error(cmd='INST-OER2GO-MOD', msg='Module not in catalog in Command')
+            return resp
+
+        targetDir = rachel_working_dir
+    else:
+        return cmd_malformed(cmd_info['cmd'])
+
+    # at this point we can create all the jobs
+
+    # rsync module files
+    job_command = "/usr/bin/rsync --Pavz --size-only " + oer2go_download_src + " " + targetDir
+    job_id = request_one_job(cmd_info, job_command, 1, -1, "Y")
+    #print job_command
+
+    # move to location and clean up
+    #job_command = "mv " + targetDir + moddir + " " + iiab_modules_dir
+    job_command = "scripts/oer2go_install_move.sh " + moddir
+    #print job_command
+    resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=2, depend_on_job_id=job_id, has_dependent="N")
 
     return resp
 
@@ -1944,6 +1979,7 @@ def app_config():
     global rachel_downloads_dir
     global rachel_working_dir
     global rachel_version
+    global iiab_modules_dir
     global ansible_playbook_program
     global ansible_program
     global apache_user
@@ -1981,6 +2017,7 @@ def app_config():
     oer2go_catalog_file = conf['oer2go_catalog_file']
     rachel_downloads_dir = conf['rachel_downloads_dir']
     rachel_working_dir = conf['rachel_working_dir']
+    iiab_modules_dir = conf['iiab_modules_dir']
     squid_service = conf['squid_service']
     squid_whitelist = "/etc/%s/sites.whitelist.txt" % squid_service
     ansible_playbook_program = conf['ansible_playbook_program']

@@ -134,6 +134,7 @@
   with_items:
             - scripts/get_kiwix_catalog
             - scripts/get_oer2go_catalog
+            - scripts/constants.sh
 
 - name: Copy templated utilies
   template: src={{ item }}
