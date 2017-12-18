@@ -1,7 +1,7 @@
 #!/bin/bash -e
 # parameter 1 is name of module
 
-SOURCE constants.sh
+. scripts/constants.sh
 
 # Module directory
 

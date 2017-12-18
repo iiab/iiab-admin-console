@@ -73,6 +73,7 @@ zim_dir = None
 zim_content_dir = None
 zim_index_dir = None
 oer2go_catalog_file = None
+oer2go_mods_url = None
 rachel_downloads_dir = None
 rachel_working_dir = None
 rachel_version = None
@@ -1199,7 +1200,7 @@ def install_oer2go_mod(cmd_info):
     # at this point we can create all the jobs
 
     # rsync module files
-    job_command = "/usr/bin/rsync --Pavz --size-only " + oer2go_download_src + " " + targetDir
+    job_command = "/usr/bin/rsync -Pavz --size-only " + oer2go_download_src + " " + targetDir
     job_id = request_one_job(cmd_info, job_command, 1, -1, "Y")
     #print job_command
 
@@ -1976,6 +1977,7 @@ def app_config():
     global zim_content_dir
     global zim_index_dir
     global oer2go_catalog_file
+    global oer2go_mods_url
     global rachel_downloads_dir
     global rachel_working_dir
     global rachel_version
@@ -2015,6 +2017,7 @@ def app_config():
     zim_working_dir = conf['zim_working_dir']
     zim_download_prefix = conf['zim_download_prefix']
     oer2go_catalog_file = conf['oer2go_catalog_file']
+    oer2go_mods_url = conf['oer2go_mods_url']
     rachel_downloads_dir = conf['rachel_downloads_dir']
     rachel_working_dir = conf['rachel_working_dir']
     iiab_modules_dir = conf['iiab_modules_dir']
