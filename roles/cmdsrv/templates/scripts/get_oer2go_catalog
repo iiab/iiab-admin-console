@@ -46,12 +46,18 @@ rachel_mods_url = "rsync://dev.worldpossible.org/rachelmods/"
 # output files
 
 oer2go_catalog_file = jsonPath + "oer2go_catalog.json"
-iiab_root_dir = "/library/www/html/"
-iiab_modules_dir = iiab_root_dir + "modules/"
+# soft code these
+#iiab_root_dir = "/library/www/html/"
+#iiab_modules_dir = iiab_root_dir + "modules/"
+#iiab_menu_repo_dir = "/opt/iiab/iiab-menu/"
+iiab_root_dir = "{{ doc_root }}/"
+iiab_modules_dir = "{{ iiab_modules_dir }}"
+
 iiab_menu_dir = iiab_root_dir + "iiab-menu/"
 iiab_menu_files = iiab_menu_dir + "menu-files/"
 iiab_menu_download_dir = iiab_menu_dir + "local/unedited/"
-iiab_menu_repo_dir = "/opt/iiab/iiab-menu/"
+
+iiab_menu_repo_dir = "{{ iiab_base }}/iiab-menu }}"
 working_dir = "/library/working/rachel/" + str(uuid.uuid4()) + "/"
 
 php_parser = re.compile('\<\?php echo .+? \?>')
