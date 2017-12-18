@@ -3,7 +3,7 @@
 # Get new oer2go (rachel) catalog
 # for now we will assume that old modules are still in the current catalog
 # exclude known modules that we get by another means, such as zims
-# for modules with no menu defs create that and an extra html file under iiab-menu/local/downloads/
+# for modules with no menu defs create that and an extra html file under iiab-menu/local/unedited/
 # there is an optional switch to suppress menu processing
 
 import xml.etree.ElementTree as ET
@@ -57,7 +57,7 @@ iiab_menu_dir = iiab_root_dir + "iiab-menu/"
 iiab_menu_files = iiab_menu_dir + "menu-files/"
 iiab_menu_download_dir = iiab_menu_dir + "local/unedited/"
 
-iiab_menu_repo_dir = "{{ iiab_base }}/iiab-menu }}"
+iiab_menu_repo_dir = "{{ iiab_base }}/iiab-menu/"
 working_dir = "/library/working/rachel/" + str(uuid.uuid4()) + "/"
 
 php_parser = re.compile('\<\?php echo .+? \?>')
@@ -71,8 +71,17 @@ def main ():
     args = parse_args()
     if args.verbose:
         verbose = True
-    if args.no_download:
-        args.no_menu = True # no need to do menu processing if no download
+
+    # make sure we have menu iiab_menu_dir if args.menu true
+    if args.menu:
+        if args.no_download:
+            sys.stdout.write("GET-OER2GO-CAT ERROR - --no_download and --menu options are incompatible\n")
+            sys.stdout.flush()
+            sys.exit(1)
+        if not os.path.isdir(iiab_menu_dir):
+            sys.stdout.write("GET-OER2GO-CAT ERROR - iiab-menu not installed and --menu option given\n")
+            sys.stdout.flush()
+            sys.exit(1)
 
     # for now we will assume that old modules are still in the current catalog
     # get new oer2go catalog unless told not to
@@ -84,7 +93,7 @@ def main ():
             oer2go_catalog = json.loads(oer2go_catalog_json)
             url_handle.close()
         except (urllib2.URLError) as exc:
-            sys.stdout.write("GET-OER2GO-CAT ERROR - " + str(exc.reason))
+            sys.stdout.write("GET-OER2GO-CAT ERROR - " + str(exc.reason) +'\n')
             sys.stdout.flush()
             sys.exit(1)
     else:
@@ -107,7 +116,7 @@ def main ():
 
         if id not in dup_list:
             module, get_new_menudef = get_status (module)
-            if get_new_menudef and not args.no_menu:
+            if get_new_menudef and args.menu:
                 module = proc_module(module)
                 msg = "Generating menu files"
                 if verbose:
@@ -234,7 +243,7 @@ def proc_module (module):
 def parse_args():
     parser = argparse.ArgumentParser(description="Get Rachel/OER2GO catalog. Create menu defs if not found.")
     parser.add_argument("--no_download", help="Don't download catalog just check which modules are installed", action="store_true")
-    parser.add_argument("--no_menu", help="Don't do IIAB menu processing", action="store_true")
+    parser.add_argument("--menu", help="When downloading generate files for IIAB menu and put them in iiab-menu/local/unedited", action="store_true")
     parser.add_argument("-v", "--verbose", help="Print messages.", action="store_true")
     return parser.parse_args()
 

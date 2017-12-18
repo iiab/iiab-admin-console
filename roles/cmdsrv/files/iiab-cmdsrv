@@ -1188,7 +1188,11 @@ def install_oer2go_mod(cmd_info):
     if 'cmd_args' in cmd_info:
         moddir = cmd_info['cmd_args']['moddir']
         if moddir in oer2go_catalog: # not really necessary as we compute the link
-            oer2go_download_src = oer2go_mods_url + moddir
+            if oer2go_catalog[moddir]['module_downloaded']:
+                resp = cmd_error(cmd='INST-OER2GO-MOD', msg='Module already installed in Command')
+                return resp
+            else:
+                oer2go_download_src = oer2go_mods_url + moddir
         else:
             resp = cmd_error(cmd='INST-OER2GO-MOD', msg='Module not in catalog in Command')
             return resp
