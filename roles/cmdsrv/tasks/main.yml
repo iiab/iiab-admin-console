@@ -10,6 +10,7 @@
     - pkg-config
     - sqlite3
     - libapache2-mod-wsgi
+    - python-systemd
   tags:
     - download
   when: is_debuntu
@@ -28,6 +29,7 @@
     - zeromq3-devel
     - cracklib-python
     - mod_wsgi
+    - python-systemd
   tags:
     - download
   when: is_redhat

@@ -14,6 +14,8 @@
 """
 
 import os, sys, syslog, signal
+import logging
+from systemd import journal
 import pwd, grp
 import time
 from datetime import date, datetime, timedelta
@@ -95,6 +97,14 @@ running_job_count = 0
 ansible_running_flag = False
 daemon_mode = False
 init_error = False
+
+# Logging
+
+journal_log = logging.getLogger('IIAB-CMDSRV')
+journal_log.setLevel(5) # having two different severity scales is nuts
+journal_log.propagate = False
+jhandler = journal.JournalHandler(SYSLOG_IDENTIFIER='IIAB-CMDSRV')
+journal_log.addHandler(jhandler)
 
 # Locking
 lock = threading.Lock() # for updating global variables
@@ -1529,11 +1539,20 @@ def get_cmd_info_key(cmd_info, key):
        return (cmd_info[key])
    else:
        return None
+
 def tprint(msg):
     """like print, but won't get newlines confused with multiple threads DELETE AFTER TESTING"""
     if daemon_mode == False:
         sys.stdout.write(msg + '\n')
         sys.stdout.flush()
+
+def log(level, msg):
+   # translate syslog levels to logger levels
+   levels = [50,50,50,40,30,20,10,0]
+
+   #print level, msg
+   #print journal_log.getEffectiveLevel()
+   journal_log.log(levels[level], "IIAB-CMDSRV : " + msg)
 
 def cmd_success(cmd):
    return (cmd_success_msg(cmd, ""))
@@ -1836,18 +1855,30 @@ def get_ansible_tags():
 
 def read_kiwix_catalog():
     global kiwix_catalog
+    global init_error
 
-    stream = open (kiwix_catalog_file,"r")
-    kiwix_catalog_with_date = json.load(stream)
-    kiwix_catalog = kiwix_catalog_with_date['zims']
-    stream.close()
+    try:
+        stream = open (kiwix_catalog_file,"r")
+        kiwix_catalog_with_date = json.load(stream)
+        kiwix_catalog = kiwix_catalog_with_date['zims']
+        stream.close()
+    except:
+        init_error = True
+        log(syslog.LOG_ERR, 'Kiwix Catalog json file not found' )
+        pass
 
 def read_oer2go_catalog():
     global oer2go_catalog
+    global init_error
 
-    stream = open (oer2go_catalog_file,"r")
-    oer2go_catalog = json.load(stream)
-    stream.close()
+    try:
+        stream = open (oer2go_catalog_file,"r")
+        oer2go_catalog = json.load(stream)
+        stream.close()
+    except:
+        init_error = True
+        log(syslog.LOG_ERR, 'OER2GO Catalog json file not found' )
+        pass
 
 def get_incomplete_jobs():
     global jobs_requested
@@ -2145,8 +2176,8 @@ if __name__ == "__main__":
             syslog.closelog()
             raise
 
-    syslog.openlog( 'iiab_cmdsrv', 0, syslog.LOG_USER )
-    log = syslog.syslog
+    #syslog.openlog( 'iiab_cmdsrv', 0, syslog.LOG_USER )
+    #log = syslog.syslog
     log(syslog.LOG_INFO, 'Starting Command Server')
 
     # Now run the main routine
