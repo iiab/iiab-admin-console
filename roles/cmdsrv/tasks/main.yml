@@ -161,6 +161,10 @@
 
 - debug: var=kiwix_cat.stdout_lines
 
+- name: Create fresh oer2go_catalog.json
+  shell: "iiab-get-oer2go-cat"
+  register: oer2go_cat
+
 - name: Create symlink from /common/assets to kiwix_catalog.json
   file: src=/etc/iiab/kiwix_catalog.json
         dest={{ doc_root }}/common/assets/kiwix_catalog.json
