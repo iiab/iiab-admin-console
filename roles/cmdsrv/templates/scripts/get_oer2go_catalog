@@ -1,0 +1,252 @@
+#!/usr/bin/python
+
+# Get new oer2go (rachel) catalog
+# for now we will assume that old modules are still in the current catalog
+# exclude known modules that we get by another means, such as zims
+# for modules with no menu defs create that and an extra html file under iiab-menu/local/unedited/
+# there is an optional switch to suppress menu processing
+
+import xml.etree.ElementTree as ET
+import json
+import csv
+import operator
+import base64
+import os.path
+import sys
+import shutil
+import urllib2
+import json
+import time
+import subprocess
+import shlex
+import uuid
+import re
+import argparse
+
+verbose = False
+jsonPath = "/etc/iiab/"
+
+oer2go_duplicates = {'en': [60, 88, 5, 6, 44, 93, 22, 17, 65, 20, 50, 19, 68, 23],
+  'es': [63, 61, 53, 58, 59, 26, 66, 94, 51, 69, 72, 75, 49],
+  'fr': [],
+  'misc': [98,114]}
+
+dup_list = []
+for lang in oer2go_duplicates:
+    dup_list += oer2go_duplicates[lang]
+dup_list = [str(i) for i in dup_list]
+
+iiab_oer2go_catalog = {}
+
+# input file
+
+oer2go_cat_url = 'http://dev.worldpossible.org/cgi/json_api_v1.pl'
+rachel_mods_url = "rsync://dev.worldpossible.org/rachelmods/"
+
+# output files
+
+oer2go_catalog_file = jsonPath + "oer2go_catalog.json"
+# soft code these
+#iiab_root_dir = "/library/www/html/"
+#iiab_modules_dir = iiab_root_dir + "modules/"
+#iiab_menu_repo_dir = "/opt/iiab/iiab-menu/"
+iiab_root_dir = "{{ doc_root }}/"
+iiab_modules_dir = "{{ iiab_modules_dir }}"
+
+iiab_menu_dir = iiab_root_dir + "iiab-menu/"
+iiab_menu_files = iiab_menu_dir + "menu-files/"
+iiab_menu_download_dir = iiab_menu_dir + "local/unedited/"
+
+iiab_menu_repo_dir = "{{ iiab_base }}/iiab-menu/"
+working_dir = "/library/working/rachel/" + str(uuid.uuid4()) + "/"
+
+php_parser = re.compile('\<\?php echo .+? \?>')
+
+def main ():
+
+    global verbose
+    global iiab_oer2go_catalog
+    oer2go_catalog = {}
+
+    args = parse_args()
+    if args.verbose:
+        verbose = True
+
+    # make sure we have menu iiab_menu_dir if args.menu true
+    if args.menu:
+        if args.no_download:
+            sys.stdout.write("GET-OER2GO-CAT ERROR - --no_download and --menu options are incompatible\n")
+            sys.stdout.flush()
+            sys.exit(1)
+        if not os.path.isdir(iiab_menu_dir):
+            sys.stdout.write("GET-OER2GO-CAT ERROR - iiab-menu not installed and --menu option given\n")
+            sys.stdout.flush()
+            sys.exit(1)
+
+    # for now we will assume that old modules are still in the current catalog
+    # get new oer2go catalog unless told not to
+
+    if not args.no_download:
+        try:
+            url_handle = urllib2.urlopen(oer2go_cat_url)
+            oer2go_catalog_json = url_handle.read()
+            oer2go_catalog = json.loads(oer2go_catalog_json)
+            url_handle.close()
+        except (urllib2.URLError) as exc:
+            sys.stdout.write("GET-OER2GO-CAT ERROR - " + str(exc.reason) +'\n')
+            sys.stdout.flush()
+            sys.exit(1)
+    else:
+        with open(oer2go_catalog_file, 'r') as infile:
+            oer2go_catalog = json.load(infile)
+
+
+    os.mkdir(working_dir)
+    #os.mkdir(iiab_menu_download_dir)
+
+    for item in oer2go_catalog: # structure of local and remote catalogs is different
+        if args.no_download: # local
+            moddir = item
+            module = oer2go_catalog[moddir]
+            id = module['module_id']
+        else: # remote
+            moddir = item['moddir']
+            id = item['module_id']
+            module = item
+
+        if id not in dup_list:
+            module, get_new_menudef = get_status (module)
+            if get_new_menudef and args.menu:
+                module = proc_module(module)
+                msg = "Generating menu files"
+                if verbose:
+                    print "%s %s %s" % (msg, id, moddir)
+        else:
+            msg = "Skipping module not needed by Internet in a Box"
+            if verbose:
+                print "%s %s %s" % (msg, id, moddir)
+            continue
+
+        iiab_oer2go_catalog[moddir] = module
+
+
+    with open(oer2go_catalog_file, 'w') as outfile:
+         json.dump(iiab_oer2go_catalog, outfile, indent=2)
+
+    shutil.rmtree(working_dir)
+
+    sys.stdout.write("SUCCESS")
+    sys.stdout.flush()
+    sys.exit(0)
+
+# find missing menu defs
+# what about newer modules?
+# download icon, html, etc to working_dir
+# parse html, cp files to iiab_menu_dir /downloads for manual processing
+# put in live?
+# create oer2go_catalog.json, mark downloaded with flag, mark blacklisted duplicates
+# need to track which version of content was downloaded - new version attribute added 6/9/2017
+
+def get_status (item):
+    id = item['module_id']
+    item['module_downloaded'] = False
+    item['has_live_menudef'] = False
+    item['has_wip_menudef'] = False
+    item['has_redundant_menudef'] = False
+    get_new_menudef = False
+
+    moddir = item['moddir']
+    # check if menu def exists
+    if os.path.exists(iiab_menu_repo_dir +  'menu-files/menu-defs/' + moddir + '.json'):
+        msg = "Found menudef for"
+        item['has_live_menudef'] = True
+    elif os.path.exists(iiab_menu_repo_dir +  'incompatible/wip/' + moddir + '.json'):
+        msg = "WIP menudef for"
+        item['has_wip_menudef'] = True
+    elif os.path.exists(iiab_menu_repo_dir +  'incompatible/rachel-duplicates/' + moddir + '.json'):
+        msg = "Redundant menudef for"
+        item['has_redundant_menudef'] = True
+    else:
+        msg = "Missing menudef for"
+        get_new_menudef = True
+
+    if verbose:
+        print "%s %s %s" % (msg, id, moddir)
+
+    # check if module downloaded
+    if os.path.exists(iiab_modules_dir + moddir):
+        msg = "Found download"
+        item['module_downloaded'] = True
+    else:
+        msg = "No download for"
+
+    if verbose:
+        print "%s %s %s" % (msg, id, moddir)
+
+    return(item, get_new_menudef)
+
+def proc_module (module):
+    # create menu item files:
+    # download icon
+    # download htmlf
+    # create menudef json file
+    # create menudef extra html file
+
+    menu_item = module
+    menu_item['intended_use'] = 'html'
+    moddir = module['moddir']
+    menu_item['menu_item_name'] = moddir
+
+    # get logo if there is one
+    if 'logo_url' in module and module['logo_url'] != None:
+        logo_download_url = module['logo_url']
+        logo = module['logo_url']
+        logo_ext = logo.split('/')[-1].split('.')[-1]
+        logo = module['moddir'] + '.' + logo_ext
+        menu_item['logo_url'] = logo
+        if not os.path.isfile(iiab_menu_files + "images/" + logo):
+            cmdstr = "wget -O " + iiab_menu_files + "images/" + logo + " " + logo_download_url
+            args = shlex.split(cmdstr)
+            outp = subprocess.check_output(args)
+    else:
+        menu_item['logo_url'] = None
+
+    # get rachel index for parsing for 'extra-html'
+    #print "Downloading rachel-index.php"
+    cmdstr = "rsync -Pavz " + menu_item['rsync_url'] + "/rachel-index.php " + working_dir
+    args = shlex.split(cmdstr)
+    outp = subprocess.check_output(args)
+
+    # look for ul list as submenu and create extra html file if exists
+    with open(working_dir + "rachel-index.php", 'r') as fp:
+        php = fp.read()
+
+    # print php
+    ulpos = php.find('<ul')
+    divpos = php.find('</div>',ulpos)
+    if ulpos != -1:
+        htmlfile = moddir + '.html'
+        php_frag = php[ulpos:divpos]
+        #print php_frag
+        html = re.sub(php_parser,"##HREF-BASE##", php_frag)
+        with open(iiab_menu_download_dir + htmlfile, 'w') as fp:
+            fp.write(html)
+        menu_item['extra_html'] = htmlfile
+
+    with open(iiab_menu_download_dir + moddir + '.json', 'w') as fp:
+        json.dump(menu_item, fp, indent=2)
+
+    os.remove(working_dir + "rachel-index.php")
+
+    return menu_item
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Get Rachel/OER2GO catalog. Create menu defs if not found.")
+    parser.add_argument("--no_download", help="Don't download catalog just check which modules are installed", action="store_true")
+    parser.add_argument("--menu", help="When downloading generate files for IIAB menu and put them in iiab-menu/local/unedited", action="store_true")
+    parser.add_argument("-v", "--verbose", help="Print messages.", action="store_true")
+    return parser.parse_args()
+
+if __name__ == "__main__":
+    # Now run the main routine
+    main()
