@@ -604,6 +604,7 @@ def cmd_handler(cmd_msg):
         "INST-ZIMS": install_zims,
         "GET-OER2GO-CAT": get_oer2go_catalog,
         "INST-OER2GO-MOD": install_oer2go_mod,
+        "GET-OER2GO-STAT": get_oer2go_stat,
         "GET-RACHEL-STAT": get_rachel_stat,
         "INST-RACHEL": install_rachel,
         "DEL-DOWNLOADS": del_downloads,
@@ -1225,6 +1226,10 @@ def install_oer2go_mod(cmd_info):
     resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=2, depend_on_job_id=job_id, has_dependent="N")
 
     return resp
+
+def get_oer2go_stat(cmd_info):
+    resp = json.dumps(oer2go_catalog)
+    return (resp)
 
 def install_rachel(cmd_info):
 
