@@ -129,9 +129,12 @@ def main ():
 
         iiab_oer2go_catalog[moddir] = module
 
+    dated_oer2go_cat = {}
+    dated_oer2go_cat['download_date'] = time.strftime("%Y-%m-%d.%H:%M:%S")
+    dated_oer2go_cat['modules'] = iiab_oer2go_catalog
 
     with open(oer2go_catalog_file, 'w') as outfile:
-         json.dump(iiab_oer2go_catalog, outfile, indent=2)
+         json.dump(dated_oer2go_cat, outfile, indent=2)
 
     shutil.rmtree(working_dir)
 

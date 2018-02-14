@@ -1878,7 +1878,8 @@ def read_oer2go_catalog():
 
     try:
         stream = open (oer2go_catalog_file,"r")
-        oer2go_catalog = json.load(stream)
+        oer2go_catalog_with_date = json.load(stream)
+        oer2go_catalog = oer2go_catalog_with_date['modules']
         stream.close()
     except:
         init_error = True
