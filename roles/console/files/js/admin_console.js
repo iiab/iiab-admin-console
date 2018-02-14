@@ -21,6 +21,8 @@ var zimCategories = {}; // zim categories grouped by language and priority to al
 var kiwixCatalog = {}; // catalog of kiwix zims, read from file downloaded from kiwix.org
 var kiwixCatalogDate = new Date; // date of download, stored in json file
 var installedZimCatalog = {}; // catalog of installed, and wip zims
+var oer2goCatalog = {}; // catalog of rachel/oer2go modules, read from file downloaded from rachel
+var oer2goCatalogDate = new Date; // date of download, stored in json file
 var rachelStat = {}; // installed, enabled and whether content is installed and which is enabled
 
 var zimsInstalled = []; // list of zims already installed
@@ -1164,6 +1166,26 @@ function sortZimLangs(){
     if (a.locname < b.locname) return -1;
     else return 1;
     });
+}
+
+function readOer2goCatalog(){
+	//consoleLog ("in readOer2goCatalog");
+  //consoleLog ('ran sendCmdSrvCmd');
+  //if (asyncFlag === undefined) asyncFlag = false;
+
+  var resp = $.ajax({
+    type: 'GET',
+    url: consoleJsonDir + 'oer2go_catalog.json',
+    dataType: 'json'
+  })
+  .done(function( data ) {
+  	oer2goCatalogDate = Date.parse(data['download_date']);
+  	oer2goCatalog = data['modules'];
+    //consoleLog(kiwixCatalog);
+  })
+  .fail(jsonErrhandler);
+
+  return resp;
 }
 
 function getRachelStat(){
