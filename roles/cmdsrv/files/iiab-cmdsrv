@@ -14,6 +14,7 @@
 """
 
 import os, sys, syslog, signal
+from glob import glob
 import logging
 from systemd import journal
 import pwd, grp
@@ -87,6 +88,7 @@ last_job_rowid = 0
 
 active_commands = {}
 zims_wip = {}
+oer2go_wip = {}
 jobs_requested = {}
 jobs_to_restart = {}
 jobs_to_cancel = {}
@@ -400,6 +402,9 @@ def job_minder_thread(client_url, worker_control_url, context=None):
                 active_commands.pop(jobs_running[key]['cmd_rowid'], None)
                 if jobs_running[key]['cmd'] == "INST-ZIMS":
                     zims_wip.pop(jobs_running[key]['cmd_args']['zim_id'], None)
+                elif jobs_running[key]['cmd'] == "INST-OER2GO-MOD":
+                    oer2go_wip.pop(jobs_running[key]['cmd_args']['moddir'], None)
+
             jobs_running.pop(key, None)
             if key in jobs_to_cancel:
                 jobs_to_cancel.pop(key, None)
@@ -522,11 +527,13 @@ def cancel_req_job(job_id, job_info):
     # update jobs table
     upd_job_cancelled(job_id)
 
-    # Remove Active Command and Zim WIP
+    # Remove Active Command and any WIP tracking
     if job_info['has_dependent'] == "N": # delete from command list if last step of command
         active_commands.pop(job_info['cmd_rowid'], None)
         if job_info['cmd'] == "INST-ZIMS":
             zims_wip.pop(job_info['cmd_args']['zim_id'], None)
+        elif jobs_running[key]['cmd'] == "INST-OER2GO-MOD":
+            oer2go_wip.pop(jobs_running[key]['cmd_args']['moddir'], None)
 
     return (job_info)
 
@@ -1225,10 +1232,22 @@ def install_oer2go_mod(cmd_info):
     #print job_command
     resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=2, depend_on_job_id=job_id, has_dependent="N")
 
+    oer2go_wip[moddir] = oer2go_catalog[moddir] # track wip for front end
+
     return resp
 
 def get_oer2go_stat(cmd_info):
-    resp = json.dumps(oer2go_catalog)
+    # resp = json.dumps(oer2go_catalog) # FE gets this this by reading the json directly
+
+    all_oer2go = {}
+    all_oer2go['WIP'] = oer2go_wip.keys()
+    all_oer2go['INSTALLED'] = []
+
+    dirlist = glob(iiab_modules_dir + "/*/")
+    for modpath in dirlist:
+        all_oer2go['INSTALLED'].append(modpath.split('/')[-2]) # can include non-oer2go items
+
+    resp = json.dumps(all_oer2go)
     return (resp)
 
 def install_rachel(cmd_info):

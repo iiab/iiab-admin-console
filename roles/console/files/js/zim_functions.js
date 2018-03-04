@@ -122,7 +122,10 @@ function procZimGroups() {
   //consoleLog (html);
   $( "#ZimDownload" ).html(html);
   $(function () {
-  $('[data-toggle="tooltip"]').tooltip()
+  $('[data-toggle="tooltip"]').tooltip({
+      animation: true,
+      delay: {show: 500, hide: 100}
+    });
   });
 }
 

@@ -9,7 +9,9 @@
 // Install Content functions are at around 750
 
 function getOer2goStat(){
-	$.when(readOer2goCatalog()).then(procOer2goCatalog);
+	$.when(readOer2goCatalog(),
+	       sendCmdSrvCmd("GET-OER2GO-STAT", procOer2goStat)
+	).then(procOer2goCatalog);
 }
 
 function readOer2goCatalog(){
@@ -32,14 +34,19 @@ function readOer2goCatalog(){
   return resp;
 }
 
-// oer2goSelLangs
-// oer2goSelLangLists
+function procOer2goStat(data) {
+	//consoleLog(data);
+	oer2goInstalled = data['INSTALLED']
+	oer2goScheduled = data['WIP']
+}
 
 function procOer2goCatalog() {
-  var langSelectedCodes = []; // working lookup of 2 char codes
+  //var langSelectedCodes = []; // working lookup of 2 char codes
   var selectedLangsOer2goMods = {};  // working lists of oer2go mods for each selected lang
 
   //consoleLog("starting selectedLangs.forEach");
+
+  // make sure langs are selected for
 
   selectedLangs.forEach((lang, index) => {
     //console.log(lang);
@@ -54,9 +61,8 @@ function procOer2goCatalog() {
     //console.log(item);
     //console.log(lang);
     if (lang in selectedLangsOer2goMods) {
-    	if (! oer2goCatalog[item].has_redundant_menudef) // don't add zims and other items handled by other providers
+    	if (oer2goCatalogFilter.indexOf(oer2goCatalog[item].type) >= 0) // don't add zims and other items handled by other providers
     	  selectedLangsOer2goMods[lang].push(moddir);
-
     }
   }
 
@@ -72,7 +78,10 @@ function procOer2goCatalog() {
 
   $( "#Oer2goDownload" ).html(html);
   $(function () {
-    $('[data-toggle="tooltip"]').tooltip()
+    $('[data-toggle="tooltip"]').tooltip({
+      animation: true,
+      delay: {show: 500, hide: 100}
+    });
   });
 }
 
@@ -102,7 +111,7 @@ function renderOer2goItem(item) {
   var html = "";
   var colorClass = "";
   var colorClass2 = "";
-  console.log(item);
+  //console.log(item);
   var itemId = item.moddir;
 
   if (oer2goInstalled.indexOf(itemId) >= 0){
@@ -117,8 +126,11 @@ function renderOer2goItem(item) {
   html += '><input type="checkbox" name="' + itemId + '"';
   //html += '><img src="images/' + zimId + '.png' + '"><input type="checkbox" name="' + zimId + '"';
   if ((oer2goInstalled.indexOf(itemId) >= 0) || (oer2goScheduled.indexOf(itemId) >= 0))
-  html += 'disabled="disabled" checked="checked"';
-  html += 'onChange="updateZimDiskSpace(this)"></label>'; // end input
+    html += 'disabled="disabled" checked="checked"';
+  if (selectedOer2goItems.indexOf(itemId) >= 0)
+    html += ' checked="checked"';
+
+  html += 'onChange="updateOer2goDiskSpace(this)"></label>'; // end input
   //var zimDesc = zim.title + ' (' + zim.description + ') [' + zim.perma_ref + ']';
   var itemDesc = item.title + ': ' +item.description;
   //html += '<span class="zim-desc ' + colorClass + '" >&nbsp;&nbsp;' + zimDesc + '</span>';
@@ -129,9 +141,9 @@ function renderOer2goItem(item) {
   //html += '<span ' + colorClass2 + 'style="display:inline-block; width:120px;"> Date: ' + zim.date + '</span>';
   html += '<span ' + colorClass2 + ' style="display:inline-block; width:120px;"> Size: ' + readableSize(item.ksize) + '</span>';
   if (oer2goInstalled.indexOf(itemId) >= 0)
-    html += ' - INSTALLED';
+    html += '<span class="' + colorClass + '">INSTALLED';
   else if (oer2goScheduled.indexOf(itemId) >= 0)
-    html += ' - WORKING ON IT';
+    html += '<span class="' + colorClass + '">WORKING ON IT';
   else
   	html += '<span> <a href="' + item.index_mod_sample_url + '" target="_blank">Sample</a>';
   html += '</span><BR>';
@@ -141,7 +153,7 @@ function renderOer2goItem(item) {
 }
 
 function genOer2goToolTip(item) {
-  var oer2goToolTip = ' data-toggle="tooltip" data-placement="top" data-html="true" ';
+  var oer2goToolTip = ' data-toggle="tooltip" data-placement="auto top" data-html="true" ';
   oer2goToolTip += 'title="<h3>' + item.title + '</h3>' + item.description + '<BR><BR>';
   oer2goToolTip += 'Language: ' + item.lang + '<BR>';
   oer2goToolTip += 'Category: ' + item.category + '<BR>';
@@ -165,4 +177,64 @@ function genOer2goToolTip(item) {
   //oer2goToolTip += 'title="<em><b>' + item.description + '</b><BR>some more text that is rather long"';
   oer2goToolTip += '"'
   return oer2goToolTip;
+}
+
+function instOer2goItem(mod_id) {
+  var command = "INST-OER2GO-MOD"
+  var cmd_args = {}
+  cmd_args['moddir'] = mod_id;
+  cmd = command + " " + JSON.stringify(cmd_args);
+  sendCmdSrvCmd(cmd, genericCmdHandler());
+  oer2goScheduled.push(mod_id);
+  procOer2goCatalog();
+  return true;
+}
+
+function sumCheckedOer2goDiskSpace(){
+  var totalSpace = 0;
+
+  for (var i in selectedOer2goItems){
+    var mod_id = selectedOer2goItems[i]
+    var mod = oer2goCatalog[mod_id];
+    var size =  parseInt(mod.ksize);
+
+    totalSpace += size;
+  }
+  // sysStorage.oer2go_selected_size = totalSpace;
+  return totalSpace;
+}
+
+function updateOer2goDiskSpace(cb){
+  var mod_id = cb.name
+  updateOer2goDiskSpaceUtil(mod_id, cb.checked);
+}
+
+function updateOer2goDiskSpaceUtil(mod_id, checked){
+  var mod = oer2goCatalog[mod_id]
+  var size =  parseInt(mod.ksize);
+
+  var modIdx = selectedOer2goItems.indexOf(mod_id);
+
+  if (checked){
+    if (oer2goInstalled.indexOf(mod_id) == -1){ // only update if not already installed mods
+      sysStorage.oer2go_selected_size += size;
+      selectedOer2goItems.push(mod_id);
+    }
+  }
+  else {
+    if (modIdx != -1){
+      sysStorage.oer2go_selected_size -= size;
+      selectedOer2goItems.splice(mod_id, 1);
+    }
+  }
+
+  displaySpaceAvail();
+
+}
+
+function setOer2goDiskSpace(html){
+  html += "Estimated Space Required: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+
+  html += "<b>" + readableSize(sysStorage.oer2go_selected_size) + "</b>"
+  $( "#oer2goDiskSpace" ).html(html);
 }

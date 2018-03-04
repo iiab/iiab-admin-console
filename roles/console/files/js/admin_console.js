@@ -1,5 +1,5 @@
 // admin_console.js
-// copyright 2016 Tim Moody
+// copyright 2018 Tim Moody
 
 var today = new Date();
 var dayInMs = 1000*60*60*24;
@@ -14,6 +14,7 @@ var config_vars = {};
 var iiab_ini = {};
 var job_status = {};
 var langCodes = {}; // iso code, local name and English name for all languages we support, read from file
+var langCodesXRef = {}; // lookup langCodes key by iso2
 var zimCatalog = {}; // working composite catalog of kiwix, installed, and wip zims
 var zimLangs = {}; // working list of iso codes in zimCatalog
 var zimGroups = {}; // zim ids grouped by language and category
@@ -23,6 +24,7 @@ var kiwixCatalogDate = new Date; // date of download, stored in json file
 var installedZimCatalog = {}; // catalog of installed, and wip zims
 var oer2goCatalog = {}; // catalog of rachel/oer2go modules, read from file downloaded from rachel
 var oer2goCatalogDate = new Date; // date of download, stored in json file
+var oer2goCatalogFilter = ["html"] // only manage these types as OER2GO; catalog can contain zims and kalite that we do elsewhere
 var rachelStat = {}; // installed, enabled and whether content is installed and which is enabled
 
 var zimsInstalled = []; // list of zims already installed
@@ -34,13 +36,16 @@ var downloadedFiles = {};
 var langNames = []; // iso code, local name and English name for languages for which we have zims sorted by English name for language
 var topNames = ["ara","eng","spa","fra","hin","por"]; // languages for top language menu
 var defaultLang = "eng";
-var langGroups = {"en":"eng"}; // language codes to treat as a single code
+var langGroups = {"en":"eng","fr":"fra"}; // language codes to treat as a single code
 var selectedLangs = []; // languages selected by gui for display of content
 var selectedZims = [];
+var selectedOer2goItems = [];
 var sysStorage = {};
 sysStorage.root = {};
 sysStorage.library = {};
 sysStorage.library.partition = false; // no separate library partition
+sysStorage.zims_selected_size = 0;
+sysStorage.oer2go_selected_size = 0;
 sysStorage.zims_selected_size = 0;
 
 // because jquery does not percolate .fail conditions in async chains
@@ -214,6 +219,23 @@ function instContentButtonsEvents() {
     procZimGroups();
     alert ("Selected Zims scheduled to be installed.\n\nPlease view Utilities->Display Job Status to see the results.");
     make_button_disabled("#INST-ZIMS", false);
+  });
+
+  $("#INST-MODS").click(function(){
+    var mod_id;
+    make_button_disabled("#INST-MODS", true);
+
+    $('#Oer2goDownload input').each( function(){
+      if (this.type == "checkbox")
+        if (this.checked){
+          mod_id = this.name;
+          if (oer2goInstalled.indexOf(mod_id) == -1 && oer2goScheduled.indexOf(mod_id) == -1)
+            instOer2goItem(mod_id);
+        }
+    });
+    getOer2goStat();
+    alert ("Selected OER2Go Items scheduled to be installed.\n\nPlease view Utilities->Display Job Status to see the results.");
+    make_button_disabled("#INST-MODS", false);
   });
 
   $("#launchKaliteButton").click(function(){
@@ -770,6 +792,14 @@ function getLangCodes() {
   })
   .done(function( data ) {
     langCodes = data;
+    var xrefLang;
+    for (var lang in langCodes){
+      if (lang in langGroups)
+        xrefLang = langGroups[lang]; // en and fr are used interchangeably with eng and fra
+      else
+      	xrefLang = lang;
+      langCodesXRef[langCodes[xrefLang].iso2] = xrefLang;
+    }
     //consoleLog(langCodes);
   })
   .fail(jsonErrhandler);
@@ -792,10 +822,13 @@ function procContentLangs() {
   var html = '';
   var topHtml = '';
   var bottomHtml = '';
+
+  selectedLangsDefaults(); // make sure the langs of any downloaded content is selected
+
   for (var i in langNames){
     html = '<span class="lang-codes"><label><input type="checkbox" name="' + langNames[i].code + '"';
     if (selectedLangs.indexOf(langNames[i].code) != -1)
-    html += ' checked';
+      html += ' checked';
     html += '>&nbsp;&nbsp;<span>' + langNames[i].locname + '</span><span> (' + langNames[i].engname + ') [' + langNames[i].code + ']</span></label></span>';
 
     if (topNames.indexOf(langNames[i].code) >= 0 || selectedLangs.indexOf(langNames[i].code) != -1) {
@@ -808,6 +841,33 @@ function procContentLangs() {
 
   $( "#ContentLanguages" ).html(topHtml);
   $( "#ContentLanguages2" ).html(bottomHtml);
+}
+
+function selectedLangsDefaults() {
+  if (selectedLangs.length == 0)
+    selectedLangs.push (defaultLang); // default
+  // make sure languages for all installed content are selected
+
+  for (var id in installedZimCatalog['INSTALLED']){
+    lang = installedZimCatalog['INSTALLED'][id]['language'];
+    if (selectedLangs.indexOf(lang) == -1) // automatically select any language for which zim is installed
+      selectedLangs.push (lang);
+  }
+  for (var id in installedZimCatalog['WIP']){
+    lang = installedZimCatalog['WIP'][id]['language'];
+    if (selectedLangs.indexOf(lang) == -1) // automatically select any language for which zim is being installed
+      selectedLangs.push (lang);
+  }
+  for (var id in oer2goInstalled){
+    lang = langCodesXRef[oer2goCatalog[oer2goInstalled[id]]['lang']];
+    if (selectedLangs.indexOf(lang) == -1) // automatically select any language for which oer2go item is installed
+      selectedLangs.push(lang);
+  }
+  for (var id in oer2goScheduled){
+    lang = langCodesXRef[oer2goCatalog[oer2goScheduled[id]]['lang']];
+    if (selectedLangs.indexOf(lang) == -1) // automatically select any language for which oer2go item is wip
+      selectedLangs.push(lang);
+  }
 }
 
 function procSelectedLangs() {
@@ -1164,32 +1224,57 @@ function procSpaceAvail (data){
 function displaySpaceAvail(){
 	// display space available on various panels
 	// assumes all data has been retrieved and is in data structures
-  setZimDiskSpace();
-  setRachelDiskSpace();
-  setDnldDiskSpace();
+  var html = calcLibraryDiskSpace();
+  $( "#dnldDiskSpace" ).html(html);
+
+  var allocatedSpace = calcAllocatedSpace();
+  html += "Estimated Space Required: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+  html += "<b>" + readableSize(allocatedSpace) + "</b>"
+
+  $( "#zimDiskSpace" ).html(html);
+  $( "#oer2goDiskSpace" ).html(html);
+
+  //setDnldDiskSpace(html);
+  //setZimDiskSpace(html);
+  //setOer2goDiskSpace(html);
 }
 
-function setZimDiskSpace(){
-  var html = calcLibraryDiskSpace();
+function calcAllocatedSpace(){
+	var totalSpace = 0;
+	totalSpace += sumAllocationList(selectedZims, 'zim');
+	//consoleLog(totalSpace);
+	totalSpace += sumAllocationList(zimsScheduled, 'zim');
+	totalSpace += sumAllocationList(selectedOer2goItems, 'oer2go');
+	totalSpace += sumAllocationList(oer2goScheduled, 'oer2go');
+	return totalSpace;
+}
 
+function sumAllocationList(list, type){
+  var totalSpace = 0;
+
+  for (var i in list){
+    var id = list[i]
+    if (type == "zim"){
+      totalSpace += parseInt(zimCatalog[id].size);
+      if (zimCatalog[id].source == "portable")
+        totalSpace += parseInt(zimCatalog[id].size); // double it for portable
+      }
+    else if (type == "oer2go")
+      totalSpace += parseInt(oer2goCatalog[id].ksize);
+  }
+  // sysStorage.oer2go_selected_size = totalSpace;
+  return totalSpace;
+}
+
+function setZimDiskSpace(html){
   html += "Estimated Space Required: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
 
-  // make space estimate double the size due to needing both the download and the deployed files
-  html += "<b>" + readableSize(sysStorage.zims_selected_size * 2) + "</b>"
+  html += "<b>" + readableSize(sysStorage.zims_selected_size) + "</b>"
   $( "#zimDiskSpace" ).html(html);
 }
 
-function setRachelDiskSpace(){
-  var html = calcLibraryDiskSpace();
-
-  html += "Estimated Space Required: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
-
-  html += "<b>" + "23G (X 2 for Download)" + "</b>"
-  $( "#rachelDiskSpace" ).html(html);
-}
-
-function setDnldDiskSpace() {
-	var html = calcLibraryDiskSpace();
+function setDnldDiskSpace(html) {
+	//var html = calcLibraryDiskSpace();
 	$( "#dnldDiskSpace" ).html(html);
 }
 
@@ -1217,6 +1302,10 @@ function updateZimDiskSpaceUtil(zim_id, checked){
   var zim = zimCatalog[zim_id]
   var size =  parseInt(zim.size);
 
+  // make space estimate double the size if source is portable due to needing both the download and the deployed files
+  if (zim.source == "portable")
+    size *= 2;
+
   var zimIdx = selectedZims.indexOf(zim_id);
 
   if (checked){
@@ -1231,9 +1320,7 @@ function updateZimDiskSpaceUtil(zim_id, checked){
       selectedZims.splice(zimIdx, 1);
     }
   }
-
-  setZimDiskSpace();
-
+  displaySpaceAvail();
 }
 
 function sumCheckedZimDiskSpace(){
@@ -1577,6 +1664,7 @@ function init ()
     sendCmdSrvCmd("GET-WHLIST", getWhitelist),
     $.when(sendCmdSrvCmd("GET-VARS", getInstallVars), sendCmdSrvCmd("GET-ANS", getAnsibleFacts),sendCmdSrvCmd("GET-CONF", getConfigVars),sendCmdSrvCmd("GET-IIAB-INI", procXsceIni)).done(initConfigVars),
     $.when(getLangCodes(),readKiwixCatalog(),sendCmdSrvCmd("GET-ZIM-STAT", procZimStatInit)).done(procZimCatalog),
+    getOer2goStat(),
     getSpaceAvail())
     .done(initDone)
     .fail(function () {
@@ -1590,6 +1678,7 @@ function initDone ()
 	if (initStat["error"] == false){
 	  consoleLog("Init Finished Successfully");
 	  displayServerCommandStatus('<span style="color:green">Init Finished Successfully</span>');
+	  //selectedLangsDefaults(); // any installed or wip content plus default language
 	  displaySpaceAvail(); // display on various panels
 	  // now turn on navigation
 	  navButtonsEvents();
