@@ -1225,12 +1225,23 @@ function procSpaceAvail (data){
 function displaySpaceAvail(){
 	// display space available on various panels
 	// assumes all data has been retrieved and is in data structures
-  var html = calcLibraryDiskSpace();
+
+	var availableSpace = calcLibraryDiskSpace();
+	var allocatedSpace = calcAllocatedSpace();
+	var warningStyle = '';
+
+	if (allocatedSpace / availableSpace > .5)
+	  warningStyle = 'style="color: darkorange;"';
+	if (allocatedSpace / availableSpace > .85)
+	  warningStyle = 'style="color: red;"';
+
+	var html = "Library Space Available : <b>";
+  html += readableSize(availableSpace) + "</b><BR>";
+
   $( "#dnldDiskSpace" ).html(html);
 
-  var allocatedSpace = calcAllocatedSpace();
   html += "Estimated Space Required: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
-  html += "<b>" + readableSize(allocatedSpace) + "</b>"
+  html += '<b><span ' + warningStyle + '>' + readableSize(allocatedSpace) + '</span</b>';
 
   $( "#zimDiskSpace" ).html(html);
   $( "#oer2goDiskSpace" ).html(html);
@@ -1264,18 +1275,13 @@ function sumAllocationList(list, type){
 }
 
 function calcLibraryDiskSpace(){
-  var html = "Library Space Available : <b>";
-
-  //var zims_selected_size;
-
+  var availableSpace = 0;
   // library space is accurate whether separate partition or not
-
 	if (sysStorage.library_on_root)
-	  html += readableSize(sysStorage.root.avail_in_megs * 1024) + "</b><BR>";
+	  availableSpace = sysStorage.root.avail_in_megs * 1024;
 	else
-    html += readableSize(sysStorage.library.avail_in_megs * 1024) + "</b><BR>";
-
-  return html;
+    availableSpace = sysStorage.library.avail_in_megs * 1024;
+  return availableSpace;
 }
 
 function updateZimDiskSpace(cb){
@@ -1306,22 +1312,6 @@ function updateZimDiskSpaceUtil(zim_id, checked){
     }
   }
   displaySpaceAvail();
-}
-
-function sumCheckedZimDiskSpace(){
-  var zim_id = '';
-  var zim = {};
-  var size = 0;
-
-  sysStorage.zims_selected_size = 0;
-
-  for (var i in selectedZims){
-    zim_id = selectedZims[i]
-    zim = zimCatalog[zim_id];
-    var size =  parseInt(zim.size);
-
-    sysStorage.zims_selected_size += size;
-  }
 }
 
 function getInetSpeed(){
