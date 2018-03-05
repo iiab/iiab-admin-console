@@ -955,7 +955,7 @@ function procRachelStat(data) {
 function getDownloadList(){
 	var zimCmd = 'LIST-LIBR {"sub_dir":"downloads/zims"}';
 	var rachelCmd = 'LIST-LIBR {"sub_dir":"downloads/rachel"}';
-	setDnldDiskSpace();
+	displaySpaceAvail();
 	$.when(sendCmdSrvCmd(zimCmd, procDnldZimList), sendCmdSrvCmd(rachelCmd, procDnldRachelList)).done(procDnldList);
 
   return true;
@@ -1492,6 +1492,8 @@ function sendCmdSrvCmd(command, callback, buttonId, errCallback, cmdArgs) {
     })
     //.done(callback)
     .done(function(dataResp, textStatus, jqXHR) {
+    	//consoleLog (dataResp);
+    	//consoleLog (callback);
     	//var dataResp = data;
     	if ("Error" in dataResp){
     	  cmdSrvError(cmdVerb, dataResp);
