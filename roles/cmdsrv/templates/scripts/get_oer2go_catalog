@@ -98,8 +98,8 @@ def main ():
             sys.exit(1)
     else:
         with open(oer2go_catalog_file, 'r') as infile:
-            oer2go_catalog = json.load(infile)
-
+            local_oer2go_catalog = json.load(infile)
+        oer2go_catalog = local_oer2go_catalog['modules']
 
     os.mkdir(working_dir)
     #os.mkdir(iiab_menu_download_dir)
