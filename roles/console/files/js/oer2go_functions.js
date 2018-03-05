@@ -8,10 +8,40 @@
 // requires id on <div id="installContentOptions" class="tab-content"> <!-- Start Container for Sub Menu Options Panes -->
 // Install Content functions are at around 750
 
+function getOer2goCatalog(){ // Downloads OER2GO catalog from RACHEL
+  make_button_disabled("#OER3GO-CAT-REFRESH", true);
+  // remove any selections as catalog may have changed
+  // selectedOer2goItems = []; // we already assume that items never disappear from oer2go catalog
+
+  var command = "GET-OER2GO-CAT";
+  sendCmdSrvCmd(command, procOer2goCatalog, "OER3GO-CAT-REFRESH");
+  return true;
+}
+
+function procOer2goCatalog() {
+	$.when(getOer2goStat)
+    .done(function() {
+      // renderOer2goCatalog(); - done by getOer2goStat
+      displaySpaceAvail();
+    })
+    .always(function() {
+      alert ("OER2GO Catalog has been downloaded.");
+      make_button_disabled("#OER3GO-CAT-REFRESH", false);
+    })
+}
+
+function oer2goMenuOption (){
+	getOer2goStat();
+	today = new Date(); // in case is stale
+  if (today - oer2goCatalogDate > 30 * dayInMs){
+		alert ("OER2GO Catalog is Older than 30 days.\n\nPlease click Refresh OER2GO Catalog in the menu.");
+	}
+}
+
 function getOer2goStat(){
 	$.when(readOer2goCatalog(),
 	       sendCmdSrvCmd("GET-OER2GO-STAT", procOer2goStat)
-	).then(procOer2goCatalog);
+	).then(renderOer2goCatalog);
 }
 
 function readOer2goCatalog(){
@@ -40,7 +70,7 @@ function procOer2goStat(data) {
 	oer2goScheduled = data['WIP']
 }
 
-function procOer2goCatalog() {
+function renderOer2goCatalog() {
   //var langSelectedCodes = []; // working lookup of 2 char codes
   var selectedLangsOer2goMods = {};  // working lists of oer2go mods for each selected lang
 
@@ -131,14 +161,10 @@ function renderOer2goItem(item) {
     html += ' checked="checked"';
 
   html += 'onChange="updateOer2goDiskSpace(this)"></label>'; // end input
-  //var zimDesc = zim.title + ' (' + zim.description + ') [' + zim.perma_ref + ']';
   var itemDesc = item.title + ': ' +item.description;
-  //html += '<span class="zim-desc ' + colorClass + '" >&nbsp;&nbsp;' + zimDesc + '</span>';
-
   var oer2goToolTip = genOer2goToolTip(item);
   html += '<span class="zim-desc ' + colorClass + '"' + oer2goToolTip + '>&nbsp;&nbsp;' + itemDesc + '</span>';
 
-  //html += '<span ' + colorClass2 + 'style="display:inline-block; width:120px;"> Date: ' + zim.date + '</span>';
   html += '<span ' + colorClass2 + ' style="display:inline-block; width:120px;"> Size: ' + readableSize(item.ksize) + '</span>';
   if (oer2goInstalled.indexOf(itemId) >= 0)
     html += '<span class="' + colorClass + '">INSTALLED';
@@ -147,7 +173,6 @@ function renderOer2goItem(item) {
   else
   	html += '<span> <a href="' + item.index_mod_sample_url + '" target="_blank">Sample</a>';
   html += '</span><BR>';
-
 
   return html;
 }
@@ -162,19 +187,7 @@ function genOer2goToolTip(item) {
   oer2goToolTip += 'Version: ' + item.version + '<BR>';
   oer2goToolTip += 'Size: ' + readableSize(item.ksize) + '<BR>';
   oer2goToolTip += 'Number of Files: ' + item.file_count + '<BR><BR>';
-  //oer2goToolTip += 'Sample URL: <a href="' + item.index_mod_sample_url + '">Click Here</a><BR>';
 
-  //oer2goToolTip += 'Media: ' + Intl.NumberFormat().format(item.mediaCount) + '<BR>';
-  //oer2goToolTip += 'Download URL: ' + item.download_url + '<BR>';
-  //oer2goToolTip += 'With:<ul>';
-  //oer2goToolTip += item.has_embedded_index ? '<li>Internal Full Text Index</li>' : '';
-  //oer2goToolTip += item.has_video ? '<li>Videos</li>' : '';
-  //oer2goToolTip += item.has_pictures ? '<li>Images</li>' : '';
-  //oer2goToolTip += item.has_details ? '<li>Complete Articles</li>' : '';
-  //oer2goToolTip += '<table><tr><td>Full Text Index</td><td>' + item.has_video ? "&#10003;" : "X";
-  //oer2goToolTip += '</li></ul></b>"'
-  //oer2goToolTip += '</ul></b>"'
-  //oer2goToolTip += 'title="<em><b>' + item.description + '</b><BR>some more text that is rather long"';
   oer2goToolTip += '"'
   return oer2goToolTip;
 }
@@ -186,22 +199,8 @@ function instOer2goItem(mod_id) {
   cmd = command + " " + JSON.stringify(cmd_args);
   sendCmdSrvCmd(cmd, genericCmdHandler());
   oer2goScheduled.push(mod_id);
-  procOer2goCatalog();
+  renderOer2goCatalog();
   return true;
-}
-
-function sumCheckedOer2goDiskSpace(){
-  var totalSpace = 0;
-
-  for (var i in selectedOer2goItems){
-    var mod_id = selectedOer2goItems[i]
-    var mod = oer2goCatalog[mod_id];
-    var size =  parseInt(mod.ksize);
-
-    totalSpace += size;
-  }
-  // sysStorage.oer2go_selected_size = totalSpace;
-  return totalSpace;
 }
 
 function updateOer2goDiskSpace(cb){
@@ -229,12 +228,4 @@ function updateOer2goDiskSpaceUtil(mod_id, checked){
   }
 
   displaySpaceAvail();
-
-}
-
-function setOer2goDiskSpace(html){
-  html += "Estimated Space Required: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
-
-  html += "<b>" + readableSize(sysStorage.oer2go_selected_size) + "</b>"
-  $( "#oer2goDiskSpace" ).html(html);
 }

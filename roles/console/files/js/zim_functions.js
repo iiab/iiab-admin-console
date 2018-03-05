@@ -64,8 +64,7 @@
     )
     .done(function() {
       procZimCatalog();
-      sumCheckedZimDiskSpace();
-      setZimDiskSpace();
+      displaySpaceAvail();
     })
     .always(function() {
       alert ("Kiwix Catalog has been downloaded.");

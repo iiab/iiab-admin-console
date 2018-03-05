@@ -44,9 +44,6 @@ var sysStorage = {};
 sysStorage.root = {};
 sysStorage.library = {};
 sysStorage.library.partition = false; // no separate library partition
-sysStorage.zims_selected_size = 0;
-sysStorage.oer2go_selected_size = 0;
-sysStorage.zims_selected_size = 0;
 
 // because jquery does not percolate .fail conditions in async chains
 // and because an error returned from the server is not an ajax error
@@ -254,6 +251,10 @@ function instContentButtonsEvents() {
 
   $("#KIWIX-LIB-REFRESH").click(function(){
     getKiwixCatalog();
+  });
+
+  $("#OER3GO-CAT-REFRESH").click(function(){
+    getOer2goCatalog();
   });
 
   $("#DOWNLOAD-RACHEL").click(function(){
@@ -1135,7 +1136,7 @@ function refreshDiskSpace(){
 
 function procDiskSpace(){
   //procSelectedLangs(); - don't call because resets check boxes
-  sumCheckedZimDiskSpace();
+  //sumCheckedZimDiskSpace();
   displaySpaceAvail();
 }
 
@@ -1233,10 +1234,6 @@ function displaySpaceAvail(){
 
   $( "#zimDiskSpace" ).html(html);
   $( "#oer2goDiskSpace" ).html(html);
-
-  //setDnldDiskSpace(html);
-  //setZimDiskSpace(html);
-  //setOer2goDiskSpace(html);
 }
 
 function calcAllocatedSpace(){
@@ -1264,18 +1261,6 @@ function sumAllocationList(list, type){
   }
   // sysStorage.oer2go_selected_size = totalSpace;
   return totalSpace;
-}
-
-function setZimDiskSpace(html){
-  html += "Estimated Space Required: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
-
-  html += "<b>" + readableSize(sysStorage.zims_selected_size) + "</b>"
-  $( "#zimDiskSpace" ).html(html);
-}
-
-function setDnldDiskSpace(html) {
-	//var html = calcLibraryDiskSpace();
-	$( "#dnldDiskSpace" ).html(html);
 }
 
 function calcLibraryDiskSpace(){
