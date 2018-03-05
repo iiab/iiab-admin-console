@@ -40,9 +40,42 @@ When you have made your selections click **Install Selected ZIMs**.  Jobs will b
 
 ### Don't Forget
 
-When all of the ZIM files have been downloaded and installed the Kiwix server needs to be restarted, which can be done by clicking **Restart the Kiwix ZIM Server**.
+When each of the ZIM files has been downloaded and installed the Kiwix server will be restarted automatically. This can also be done manuall by clicking **Restart the Kiwix ZIM Server**.
 
 Make sure that the **Kiwix** service is enabled under **Configure** - **Services Enabled**.
+
+Get OER2GO(RACHEL) Modules
+--------------------------
+
+### Overview
+
+Many people have heard of RACHEL as a source of Educational Content. The RACHEL repository is also known as OER2GO and contains modules accessible with a web server such as:
+
+* CK-12
+* English Storybooks
+* Hesperian Health Guides
+* Practical Action
+* And Many Others
+
+### Do this First
+
+When you installed the Admin Console the latest version of the OER2Go catalog was downloaded. When you click this menu option the system will check to see if it is still less than a month old and will recommend downloading again if it is not.
+
+To get the latest version Click on the button labelled **Refresh OER2GO Catalog**.
+
+### How it works
+
+When you Click on this menu option you will see a list of any content already installed, any in the process of being installed, and all content available in the languages selected.
+
+To select more languages Click on the button labelled **Select Languages**.  You will see the six languages with the most speakers in the world.  Click **More Languages** for others.  Check the language you want and then click **Show Content** or the **x** in the top right of the screen.
+
+Next **Check the Titles** you want to download.  You will see the total space available and the amount required for your selections.
+
+When you have made your selections click **Install Selected Modules**.  Jobs will be created on the server to download and install the selected content.  These are large files and the download can take a long time.  Visit **Display Job Status** on the **Utilities** menu to see when they have completed or any problems encountered.  It is not necessary to keep the browser open during the download.
+
+### Don't Forget
+
+Downloaded Modules will appear on the server in a URL like /modules/Name of the Module. If you are using IIAB-Menu, there will already be a menu definition for most modules, but you may need to create your own. You may also need to add a reference to the module to your menu file.
 
 Download Khan Academy Videos
 ----------------------------
