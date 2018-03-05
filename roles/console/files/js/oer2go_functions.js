@@ -9,24 +9,24 @@
 // Install Content functions are at around 750
 
 function getOer2goCatalog(){ // Downloads OER2GO catalog from RACHEL
-  make_button_disabled("#OER3GO-CAT-REFRESH", true);
+  //make_button_disabled("#OER2GO-CAT-REFRESH", true);
   // remove any selections as catalog may have changed
   // selectedOer2goItems = []; // we already assume that items never disappear from oer2go catalog
 
   var command = "GET-OER2GO-CAT";
-  sendCmdSrvCmd(command, procOer2goCatalog, "OER3GO-CAT-REFRESH");
+  sendCmdSrvCmd(command, procOer2goCatalog, "OER2GO-CAT-REFRESH");
   return true;
 }
 
 function procOer2goCatalog() {
-	$.when(getOer2goStat)
+	$.when(getOer2goStat())
     .done(function() {
       // renderOer2goCatalog(); - done by getOer2goStat
       displaySpaceAvail();
     })
     .always(function() {
       alert ("OER2GO Catalog has been downloaded.");
-      make_button_disabled("#OER3GO-CAT-REFRESH", false);
+      //make_button_disabled("#OER2GO-CAT-REFRESH", false);
     })
 }
 

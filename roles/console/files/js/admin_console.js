@@ -253,7 +253,7 @@ function instContentButtonsEvents() {
     getKiwixCatalog();
   });
 
-  $("#OER3GO-CAT-REFRESH").click(function(){
+  $("#OER2GO-CAT-REFRESH").click(function(){
     getOer2goCatalog();
   });
 
