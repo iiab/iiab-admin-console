@@ -877,7 +877,7 @@ function procSelectedLangs() {
 	if (contentContext == "instConZims")
 	  procZimGroups();
 	else if (contentContext == "instConOer2go")
-		procOer2goCatalog();
+		renderOer2goCatalog();
 }
 
 function readableSize(kbytes) {
