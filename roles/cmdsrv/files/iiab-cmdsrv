@@ -89,6 +89,7 @@ last_job_rowid = 0
 active_commands = {}
 zims_wip = {}
 oer2go_wip = {}
+oer2go_installed = []
 jobs_requested = {}
 jobs_to_restart = {}
 jobs_to_cancel = {}
@@ -1206,7 +1207,8 @@ def install_oer2go_mod(cmd_info):
     if 'cmd_args' in cmd_info:
         moddir = cmd_info['cmd_args']['moddir']
         if moddir in oer2go_catalog: # not really necessary as we compute the link
-            if oer2go_catalog[moddir]['module_downloaded']:
+            refresh_oer2go_installed() # check to make sure it didn't get installed manually
+            if moddir in oer2go_installed:
                 resp = cmd_error(cmd='INST-OER2GO-MOD', msg='Module already installed in Command')
                 return resp
             else:
@@ -1239,16 +1241,21 @@ def install_oer2go_mod(cmd_info):
 def get_oer2go_stat(cmd_info):
     # resp = json.dumps(oer2go_catalog) # FE gets this this by reading the json directly
 
+    refresh_oer2go_installed() # we will no longer use the module downloaded attribute in oer2go_catalog
+
     all_oer2go = {}
     all_oer2go['WIP'] = oer2go_wip.keys()
-    all_oer2go['INSTALLED'] = []
-
-    dirlist = glob(iiab_modules_dir + "/*/")
-    for modpath in dirlist:
-        all_oer2go['INSTALLED'].append(modpath.split('/')[-2]) # can include non-oer2go items
+    all_oer2go['INSTALLED'] = oer2go_installed
 
     resp = json.dumps(all_oer2go)
     return (resp)
+
+def refresh_oer2go_installed():
+    global oer2go_installed
+    oer2go_installed = []
+    dirlist = glob(iiab_modules_dir + "/*/")
+    for modpath in dirlist:
+        oer2go_installed.append(modpath.split('/')[-2]) # can include non-oer2go items
 
 def install_rachel(cmd_info):
 
