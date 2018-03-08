@@ -1455,7 +1455,8 @@ function sendCmdSrvCmd(command, callback, buttonId, errCallback, cmdArgs) {
   //   cmdArgs - Optional arguments to original command for use by errCallback
   //   TODO  - add assignmentVar so can assign variable before running callback
   //alert ("in sendCmdSrvCmd(");
-  //consoleLog ('buttonid = ' + buttonId);;
+  //consoleLog (command, callback.name);
+  //consoleLog ('buttonid = ' + buttonId);
 
   // skip command if init has already failed - not sure this works
   if (initStat.active == true && initStat.error == true){
