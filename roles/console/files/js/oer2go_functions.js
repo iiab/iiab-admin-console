@@ -40,8 +40,8 @@ function oer2goMenuOption (){
 
 function getOer2goStat(){
 	$.when(readOer2goCatalog(),
-	       sendCmdSrvCmd("GET-OER2GO-STAT", procOer2goStat)
-	).then(renderOer2goCatalog);
+	       sendCmdSrvCmd("GET-OER2GO-STAT", procOer2goStat))
+	.then(renderOer2goCatalog);
 }
 
 function readOer2goCatalog(){
@@ -197,7 +197,7 @@ function instOer2goItem(mod_id) {
   var cmd_args = {}
   cmd_args['moddir'] = mod_id;
   cmd = command + " " + JSON.stringify(cmd_args);
-  sendCmdSrvCmd(cmd, genericCmdHandler());
+  sendCmdSrvCmd(cmd, genericCmdHandler);
   oer2goScheduled.push(mod_id);
   renderOer2goCatalog();
   return true;
