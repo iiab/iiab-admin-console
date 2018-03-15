@@ -1255,7 +1255,9 @@ def refresh_oer2go_installed():
     oer2go_installed = []
     dirlist = glob(iiab_modules_dir + "/*/")
     for modpath in dirlist:
-        oer2go_installed.append(modpath.split('/')[-2]) # can include non-oer2go items
+        moddir = modpath.split('/')[-2] # can include non-oer2go items so remove them
+        if moddir in oer2go_catalog:
+            oer2go_installed.append(moddir)
 
 def install_rachel(cmd_info):
 
