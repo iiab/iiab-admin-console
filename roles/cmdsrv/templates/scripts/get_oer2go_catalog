@@ -42,10 +42,12 @@ iiab_oer2go_catalog = {}
 
 oer2go_cat_url = 'http://dev.worldpossible.org/cgi/json_api_v1.pl'
 rachel_mods_url = "rsync://dev.worldpossible.org/rachelmods/"
+iiab_cat_url = "http://medbox.iiab.me/catalog/iiab_catalog.json"
 
 # output files
 
 oer2go_catalog_file = jsonPath + "oer2go_catalog.json"
+iiab_catalog_file = jsonPath + "iiab_catalog.json"
 # soft code these
 #iiab_root_dir = "/library/www/html/"
 #iiab_modules_dir = iiab_root_dir + "modules/"
@@ -96,6 +98,23 @@ def main ():
             sys.stdout.write("GET-OER2GO-CAT ERROR - " + str(exc.reason) +'\n')
             sys.stdout.flush()
             sys.exit(1)
+        try:
+            url_handle = urllib2.urlopen(iiab_cat_url)
+            iiab_catalog_json = url_handle.read()
+            iiab_catalog = json.loads(iiab_catalog_json)
+            url_handle.close()
+        except (urllib2.URLError) as exc:
+            sys.stdout.write("GET-OER2GO-CAT ERROR - " + str(exc.reason) +'\n')
+            sys.stdout.flush()
+            sys.exit(1)
+
+        # merge iiab_catalog.json if was downloaded otherwise assume was previously merged
+        for item in iiab_catalog:
+            moddir = item['moddir']
+            id = item['module_id']
+            module = item
+            iiab_oer2go_catalog[moddir] = module
+
     else:
         with open(oer2go_catalog_file, 'r') as infile:
             local_oer2go_catalog = json.load(infile)
