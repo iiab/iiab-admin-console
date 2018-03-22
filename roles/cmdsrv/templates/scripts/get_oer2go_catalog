@@ -133,6 +133,9 @@ def main ():
             id = item['module_id']
             module = item
 
+        if moddir is None: # skip items with no moddir
+            break
+
         if id not in dup_list:
             module, get_new_menudef = get_status (module)
             if get_new_menudef and args.menu:
