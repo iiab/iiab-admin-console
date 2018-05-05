@@ -6,7 +6,7 @@ After=syslog.target network.target local-fs.target
 Type=forking
 Environment="CMDSRV_DIR={{ cmdsrv_dir }}"
 PIDFile={{ cmdsrv_pid_file }}
-ExecStart=/usr/bin/python2 {{ cmdsrv_dir }}/iiab-cmdsrv --daemon
+ExecStart={{ cmdsrv_dir }}/iiab-cmdsrv --daemon
 ExecStop=/usr/bin/iiab-cmdsrv-ctl STOP
 
 [Install]
