@@ -15,7 +15,7 @@
     - download
   when: is_debuntu
 
-- name: install ubuntu connector apache to php
+- name: Install ubuntu connector apache to php
   package: name=libapache2-mod-php
            state=present
   tags:
@@ -34,7 +34,7 @@
     - download
   when: is_redhat
 
-- name: check the config_vars.yml file
+- name: Check the config_vars.yml file
   stat: path=/etc/iiab/config_vars.yml
   register: config_vars
 
@@ -204,42 +204,12 @@
             group=root
             mode={{ item.mode }}
   with_items:
-    - { src: 'iiab-cmdsrv.service.j2', dest: '/etc/systemd/system/iiab-cmdsrv.service', mode: '0655'}
+    - { src: 'iiab-cmdsrv.service.j2', dest: '/etc/systemd/system/iiab-cmdsrv.service', mode: '0644'}
     - { src: 'iiab-cmdsrv-ctl.j2', dest: '/usr/bin/iiab-cmdsrv-ctl', mode: '0755'}
-
-- name: Create iiab-cmdsrv service
-  template: backup=yes
-            src={{ item.src }}
-            dest={{ item.dest }}
-            mode={{ item.mode }}
-  with_items:
-    - { src: 'iiab-cmdsrv-init.j2', dest: '/etc/init.d/iiab-cmdsrv-init', mode: '0755'}
-#    - { src: 'zmq.ini', dest: '/etc/php5/apache2/conf.d/20-zmq.ini', mode: '0755'}
-  when: is_debian
-
-- name: Create iiab-cmdsrv service
-  template: backup=yes
-            src={{ item.src }}
-            dest={{ item.dest }}
-            mode={{ item.mode }}
-  with_items:
-    - { src: 'iiab-cmdsrv-init.j2', dest: '/etc/init.d/iiab-cmdsrv-init', mode: '0755'}
-#    - { src: 'zmq.ini', dest: '/etc/php/7.0/mods-available/20-zmq.ini', mode: '0755'}
-  when: is_ubuntu
 
 #- name: Enable the ubuntu php config file
 #  command: phpenmod 20-zmq
 #  when: is_ubuntu
-
-- name: Create iiab-cmdsrv service
-  template: backup=yes
-            src={{ item.src }}
-            dest={{ item.dest }}
-            mode={{ item.mode }}
-  with_items:
-    - { src: 'iiab-cmdsrv-init.j2', dest: '/usr/libexec/iiab-cmdsrv-init', mode: '0755'}
-#    - { src: 'zmq.ini', dest: '/etc/php.d/20-zmq.ini', mode: '0755'}
-  when: is_redhat
 
 - name: Create symlink to iiab ansible.cfg
   file: path="{{ cmdsrv_dir }}/ansible.cfg"
