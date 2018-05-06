@@ -14,6 +14,9 @@
 """
 
 import os, sys, syslog, signal
+from glob import glob
+import logging
+from systemd import journal
 import pwd, grp
 import time
 from datetime import date, datetime, timedelta
@@ -72,9 +75,12 @@ zim_working_dir = None
 zim_dir = None
 zim_content_dir = None
 zim_index_dir = None
+oer2go_catalog_file = None
+oer2go_mods_url = None
 rachel_downloads_dir = None
 rachel_working_dir = None
 rachel_version = None
+iiab_modules_dir = None
 
 # Global Variables
 last_command_rowid = 0
@@ -82,6 +88,8 @@ last_job_rowid = 0
 
 active_commands = {}
 zims_wip = {}
+oer2go_wip = {}
+oer2go_installed = []
 jobs_requested = {}
 jobs_to_restart = {}
 jobs_to_cancel = {}
@@ -92,6 +100,14 @@ running_job_count = 0
 ansible_running_flag = False
 daemon_mode = False
 init_error = False
+
+# Logging
+
+journal_log = logging.getLogger('IIAB-CMDSRV')
+journal_log.setLevel(5) # having two different severity scales is nuts
+journal_log.propagate = False
+jhandler = journal.JournalHandler(SYSLOG_IDENTIFIER='IIAB-CMDSRV')
+journal_log.addHandler(jhandler)
 
 # Locking
 lock = threading.Lock() # for updating global variables
@@ -107,6 +123,7 @@ ansible_facts = {}
 ansible_tags = {}
 iiab_ini = {}
 kiwix_catalog = {}
+oer2go_catalog = {}
 
 # vars set by admin-console
 config_vars = {}
@@ -386,6 +403,9 @@ def job_minder_thread(client_url, worker_control_url, context=None):
                 active_commands.pop(jobs_running[key]['cmd_rowid'], None)
                 if jobs_running[key]['cmd'] == "INST-ZIMS":
                     zims_wip.pop(jobs_running[key]['cmd_args']['zim_id'], None)
+                elif jobs_running[key]['cmd'] == "INST-OER2GO-MOD":
+                    oer2go_wip.pop(jobs_running[key]['cmd_args']['moddir'], None)
+
             jobs_running.pop(key, None)
             if key in jobs_to_cancel:
                 jobs_to_cancel.pop(key, None)
@@ -508,11 +528,13 @@ def cancel_req_job(job_id, job_info):
     # update jobs table
     upd_job_cancelled(job_id)
 
-    # Remove Active Command and Zim WIP
+    # Remove Active Command and any WIP tracking
     if job_info['has_dependent'] == "N": # delete from command list if last step of command
         active_commands.pop(job_info['cmd_rowid'], None)
         if job_info['cmd'] == "INST-ZIMS":
             zims_wip.pop(job_info['cmd_args']['zim_id'], None)
+        elif jobs_running[key]['cmd'] == "INST-OER2GO-MOD":
+            oer2go_wip.pop(jobs_running[key]['cmd_args']['moddir'], None)
 
     return (job_info)
 
@@ -588,6 +610,9 @@ def cmd_handler(cmd_msg):
         "GET-KIWIX-CAT": get_kiwix_catalog,
         "GET-ZIM-STAT": get_zim_stat,
         "INST-ZIMS": install_zims,
+        "GET-OER2GO-CAT": get_oer2go_catalog,
+        "INST-OER2GO-MOD": install_oer2go_mod,
+        "GET-OER2GO-STAT": get_oer2go_stat,
         "GET-RACHEL-STAT": get_rachel_stat,
         "INST-RACHEL": install_rachel,
         "DEL-DOWNLOADS": del_downloads,
@@ -994,6 +1019,15 @@ def get_zim_stat(cmd_info):
     resp = json.dumps(all_zims)
     return (resp)
 
+def get_oer2go_catalog(cmd_info):
+    outp = subprocess.check_output(["scripts/get_oer2go_catalog"])
+    if outp == "SUCCESS":
+        read_oer2go_catalog()
+        resp = cmd_success("GET-OER2GO-CAT")
+        return (resp)
+    else:
+        return ('{"Error": "' + outp + '."}')
+
 def get_config_vars(cmd_info):
     read_config_vars()
     resp = json.dumps(config_vars)
@@ -1163,6 +1197,68 @@ def install_zims(cmd_info):
         #resp = cmd_error(cmd='INST-ZIMS', msg='Just testing')
 
     return resp
+
+def install_oer2go_mod(cmd_info):
+
+    global ansible_running_flag
+    global jobs_requested
+    global oer2go_catalog
+
+    if 'cmd_args' in cmd_info:
+        moddir = cmd_info['cmd_args']['moddir']
+        if moddir in oer2go_catalog: # not really necessary as we compute the link
+            refresh_oer2go_installed() # check to make sure it didn't get installed manually
+            if moddir in oer2go_installed:
+                resp = cmd_error(cmd='INST-OER2GO-MOD', msg='Module already installed in Command')
+                return resp
+            else:
+                oer2go_download_src = oer2go_catalog[moddir]['rsync_url']
+                #oer2go_download_src = oer2go_mods_url + moddir
+        else:
+            resp = cmd_error(cmd='INST-OER2GO-MOD', msg='Module not in catalog in Command')
+            return resp
+
+        targetDir = rachel_working_dir
+    else:
+        return cmd_malformed(cmd_info['cmd'])
+
+    # at this point we can create all the jobs
+
+    # rsync module files
+    job_command = "/usr/bin/rsync -Pavz --size-only " + oer2go_download_src + " " + targetDir
+    job_id = request_one_job(cmd_info, job_command, 1, -1, "Y")
+    #print job_command
+
+    # move to location and clean up
+    #job_command = "mv " + targetDir + moddir + " " + iiab_modules_dir
+    job_command = "scripts/oer2go_install_move.sh " + moddir
+    #print job_command
+    resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=2, depend_on_job_id=job_id, has_dependent="N")
+
+    oer2go_wip[moddir] = oer2go_catalog[moddir] # track wip for front end
+
+    return resp
+
+def get_oer2go_stat(cmd_info):
+    # resp = json.dumps(oer2go_catalog) # FE gets this this by reading the json directly
+
+    refresh_oer2go_installed() # we will no longer use the module downloaded attribute in oer2go_catalog
+
+    all_oer2go = {}
+    all_oer2go['WIP'] = oer2go_wip.keys()
+    all_oer2go['INSTALLED'] = oer2go_installed
+
+    resp = json.dumps(all_oer2go)
+    return (resp)
+
+def refresh_oer2go_installed():
+    global oer2go_installed
+    oer2go_installed = []
+    dirlist = glob(iiab_modules_dir + "/*/")
+    for modpath in dirlist:
+        moddir = modpath.split('/')[-2] # can include non-oer2go items so remove them
+        if moddir in oer2go_catalog:
+            oer2go_installed.append(moddir)
 
 def install_rachel(cmd_info):
 
@@ -1477,11 +1573,20 @@ def get_cmd_info_key(cmd_info, key):
        return (cmd_info[key])
    else:
        return None
+
 def tprint(msg):
     """like print, but won't get newlines confused with multiple threads DELETE AFTER TESTING"""
     if daemon_mode == False:
         sys.stdout.write(msg + '\n')
         sys.stdout.flush()
+
+def log(level, msg):
+   # translate syslog levels to logger levels
+   levels = [50,50,50,40,30,20,10,0]
+
+   #print level, msg
+   #print journal_log.getEffectiveLevel()
+   journal_log.log(levels[level], "IIAB-CMDSRV : " + msg)
 
 def cmd_success(cmd):
    return (cmd_success_msg(cmd, ""))
@@ -1633,6 +1738,7 @@ def init():
     get_ansible_facts()
     #get_ansible_tags()
     read_kiwix_catalog()
+    read_oer2go_catalog()
 
     # Compute variables derived from all of the above
     compute_vars()
@@ -1783,11 +1889,31 @@ def get_ansible_tags():
 
 def read_kiwix_catalog():
     global kiwix_catalog
+    global init_error
 
-    stream = open (kiwix_catalog_file,"r")
-    kiwix_catalog_with_date = json.load(stream)
-    kiwix_catalog = kiwix_catalog_with_date['zims']
-    stream.close()
+    try:
+        stream = open (kiwix_catalog_file,"r")
+        kiwix_catalog_with_date = json.load(stream)
+        kiwix_catalog = kiwix_catalog_with_date['zims']
+        stream.close()
+    except:
+        init_error = True
+        log(syslog.LOG_ERR, 'Kiwix Catalog json file not found' )
+        pass
+
+def read_oer2go_catalog():
+    global oer2go_catalog
+    global init_error
+
+    try:
+        stream = open (oer2go_catalog_file,"r")
+        oer2go_catalog_with_date = json.load(stream)
+        oer2go_catalog = oer2go_catalog_with_date['modules']
+        stream.close()
+    except:
+        init_error = True
+        log(syslog.LOG_ERR, 'OER2GO Catalog json file not found' )
+        pass
 
 def get_incomplete_jobs():
     global jobs_requested
@@ -1920,9 +2046,12 @@ def app_config():
     global zim_download_prefix
     global zim_content_dir
     global zim_index_dir
+    global oer2go_catalog_file
+    global oer2go_mods_url
     global rachel_downloads_dir
     global rachel_working_dir
     global rachel_version
+    global iiab_modules_dir
     global ansible_playbook_program
     global ansible_program
     global apache_user
@@ -1957,8 +2086,11 @@ def app_config():
     zim_downloads_dir = conf['zim_downloads_dir']
     zim_working_dir = conf['zim_working_dir']
     zim_download_prefix = conf['zim_download_prefix']
+    oer2go_catalog_file = conf['oer2go_catalog_file']
+    oer2go_mods_url = conf['oer2go_mods_url'] # this is not used; we use the url for each catalog item
     rachel_downloads_dir = conf['rachel_downloads_dir']
     rachel_working_dir = conf['rachel_working_dir']
+    iiab_modules_dir = conf['iiab_modules_dir']
     squid_service = conf['squid_service']
     squid_whitelist = "/etc/%s/sites.whitelist.txt" % squid_service
     ansible_playbook_program = conf['ansible_playbook_program']
@@ -2079,8 +2211,8 @@ if __name__ == "__main__":
             syslog.closelog()
             raise
 
-    syslog.openlog( 'iiab_cmdsrv', 0, syslog.LOG_USER )
-    log = syslog.syslog
+    #syslog.openlog( 'iiab_cmdsrv', 0, syslog.LOG_USER )
+    #log = syslog.syslog
     log(syslog.LOG_INFO, 'Starting Command Server')
 
     # Now run the main routine

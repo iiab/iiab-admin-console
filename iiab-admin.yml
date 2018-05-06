@@ -15,7 +15,7 @@
     downloads_dir: "{{ iiab_base }}/downloads"
     use_cache: False
     no_network: False
-    doc_root: /library/www/html
+    # doc_root: /library/www/html inherited from iiab
     adm_cons_force_ssl: False
     iiab_home_url: /home
 

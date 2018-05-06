@@ -1,0 +1,18 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+  echo "Usage: $0 <name of module to download and install>."
+  exit 1
+fi
+
+START='INST-OER2GO-MOD {"moddir":"'
+END='"}'
+ARG=$START$1$END
+
+iiab-cmdsrv-ctl $ARG
+
+if [ $? -ne 0 ]; then
+  echo "INST-OER2GO-MOD Failed."
+  exit 1
+fi
+exit 0

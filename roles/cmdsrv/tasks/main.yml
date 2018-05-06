@@ -10,6 +10,7 @@
     - pkg-config
     - sqlite3
     - libapache2-mod-wsgi
+    - python-systemd
   tags:
     - download
   when: is_debuntu
@@ -28,6 +29,7 @@
     - zeromq3-devel
     - cracklib-python
     - mod_wsgi
+    - python-systemd
   tags:
     - download
   when: is_redhat
@@ -133,13 +135,19 @@
             group=root
   with_items:
             - scripts/get_kiwix_catalog
+            - scripts/get_oer2go_catalog
+            - scripts/constants.sh
 
 - name: Copy templated utilies
-  template: src="utilities/iiab-get-kiwix-cat"
-            dest="/usr/bin/iiab-get-kiwix-cat"
+  template: src={{ item }}
+            dest="/usr/bin/"
             mode=0755
             owner=root
             group=root
+  with_items:
+            - utilities/iiab-get-kiwix-cat
+            - utilities/iiab-get-oer2go-cat
+            - utilities/iiab-install-oer2go-mod
 
 - name: Copy default kiwix_catalog.json
   copy: src="json/kiwix_catalog.json"
@@ -155,9 +163,20 @@
 
 - debug: var=kiwix_cat.stdout_lines
 
+- name: Create fresh oer2go_catalog.json
+  shell: "iiab-get-oer2go-cat"
+  register: oer2go_cat
+
 - name: Create symlink from /common/assets to kiwix_catalog.json
   file: src=/etc/iiab/kiwix_catalog.json
         dest={{ doc_root }}/common/assets/kiwix_catalog.json
+        owner=root
+        group=root
+        state=link
+
+- name: Create symlink from /common/assets to oer2go_catalog.json
+  file: src=/etc/iiab/oer2go_catalog.json
+        dest={{ doc_root }}/common/assets/oer2go_catalog.json
         owner=root
         group=root
         state=link

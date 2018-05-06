@@ -36,6 +36,7 @@ Install Content
 
 * Get Started
 * Get ZIM Files from Kiwix
+* Get OER2GO(RACHEL) Modules
 * Download Khan Academy Videos
 * Remove Downloaded Files
 
