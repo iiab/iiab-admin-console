@@ -29,7 +29,7 @@
     - zeromq3-devel
     - cracklib-python
     - mod_wsgi
-    - python-systemd
+    - systemd-python
   tags:
     - download
   when: is_redhat
