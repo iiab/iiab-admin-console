@@ -645,13 +645,17 @@ function initConfigVars()
   //consoleLog(config_vars);
   // handle variable name change in iiab
   var gui_desired_network_role = "Gateway";
-  if (iiab_ini.hasOwnProperty('network'))
-    gui_desired_network_role = iiab_ini.network.iiab_network_mode;
-  if (iiab_ini.hasOwnProperty('computed_network'))
-    gui_desired_network_role = iiab_ini.computed_network.iiab_network_mode;
 
-  html += "LAN: on " + iiab_ini.network.computed_lan  + "<BR>";
-  html += "Network Mode: " + iiab_ini.network.iiab_network_mode + "<BR>";
+  if (iiab_ini.hasOwnProperty('computed_network')){
+    gui_desired_network_role = iiab_ini.computed_network.iiab_network_mode;
+    html += "LAN: on " + iiab_ini.computed_network.iiab_lan_iface + "<BR>";
+    html += "Network Mode: " + iiab_ini.computed_network.iiab_network_mode + "<BR>";
+  }
+  else if (iiab_ini.hasOwnProperty('network')){
+    gui_desired_network_role = iiab_ini.network.iiab_network_mode;
+    html += "LAN: on " + iiab_ini.network.computed_lan  + "<BR>";
+    html += "Network Mode: " + iiab_ini.network.iiab_network_mode + "<BR>";
+  }
   $("#discoveredNetwork").html(html);
   if (typeof config_vars.gui_desired_network_role === "undefined")
     setRadioButton("gui_desired_network_role", gui_desired_network_role)
