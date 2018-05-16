@@ -120,56 +120,76 @@ function procZimGroups() {
   });
   //consoleLog (html);
   $( "#ZimDownload" ).html(html);
-  $(function () {
-  $('[data-toggle="tooltip"]').tooltip({
-      animation: true,
-      delay: {show: 500, hide: 100}
-    });
-  });
+  activateTooltip();
 }
 
 function renderZimCategory(lang, category) {
 
   var html = "<h3>" + category + "</h3>";
-  var zimList = zimGroups[lang][category]
+  var zimList = zimGroups[lang][category];
     if (lang == 'eng')
       consoleLog (category);
-    zimList.sort(zimCompare);
+  html += renderZimList(zimList);
+  return html;
+}
 
-    $.each(zimList, function(key, zimId) {
-      var zim = zimCatalog[zimId];
-      var colorClass = "";
-      var colorClass2 = "";
-      if (zimsInstalled.indexOf(zimId) >= 0){
-        colorClass = "installed";
-        colorClass2 = 'class="installed"';
-      }
-      if (zimsScheduled.indexOf(zimId) >= 0){
-        colorClass = "scheduled";
-        colorClass2 = 'class="scheduled"';
-      }
-      html += '<label ';
-      html += '><input type="checkbox" name="' + zimId + '"';
-      //html += '><img src="images/' + zimId + '.png' + '"><input type="checkbox" name="' + zimId + '"';
-      if ((zimsInstalled.indexOf(zimId) >= 0) || (zimsScheduled.indexOf(zimId) >= 0))
-      html += 'disabled="disabled" checked="checked"';
-      html += 'onChange="updateZimDiskSpace(this)"></label>'; // end input
-      //var zimDesc = zim.title + ' (' + zim.description + ') [' + zim.perma_ref + ']';
-      var zimDesc = zim.title + ' (' + zim.perma_ref + ')';
-      //html += '<span class="zim-desc ' + colorClass + '" >&nbsp;&nbsp;' + zimDesc + '</span>';
+function renderZimInstalledList() {
+	var html = "";
+	$.each( installedZimCatalog.INSTALLED, function( zimId, zim ) {
+    html += genZimItem(zimId , preChecked=false, onChangeFunc="updateZimDiskSpace");
+  });
 
-      var zimToolTip = genZimTooltip(zim);
-      html += '<span class="zim-desc ' + colorClass + '"' + zimToolTip + '>&nbsp;&nbsp;' + zimDesc + '</span>';
+	$( "#installedZimModules" ).html(html);
+	activateTooltip();
+}
 
-      html += '<span ' + colorClass2 + 'style="display:inline-block; width:120px;"> Date: ' + zim.date + '</span>';
-      html += '<span ' + colorClass2 +'> Size: ' + readableSize(zim.size);
-      if (zimsInstalled.indexOf(zimId) >= 0)
-      html += ' - INSTALLED';
-      if (zimsScheduled.indexOf(zimId) >= 0)
-      html += ' - WORKING ON IT';
-      html += '</span><BR>';
-    });
+function renderZimList(zimList, preChecked=true, onChangeFunc="updateZimDiskSpace") {
+	var html = "";
+  zimList.sort(zimCompare);
 
+  $.each(zimList, function(key, zimId) {
+    html += genZimItem(zimId , preChecked=true, onChangeFunc="updateZimDiskSpace");
+  });
+
+  return html;
+}
+
+function genZimItem(zimId , preChecked=true, onChangeFunc="updateZimDiskSpace") {
+  var zim = zimCatalog[zimId];
+  var html = "";
+  var colorClass = "";
+  var colorClass2 = "";
+  if (zimsInstalled.indexOf(zimId) >= 0){
+    colorClass = "installed";
+    colorClass2 = 'class="installed"';
+  }
+  if (zimsScheduled.indexOf(zimId) >= 0){
+    colorClass = "scheduled";
+    colorClass2 = 'class="scheduled"';
+  }
+  html += '<label ';
+  html += '><input type="checkbox" name="' + zimId + '"';
+  //html += '><img src="images/' + zimId + '.png' + '"><input type="checkbox" name="' + zimId + '"';
+  if (preChecked) {
+    if ((zimsInstalled.indexOf(zimId) >= 0) || (zimsScheduled.indexOf(zimId) >= 0))
+      html += ' disabled="disabled" checked="checked"';
+  }
+  html += ' onChange="' + onChangeFunc + '(this)"></label>'; // end input
+
+  //var zimDesc = zim.title + ' (' + zim.description + ') [' + zim.perma_ref + ']';
+  var zimDesc = zim.title + ' (' + zim.perma_ref + ')';
+  //html += '<span class="zim-desc ' + colorClass + '" >&nbsp;&nbsp;' + zimDesc + '</span>';
+
+  var zimToolTip = genZimTooltip(zim);
+  html += '<span class="zim-desc ' + colorClass + '"' + zimToolTip + '>&nbsp;&nbsp;' + zimDesc + '</span>';
+
+  html += '<span ' + colorClass2 + 'style="display:inline-block; width:120px;"> Date: ' + zim.date + '</span>';
+  html += '<span ' + colorClass2 +'> Size: ' + readableSize(zim.size);
+  if (zimsInstalled.indexOf(zimId) >= 0)
+  html += ' - INSTALLED';
+  if (zimsScheduled.indexOf(zimId) >= 0)
+  html += ' - WORKING ON IT';
+  html += '</span><BR>';
   return html;
 }
 

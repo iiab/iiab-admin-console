@@ -107,18 +107,27 @@ function renderOer2goCatalog() {
   });
 
   $( "#Oer2goDownload" ).html(html);
-  $(function () {
-    $('[data-toggle="tooltip"]').tooltip({
-      animation: true,
-      delay: {show: 500, hide: 100}
-    });
-  });
+  activateTooltip();
+}
+
+function renderOer2goInstalledList() {
+	var html = "";
+	html = renderOer2goList(oer2goInstalled);
+	$( "#installedOer2goModules" ).html(html);
+	activateTooltip();
 }
 
 function renderOer2goItems(lang, mods) {
 	var html = "";
 	// lang header
 	html += "<h2>" + langCodes[lang]['locname'] + ' (' + langCodes[lang]['engname'] + ")</h2>";
+	html += renderOer2goList(mods);
+	return html;
+}
+
+function renderOer2goList(mods) {
+	var html = "";
+
 	// sort mods
   //console.log(mods);
   mods = mods.sort(function(a,b){
@@ -130,13 +139,13 @@ function renderOer2goItems(lang, mods) {
   	//console.log(mod);
   	var item = oer2goCatalog[mod];
   	//html += oer2goCatalog[mod].title + "<BR>";
-  	html += renderOer2goItem(item);
+  	html += renderOer2goItem(item, preChecked=false, onChangeFunc="whatever");
   });
 
 	return html;
 }
 
-function renderOer2goItem(item) {
+function renderOer2goItem(item, preChecked=true, onChangeFunc="updateOer2goDiskSpace") {
 
   var html = "";
   var colorClass = "";
@@ -155,12 +164,14 @@ function renderOer2goItem(item) {
   html += '<label ';
   html += '><input type="checkbox" name="' + itemId + '"';
   //html += '><img src="images/' + zimId + '.png' + '"><input type="checkbox" name="' + zimId + '"';
-  if ((oer2goInstalled.indexOf(itemId) >= 0) || (oer2goScheduled.indexOf(itemId) >= 0))
-    html += 'disabled="disabled" checked="checked"';
-  if (selectedOer2goItems.indexOf(itemId) >= 0)
-    html += ' checked="checked"';
+  if (preChecked) {
+    if ((oer2goInstalled.indexOf(itemId) >= 0) || (oer2goScheduled.indexOf(itemId) >= 0))
+      html += ' disabled="disabled" checked="checked"';
+    if (selectedOer2goItems.indexOf(itemId) >= 0)
+      html += ' checked="checked"';
+  }
+  html += ' onChange="' + onChangeFunc + '(this)"></label>'; // end input
 
-  html += 'onChange="updateOer2goDiskSpace(this)"></label>'; // end input
   var itemDesc = item.title + ': ' +item.description;
   var oer2goToolTip = genOer2goToolTip(item);
   html += '<span class="zim-desc ' + colorClass + '"' + oer2goToolTip + '>&nbsp;&nbsp;' + itemDesc + '</span>';
@@ -178,8 +189,11 @@ function renderOer2goItem(item) {
 }
 
 function genOer2goToolTip(item) {
+	// quick fix as there could be other needs to escape
+	var desc = item.description.replace(/"/g, '&quot;')
+
   var oer2goToolTip = ' data-toggle="tooltip" data-placement="auto top" data-html="true" ';
-  oer2goToolTip += 'title="<h3>' + item.title + '</h3>' + item.description + '<BR><BR>';
+  oer2goToolTip += 'title="<h3>' + item.title + '</h3>' + desc + '<BR><BR>';
   oer2goToolTip += 'Language: ' + item.lang + '<BR>';
   oer2goToolTip += 'Category: ' + item.category + '<BR>';
   oer2goToolTip += 'Age Range: ' + item.age_range + '<BR>';

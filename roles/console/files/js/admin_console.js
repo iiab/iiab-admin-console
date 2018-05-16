@@ -481,6 +481,15 @@ function staticIpVal(fieldId) {
       return true;
 }
 
+
+// Common functions
+function activateTooltip() {
+    $('[data-toggle="tooltip"]').tooltip({
+      animation: true,
+      delay: {show: 500, hide: 100}
+    });
+}
+
 //var testCmdHandler = function (data, textStatus, jqXHR) is not necessary
 var testCmdHandler = function (data)
 //function testCmdHandler (data)
@@ -984,6 +993,8 @@ function procDnldList(){
 
   $("#downloadedFilesRachel").html(calcDnldListHtml(downloadedFiles.rachel.file_list));
   $("#downloadedFilesZims").html(calcDnldListHtml(downloadedFiles.zims.file_list));
+  renderZimInstalledList();
+  renderOer2goInstalledList();
   //console.log("in procDnldList");
 }
 
@@ -1027,7 +1038,7 @@ function delDownloadedFileList(id, sub_dir) {
   return sendCmdSrvCmd(delCmd, genericCmdHandler);
 }
 
-// Util functions
+// Utility Menu functions
 
 function getJobStat()
 {
