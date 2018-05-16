@@ -1881,7 +1881,7 @@ def write_config_vars():
         fd.write(outstr)
         fd.close()
     finally:
-        lock.release()
+        lock.release() # release lock, no matter what
 
 def read_iiab_vars():
     global default_vars
