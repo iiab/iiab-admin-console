@@ -22,6 +22,7 @@ import time
 from datetime import date, datetime, timedelta
 import threading, subprocess
 import shlex
+import shutil
 import zmq
 import sqlite3
 import json
@@ -80,7 +81,7 @@ oer2go_mods_url = None
 rachel_downloads_dir = None
 rachel_working_dir = None
 rachel_version = None
-iiab_modules_dir = None
+modules_dir = None
 
 # Global Variables
 last_command_rowid = 0
@@ -616,6 +617,7 @@ def cmd_handler(cmd_msg):
         "GET-RACHEL-STAT": get_rachel_stat,
         "INST-RACHEL": install_rachel,
         "DEL-DOWNLOADS": del_downloads,
+        "DEL-MODULES": del_modules,
         "RESTART-KIWIX": restart_kiwix,
         "REBOOT": reboot_server,
         "POWEROFF": poweroff_server,
@@ -740,23 +742,52 @@ def list_library(cmd_info):
     return (json_resp)
 
 def del_downloads(cmd_info):
-    target_dir = "/library/downloads/"
+    if cmd_info['cmd_args']['sub_dir'] == "zims":
+        target_dir = zim_downloads_dir
+    elif cmd_info['cmd_args']['sub_dir'] == "rachel":
+        target_dir = rachel_downloads_dir
+    else:
+        return cmd_malformed(cmd_info['cmd'])
+
     error_flag = False
     try:
-        target_dir += cmd_info['cmd_args']['sub_dir']
-        if '..' in cmd_info['cmd_args']['sub_dir']: # could be legit, but ../ and /.. are not
-            return cmd_malformed(cmd_info['cmd'])
-
         file_list = cmd_info['cmd_args']['file_list']
-
     except:
         return cmd_malformed(cmd_info['cmd'])
 
-    cmdstr = "rm " + target_dir + "/"
+    cmdstr = "rm " + target_dir
 
     for file in file_list:
         try:
             outp = subproc_cmd(cmdstr + file)
+        except:
+            # ignore for now but report
+            error_flag = True
+            pass
+
+    if error_flag:
+        resp = cmd_success_msg(cmd_info['cmd'], "- Some errors occurred")
+    else:
+        resp = cmd_success(cmd_info['cmd'])
+
+    return (resp)
+
+def del_modules(cmd_info): # includes zims
+    mod_type = cmd_info['cmd_args']['mod_type']
+    if mod_type not in ["zims", "modules"]:
+        return cmd_malformed(cmd_info['cmd'])
+
+    mod_list = cmd_info['cmd_args']['mod_list']
+    for mod in mod_list:
+        try:
+            if mod_type == "zims":
+                filelist=glob.glob(zim_dir + "content/" + mod + "*")
+                for file in filelist:
+                    os.remove(file)
+
+                shutil.rmtree(zim_dir + "index/" + mod + ".idx")
+            else: # modules
+                shutil.rmtree(modules_dir + mod)
         except:
             # ignore for now but report
             error_flag = True
@@ -1230,7 +1261,7 @@ def install_oer2go_mod(cmd_info):
     #print job_command
 
     # move to location and clean up
-    #job_command = "mv " + targetDir + moddir + " " + iiab_modules_dir
+    #job_command = "mv " + targetDir + moddir + " " + modules_dir
     job_command = "scripts/oer2go_install_move.sh " + moddir
     #print job_command
     resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=2, depend_on_job_id=job_id, has_dependent="N")
@@ -1254,7 +1285,7 @@ def get_oer2go_stat(cmd_info):
 def refresh_oer2go_installed():
     global oer2go_installed
     oer2go_installed = []
-    dirlist = glob(iiab_modules_dir + "/*/")
+    dirlist = glob(modules_dir + "/*/")
     for modpath in dirlist:
         moddir = modpath.split('/')[-2] # can include non-oer2go items so remove them
         if moddir in oer2go_catalog:
@@ -2051,7 +2082,7 @@ def app_config():
     global rachel_downloads_dir
     global rachel_working_dir
     global rachel_version
-    global iiab_modules_dir
+    global modules_dir
     global ansible_playbook_program
     global ansible_program
     global apache_user
@@ -2090,7 +2121,7 @@ def app_config():
     oer2go_mods_url = conf['oer2go_mods_url'] # this is not used; we use the url for each catalog item
     rachel_downloads_dir = conf['rachel_downloads_dir']
     rachel_working_dir = conf['rachel_working_dir']
-    iiab_modules_dir = conf['iiab_modules_dir']
+    modules_dir = conf['modules_dir']
     squid_service = conf['squid_service']
     squid_whitelist = "/etc/%s/sites.whitelist.txt" % squid_service
     ansible_playbook_program = conf['ansible_playbook_program']

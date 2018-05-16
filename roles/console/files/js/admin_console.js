@@ -1014,7 +1014,9 @@ function calcDnldListHtml(list) {
 function delDownloadedFiles() {
   $.when(
     delDownloadedFileList("downloadedFilesRachel", "rachel"),
-    delDownloadedFileList("downloadedFilesZims", "zims"))
+    delDownloadedFileList("downloadedFilesZims", "zims"),
+    delModules("installedZimModules", "zims"),
+    delModules("installedOer2goModules", "modules")    )
     .done(getDownloadList, refreshDiskSpace);
 }
 
@@ -1035,6 +1037,29 @@ function delDownloadedFileList(id, sub_dir) {
   delArgs['file_list'] = fileList;
 
   var delCmd = 'DEL-DOWNLOADS ' + JSON.stringify(delArgs);
+  return sendCmdSrvCmd(delCmd, genericCmdHandler);
+}
+
+function delModules(id, mod_type) {
+  var delArgs = {}
+	var modList = [];
+  $("#" + id + " input").each(function() {
+    if (this.type == "checkbox") {
+      if (this.checked)
+        if (mod_type == "zims")
+          modList.push(installedZimCatalog.INSTALLED[this.name].perma_ref);
+        else
+        	modList.push(this.name);
+    }
+  });
+
+  if (modList.length == 0)
+    return;
+
+  delArgs['mod_type'] = mod_type;
+  delArgs['mod_list'] = modList;
+
+  var delCmd = 'DEL-MODULES ' + JSON.stringify(delArgs);
   return sendCmdSrvCmd(delCmd, genericCmdHandler);
 }
 
