@@ -490,6 +490,9 @@ function activateTooltip() {
     });
 }
 
+function nop(){
+}
+
 //var testCmdHandler = function (data, textStatus, jqXHR) is not necessary
 var testCmdHandler = function (data)
 //function testCmdHandler (data)

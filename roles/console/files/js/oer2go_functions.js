@@ -85,7 +85,7 @@ function renderOer2goCatalog() {
   });
 
   //consoleLog("starting for (var item in oer2goCatalog)");
-  for (var item in oer2goCatalog) { // create lists of modules belonging to selected lans
+  for (var item in oer2goCatalog) { // create lists of modules belonging to selected langs
     var lang = oer2goCatalog[item].lang;
     var moddir = oer2goCatalog[item].moddir;
     //console.log(item);
@@ -110,22 +110,22 @@ function renderOer2goCatalog() {
   activateTooltip();
 }
 
-function renderOer2goInstalledList() {
+function renderOer2goInstalledList() { // used by remove content
 	var html = "";
-	html = renderOer2goList(oer2goInstalled);
+	html = renderOer2goList(oer2goInstalled, preChecked=false, onChangeFunc="nop");
 	$( "#installedOer2goModules" ).html(html);
 	activateTooltip();
 }
 
-function renderOer2goItems(lang, mods) {
+function renderOer2goItems(lang, mods) { //used by oer2go download
 	var html = "";
 	// lang header
 	html += "<h2>" + langCodes[lang]['locname'] + ' (' + langCodes[lang]['engname'] + ")</h2>";
-	html += renderOer2goList(mods);
+	html += renderOer2goList(mods, preChecked=true, onChangeFunc="updateOer2goDiskSpace");
 	return html;
 }
 
-function renderOer2goList(mods) {
+function renderOer2goList(mods, preChecked, onChangeFunc) {
 	var html = "";
 
 	// sort mods
@@ -139,13 +139,13 @@ function renderOer2goList(mods) {
   	//console.log(mod);
   	var item = oer2goCatalog[mod];
   	//html += oer2goCatalog[mod].title + "<BR>";
-  	html += renderOer2goItem(item, preChecked=false, onChangeFunc="whatever");
+  	html += renderOer2goItem(item, preChecked, onChangeFunc);
   });
 
 	return html;
 }
 
-function renderOer2goItem(item, preChecked=true, onChangeFunc="updateOer2goDiskSpace") {
+function renderOer2goItem(item, preChecked, onChangeFunc) {
 
   var html = "";
   var colorClass = "";

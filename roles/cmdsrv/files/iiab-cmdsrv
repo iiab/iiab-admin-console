@@ -778,20 +778,25 @@ def del_modules(cmd_info): # includes zims
         return cmd_malformed(cmd_info['cmd'])
 
     mod_list = cmd_info['cmd_args']['mod_list']
+    error_flag = False
+
     for mod in mod_list:
         try:
             if mod_type == "zims":
-                filelist=glob.glob(zim_dir + "content/" + mod + "*")
+                filelist=glob(zim_dir + "content/" + mod + "*")
                 for file in filelist:
                     os.remove(file)
 
-                shutil.rmtree(zim_dir + "index/" + mod + ".idx")
+                shutil.rmtree(zim_dir + "index/" + mod + ".idx", ignore_errors=True)
             else: # modules
                 shutil.rmtree(modules_dir + mod)
         except:
             # ignore for now but report
             error_flag = True
             pass
+
+    if mod_type == "zims":
+        rc = subprocess.call(["/usr/bin/iiab-make-kiwix-lib"])
 
     if error_flag:
         resp = cmd_success_msg(cmd_info['cmd'], "- Some errors occurred")
