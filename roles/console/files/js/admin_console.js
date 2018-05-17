@@ -996,8 +996,6 @@ function procDnldList(){
 
   $("#downloadedFilesRachel").html(calcDnldListHtml(downloadedFiles.rachel.file_list));
   $("#downloadedFilesZims").html(calcDnldListHtml(downloadedFiles.zims.file_list));
-  renderZimInstalledList();
-  renderOer2goInstalledList();
   //console.log("in procDnldList");
 }
 
@@ -1019,8 +1017,13 @@ function delDownloadedFiles() {
     delDownloadedFileList("downloadedFilesRachel", "rachel"),
     delDownloadedFileList("downloadedFilesZims", "zims"),
     delModules("installedZimModules", "zims"),
-    delModules("installedOer2goModules", "modules")    )
-    .done(getDownloadList, getOer2goStat, getZimStat, refreshDiskSpace);
+    delModules("installedOer2goModules", "modules"))
+    .done(refreshAllInstalledList);
+}
+
+function refreshAllInstalledList() {
+	$.when(getDownloadList(), getOer2goStat(), getZimStat())
+	.done(renderZimInstalledList, renderOer2goInstalledList, refreshDiskSpace);
 }
 
 function delDownloadedFileList(id, sub_dir) {
