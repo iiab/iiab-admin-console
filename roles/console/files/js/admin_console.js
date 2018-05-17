@@ -1020,7 +1020,7 @@ function delDownloadedFiles() {
     delDownloadedFileList("downloadedFilesZims", "zims"),
     delModules("installedZimModules", "zims"),
     delModules("installedOer2goModules", "modules")    )
-    .done(getDownloadList, refreshDiskSpace);
+    .done(getDownloadList, getOer2goStat, getZimStat, refreshDiskSpace);
 }
 
 function delDownloadedFileList(id, sub_dir) {
