@@ -88,52 +88,8 @@ KA Lite from the Learning Equality Foundation is installed on Internet-in-a-Box 
 
 Make sure that the **KA Lite** and **KA Downloader** services are enabled under **Configure** - **Services Enabled**.
 
-Get RACHEL
-----------
-
-*WARNING: THIS SECTION IN TRANSITION*
-
-RACHEL from worldpossible.org is another collection of content which includes as of the rachelusb_32EN_3.1.5 release:
-
-* Khan Academy - Math and Science (without exercises)
-* Medline Plus Medical Encyclopedia
-* Hesperian Health Guides
-* Khan Academy - Health & Medicine
-* Infonet-Biovision
-* Practical Action
-* Project Gutenberg, 400 Selected Titles
-* CK-12 Textbooks
-* OLPC Educational Packages
-* UNESCO's IICBA Electronic Library
-* Math Expression
-* Powertyping
-* MIT Scratch
-* Understanding Algebra
-
-### How it works
-
-*WARNING: THIS SECTION IN TRANSITION*
-
-The screen displays whether RACHEL is installed, enabled, and whether the content has been installed.
-
-To download, unzip, and install the above content click **Download RACHEL Content**.  This is a single, large file and the whole process can take a long time. Visit **Display Job Status** on the **Utilities** menu to see when they have completed or any problems encountered.  It is not necessary to keep the browser open during the download.
-
-Particular content items can be removed from the RACHEL menu (but not from the server), by moving them from the rachel/www/modules directory to rachel/www/modules.out. In the future it will be possible to do this using this menu option.
-
-### Please Note
-
-*WARNING: THIS SECTION IN TRANSITION*
-
-With the current version of RACHEL there are errors in several files that may cause this download to fail part way through the first time.  However, it will succeed on a subsequent try.  If you see that it has failed when visting the **Display Job Status** screen, please return to this screen and click **Download RACHEL Content**.  The download and unzip will resume from the point at which it failed.
-
-### Don't Forget
-
-*WARNING: THIS SECTION IN TRANSITION*
-
-Make sure that the **RACHEL** service is enabled under **Configure** - **Services Enabled**.  The content can be downloaded if it is not enabled, but will only be visible to students after RACHEL has been enabled.
-
-Remove Files
-------------
+Remove Content
+--------------
 
 Over time you may find that ZIM or OER2GO/RACHEL modules are no longer needed or in need of upgrade. So you may want to delete some of the ones that are install
 
