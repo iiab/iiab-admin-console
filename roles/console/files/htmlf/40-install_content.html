@@ -61,6 +61,7 @@
 
 					<div id="Oer2goDownload" >  </div>
 				</div> <!--  End instConOer2go Submenu Option Pane -->
+
 				<div class="tab-pane" id="instDelDownloads"> <!-- Start instDelDownloads Submenu Option Pane -->
 					<h2>Remove Content</h2>
 					<p>In order to add new content you may need to remove old content, especially ZIM and OER2GO modules. Use this option to remove any of them.<BR>
@@ -69,12 +70,13 @@
 					<p>In the process of installing content a number of downloads are performed and accumulated in case you need to restart a download. Use this option to remove any of them.<BR>
 							Please <b>make sure</b> the content contained in the downloads has been <b>installed</b> prior to deleting these files.
 					</p>
+
 					<div class="row">
-						<div class="col-sm-4">
-							<h3>Disk Space:</h3>
-							<span id="dnldDiskSpace" >Disk Space: </span><BR><BR>
-						</div>
+						<!--  <div class="col-sm-3"></div> -->
+						<div class="col-sm-4"><span id="dnldDiskSpace" >Disk Space: </span></div>
+						<div class="col-sm-2"><button id="DEL-DOWNLOADS" type="button" class="btn btn-lg btn-primary">Delete Checked Files</button></div>
 					</div>
+
 					<div class="row">
 						<div class="col-sm-12">
 							<h3>Installed ZIM Modules: </h3>
@@ -103,11 +105,6 @@
 									<tbody id="downloadedFilesZims"></tbody>
 								</table>
 							</div> <!--  End downloadedFiles Table -->
-						</div>
-					</div>
-					<div class="row">
-						<div class="col-sm-4">
-							<button id="DEL-DOWNLOADS" type="button" class="btn btn-lg btn-primary">Delete Checked Files</button>
 						</div>
 					</div>
 				</div> <!--  End instDelDownloads Submenu Option Pane -->
