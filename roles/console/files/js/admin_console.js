@@ -204,7 +204,7 @@ function instContentButtonsEvents() {
   $("#INST-ZIMS").click(function(){
     var zim_id;
     make_button_disabled("#INST-ZIMS", true);
-
+    selectedZims = []; // items no longer selected as are being installed
     $('#ZimDownload input').each( function(){
       if (this.type == "checkbox")
       if (this.checked){
@@ -221,7 +221,7 @@ function instContentButtonsEvents() {
   $("#INST-MODS").click(function(){
     var mod_id;
     make_button_disabled("#INST-MODS", true);
-
+    selectedOer2goItems = []; // items no longer selected as are being installed
     $('#Oer2goDownload input').each( function(){
       if (this.type == "checkbox")
         if (this.checked){
