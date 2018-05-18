@@ -132,10 +132,12 @@ With the current version of RACHEL there are errors in several files that may ca
 
 Make sure that the **RACHEL** service is enabled under **Configure** - **Services Enabled**.  The content can be downloaded if it is not enabled, but will only be visible to students after RACHEL has been enabled.
 
-Remove Downloaded Files
------------------------
+Remove Files
+------------
 
-By installing ZIM files or RACHEL you are downloading large files from the internet.  These are not removed in case there is a problem and the installed needs to be rerun.
+Over time you may find that ZIM or OER2GO/RACHEL modules are no longer needed or in need of upgrade. So you may want to delete some of the ones that are install
+
+In addition, when you install ZIM files or OER2GO/RACHEL modules you are downloading large files from the internet.  These are not removed in case there is a problem and the installed needs to be rerun.
 
 After you are sure that everything has been installed successfully you can remove some or all of these files to free up space on the disk.
 
@@ -143,6 +145,8 @@ Here is how to verify that an item has been installed:
 
 * Look at the installation page and ensure that the item is marked as installed.
 * Look at the Server menu to see if the item is accessible and brings up content.
+
+To remove a module or file check the corresponding box and click **Delete Checked Files**.
 
 Actions
 -------

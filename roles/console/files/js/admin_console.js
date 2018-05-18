@@ -204,7 +204,7 @@ function instContentButtonsEvents() {
   $("#INST-ZIMS").click(function(){
     var zim_id;
     make_button_disabled("#INST-ZIMS", true);
-
+    selectedZims = []; // items no longer selected as are being installed
     $('#ZimDownload input').each( function(){
       if (this.type == "checkbox")
       if (this.checked){
@@ -221,7 +221,7 @@ function instContentButtonsEvents() {
   $("#INST-MODS").click(function(){
     var mod_id;
     make_button_disabled("#INST-MODS", true);
-
+    selectedOer2goItems = []; // items no longer selected as are being installed
     $('#Oer2goDownload input').each( function(){
       if (this.type == "checkbox")
         if (this.checked){
@@ -479,6 +479,18 @@ function staticIpVal(fieldId) {
     }
     else
       return true;
+}
+
+
+// Common functions
+function activateTooltip() {
+    $('[data-toggle="tooltip"]').tooltip({
+      animation: true,
+      delay: {show: 500, hide: 100}
+    });
+}
+
+function nop(){
 }
 
 //var testCmdHandler = function (data, textStatus, jqXHR) is not necessary
@@ -1003,8 +1015,15 @@ function calcDnldListHtml(list) {
 function delDownloadedFiles() {
   $.when(
     delDownloadedFileList("downloadedFilesRachel", "rachel"),
-    delDownloadedFileList("downloadedFilesZims", "zims"))
-    .done(getDownloadList, refreshDiskSpace);
+    delDownloadedFileList("downloadedFilesZims", "zims"),
+    delModules("installedZimModules", "zims"),
+    delModules("installedOer2goModules", "modules"))
+    .done(refreshAllInstalledList);
+}
+
+function refreshAllInstalledList() {
+	$.when(getDownloadList(), getOer2goStat(), getZimStat())
+	.done(renderZimInstalledList, renderOer2goInstalledList, refreshDiskSpace);
 }
 
 function delDownloadedFileList(id, sub_dir) {
@@ -1027,7 +1046,30 @@ function delDownloadedFileList(id, sub_dir) {
   return sendCmdSrvCmd(delCmd, genericCmdHandler);
 }
 
-// Util functions
+function delModules(id, mod_type) {
+  var delArgs = {}
+	var modList = [];
+  $("#" + id + " input").each(function() {
+    if (this.type == "checkbox") {
+      if (this.checked)
+        if (mod_type == "zims")
+          modList.push(installedZimCatalog.INSTALLED[this.name].perma_ref);
+        else
+        	modList.push(this.name);
+    }
+  });
+
+  if (modList.length == 0)
+    return;
+
+  delArgs['mod_type'] = mod_type;
+  delArgs['mod_list'] = modList;
+
+  var delCmd = 'DEL-MODULES ' + JSON.stringify(delArgs);
+  return sendCmdSrvCmd(delCmd, genericCmdHandler);
+}
+
+// Utility Menu functions
 
 function getJobStat()
 {

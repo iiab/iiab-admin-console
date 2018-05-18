@@ -13,7 +13,7 @@
 				<li><a href="#instConZims" call-after="checkKiwixCatalogDate">Get ZIM Files from Kiwix</a></li>
 				<li><a href="#instConOer2go" call-after="oer2goMenuOption">Get OER2GO(RACHEL) Modules</a></li>
 				<li><a href="#instConKAlite">Download Khan Academy Videos</a></li>
-				<li><a href="#instDelDownloads" call-after="getDownloadList">Remove Downloaded Files</a></li>
+				<li><a href="#instDelDownloads" call-after="refreshAllInstalledList">Remove Files</a></li>
 				<!-- <li><a href="#">Services Enabled</a></li> -->
 			</ul> <!-- End XXX Sub Level Menu -->
 			<h2>Actions</h2>
@@ -62,14 +62,29 @@
 					<div id="Oer2goDownload" >  </div>
 				</div> <!--  End instConOer2go Submenu Option Pane -->
 				<div class="tab-pane" id="instDelDownloads"> <!-- Start instDelDownloads Submenu Option Pane -->
-					<h2>Remove Downloaded Files</h2>
-					<p>In the process of installing ZIM files and RACHEL a number of downloads are performed and accumulated. Use this option to remove any of them.<BR>
+					<h2>Remove Files</h2>
+					<p>In order to add new content you may need to remove old content, especially ZIM and OER2GO modules. Use this option to remove any of them.<BR>
+							Please <b>make sure</b> you no longer want this content as it will be permanently removed.
+					</p>
+					<p>In the process of installing content a number of downloads are performed and accumulated in case you need to restart a download. Use this option to remove any of them.<BR>
 							Please <b>make sure</b> the content contained in the downloads has been <b>installed</b> prior to deleting these files.
 					</p>
 					<div class="row">
 						<div class="col-sm-4">
 							<h3>Disk Space:</h3>
 							<span id="dnldDiskSpace" >Disk Space: </span><BR><BR>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-sm-12">
+							<h3>Installed ZIM Modules: </h3>
+							<div id="installedZimModules" >  </div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-sm-12">
+							<h3>Installed OER2GO(RACHEL) Modules: </h3>
+							<div id="installedOer2goModules" >  </div>
 						</div>
 					</div>
 					<div class="row">
