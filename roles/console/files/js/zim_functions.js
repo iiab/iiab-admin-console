@@ -54,7 +54,8 @@
   }
 
   function getZimStat(){
-    return sendCmdSrvCmd("GET-ZIM-STAT", procZimStatInit);
+    // return sendCmdSrvCmd("GET-ZIM-STAT", procZimStatInit);
+    return sendCmdSrvCmd("GET-ZIM-STAT", procZimStat); // may cause display space calcs to be repeated
   }
 
   function procKiwixCatalog() {
@@ -133,17 +134,17 @@ function renderZimCategory(lang, category) {
   return html;
 }
 
-function renderZimInstalledList() {
+function renderZimInstalledList() { // used by remove content
 	var html = "";
 	$.each( installedZimCatalog.INSTALLED, function( zimId, zim ) {
-    html += genZimItem(zimId , preChecked=false, onChangeFunc="updateZimDiskSpace");
+    html += genZimItem(zimId , preChecked=false, onChangeFunc="nop");
   });
 
 	$( "#installedZimModules" ).html(html);
 	activateTooltip();
 }
 
-function renderZimList(zimList, preChecked=true, onChangeFunc="updateZimDiskSpace") {
+function renderZimList(zimList, preChecked=true, onChangeFunc="updateZimDiskSpace") { //used by zim download
 	var html = "";
   zimList.sort(zimCompare);
 
