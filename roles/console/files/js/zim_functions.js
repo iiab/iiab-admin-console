@@ -136,7 +136,8 @@ function renderZimCategory(lang, category) {
 
 function renderZimInstalledList() { // used by remove content
 	var html = "";
-	$.each( installedZimCatalog.INSTALLED, function( zimId, zim ) {
+	$.each( zimsInstalled, function( index, zimId ) {
+	//$.each( installedZimCatalog.INSTALLED, function( zimId, zim ) {
     html += genZimItem(zimId , preChecked=false, onChangeFunc="nop");
   });
 
@@ -305,6 +306,9 @@ function procZimCatalog() {
     if (selectedLangs.indexOf(lang) == -1) // automatically select any language for which zim is installed
     selectedLangs.push (lang);
   }
+  // sort installed zims by name for remove menu item
+  zimsInstalled.sort(zimCompare);
+
   for (var id in installedZimCatalog['WIP']){
     zimsScheduled.push(id);
     lang = installedZimCatalog['WIP'][id]['language'];
