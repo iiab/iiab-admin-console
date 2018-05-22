@@ -1187,14 +1187,15 @@ def install_zims(cmd_info):
             return resp
 
         targetDir = zim_working_dir + zimFileRef
-        if not os.path.exists(targetDir):
-            try:
-                os.makedirs(targetDir)
-            except OSError:
-                resp = cmd_error(cmd='INST-ZIMS', msg='Error creating directory in Command')
-                return resp
-    else:
-        return cmd_malformed(cmd_info['cmd'])
+        if kiwix_catalog[zimId]['source'] == 'portable': # create working dir, but only for zips
+            if not os.path.exists(targetDir):
+                try:
+                    os.makedirs(targetDir)
+                except OSError:
+                    resp = cmd_error(cmd='INST-ZIMS', msg='Error creating directory in Command')
+                    return resp
+            else:
+                return cmd_malformed(cmd_info['cmd'])
 
     # at this point we can create all the jobs
 
