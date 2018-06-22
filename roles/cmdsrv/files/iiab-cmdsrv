@@ -58,7 +58,7 @@ iiab_local_vars_file = None
 # Variables that should be read from config file
 # All of these variables will be read from config files and recomputed in init()
 iiab_repo = None
-iiab_base_path = None
+iiab_base = None
 cmdsrv_dbname = None
 
 cmdsrv_no_workers = 5
@@ -71,6 +71,7 @@ cmdsrv_dbpath = None
 # Constants - ToDo add to cmdsrv_config_file
 # for kiwix zims
 kiwix_catalog_file = None
+content_base = None
 zim_downloads_dir = None
 zim_download_prefix = None
 zim_working_dir = None
@@ -601,6 +602,7 @@ def cmd_handler(cmd_msg):
         "GET-MEM-INFO": get_mem_info,
         "GET-SPACE-AVAIL": get_space_avail,
         "GET-STORAGE-INFO": get_storage_info_lite,
+        "GET-EXTDEV-INFO": get_external_device_info,
         "RUN-ANSIBLE": run_ansible,
         "RESET-NETWORK": run_ansible,
         "GET-JOB-STAT": get_last_jobs_stat,
@@ -622,8 +624,8 @@ def cmd_handler(cmd_msg):
         "RESTART-KIWIX": restart_kiwix,
         "REBOOT": reboot_server,
         "POWEROFF": poweroff_server,
-        "REMOTE-ADMIN-CTL": remote_admin_ctl, #true/false
-        "GET-REMOTE-ADMIN-STATUS": get_remote_admin_status, #returns activated
+        #"REMOTE-ADMIN-CTL": remote_admin_ctl, #true/false
+        #"GET-REMOTE-ADMIN-STATUS": get_remote_admin_status, #returns activated
         "CHGPW": change_password
         }
 
@@ -869,6 +871,69 @@ def get_storage_info_lite(cmd_info):
     json_outp = json_array("system_fs", outp)
     return (json_outp)
 
+def get_external_device_info(cmd_info):
+    extdev_info = {}
+    outp = subprocess.check_output("scripts/get_ext_devs.sh")
+    dev_arr = outp.split('\n')
+    # dev_arr gets a dummy element due to final \n
+    if len(dev_arr) > 2:
+        return (cmd_error(cmd='GET-EXTDEV-INFO', msg='Only One USB may be used at a time.'))
+    # elif len(dev_arr) < 2:
+    for dev in dev_arr:
+        if len(dev) == 0:
+            continue
+        dev_info = dev.split()
+        print dev
+        print dev_info
+        dev_name = dev_info[5]
+        #dev_sp_avail = dev_info[3]
+        extdev_info[dev_name] = {}
+        extdev_info[dev_name]['dev_size_k'] = dev_info[1]
+        extdev_info[dev_name]['dev_used_k'] = dev_info[2]
+        extdev_info[dev_name]['dev_sp_avail_k'] = dev_info[3]
+        lib_dir = dev_name + content_base
+        if os.path.exists(lib_dir):
+            extdev_info[dev_name]['oer2go_modules'] = get_oer2go_installed_list(dev_name)
+            if iiab_ini['kiwix']: # if kiwix installed catalog zims
+                extdev_info[dev_name]['zim_modules'] = get_ext_zim_catalog(dev_name)
+
+            # put local_content here
+
+    resp = json.dumps(extdev_info)
+    return (resp)
+
+def get_ext_zim_catalog(dev_name):
+    kiwix_manage = iiab_base + "/kiwix/bin/kiwix-manage"
+    kiwix_library_xml_tmp = "/tmp/library.xml"
+    kiwix_exclude_attr = ["favicon"]
+    iiab_zim_path = dev_name + zim_dir
+    content = iiab_zim_path + "/content/"
+    index = iiab_zim_path + "/index/"
+
+    files_processed = {}
+    flist = os.listdir(content)
+    flist.sort()
+    for filename in flist:
+        zimpos = filename.find(".zim")
+        if zimpos != -1:
+            filename = filename[:zimpos]
+            if filename not in files_processed:
+                files_processed[filename] = True
+                zimname = content + filename + ".zim"
+                zimidx = index + filename + ".zim.idx"
+                command = kiwix_manage + " " + kiwix_library_xml_tmp + " add " + zimname
+                if os.path.isdir (zimidx): # only declare index if exists (could be embedded)
+                    command += " -i " + zimidx
+                #print command
+                args = shlex.split(command)
+                try:
+                    outp = subprocess.check_output(args)
+                except: #skip things that don't work
+                    #print 'skipping ' + filename
+                    pass
+
+    return read_library_xml(kiwix_library_xml_tmp, kiwix_exclude_attr)
+
 # the following does not work on lvm or raid or iso usb drives
 # we wil fix later
 
@@ -1040,21 +1105,29 @@ def get_zim_stat(cmd_info):
     all_zims['INSTALLED'] = {}
 
     lib_xml_file = zim_dir + "/library.xml"
+    all_zims['INSTALLED'] = read_library_xml(lib_xml_file)
 
+    resp = json.dumps(all_zims)
+    return (resp)
+
+def read_library_xml(lib_xml_file, kiwix_exclude_attr=[""]):
+    kiwix_exclude_attr.append("id") # attributes to exclude
+    zims_installed = {}
     try:
         tree = ET.parse(lib_xml_file)
         root = tree.getroot()
 
         for child in root:
-            attributes = child.attrib
-            if 'id' in attributes:
-                id = attributes['id']
-                all_zims['INSTALLED'][id] = attributes
+            attributes = {}
+            if 'id' in child.attrib:
+                id = child.attrib['id']
+                for attr in child.attrib:
+                    if attr not in kiwix_exclude_attr:
+                        attributes[attr] = child.attrib[attr] # copy if not id or in exclusion list
+                zims_installed[id] = attributes
     except IOError:
-        all_zims['INSTALLED'] = {}
-
-    resp = json.dumps(all_zims)
-    return (resp)
+        zims_installed = {}
+    return zims_installed
 
 def get_oer2go_catalog(cmd_info):
     outp = subprocess.check_output(["scripts/get_oer2go_catalog"])
@@ -1291,12 +1364,16 @@ def get_oer2go_stat(cmd_info):
 
 def refresh_oer2go_installed():
     global oer2go_installed
-    oer2go_installed = []
-    dirlist = glob(modules_dir + "/*/")
+    oer2go_installed = get_oer2go_installed_list() # could go further and get rid of oer2go_installed
+
+def get_oer2go_installed_list(device=""):
+    oer2go_installed_list = []
+    dirlist = glob(device + modules_dir + "/*/")
     for modpath in dirlist:
         moddir = modpath.split('/')[-2] # can include non-oer2go items so remove them
         if moddir in oer2go_catalog:
-            oer2go_installed.append(moddir)
+            oer2go_installed_list.append(moddir)
+    return oer2go_installed_list
 
 def install_rachel(cmd_info):
 
@@ -2079,6 +2156,7 @@ def app_config():
     global cmdsrv_pid_file
     global cmdsrv_ready_file
     global kiwix_catalog_file
+    global content_base
     global zim_downloads_dir
     global zim_working_dir
     global zim_dir
@@ -2120,6 +2198,7 @@ def app_config():
     cmdsrv_pid_file = conf['cmdsrv_pid_file']
     cmdsrv_ready_file = conf['cmdsrv_ready_file']
     kiwix_catalog_file = conf['kiwix_catalog_file']
+    content_base = conf['content_base']
     zim_dir = conf['zim_dir']
     zim_content_dir = zim_dir + "content/"
     zim_index_dir = zim_dir + "index/"

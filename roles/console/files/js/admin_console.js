@@ -32,6 +32,7 @@ var zimsScheduled = []; // list of zims being installed (wip)
 var oer2goInstalled = []; // list of Oer2go items already installed
 var oer2goScheduled = []; // list of Oer2go items being installed (wip)
 var downloadedFiles = {};
+var externalDeviceContents = {}; // zims and other content on external device; currently only one allowed
 
 var langNames = []; // iso code, local name and English name for languages for which we have zims sorted by English name for language
 var topNames = ["ara","eng","spa","fra","hin","por"]; // languages for top language menu
@@ -920,6 +921,24 @@ function readableSize(kbytes) {
 // Put oer2go_functions here
 // **************************************
 
+function manageContentInit(){
+	refreshAllInstalledList();
+	//$("#instManageContentInternal").addClass('active');
+
+}
+
+function getExternalDevInfo(){
+var command = "GET-EXTDEV-INFO";
+  sendCmdSrvCmd(command, procExternalDevInfo);
+  return true;
+}
+
+function procExternalDevInfo(data){
+  externalDeviceContents = data;
+  // next(iter(my_dict))
+}
+
+// Not currently used
 function getRachelStat(){
   var command = "GET-RACHEL-STAT";
   sendCmdSrvCmd(command, procRachelStat);
@@ -1564,7 +1583,8 @@ function sendCmdSrvCmd(command, callback, buttonId, errCallback, cmdArgs) {
     })
     .fail(jsonErrhandler)
     .always(function() {
-      make_button_disabled('#' + this.buttonId, false);
+    	if (this.buttonId != "")
+        make_button_disabled('#' + this.buttonId, false);
     });
 
     return resp;
