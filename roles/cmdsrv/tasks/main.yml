@@ -163,6 +163,14 @@
 
 - debug: var=kiwix_cat.stdout_lines
 
+- name: Copy default oer2go_catalog.json
+  copy: src="json/oer2go_catalog.json"
+        dest="/etc/iiab/oer2go_catalog.json"
+        mode=0644
+        force=no
+        owner=root
+        group=root
+
 - name: Create fresh oer2go_catalog.json
   shell: "iiab-get-oer2go-cat"
   register: oer2go_cat
