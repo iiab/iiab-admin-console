@@ -22,6 +22,7 @@ var zimCategories = {}; // zim categories grouped by language and priority to al
 var kiwixCatalog = {}; // catalog of kiwix zims, read from file downloaded from kiwix.org
 var kiwixCatalogDate = new Date; // date of download, stored in json file
 var installedZimCatalog = {}; // catalog of installed, and wip zims
+var externalZimCatalog = {}; // catalog of zims on an external device
 var oer2goCatalog = {}; // catalog of rachel/oer2go modules, read from file downloaded from rachel
 var oer2goCatalogDate = new Date; // date of download, stored in json file
 var oer2goCatalogFilter = ["html"] // only manage these types as OER2GO; catalog can contain zims and kalite that we do elsewhere
@@ -935,7 +936,10 @@ var command = "GET-EXTDEV-INFO";
 
 function procExternalDevInfo(data){
   externalDeviceContents = data;
-  // next(iter(my_dict))
+  externalZimCatalog = [];
+  var extUsb = Object.keys(externalDeviceContents)[0];
+  if (extUsb !== "undefined")
+    externalZimCatalog = externalDeviceContents[extUsb].zim_modules;
 }
 
 // Not currently used

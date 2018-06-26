@@ -117,6 +117,14 @@ function renderOer2goInstalledList() { // used by remove content
 	activateTooltip();
 }
 
+function renderexternalOer2goModules() {
+	var html = "";
+	var usb = Object.keys(externalDeviceContents)[0];
+	html = renderOer2goList(externalDeviceContents[usb].oer2go_modules, preChecked=false, onChangeFunc="nop");
+  $( "#externalOer2goModules" ).html(html);
+	activateTooltip();
+}
+
 function renderOer2goItems(lang, mods) { //used by oer2go download
 	var html = "";
 	// lang header

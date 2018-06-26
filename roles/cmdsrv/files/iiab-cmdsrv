@@ -891,6 +891,8 @@ def get_external_device_info(cmd_info):
         extdev_info[dev_name]['dev_size_k'] = dev_info[1]
         extdev_info[dev_name]['dev_used_k'] = dev_info[2]
         extdev_info[dev_name]['dev_sp_avail_k'] = dev_info[3]
+        extdev_info[dev_name]['oer2go_modules'] = []
+        extdev_info[dev_name]['zim_modules'] = {}
         lib_dir = dev_name + content_base
         if os.path.exists(lib_dir):
             extdev_info[dev_name]['oer2go_modules'] = get_oer2go_installed_list(dev_name)
