@@ -945,7 +945,7 @@ function procExternalDevInfo(data){
 }
 
 function manContInternalStat(){
-  var html = "
+  var html = "";
 }
 
 function procDnldList(){
@@ -1331,7 +1331,12 @@ function displaySpaceAvail(){
 	// display space available on various panels
 	// assumes all data has been retrieved and is in data structures
 
-	var availableSpace = calcLibraryDiskSpace();
+	var availableSpace = 0;
+	var usedSpace = 0;
+	var internalSpace = calcLibraryDiskSpace();
+	availableSpace = internalSpace.availableSpace;
+	usedSpace = internalSpace.usedSpace;
+
 	var allocatedSpace = calcAllocatedSpace();
 	var warningStyle = '';
 
@@ -1383,11 +1388,17 @@ function calcLibraryDiskSpace(){
   var availableSpace = 0;
   var usedSpace = 0;
   // library space is accurate whether separate partition or not
-	if (sysStorage.library_on_root)
-	  availableSpace = sysStorage.root.avail_in_megs * 1024;
-	else
-    availableSpace = sysStorage.library.avail_in_megs * 1024;
-  return availableSpace;
+	if (sysStorage.library_on_root){
+	  availableSpace = sysStorage.root.avail_in_k;
+	  usedSpace = sysStorage.root.size_in_k - sysStorage.root.avail_in_k;
+	}
+	else{
+    availableSpace = sysStorage.library.avail_in_k;
+    usedSpace = sysStorage.library.size_in_k - sysStorage.library.avail_in_k;
+  }
+  return { availableSpace : availableSpace,
+  	       usedSpace : usedSpace
+  };
 }
 
 function updateZimDiskSpace(cb){
