@@ -924,7 +924,8 @@ function readableSize(kbytes) {
 
 function manageContentInit(){
 	refreshAllInstalledList();
-	//$("#instManageContentInternal").addClass('active');
+	refreshExternalList();
+
 
 }
 
@@ -937,9 +938,31 @@ var command = "GET-EXTDEV-INFO";
 function procExternalDevInfo(data){
   externalDeviceContents = data;
   externalZimCatalog = [];
-  var extUsb = Object.keys(externalDeviceContents)[0];
-  if (extUsb !== "undefined")
+  if (Object.keys(externalDeviceContents).length > 0){
+    var extUsb = Object.keys(externalDeviceContents)[0];
     externalZimCatalog = externalDeviceContents[extUsb].zim_modules;
+  }
+}
+
+function manContInternalStat(){
+  var html = "
+}
+
+function procDnldList(){
+
+  $("#downloadedFilesRachel").html(calcDnldListHtml(downloadedFiles.rachel.file_list));
+  $("#downloadedFilesZims").html(calcDnldListHtml(downloadedFiles.zims.file_list));
+  //console.log("in procDnldList");
+}
+
+function manContInternalStat(){
+	var html = "";
+  html += '<tr>';
+  html += "<td>Internal</td>";
+  html += "<td>" + entry['size'] + "</td>";
+  html +=  '<td><input type="checkbox" name="' + entry['filename'] + '" id="' + entry['filename'] + '">' + "</td>";
+  html +=  '</tr>';
+  $("#instManContInternal").html(html);
 }
 
 // Not currently used
@@ -1047,6 +1070,11 @@ function delDownloadedFiles() {
 function refreshAllInstalledList() {
 	$.when(getDownloadList(), getOer2goStat(), getZimStat())
 	.done(renderZimInstalledList, renderOer2goInstalledList, refreshDiskSpace);
+}
+
+function refreshExternalList() {
+	$.when(getExternalDevInfo())
+	.done(renderExternalZimList, renderexternalOer2goModules, refreshDiskSpace);
 }
 
 function delDownloadedFileList(id, sub_dir) {
@@ -1239,6 +1267,7 @@ function procSysStorageLite(data)
 }
 
 // need to rewrite the function below for lvm, etc.
+// 6/28/2018 is not being used
 function procSysStorage()
 {
   //alert ("in procSysStorage");
@@ -1352,6 +1381,7 @@ function sumAllocationList(list, type){
 
 function calcLibraryDiskSpace(){
   var availableSpace = 0;
+  var usedSpace = 0;
   // library space is accurate whether separate partition or not
 	if (sysStorage.library_on_root)
 	  availableSpace = sysStorage.root.avail_in_megs * 1024;

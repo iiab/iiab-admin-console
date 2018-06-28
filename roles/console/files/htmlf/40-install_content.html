@@ -77,7 +77,20 @@
 					</p>
 
 					<div class="row">
-						<div class="col-sm-8"><span id="targetDiskSpace" >Target Space Available: </span></div>
+						<div class="col-sm-8"><span id="targetDiskSpace" >Target Space Available: </span>
+							<table>
+								<thead>
+									<tr>
+										<th style="width:40%">Device</th>
+										<th style="width:10%">Used</th>
+										<th style="width:10%">Available</th>
+										<th style="width:10%">Selected</th>
+									</tr>
+								</thead>
+								<tbody id="instManContInternal"></tbody>
+								<tbody id="instManContExternal"></tbody>
+							</table>
+						</div>
 						<div class="col-sm-2">
 							<div class="btn-group-vertical">
 								<button id="COPY-CONTENT" type="button" class="btn btn-lg btn-primary">Copy Selected Content</button>
@@ -89,7 +102,7 @@
 						<div class="col-sm-12">
 							<ul id="instManageContenTabs" class="nav nav-tabs">
 								<li class="nav-item active"><a href="#instManageContentInternal" class="nav-link small">Installed Content </a></li>
-								<li class="nav-item"><a href="#instManageContentUsb" class="nav-link small" call-after="">Content on USB</a></li>
+								<li class="nav-item"><a href="#instManageContentUsb" class="nav-link small" call-after="nop">Content on USB</a></li>
 							</ul>
 						</div>
 					</div>
