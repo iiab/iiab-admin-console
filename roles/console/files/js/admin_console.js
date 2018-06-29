@@ -944,10 +944,6 @@ function procExternalDevInfo(data){
   }
 }
 
-function manContInternalStat(){
-  var html = "";
-}
-
 function procDnldList(){
 
   $("#downloadedFilesRachel").html(calcDnldListHtml(downloadedFiles.rachel.file_list));
@@ -955,15 +951,7 @@ function procDnldList(){
   //console.log("in procDnldList");
 }
 
-function manContInternalStat(){
-	var html = "";
-  html += '<tr>';
-  html += "<td>Internal</td>";
-  html += "<td>" + entry['size'] + "</td>";
-  html +=  '<td><input type="checkbox" name="' + entry['filename'] + '" id="' + entry['filename'] + '">' + "</td>";
-  html +=  '</tr>';
-  $("#instManContInternal").html(html);
-}
+
 
 // Not currently used
 function getRachelStat(){
@@ -1333,6 +1321,7 @@ function displaySpaceAvail(){
 
 	var availableSpace = 0;
 	var usedSpace = 0;
+	var internalContentSelected = 0;
 	var internalSpace = calcLibraryDiskSpace();
 	availableSpace = internalSpace.availableSpace;
 	usedSpace = internalSpace.usedSpace;
@@ -1355,6 +1344,21 @@ function displaySpaceAvail(){
 
   $( "#zimDiskSpace" ).html(html);
   $( "#oer2goDiskSpace" ).html(html);
+
+  // calc internalContentSelected
+
+  manContInternalStat(usedSpace, availableSpace, internalContentSelected);
+}
+
+function manContInternalStat(usedSpace, availableSpace, internalContentSelected){
+	var html = "";
+  html += '<tr>';
+  html += "<td>Internal</td>";
+  html += '<td style="text-align:right">' + usedSpace + "</td>";
+  html += '<td style="text-align:right">' + availableSpace + "</td>";
+  html += '<td style="text-align:right">' + internalContentSelected + "</td>";
+  html +=  '</tr>';
+  $("#instManContInternal").html(html);
 }
 
 function calcAllocatedSpace(){
