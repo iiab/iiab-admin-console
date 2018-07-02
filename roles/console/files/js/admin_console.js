@@ -271,13 +271,17 @@ function instContentButtonsEvents() {
     alert ("RACHEL scheduled to be downloaded and installed.\n\nPlease view Utilities->Display Job Status to see the results.");
   });
 
-  $("#DEL-DOWNLOADS").click(function(){
-  	var r = confirm("Press OK to Delete Checked Files");
+  $("#REMOVE-CONTENT").click(function(){
+  	var r = confirm("Press OK to Remove Checked Content");
     if (r != true)
       return;
-  	make_button_disabled("#DEL-DOWNLOADS", true);
-    delDownloadedFiles();
-    make_button_disabled("#DEL-DOWNLOADS", false);
+  	make_button_disabled("#REMOVE-CONTENT", true);
+    rmContent();
+    make_button_disabled("#REMOVE-CONTENT", false);
+  });
+
+    $("#FIND-USB").click(function(){
+    refreshExternalList();
   });
 }
 
@@ -933,7 +937,7 @@ function manageContentInit(){
 
 function getExternalDevInfo(){
 var command = "GET-EXTDEV-INFO";
-  return sendCmdSrvCmd(command, procExternalDevInfo);
+  return sendCmdSrvCmd(command, procExternalDevInfo, "FIND-USB");
 }
 
 function procExternalDevInfo(data){
@@ -1055,7 +1059,7 @@ function calcDnldListHtml(list) {
   return html;
 }
 
-function delDownloadedFiles() {
+function rmContent() {
   $.when(
     delDownloadedFileList("downloadedFilesRachel", "rachel"),
     delDownloadedFileList("downloadedFilesZims", "zims"),
