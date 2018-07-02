@@ -112,17 +112,19 @@ function renderOer2goCatalog() {
 
 function renderOer2goInstalledList() { // used by remove content
 	var html = "";
-	html = renderOer2goList(oer2goInstalled, preChecked=false, onChangeFunc="nop");
+	html = renderOer2goList(oer2goInstalled, preChecked=false, onChangeFunc="updateIntOer2goSpace");
 	$( "#installedOer2goModules" ).html(html);
 	activateTooltip();
 }
 
 function renderexternalOer2goModules() {
 	var html = "";
-	var usb = Object.keys(externalDeviceContents)[0];
-	html = renderOer2goList(externalDeviceContents[usb].oer2go_modules, preChecked=false, onChangeFunc="nop");
-  $( "#externalOer2goModules" ).html(html);
-	activateTooltip();
+	var usb = calcExtUsb();
+	if (usb){
+	  html = renderOer2goList(externalDeviceContents[usb].oer2go_modules, preChecked=false, onChangeFunc="updateExtOer2goSpace");
+    $( "#externalOer2goModules" ).html(html);
+	  activateTooltip();
+}
 }
 
 function renderOer2goItems(lang, mods) { //used by oer2go download

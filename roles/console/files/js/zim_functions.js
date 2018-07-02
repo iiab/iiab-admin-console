@@ -151,7 +151,7 @@ function renderZimInstalledList() { // used by manage content
 	// zimsInstalled is sorted when computed
 	$.each( zimsInstalled, function( index, zimId ) {
 	//$.each( installedZimCatalog.INSTALLED, function( zimId, zim ) {
-    html += genZimItem(zimId, zimCatalog[zimId], preChecked=false, onChangeFunc="nop");
+    html += genZimItem(zimId, zimCatalog[zimId], preChecked=false, onChangeFunc="updateIntZimsSpace");
   });
 
 	$( "#installedZimModules" ).html(html);
@@ -166,7 +166,7 @@ function renderExternalZimList() { // used by manage content
 
   zimList.sort(zimCompare)
   $.each( zimList, function( index, zimId ) {
-	  html += genZimItem(zimId, externalZimCatalog[zimId], preChecked=false, onChangeFunc="nop");
+	  html += genZimItem(zimId, externalZimCatalog[zimId], preChecked=false, onChangeFunc="updateExtZimsSpace");
   });
 	$( "#externalZimModules" ).html(html);
 	activateTooltip();
