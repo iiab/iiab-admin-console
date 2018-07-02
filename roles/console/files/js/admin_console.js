@@ -42,6 +42,8 @@ var langGroups = {"en":"eng","fr":"fra"}; // language codes to treat as a single
 var selectedLangs = []; // languages selected by gui for display of content
 var selectedZims = [];
 var selectedOer2goItems = [];
+var manContSelections = {};
+
 var sysStorage = {};
 sysStorage.root = {};
 sysStorage.library = {};
@@ -931,17 +933,24 @@ function manageContentInit(){
 
 function getExternalDevInfo(){
 var command = "GET-EXTDEV-INFO";
-  sendCmdSrvCmd(command, procExternalDevInfo);
-  return true;
+  return sendCmdSrvCmd(command, procExternalDevInfo);
 }
 
 function procExternalDevInfo(data){
   externalDeviceContents = data;
   externalZimCatalog = [];
-  if (Object.keys(externalDeviceContents).length > 0){
-    var extUsb = Object.keys(externalDeviceContents)[0];
+  var extUsb = calcExtUsb();
+  if (extUsb){
     externalZimCatalog = externalDeviceContents[extUsb].zim_modules;
+    initmanContSelections(extUsb); // at some point we could do more than one
   }
+}
+
+function calcExtUsb(){ // for now we only allow one
+	var extUsb = null;
+	if (Object.keys(externalDeviceContents).length > 0)
+    extUsb = Object.keys(externalDeviceContents)[0];
+  return extUsb;
 }
 
 function procDnldList(){
@@ -1347,18 +1356,35 @@ function displaySpaceAvail(){
 
   // calc internalContentSelected
 
-  manContInternalStat(usedSpace, availableSpace, internalContentSelected);
+  manContInternalStat(usedSpace, availableSpace, manContSelections.internal.sum);
+  var extUsb = calcExtUsb();
+  if (extUsb){
+    manContUsbStat(extUsb);
+  }
 }
 
 function manContInternalStat(usedSpace, availableSpace, internalContentSelected){
 	var html = "";
   html += '<tr>';
   html += "<td>Internal</td>";
-  html += '<td style="text-align:right">' + usedSpace + "</td>";
-  html += '<td style="text-align:right">' + availableSpace + "</td>";
-  html += '<td style="text-align:right">' + internalContentSelected + "</td>";
+  html += '<td style="text-align:right">' + readableSize(usedSpace) + "</td>";
+  html += '<td style="text-align:right">' + readableSize(availableSpace) + "</td>";
+  html += '<td style="text-align:right">' + readableSize(internalContentSelected) + "</td>";
   html +=  '</tr>';
   $("#instManContInternal").html(html);
+}
+
+function manContUsbStat(dev){
+	var html = "";
+	var usedSpace = externalDeviceContents[dev].dev_size_k - externalDeviceContents[dev].dev_sp_avail_k;
+
+  html += '<tr>';
+  html += "<td>" + dev + "</td>";
+  html += '<td style="text-align:right">' + readableSize(usedSpace) + "</td>";
+  html += '<td style="text-align:right">' + readableSize(externalDeviceContents[dev].dev_sp_avail_k) + "</td>";
+  html += '<td style="text-align:right">' + readableSize(manContSelections[dev].sum) + "</td>";
+  html +=  '</tr>';
+  $("#instManContExternal").html(html);
 }
 
 function calcAllocatedSpace(){
@@ -1430,6 +1456,62 @@ function updateZimDiskSpaceUtil(zim_id, checked){
     if (zimIdx != -1){
       sysStorage.zims_selected_size -= size;
       selectedZims.splice(zimIdx, 1);
+    }
+  }
+  displaySpaceAvail();
+}
+
+function updateIntZimsSpace(cb){
+  var zim_id = cb.name
+  updateManContSelectedSpace(zim_id, "zims", installedZimCatalog.INSTALLED, "internal", cb.checked);
+}
+
+function updateIntOer2goSpace(cb){
+  var id = cb.name
+  updateManContSelectedSpace(id, "modules", oer2goCatalog, "internal", cb.checked);
+}
+
+function updateExtZimsSpace(cb){
+  var zim_id = cb.name
+  updateManContSelectedSpace(zim_id, "zims", externalZimCatalog, "/media/usb0", cb.checked);
+}
+
+function updateExtOer2goSpace(cb){
+  var id = cb.name
+  updateManContSelectedSpace(id, "modules", oer2goCatalog, "/media/usb0", cb.checked);
+}
+
+
+function updateManContSelectedSpace(id, contType, catalog, dev, checked){
+  var item = catalog[id]
+  var sizeStr = "0";
+  switch (contType) {
+  	case "zims":
+  	  sizeStr =  item.size;
+  	  break;
+  	case "modules":
+  	  sizeStr =  item.ksize;
+  	  break;
+  	default:
+        consoleLog("Unknown content type in updateManContSelectedSpace");
+        return false;
+  }
+
+  var size =  parseInt(sizeStr);
+  var idx = manContSelections[dev][contType].indexOf(id);
+
+  if (checked){
+    if (idx == -1){ // only update if not already selected
+      manContSelections[dev].sum += size;
+      manContSelections[dev][contType].push(id);
+    }
+    else
+    	consoleLog("ID in array that should not be in updateManContSelectedSpace");
+  }
+  else {
+    if (idx != -1){
+      manContSelections[dev].sum -= size;
+      manContSelections[dev][contType].splice(idx, 1);
     }
   }
   displaySpaceAvail();
@@ -1759,18 +1841,38 @@ function init ()
 
   getServerInfo(); // see if we can connect
 
+  initVars();
+
   $.when(
     //sendCmdSrvCmd("GET-ANS-TAGS", getAnsibleTags),
     sendCmdSrvCmd("GET-WHLIST", getWhitelist),
     $.when(sendCmdSrvCmd("GET-VARS", getInstallVars), sendCmdSrvCmd("GET-ANS", getAnsibleFacts),sendCmdSrvCmd("GET-CONF", getConfigVars),sendCmdSrvCmd("GET-IIAB-INI", procXsceIni)).done(initConfigVars),
     $.when(getLangCodes(),readKiwixCatalog(),sendCmdSrvCmd("GET-ZIM-STAT", procZimStatInit)).done(procZimCatalog),
     getOer2goStat(),
-    getSpaceAvail())
+    getSpaceAvail(),
+    getExternalDevInfo())
     .done(initDone)
     .fail(function () {
     	displayServerCommandStatus('<span style="color:red">Init Failed</span>');
     	consoleLog("Init failed");
     	})
+}
+
+function initVars(){
+	initmanContSelections("internal");
+}
+
+function initmanContSelections(dev, reset=false){
+	if (! manContSelections.hasOwnProperty(dev)){
+	  manContSelections[dev] = {};
+	  reset=true;
+	}
+
+	if (reset){
+	  manContSelections[dev]["zims"] = [];
+	  manContSelections[dev]["modules"] = [];
+	  manContSelections[dev]["sum"] = 0;
+  }
 }
 
 function initDone ()
