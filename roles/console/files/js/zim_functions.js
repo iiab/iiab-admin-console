@@ -195,7 +195,7 @@ function genZimItem(zimId, zim, preChecked=true, onChangeFunc="updateZimDiskSpac
   }
 
   html += '<label ';
-  html += '><input type="checkbox" name="' + zimId + '"';
+  html += '><input type="checkbox" name="' + zimId + '" zim_perma_ref="'+ zim.perma_ref + '"';
   //html += '><img src="images/' + zimId + '.png' + '"><input type="checkbox" name="' + zimId + '"';
   if (preChecked) {
     if ((zimsInstalled.indexOf(zimId) >= 0) || (zimsScheduled.indexOf(zimId) >= 0))

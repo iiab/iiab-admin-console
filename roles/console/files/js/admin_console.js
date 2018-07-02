@@ -1060,12 +1060,29 @@ function calcDnldListHtml(list) {
 }
 
 function rmContent() {
-  $.when(
-    delDownloadedFileList("downloadedFilesRachel", "rachel"),
-    delDownloadedFileList("downloadedFilesZims", "zims"),
-    delModules("installedZimModules", "zims"),
-    delModules("installedOer2goModules", "modules"))
+	var device = calcManContentDevice();
+	var calls =[delModules(device, "zims"),
+              delModules(device, "modules")];
+	if (device == "internal"){
+		calls.push(delDownloadedFileList("downloadedFilesRachel", "zims"));
+		calls.push(delDownloadedFileList("downloadedFilesRachel", "rachel"));
+	}
+
+  $.when.apply($, calls)
+    //delDownloadedFileList("downloadedFilesRachel", "rachel"),
+    //delDownloadedFileList("downloadedFilesZims", "zims"),
+    //delModules("installedZimModules", "zims"),
+    //delModules("installedOer2goModules", "modules"))
     .done(refreshAllInstalledList);
+}
+
+function calcManContentDevice(){
+	var tab = $("ul#instManageContenTabs li.active a").attr('href');
+	var device = tab.split("Content")[1].toLowerCase();
+  // for now we only support one usb
+  if (device != "internal")
+    device = calcExtUsb();
+  return device;
 }
 
 function refreshAllInstalledList() {
@@ -1098,14 +1115,28 @@ function delDownloadedFileList(id, sub_dir) {
   return sendCmdSrvCmd(delCmd, genericCmdHandler);
 }
 
-function delModules(id, mod_type) {
+function delModules(device, mod_type) {
   var delArgs = {}
 	var modList = [];
-  $("#" + id + " input").each(function() {
+	var selectorId;
+
+	// compute jquery selector
+	// for now we only allow one usb call external
+
+	if (device == "internal")
+	  selectorId = "installed";
+	else
+		selectorId = "external";
+	if (mod_type == "zims")
+		selectorId += "ZimModules";
+  else if (mod_type == "modules")
+    selectorId += "Oer2goModules";
+
+  $("#" + selectorId + " input").each(function() {
     if (this.type == "checkbox") {
       if (this.checked)
         if (mod_type == "zims")
-          modList.push(installedZimCatalog.INSTALLED[this.name].perma_ref);
+          modList.push(this.zim_perma_ref);
         else
         	modList.push(this.name);
     }
