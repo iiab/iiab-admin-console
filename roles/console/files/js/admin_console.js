@@ -43,6 +43,7 @@ var selectedLangs = []; // languages selected by gui for display of content
 var selectedZims = [];
 var selectedOer2goItems = [];
 var manContSelections = {};
+var selectedUsb = null;
 
 var sysStorage = {};
 sysStorage.root = {};
@@ -269,6 +270,12 @@ function instContentButtonsEvents() {
   	}
     sendCmdSrvCmd("INST-RACHEL", genericCmdHandler, "DOWNLOAD-RACHEL");
     alert ("RACHEL scheduled to be downloaded and installed.\n\nPlease view Utilities->Display Job Status to see the results.");
+  });
+
+  $("#instManContExternal").click(function(){
+  	consoleLog ("in instManContExternal click");
+  	selectedUsb = $('#instManContExternal input:radio:checked').val();
+    renderExternalList();
   });
 
   $("#REMOVE-CONTENT").click(function(){
@@ -931,8 +938,6 @@ function readableSize(kbytes) {
 function manageContentInit(){
 	refreshAllInstalledList();
 	refreshExternalList();
-
-
 }
 
 function getExternalDevInfo(){
@@ -943,18 +948,34 @@ var command = "GET-EXTDEV-INFO";
 function procExternalDevInfo(data){
   externalDeviceContents = data;
   externalZimCatalog = [];
-  var extUsb = calcExtUsb();
-  if (extUsb){
-    externalZimCatalog = externalDeviceContents[extUsb].zim_modules;
-    initmanContSelections(extUsb); // at some point we could do more than one
+
+  if (calcExtUsb()){ // sets selectedUsb
+    externalZimCatalog = externalDeviceContents[selectedUsb].zim_modules;
+    setCopyContentButtonText();
+    $.each(Object.keys(externalDeviceContents).sort(), function(index, dev) {
+  		initManContSelections(dev);
+      });
   }
 }
 
-function calcExtUsb(){ // for now we only allow one
-	var extUsb = null;
-	if (Object.keys(externalDeviceContents).length > 0)
-    extUsb = Object.keys(externalDeviceContents)[0];
-  return extUsb;
+function calcExtUsb(){ // checks if any usb devices are attached and selects the one to display
+	if (Object.keys(externalDeviceContents).length > 0){
+	  if (Object.keys(externalDeviceContents).indexOf(selectedUsb)== -1)
+      selectedUsb = Object.keys(externalDeviceContents)[0];
+    return true;
+  }
+  else {
+    selectedUsb = null;
+    return false;
+  }
+}
+
+function setCopyContentButtonText(){
+  var text = "Copy Installed to " + selectedUsb;
+  var activeDev = calcManContentDevice();
+  if (activeDev != "internal")
+    text = "Copy " + selectedUsb + " to Installed";
+  $("#COPY-CONTENT").text(text)
 }
 
 function procDnldList(){
@@ -1077,11 +1098,11 @@ function rmContent() {
 }
 
 function calcManContentDevice(){
-	var tab = $("ul#instManageContenTabs li.active a").attr('href');
+	var tab = $("ul#instManageContentTabs li.active a").attr('href');
 	var device = tab.split("Content")[1].toLowerCase();
-  // for now we only support one usb
+
   if (device != "internal")
-    device = calcExtUsb();
+    device = selectedUsb;
   return device;
 }
 
@@ -1092,7 +1113,14 @@ function refreshAllInstalledList() {
 
 function refreshExternalList() {
 	$.when(getExternalDevInfo())
-	.done(renderExternalZimList, renderexternalOer2goModules, refreshDiskSpace);
+	.done(renderExternalList, refreshDiskSpace);
+}
+
+function renderExternalList() {
+	$("#instManageContentUsbTab").text("Content on " + selectedUsb);
+	setCopyContentButtonText();
+	renderExternalZimList();
+	renderexternalOer2goModules();
 }
 
 function delDownloadedFileList(id, sub_dir) {
@@ -1392,15 +1420,20 @@ function displaySpaceAvail(){
   // calc internalContentSelected
 
   manContInternalStat(usedSpace, availableSpace, manContSelections.internal.sum);
-  var extUsb = calcExtUsb();
-  if (extUsb){
-    manContUsbStat(extUsb);
-  }
+  var html = "";
+
+  if (calcExtUsb()){
+  	$.each(Object.keys(externalDeviceContents).sort(), function(index, dev) {
+  		html += manContUsbStat(dev)
+      });
+    }
+    $("#instManContExternal").html(html);
 }
 
 function manContInternalStat(usedSpace, availableSpace, internalContentSelected){
 	var html = "";
   html += '<tr>';
+  html += "<td></td>";
   html += "<td>Internal</td>";
   html += '<td style="text-align:right">' + readableSize(usedSpace) + "</td>";
   html += '<td style="text-align:right">' + readableSize(availableSpace) + "</td>";
@@ -1412,14 +1445,17 @@ function manContInternalStat(usedSpace, availableSpace, internalContentSelected)
 function manContUsbStat(dev){
 	var html = "";
 	var usedSpace = externalDeviceContents[dev].dev_size_k - externalDeviceContents[dev].dev_sp_avail_k;
+	var checked = (dev == selectedUsb) ? "checked" : "";
+	//var status = (age >= 18) ? 'adult' : 'minor';
 
   html += '<tr>';
+  html += '<td><input type="radio" name="usbList" value="' + dev + '"' + checked + '></td>';
   html += "<td>" + dev + "</td>";
   html += '<td style="text-align:right">' + readableSize(usedSpace) + "</td>";
   html += '<td style="text-align:right">' + readableSize(externalDeviceContents[dev].dev_sp_avail_k) + "</td>";
   html += '<td style="text-align:right">' + readableSize(manContSelections[dev].sum) + "</td>";
   html +=  '</tr>';
-  $("#instManContExternal").html(html);
+  return(html);
 }
 
 function calcAllocatedSpace(){
@@ -1508,12 +1544,12 @@ function updateIntOer2goSpace(cb){
 
 function updateExtZimsSpace(cb){
   var zim_id = cb.name
-  updateManContSelectedSpace(zim_id, "zims", externalZimCatalog, "/media/usb0", cb.checked);
+  updateManContSelectedSpace(zim_id, "zims", externalZimCatalog, selectedUsb, cb.checked);
 }
 
 function updateExtOer2goSpace(cb){
   var id = cb.name
-  updateManContSelectedSpace(id, "modules", oer2goCatalog, "/media/usb0", cb.checked);
+  updateManContSelectedSpace(id, "modules", oer2goCatalog, selectedUsb, cb.checked);
 }
 
 
@@ -1894,10 +1930,10 @@ function init ()
 }
 
 function initVars(){
-	initmanContSelections("internal");
+	initManContSelections("internal");
 }
 
-function initmanContSelections(dev, reset=false){
+function initManContSelections(dev, reset=false){
 	if (! manContSelections.hasOwnProperty(dev)){
 	  manContSelections[dev] = {};
 	  reset=true;

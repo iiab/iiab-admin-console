@@ -20,7 +20,8 @@ zimsInstalled
 zimsScheduled
 oer2goInstalled
 oer2goScheduled
-contManSelections.internal.zims
-contManSelections.internal.modules
-contManSelections[dev].zims
-contManSelections[dev].modules
+manContSelections.internal.zims
+manContSelections.internal.modules
+manContSelections[dev].sum
+manContSelections[dev].zims
+manContSelections[dev].modules

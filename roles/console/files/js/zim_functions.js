@@ -160,7 +160,7 @@ function renderZimInstalledList() { // used by manage content
 
 function renderExternalZimList() { // used by manage content
 	var html = "";
-
+  externalZimCatalog = externalDeviceContents[selectedUsb].zim_modules;
 	var zimList = Object.keys(externalZimCatalog);
 	var zimCompare = zimListCompare(externalZimCatalog);
 

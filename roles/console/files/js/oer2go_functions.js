@@ -119,12 +119,12 @@ function renderOer2goInstalledList() { // used by remove content
 
 function renderexternalOer2goModules() {
 	var html = "";
-	var usb = calcExtUsb();
-	if (usb){
-	  html = renderOer2goList(externalDeviceContents[usb].oer2go_modules, preChecked=false, onChangeFunc="updateExtOer2goSpace");
+
+	if (calcExtUsb){
+	  html = renderOer2goList(externalDeviceContents[selectedUsb].oer2go_modules, preChecked=false, onChangeFunc="updateExtOer2goSpace");
     $( "#externalOer2goModules" ).html(html);
 	  activateTooltip();
-}
+  }
 }
 
 function renderOer2goItems(lang, mods) { //used by oer2go download
