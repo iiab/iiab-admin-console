@@ -290,6 +290,15 @@ function instContentButtonsEvents() {
     $("#FIND-USB").click(function(){
     refreshExternalList();
   });
+
+  $("#COPY-CONTENT").click(function(){
+  	// assume that we can only get here if there are both internal and external devices
+  	make_button_disabled("#COPY-CONTENT", true);
+  	copyContent();
+  	// clean up - empty arrays, sum, and redraw input
+    alert ("Selected Content scheduled to be copied.\n\nPlease view Utilities->Display Job Status to see the results.");
+    make_button_disabled("#COPY-CONTENT", false);
+  });
 }
 
   // Util Buttons
@@ -1080,6 +1089,40 @@ function calcDnldListHtml(list) {
   return html;
 }
 
+function copyContent(){
+  var device = calcManContentDevice();
+  var source = "internal";
+  var dest = "internal";
+  var cmd_args = {};
+  var modList = [];
+  if (device == "internal")
+  	dest = selectedUsb;
+  else
+  	source = selectedUsb;
+
+  cmd_args['source'] = source;
+  cmd_args['dest'] = dest;
+
+  // Zims
+
+  modList = getRmCopyList(device, "zims");
+  modList.forEach( function(item) {
+    cmd_args['file_ref'] = item;
+    cmd = "COPY-ZIMS " + JSON.stringify(cmd_args);
+  	sendCmdSrvCmd(cmd, genericCmdHandler);
+  });
+
+  // OER2GO
+
+  modList = getRmCopyList(device, "modules");
+  modList.forEach( function(item) {
+    cmd_args['file_ref'] = item;
+    cmd = "COPY-OER2GO-MOD " + JSON.stringify(cmd_args);
+  	sendCmdSrvCmd(cmd, genericCmdHandler);
+  });
+
+}
+
 function rmContent() {
 	var device = calcManContentDevice();
 	var calls =[delModules(device, "zims"),
@@ -1146,10 +1189,24 @@ function delDownloadedFileList(id, sub_dir) {
 function delModules(device, mod_type) {
   var delArgs = {}
 	var modList = [];
+
+  modList = getRmCopyList(device, mod_type);
+  if (modList.length == 0)
+    return;
+
+  delArgs['mod_type'] = mod_type;
+  delArgs['mod_list'] = modList;
+
+  var delCmd = 'DEL-MODULES ' + JSON.stringify(delArgs);
+  return sendCmdSrvCmd(delCmd, genericCmdHandler);
+}
+
+function getRmCopyList(device, mod_type){
+	var modList = [];
 	var selectorId;
 
 	// compute jquery selector
-	// for now we only allow one usb call external
+	// we only allow one external usb at a time
 
 	if (device == "internal")
 	  selectorId = "installed";
@@ -1170,14 +1227,7 @@ function delModules(device, mod_type) {
     }
   });
 
-  if (modList.length == 0)
-    return;
-
-  delArgs['mod_type'] = mod_type;
-  delArgs['mod_list'] = modList;
-
-  var delCmd = 'DEL-MODULES ' + JSON.stringify(delArgs);
-  return sendCmdSrvCmd(delCmd, genericCmdHandler);
+  return modList;
 }
 
 // Utility Menu functions

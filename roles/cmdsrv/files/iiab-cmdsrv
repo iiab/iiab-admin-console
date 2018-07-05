@@ -614,8 +614,10 @@ def cmd_handler(cmd_msg):
         "GET-KIWIX-CAT": get_kiwix_catalog,
         "GET-ZIM-STAT": get_zim_stat,
         "INST-ZIMS": install_zims,
+        "COPY-ZIMS": copy_zims,
         "GET-OER2GO-CAT": get_oer2go_catalog,
         "INST-OER2GO-MOD": install_oer2go_mod,
+        "COPY-OER2GO-MOD": copy_oer2go_mod,
         "GET-OER2GO-STAT": get_oer2go_stat,
         "GET-RACHEL-STAT": get_rachel_stat,
         "INST-RACHEL": install_rachel,
@@ -876,10 +878,8 @@ def get_external_device_info(cmd_info):
     extdev_info = {}
     outp = subprocess.check_output("scripts/get_ext_devs.sh")
     dev_arr = outp.split('\n')
+
     # dev_arr gets a dummy element due to final \n
-    if len(dev_arr) > 2:
-        return (cmd_error(cmd='GET-EXTDEV-INFO', msg='Only One USB may be used at a time.'))
-    # elif len(dev_arr) < 2:
     for dev in dev_arr:
         if len(dev) == 0:
             continue
@@ -1276,8 +1276,8 @@ def install_zims(cmd_info):
                 except OSError:
                     resp = cmd_error(cmd='INST-ZIMS', msg='Error creating directory in Command')
                     return resp
-            else:
-                return cmd_malformed(cmd_info['cmd'])
+    else:
+        return cmd_malformed(cmd_info['cmd'])
 
     # at this point we can create all the jobs
 
@@ -1315,6 +1315,75 @@ def install_zims(cmd_info):
         resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=2, depend_on_job_id=job_id, has_dependent="N")
         #resp = cmd_error(cmd='INST-ZIMS', msg='Just testing')
 
+    return resp
+
+def copy_zims(cmd_info):
+
+    if 'cmd_args' in cmd_info:
+        source = cmd_info['cmd_args']['source']
+        dest = cmd_info['cmd_args']['dest']
+        file_ref = cmd_info['cmd_args']['file_ref'] # no .zim
+    else:
+        return cmd_malformed(cmd_info['cmd'])
+
+    if 'internal' not in [source, dest]:
+        return (cmd_error(msg="Invalid Source or Destination."))
+
+    if 'usb' not in source and 'usb' not in dest:
+        return (cmd_error(msg="Invalid Source or Destination."))
+
+    if source == 'internal':
+        source = ''
+        dest = '/media/usb' + dest[-1] # protect against injection
+    else:
+        source = '/media/usb' + source[-1]
+        dest = ''
+
+    # rsync zim files; if copying to internal, copy to working and then move
+    if dest != '': # copy directly to usb
+        # create /library etc
+        zim_content_dest = dest + zim_content_dir
+        zim_index_dest = dest + zim_index_dir
+        if not os.path.isdir(zim_content_dest):
+            os.makedirs(zim_content_dest)
+        job_command = "scripts/copy_zim.sh " + source + zim_content_dir + file_ref + ".zim* " + zim_content_dest
+        #job_command = "/usr/bin/rsync -Pav --size-only " + source + zim_content_dir + file_ref + ".zim* " + zim_content_dest
+
+        zimidx = source + zim_index_dir + file_ref + ".zim.idx"
+        if os.path.isdir (zimidx): # only copy index if exists (could be embedded)
+            if not os.path.isdir(zim_index_dest):
+                os.makedirs(zim_index_dest)
+            job_id = request_one_job(cmd_info, job_command, 1, -1, "Y")
+            # copy index
+            job_command = "/usr/bin/rsync -Pav --size-only " + zimidx + " " + zim_index_dest
+            resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=2, depend_on_job_id=job_id, has_dependent="N")
+
+        else:
+            resp = request_job(cmd_info, job_command) # only one command for zim
+    else: # copy to working and move to internal
+        targetDir = zim_working_dir + file_ref
+        if not os.path.exists(targetDir):
+            try:
+                os.makedirs(targetDir)
+            except OSError:
+                resp = cmd_error(msg='Error creating directory ' + targetDir)
+                return resp
+
+        job_command = "scripts/copy_zim.sh " + source + zim_content_dir + file_ref + ".zim* " + dest + targetDir + "/content"
+        job_id = request_one_job(cmd_info, job_command, 1, -1, "Y")
+        #print job_command
+
+        last_step = 2
+        zimidx = source + zim_index_dir + file_ref + ".zim.idx"
+        if os.path.isdir (zimidx): # only copy index if exists (could be embedded)
+            job_command = "/usr/bin/rsync -Pav --size-only " + zimidx + " " + dest + targetDir + "/index"
+            job_id = request_one_job(cmd_info, job_command, 2, -1, "Y")
+            last_step = 3
+            #print job_command
+        #job_command = "scripts/zim_install_move.sh " + zimFileRef + ".zim"
+        job_command = "scripts/zim_install_step3.sh " + file_ref
+        resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=last_step, depend_on_job_id=job_id, has_dependent="N")
+        #print job_command
     return resp
 
 def install_oer2go_mod(cmd_info):
@@ -1356,6 +1425,44 @@ def install_oer2go_mod(cmd_info):
 
     oer2go_wip[moddir] = oer2go_catalog[moddir] # track wip for front end
 
+    return resp
+
+def copy_oer2go_mod(cmd_info):
+    if 'cmd_args' in cmd_info:
+        source = cmd_info['cmd_args']['source']
+        dest = cmd_info['cmd_args']['dest']
+        file_ref = cmd_info['cmd_args']['file_ref']
+    else:
+        return cmd_malformed(cmd_info['cmd'])
+
+    if 'internal' not in [source, dest]:
+        return (cmd_error(msg="Invalid Source or Destination."))
+
+    if 'usb' not in source and 'usb' not in dest:
+        return (cmd_error(msg="Invalid Source or Destination."))
+
+    if source == 'internal':
+        source = ''
+        dest = '/media/usb' + dest[-1] # protect against injection
+    else:
+        source = '/media/usb' + source[-1]
+        dest = ''
+
+    content_source = source + modules_dir
+    content_dest = dest + modules_dir
+
+    if dest != '': # copy directly to usb
+        # create /library etc
+        if not os.path.isdir(content_dest):
+            os.makedirs(content_dest)
+        job_command = "/usr/bin/rsync -Pav --size-only " + content_source + file_ref + " " + content_dest
+        resp = request_job(cmd_info, job_command)
+    else: # copy to working and mv
+        working_dest = dest + rachel_working_dir
+        job_command = "/usr/bin/rsync -Pav --size-only " + content_source + file_ref + " " + working_dest
+        job_id = request_one_job(cmd_info, job_command, 1, -1, "Y")
+        job_command = "scripts/oer2go_install_move.sh " + file_ref
+        resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=2, depend_on_job_id=job_id, has_dependent="N")
     return resp
 
 def get_oer2go_stat(cmd_info):
@@ -2228,11 +2335,8 @@ def app_config():
 # These two were taken from the OLPC idmgr application
 
 def compute_vars():
-    global zim_content_dir
-    global zim_index_dir
-
-    zim_content_dir = zim_dir + "/content/"
-    zim_index_dir = zim_dir + "/index/"
+    # nothing to do at this point
+    return
 
 def set_ready_flag(on_off):
     if on_off == "ON":
