@@ -1455,9 +1455,7 @@ def copy_oer2go_mod(cmd_info):
         # create /library etc
         if not os.path.isdir(content_dest):
             os.makedirs(content_dest)
-        #"scripts/copy_files.sh " + source + zim_content_dir + file_ref + ".zim* " + zim_content_dest
-        #job_command = "/usr/bin/rsync -PrltgoDv --size-only " + content_source + file_ref + " " + content_dest
-        job_command = "scripts/copy_files.sh  " + content_source + file_ref + " " + content_dest
+        job_command = "/usr/bin/rsync -Pt --size-only " + content_source + file_ref + " " + content_dest
         resp = request_job(cmd_info, job_command)
     else: # copy to working and mv
         working_dest = dest + rachel_working_dir
