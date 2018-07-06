@@ -896,6 +896,9 @@ def get_external_device_info(cmd_info):
         extdev_info[dev_name]['oer2go_modules'] = []
         extdev_info[dev_name]['zim_modules'] = {}
         lib_dir = dev_name + content_base
+
+        # in future we may lookup fs type and other properties with blkid
+
         if os.path.exists(lib_dir):
             extdev_info[dev_name]['oer2go_modules'] = get_oer2go_installed_list(dev_name)
             if iiab_ini['kiwix']: # if kiwix installed catalog zims
