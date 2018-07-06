@@ -957,13 +957,20 @@ var command = "GET-EXTDEV-INFO";
 function procExternalDevInfo(data){
   externalDeviceContents = data;
   externalZimCatalog = [];
+  var haveUsb = calcExtUsb(); // also sets selectedUsb
+  setCopyContentButtonText();
 
-  if (calcExtUsb()){ // sets selectedUsb
+  if (haveUsb){
     externalZimCatalog = externalDeviceContents[selectedUsb].zim_modules;
-    setCopyContentButtonText();
+    make_button_disabled("#COPY-CONTENT", false);
     $.each(Object.keys(externalDeviceContents).sort(), function(index, dev) {
   		initManContSelections(dev);
       });
+    $("#instManageContentUsbTab").show();
+  }
+  else{
+  	$("#instManageContentUsbTab").hide();
+  	make_button_disabled("#COPY-CONTENT", true);
   }
 }
 
@@ -980,11 +987,15 @@ function calcExtUsb(){ // checks if any usb devices are attached and selects the
 }
 
 function setCopyContentButtonText(){
-  var text = "Copy Installed to " + selectedUsb;
   var activeDev = calcManContentDevice();
-  if (activeDev != "internal")
-    text = "Copy " + selectedUsb + " to Installed";
-  $("#COPY-CONTENT").text(text)
+  var text = "Copy Unavailable"; // for selectedUsb is null
+  if (selectedUsb != null){
+  	if (activeDev == "internal")
+  	  text = "Copy Installed to " + selectedUsb;
+    else
+      text = "Copy " + selectedUsb + " to Installed";
+  }
+  $("#COPY-CONTENT").text(text);
 }
 
 function procDnldList(){
