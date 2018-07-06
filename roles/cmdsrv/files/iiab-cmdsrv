@@ -84,7 +84,7 @@ rachel_downloads_dir = None
 rachel_working_dir = None
 rachel_version = None
 modules_dir = None
-
+small_device_size = 250000
 # Global Variables
 last_command_rowid = 0
 last_job_rowid = 0
@@ -884,10 +884,11 @@ def get_external_device_info(cmd_info):
         if len(dev) == 0:
             continue
         dev_info = dev.split()
-        print dev
-        print dev_info
+        #print dev
+        #print dev_info
+        if float(dev_info[1]) < small_device_size: # don't include small partitions that might be boot
+            continue
         dev_name = dev_info[5]
-        #dev_sp_avail = dev_info[3]
         extdev_info[dev_name] = {}
         extdev_info[dev_name]['dev_size_k'] = dev_info[1]
         extdev_info[dev_name]['dev_used_k'] = dev_info[2]
