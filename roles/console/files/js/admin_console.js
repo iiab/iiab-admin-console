@@ -1132,12 +1132,14 @@ function copyContent(){
   	sendCmdSrvCmd(cmd, genericCmdHandler);
   });
 
+  clearManContSelections(device);
 }
 
 function rmContent() {
 	var device = calcManContentDevice();
 	var calls =[delModules(device, "zims"),
-              delModules(device, "modules")];
+              delModules(device, "modules"),
+              initManContSelections(dev, reset=true)];
 	if (device == "internal"){
 		calls.push(delDownloadedFileList("downloadedFilesRachel", "zims"));
 		calls.push(delDownloadedFileList("downloadedFilesRachel", "rachel"));
@@ -1149,6 +1151,8 @@ function rmContent() {
     //delModules("installedZimModules", "zims"),
     //delModules("installedOer2goModules", "modules"))
     .done(refreshAllInstalledList);
+
+  clearManContSelections(device);
 }
 
 function calcManContentDevice(){
@@ -1158,6 +1162,17 @@ function calcManContentDevice(){
   if (device != "internal")
     device = selectedUsb;
   return device;
+}
+
+function clearManContSelections(dev){
+  initManContSelections(dev, reset=false);
+  if (dev == "internal"){
+    renderZimInstalledList();
+    renderOer2goInstalledList();
+  }
+  else {
+    renderExternalList();
+  }
 }
 
 function refreshAllInstalledList() {
