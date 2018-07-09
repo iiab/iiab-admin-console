@@ -1137,9 +1137,9 @@ function copyContent(){
 
 function rmContent() {
 	var device = calcManContentDevice();
+	var clearFunction = clearRmSelections(device, reset=true);
 	var calls =[delModules(device, "zims"),
-              delModules(device, "modules"),
-              initManContSelections(dev, reset=true)];
+              delModules(device, "modules")];
 	if (device == "internal"){
 		calls.push(delDownloadedFileList("downloadedFilesRachel", "zims"));
 		calls.push(delDownloadedFileList("downloadedFilesRachel", "rachel"));
@@ -1150,9 +1150,7 @@ function rmContent() {
     //delDownloadedFileList("downloadedFilesZims", "zims"),
     //delModules("installedZimModules", "zims"),
     //delModules("installedOer2goModules", "modules"))
-    .done(refreshAllInstalledList);
-
-  clearManContSelections(device);
+    .done(clearFunction, refreshAllInstalledList);
 }
 
 function calcManContentDevice(){
@@ -1164,8 +1162,14 @@ function calcManContentDevice(){
   return device;
 }
 
-function clearManContSelections(dev){
-  initManContSelections(dev, reset=false);
+function clearRmSelections(dev, reset){
+  return function() {
+    initManContSelections(dev, reset);
+  }
+}
+
+function clearManContSelections(dev, reset=false){
+  initManContSelections(dev, reset);
   if (dev == "internal"){
     renderZimInstalledList();
     renderOer2goInstalledList();
@@ -1230,29 +1234,40 @@ function delModules(device, mod_type) {
 function getRmCopyList(device, mod_type){
 	var modList = [];
 	var selectorId;
+	var catalog = {};
+	var zim_path;
+	var zim_file;
 
 	// compute jquery selector
 	// we only allow one external usb at a time
 
-	if (device == "internal")
+	if (device == "internal"){
 	  selectorId = "installed";
-	else
+	  catalog = installedZimCatalog.INSTALLED;
+	}
+	else{
 		selectorId = "external";
+		catalog = externalZimCatalog;
+	}
 	if (mod_type == "zims")
 		selectorId += "ZimModules";
   else if (mod_type == "modules")
     selectorId += "Oer2goModules";
 
+  console.log(selectorId);
   $("#" + selectorId + " input").each(function() {
     if (this.type == "checkbox") {
       if (this.checked)
-        if (mod_type == "zims")
-          modList.push(this.zim_perma_ref);
+        if (mod_type == "zims"){
+        	zim_path = catalog[this.name].path;
+        	zim_file = zim_path.split('/').pop();
+          modList.push(zim_file);
+        }
         else
         	modList.push(this.name);
     }
   });
-
+  console.log(modList);
   return modList;
 }
 
