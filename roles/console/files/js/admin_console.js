@@ -1260,7 +1260,8 @@ function getRmCopyList(device, mod_type){
       if (this.checked)
         if (mod_type == "zims"){
         	zim_path = catalog[this.name].path;
-        	zim_file = zim_path.split('/').pop();
+        	zim_file = zim_path.split('/').pop(); // take only file name
+        	zim_file = zim_file.split('.zim')[0]; // remove .zim
           modList.push(zim_file);
         }
         else
