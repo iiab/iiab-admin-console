@@ -151,7 +151,7 @@ function renderZimInstalledList() { // used by manage content
 	// zimsInstalled is sorted when computed
 	$.each( zimsInstalled, function( index, zimId ) {
 	//$.each( installedZimCatalog.INSTALLED, function( zimId, zim ) {
-    html += genZimItem(zimId, zimCatalog[zimId], preChecked=false, onChangeFunc="updateIntZimsSpace");
+    html += genZimItem(zimId, zimCatalog[zimId], preChecked=false, onChangeFunc="updateIntZimsSpace", matchList=Object.keys(externalZimCatalog), matchText=" - ON USB");
   });
 
 	$( "#installedZimModules" ).html(html);
@@ -172,13 +172,13 @@ function renderExternalZimList() { // used by manage content
 	activateTooltip();
 }
 
-function genZimItem(zimId, zim, preChecked=true, onChangeFunc="updateZimDiskSpace") {
+function genZimItem(zimId, zim, preChecked=true, onChangeFunc="updateZimDiskSpace", matchList=zimsInstalled, matchText=" - INSTALLED") {
   var html = "";
   var colorClass = "";
   var colorClass2 = "";
   var permaref = "";
 
-  if (zimsInstalled.indexOf(zimId) >= 0){
+  if (matchList.indexOf(zimId) >= 0){
     colorClass = "installed";
     colorClass2 = 'class="installed"';
   }
@@ -198,7 +198,7 @@ function genZimItem(zimId, zim, preChecked=true, onChangeFunc="updateZimDiskSpac
   html += '><input type="checkbox" name="' + zimId + '" zim_perma_ref="'+ zim.perma_ref + '"';
   //html += '><img src="images/' + zimId + '.png' + '"><input type="checkbox" name="' + zimId + '"';
   if (preChecked) {
-    if ((zimsInstalled.indexOf(zimId) >= 0) || (zimsScheduled.indexOf(zimId) >= 0))
+    if ((zimsInstalled.indexOf(zimId) >= 0) || (zimsScheduled.indexOf(zimId) >= 0)) // should this be matchList?
       html += ' disabled="disabled" checked="checked"';
   }
   html += ' onChange="' + onChangeFunc + '(this)"></label>'; // end input
@@ -212,10 +212,10 @@ function genZimItem(zimId, zim, preChecked=true, onChangeFunc="updateZimDiskSpac
 
   html += '<span ' + colorClass2 + 'style="display:inline-block; width:120px;"> Date: ' + zim.date + '</span>';
   html += '<span ' + colorClass2 +'> Size: ' + readableSize(zim.size);
-  if (zimsInstalled.indexOf(zimId) >= 0)
-  html += ' - INSTALLED';
+  if (matchList.indexOf(zimId) >= 0)
+    html += matchText;
   if (zimsScheduled.indexOf(zimId) >= 0)
-  html += ' - WORKING ON IT';
+    html += ' - WORKING ON IT';
   html += '</span><BR>';
   return html;
 }

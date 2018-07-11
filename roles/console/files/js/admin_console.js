@@ -1194,6 +1194,7 @@ function renderExternalList() {
 	setCopyContentButtonText();
 	renderExternalZimList();
 	renderexternalOer2goModules();
+	renderZimInstalledList(); // update ON USB messages
 }
 
 function delDownloadedFileList(id, sub_dir) {

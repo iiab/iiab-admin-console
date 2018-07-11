@@ -112,7 +112,7 @@ function renderOer2goCatalog() {
 
 function renderOer2goInstalledList() { // used by remove content
 	var html = "";
-	html = renderOer2goList(oer2goInstalled, preChecked=false, onChangeFunc="updateIntOer2goSpace");
+	html = renderOer2goList(oer2goInstalled, preChecked=false, onChangeFunc="updateIntOer2goSpace",  matchList=externalDeviceContents[selectedUsb].oer2go_modules, matchText="ON USB");
 	$( "#installedOer2goModules" ).html(html);
 	activateTooltip();
 }
@@ -135,7 +135,7 @@ function renderOer2goItems(lang, mods) { //used by oer2go download
 	return html;
 }
 
-function renderOer2goList(mods, preChecked, onChangeFunc) {
+function renderOer2goList(mods, preChecked, onChangeFunc, matchList=oer2goInstalled, matchText="INSTALLED") {
 	var html = "";
 
 	// sort mods
@@ -149,13 +149,13 @@ function renderOer2goList(mods, preChecked, onChangeFunc) {
   	//console.log(mod);
   	var item = oer2goCatalog[mod];
   	//html += oer2goCatalog[mod].title + "<BR>";
-  	html += renderOer2goItem(item, preChecked, onChangeFunc);
+  	html += renderOer2goItem(item, preChecked, onChangeFunc, matchList, matchText);
   });
 
 	return html;
 }
 
-function renderOer2goItem(item, preChecked, onChangeFunc) {
+function renderOer2goItem(item, preChecked, onChangeFunc, matchList, matchText) {
 
   var html = "";
   var colorClass = "";
@@ -163,7 +163,7 @@ function renderOer2goItem(item, preChecked, onChangeFunc) {
   //console.log(item);
   var itemId = item.moddir;
 
-  if (oer2goInstalled.indexOf(itemId) >= 0){
+  if (matchList.indexOf(itemId) >= 0){
     colorClass = "installed";
     colorClass2 = 'class="installed"';
   }
@@ -175,7 +175,7 @@ function renderOer2goItem(item, preChecked, onChangeFunc) {
   html += '><input type="checkbox" name="' + itemId + '"';
   //html += '><img src="images/' + zimId + '.png' + '"><input type="checkbox" name="' + zimId + '"';
   if (preChecked) {
-    if ((oer2goInstalled.indexOf(itemId) >= 0) || (oer2goScheduled.indexOf(itemId) >= 0))
+    if ((oer2goInstalled.indexOf(itemId) >= 0) || (oer2goScheduled.indexOf(itemId) >= 0)) // ? use matchList
       html += ' disabled="disabled" checked="checked"';
     if (selectedOer2goItems.indexOf(itemId) >= 0)
       html += ' checked="checked"';
@@ -187,8 +187,8 @@ function renderOer2goItem(item, preChecked, onChangeFunc) {
   html += '<span class="zim-desc ' + colorClass + '"' + oer2goToolTip + '>&nbsp;&nbsp;' + itemDesc + '</span>';
 
   html += '<span ' + colorClass2 + ' style="display:inline-block; width:120px;"> Size: ' + readableSize(item.ksize) + '</span>';
-  if (oer2goInstalled.indexOf(itemId) >= 0)
-    html += '<span class="' + colorClass + '">INSTALLED';
+  if (matchList.indexOf(itemId) >= 0)
+    html += '<span class="' + colorClass + '">' + matchText;
   else if (oer2goScheduled.indexOf(itemId) >= 0)
     html += '<span class="' + colorClass + '">WORKING ON IT';
   else
