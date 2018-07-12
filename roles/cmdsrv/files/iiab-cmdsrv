@@ -615,6 +615,7 @@ def cmd_handler(cmd_msg):
         "GET-ZIM-STAT": get_zim_stat,
         "INST-ZIMS": install_zims,
         "COPY-ZIMS": copy_zims,
+        "MAKE-KIWIX-LIB": make_kiwix_lib,
         "GET-OER2GO-CAT": get_oer2go_catalog,
         "INST-OER2GO-MOD": install_oer2go_mod,
         "COPY-OER2GO-MOD": copy_oer2go_mod,
@@ -1369,10 +1370,10 @@ def copy_zims(cmd_info):
         else:
             resp = request_job(cmd_info, job_command) # only one command for zim
     else: # copy to working and move to internal
-        targetDir = zim_working_dir + file_ref
+        targetDir = zim_working_dir + file_ref + "/data"
         if not os.path.exists(targetDir):
             try:
-                os.makedirs(targetDir)
+                os.makedirs(targetDir + "/content")
             except OSError:
                 resp = cmd_error(msg='Error creating directory ' + targetDir)
                 return resp
@@ -1392,6 +1393,11 @@ def copy_zims(cmd_info):
         job_command = "scripts/zim_install_step3.sh " + file_ref
         resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=last_step, depend_on_job_id=job_id, has_dependent="N")
         #print job_command
+    return resp
+
+def make_kiwix_lib(cmd_info):
+    job_command = "/usr/bin/iiab-make-kiwix-lib"
+    resp = request_job(cmd_info=cmd_info, job_command=job_command)
     return resp
 
 def install_oer2go_mod(cmd_info):
