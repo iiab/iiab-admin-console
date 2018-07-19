@@ -70,7 +70,7 @@
   when: not adm_cons_force_ssl
 
 - name: Delete admin-console config file
-  file: dest=/etc/{{ apache_config_dir }}/admin-console.conf
+  file: path=/etc/{{ apache_config_dir }}/admin-console.conf
         state=absent
   when: adm_cons_force_ssl
 
@@ -83,12 +83,12 @@
   when: adm_cons_force_ssl
 
 - name: Delete admin-console ssl config file
-  file: dest=/etc/{{ apache_config_dir }}/admin-console-ssl.conf
+  file: path=/etc/{{ apache_config_dir }}/admin-console-ssl.conf
         state=absent
   when: not adm_cons_force_ssl
 
 - name: Remove the debian default config which gets in the way
-  file: dest=/etc/apache2/sites-enabled/000-default.conf
+  file: path=/etc/apache2/sites-enabled/000-default.conf
         state=absent
   when: is_debuntu
 
@@ -100,8 +100,8 @@
   when: is_debuntu and not adm_cons_force_ssl
 
 - name: Make the admin-console ssl version disabled in apache2
-  file: state=absent
-        dest=/etc/apache2/sites-enabled/admin-console-ssl.conf
+  file: path=/etc/apache2/sites-enabled/admin-console-ssl.conf
+        state=absent
   when: is_debuntu and not adm_cons_force_ssl
 
 # with ssl
