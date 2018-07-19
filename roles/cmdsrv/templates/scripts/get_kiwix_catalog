@@ -166,7 +166,7 @@ def parse_attr(attributes):
     url = attributes['url']
     urlSlash = url.split('/')
     urlEnd = urlSlash[-1] # last element
-    fileRef = urlEnd.split('.')[0]
+    fileRef = urlEnd.split('.zim')[0] # true for both internal and external index
     permaRefParts = urlEnd.split('_')
     permaRefParts = permaRefParts[0:len(permaRefParts) - 1]
     permaRef = permaRefParts[0]
