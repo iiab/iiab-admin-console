@@ -102,7 +102,6 @@
 - name: Make the admin-console ssl version disabled in apache2
   file: state=absent
         dest=/etc/apache2/sites-enabled/admin-console-ssl.conf
-        src=/etc/{{ apache_config_dir }}/admin-console-ssl.conf
   when: is_debuntu and not adm_cons_force_ssl
 
 # with ssl
@@ -114,7 +113,6 @@
 
 - name: remove link for admin-console config file with ssl support
   file: path=/etc/apache2/sites-enabled/admin-console.conf
-        src=/etc/{{ apache_config_dir }}/admin-console.conf
         state=absent
   when: adm_cons_force_ssl and is_debuntu
 
