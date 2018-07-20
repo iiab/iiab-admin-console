@@ -1863,7 +1863,7 @@ def read_iiab_vars():
     default_vars = yaml.load(stream)
     stream.close()
 
-    stream = open(iiab_repo + "/vars/local_vars.yml", 'r')
+    stream = open("/etc/iiab/local_vars.yml", 'r')
     local_vars = yaml.load(stream)
     stream.close()
 

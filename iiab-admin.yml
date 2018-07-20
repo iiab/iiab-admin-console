@@ -23,7 +23,7 @@
   vars_files:
   - "{{ iiab_repo }}/vars/default_vars.yml"
   - "{{ iiab_repo }}/vars/{{ ansible_local.local_facts.os_ver }}.yml"
-  - "{{ iiab_repo }}/vars/local_vars.yml"
+  - /etc/iiab/local_vars.yml
   - vars/default_vars.yml
   - vars/{{ ansible_distribution }}.yml
 
