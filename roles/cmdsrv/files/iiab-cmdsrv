@@ -53,6 +53,7 @@ cmdsrv_ready_file = "/run/iiab-cmdsrv-ready"
 # IIAB Config Files
 iiab_config_file = None
 iiab_ini_file = None
+iiab_local_vars_file = None
 
 # Variables that should be read from config file
 # All of these variables will be read from config files and recomputed in init()
@@ -1863,7 +1864,7 @@ def read_iiab_vars():
     default_vars = yaml.load(stream)
     stream.close()
 
-    stream = open("/etc/iiab/local_vars.yml", 'r')
+    stream = open(iiab_local_vars_file, 'r')
     local_vars = yaml.load(stream)
     stream.close()
 
@@ -2068,6 +2069,7 @@ def app_config():
     global iiab_config_dir
     global iiab_config_file
     global iiab_ini_file
+    global iiab_local_vars_file
     global config_vars_file
     global cmdsrv_dbpath
     global cmdsrv_dbname
@@ -2107,6 +2109,7 @@ def app_config():
     iiab_config_dir = conf['iiab_config_dir']
     iiab_config_file = conf['iiab_config_file']
     iiab_ini_file = conf['iiab_ini_file']
+    iiab_local_vars_file = conf['iiab_local_vars_file']
     config_vars_file = iiab_config_dir + "/config_vars.yml"
 
     cmdsrv_dbname = conf['cmdsrv_dbname']
