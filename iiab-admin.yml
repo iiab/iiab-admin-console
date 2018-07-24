@@ -6,6 +6,9 @@
     iiab_base: /opt/iiab
     iiab_repo: "{{ iiab_base }}/iiab"
     iiab_config_dir: /etc/iiab
+    # this is for backwards compatibility to before move of local vars in iiab 6.6
+    # default vars will override this below
+    iiab_local_vars_file: "{{ iiab_repo }}/vars/local_vars.yml"
     admin_install_base : /opt/admin
     #admin_install_base : /opt/schoolserver/admin
 
@@ -23,7 +26,7 @@
   vars_files:
   - "{{ iiab_repo }}/vars/default_vars.yml"
   - "{{ iiab_repo }}/vars/{{ ansible_local.local_facts.os_ver }}.yml"
-  - /etc/iiab/local_vars.yml
+  - "{{ iiab_local_vars_file }}"
   - vars/default_vars.yml
   - vars/{{ ansible_distribution }}.yml
 
