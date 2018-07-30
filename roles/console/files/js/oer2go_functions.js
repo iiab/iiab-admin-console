@@ -191,7 +191,7 @@ function renderOer2goItem(item, preChecked, onChangeFunc, matchList, matchText) 
     html += '<span class="' + colorClass + '">' + matchText;
   else if (oer2goScheduled.indexOf(itemId) >= 0)
     html += '<span class="' + colorClass + '">WORKING ON IT';
-  else
+  else if (item.index_mod_sample_url != null)
   	html += '<span> <a href="' + item.index_mod_sample_url + '" target="_blank">Sample</a>';
   html += '</span><BR>';
 
