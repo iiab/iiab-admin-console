@@ -642,7 +642,8 @@ def cmd_handler(cmd_msg):
         "GET-ZIM-STAT": get_zim_stat,
         "INST-ZIMS": install_zims,
         "COPY-ZIMS": copy_zims,
-        "MAKE-KIWIX-LIB": make_kiwix_lib,
+        "MAKE-KIWIX-LIB": make_kiwix_lib, # runs as job
+        "RESTART-KIWIX": restart_kiwix, # runs immediately
         "GET-OER2GO-CAT": get_oer2go_catalog,
         "INST-OER2GO-MOD": install_oer2go_mod,
         "COPY-OER2GO-MOD": copy_oer2go_mod,
@@ -651,7 +652,6 @@ def cmd_handler(cmd_msg):
         "INST-RACHEL": install_rachel,
         "DEL-DOWNLOADS": del_downloads,
         "DEL-MODULES": del_modules,
-        "RESTART-KIWIX": restart_kiwix,
         "REBOOT": reboot_server,
         "POWEROFF": poweroff_server,
         #"REMOTE-ADMIN-CTL": remote_admin_ctl, #true/false
