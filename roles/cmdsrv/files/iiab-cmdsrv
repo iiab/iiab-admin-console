@@ -90,8 +90,10 @@ last_command_rowid = 0
 last_job_rowid = 0
 
 active_commands = {}
-zims_wip = {}
-oer2go_wip = {}
+zims_downloading = {}
+zims_copying = {}
+oer2go_downloading = {}
+oer2go_copying = {}
 oer2go_installed = []
 jobs_requested = {}
 jobs_to_restart = {}
@@ -273,6 +275,8 @@ def job_minder_thread(client_url, worker_control_url, context=None):
         if job_info['has_dependent'] == "Y":
             prereq_info ['status'] = 'STARTED' # for both 'STARTED' and 'RESTARTED'
             prereq_jobs[job_id] = prereq_info
+        else:
+            add_wip(job_info)
         job_info = start_job(job_id, job_info, status='RESTARTED')
         jobs_running[job_id] = job_info
 
@@ -399,16 +403,12 @@ def job_minder_thread(client_url, worker_control_url, context=None):
                 # flag job for removal
                 jobs_to_close.append(job_id)
 
-        #print 'starting close jobs'
+        # print 'starting close jobs'
         # now remove closed jobs from running list
         for key in jobs_to_close:
             if jobs_running[key]['has_dependent'] == "N": # delete from command list if last step of command
                 active_commands.pop(jobs_running[key]['cmd_rowid'], None)
-                if jobs_running[key]['cmd'] == "INST-ZIMS":
-                    zims_wip.pop(jobs_running[key]['cmd_args']['zim_id'], None)
-                elif jobs_running[key]['cmd'] == "INST-OER2GO-MOD":
-                    oer2go_wip.pop(jobs_running[key]['cmd_args']['moddir'], None)
-
+                remove_wip(jobs_running[key])
             jobs_running.pop(key, None)
             if key in jobs_to_cancel:
                 jobs_to_cancel.pop(key, None)
@@ -434,6 +434,36 @@ def job_minder_thread(client_url, worker_control_url, context=None):
     #context.term()
     #sys.exit()
 
+def add_wip(job_info):
+    global zims_downloading
+    global zims_copying
+    global oer2go_downloading
+    global oer2go_copying
+
+    if job_info['cmd'] == "INST-ZIMS":
+        zims_downloading[job_info['cmd_args']['zim_id']] = True
+    elif job_info['cmd'] == "COPY-ZIMS" and job_info['cmd_args']['dest'] == "internal":
+        zims_copying[job_info['cmd_args']['zim_id']] = True
+    elif job_info['cmd'] == "INST-OER2GO-MOD":
+        oer2go_downloading[job_info['cmd_args']['moddir']] = True
+    elif job_info['cmd'] == "COPY-OER2GO-MOD" and job_info['cmd_args']['dest'] == "internal":
+        oer2go_copying[job_info['cmd_args']['moddir']] = True
+
+def remove_wip(job_info):
+    global zims_downloading
+    global zims_copying
+    global oer2go_downloading
+    global oer2go_copying
+
+    if job_info['cmd'] == "INST-ZIMS":
+        zims_downloading.pop(job_info['cmd_args']['zim_id'], None)
+    elif job_info['cmd'] == "COPY-ZIMS":
+        zims_copying.pop(job_info['cmd_args']['zim_id'], None)
+    elif job_info['cmd'] == "INST-OER2GO-MOD":
+        oer2go_downloading.pop(job_info['cmd_args']['moddir'], None)
+    elif job_info['cmd'] == "COPY-OER2GO-MOD":
+        oer2go_copying.pop(job_info['cmd_args']['moddir'], None)
+
 def start_job(job_id, job_info, status='STARTED'):
     global running_job_count
     global ansible_running_flag
@@ -448,6 +478,7 @@ def start_job(job_id, job_info, status='STARTED'):
     job_info['status_datetime'] = str(datetime.now())
     job_info['job_output'] = ""
 
+    print job_info
     if job_id in prereq_jobs:
         prereq_jobs[job_id]['status'] = 'STARTED'
 
@@ -534,11 +565,7 @@ def cancel_req_job(job_id, job_info):
     # Remove Active Command and any WIP tracking
     if job_info['has_dependent'] == "N": # delete from command list if last step of command
         active_commands.pop(job_info['cmd_rowid'], None)
-        if job_info['cmd'] == "INST-ZIMS":
-            zims_wip.pop(job_info['cmd_args']['zim_id'], None)
-        elif jobs_running[key]['cmd'] == "INST-OER2GO-MOD":
-            oer2go_wip.pop(jobs_running[key]['cmd_args']['moddir'], None)
-
+        remove_wip(job_info)
     return (job_info)
 
 def cmd_proc_thread(worker_data_url, worker_control_url, context=None):
@@ -942,7 +969,10 @@ def get_ext_zim_catalog(dev_name):
                     pass
 
     usb_catalog = read_library_xml(kiwix_library_xml_tmp, kiwix_exclude_attr)
-    os.remove(kiwix_library_xml_tmp)
+    try:
+        os.remove(kiwix_library_xml_tmp)
+    except OSError:
+        pass
     return (usb_catalog)
 
 # the following does not work on lvm or raid or iso usb drives
@@ -1117,7 +1147,8 @@ def get_kiwix_catalog(cmd_info):
 
 def get_zim_stat(cmd_info):
     all_zims = {}
-    all_zims['WIP'] = zims_wip
+    all_zims['DOWNLOADING'] = zims_downloading
+    all_zims['COPYING'] = zims_copying
     all_zims['INSTALLED'] = {}
 
     lib_xml_file = zim_dir + "/library.xml"
@@ -1127,7 +1158,8 @@ def get_zim_stat(cmd_info):
     return (resp)
 
 def read_library_xml(lib_xml_file, kiwix_exclude_attr=[""]):
-    kiwix_exclude_attr.append("id") # attributes to exclude
+    kiwix_exclude_attr.append("id") # don't include id
+    kiwix_exclude_attr.append("favicon") # don't include large favicon
     zims_installed = {}
     try:
         tree = ET.parse(lib_xml_file)
@@ -1330,7 +1362,8 @@ def copy_zims(cmd_info):
     if 'cmd_args' in cmd_info:
         source = cmd_info['cmd_args']['source']
         dest = cmd_info['cmd_args']['dest']
-        file_ref = cmd_info['cmd_args']['file_ref'] # no .zim
+        zim_id = cmd_info['cmd_args']['zim_id']
+        file_ref = cmd_info['cmd_args']['file_ref']
     else:
         return cmd_malformed(cmd_info['cmd'])
 
@@ -1346,6 +1379,7 @@ def copy_zims(cmd_info):
     else:
         source = '/media/usb' + source[-1]
         dest = ''
+        zims_copying[id] = zim_id # track wip for front end
 
     # rsync zim files; if copying to internal, copy to working and then move
     if dest != '': # copy directly to usb
@@ -1437,7 +1471,7 @@ def install_oer2go_mod(cmd_info):
     #print job_command
     resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=2, depend_on_job_id=job_id, has_dependent="N")
 
-    oer2go_wip[moddir] = oer2go_catalog[moddir] # track wip for front end
+    # oer2go_downloading[moddir] = oer2go_catalog[moddir] # track wip for front end
 
     return resp
 
@@ -1461,6 +1495,7 @@ def copy_oer2go_mod(cmd_info):
     else:
         source = '/media/usb' + source[-1]
         dest = ''
+        # oer2go_copying[moddir] = oer2go_catalog[moddir] # track wip for front end
 
     content_source = source + modules_dir
     content_dest = dest + modules_dir
@@ -1485,7 +1520,8 @@ def get_oer2go_stat(cmd_info):
     refresh_oer2go_installed() # we will no longer use the module downloaded attribute in oer2go_catalog
 
     all_oer2go = {}
-    all_oer2go['WIP'] = oer2go_wip.keys()
+    all_oer2go['DOWNLOADING'] = oer2go_downloading.keys()
+    all_oer2go['COPYING'] = oer2go_copying.keys()
     all_oer2go['INSTALLED'] = oer2go_installed
 
     resp = json.dumps(all_oer2go)
@@ -1703,13 +1739,8 @@ def request_one_job(cmd_info, job_command, cmd_step_no, depend_on_job_id, has_de
         prereq_info ['status'] = job_info['status']
         prereq_jobs[job_id] = prereq_info
     else:
-        if cmd_info['cmd'] == "INST-ZIMS":
-            id = cmd_info['cmd_args']['zim_id']
-            if id in kiwix_catalog:
-                zims_wip[id] = kiwix_catalog[id]
-            else:
-                log(syslog.LOG_ERR, "Error: Unknown kiwix zim - %s." % id)
-                #print "unknown kiwix zim - ", id
+        add_wip(job_info)
+
     return job_id
 
 def cancel_job(cmd_info):
@@ -2239,7 +2270,7 @@ def get_incomplete_jobs():
             if job_info['cmd'] == "INST-ZIMS":
                 id = job_info['cmd_args']['zim_id']
                 if id in kiwix_catalog:
-                    zims_wip[id] = kiwix_catalog[id]
+                    zims_downloading[id] = kiwix_catalog[id]
                 else:
                     log(syslog.LOG_ERR, "Error: Unknown kiwix zim - %s." % id)
                     #print "unknown kiwix zim - ", id
