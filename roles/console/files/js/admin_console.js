@@ -29,11 +29,13 @@ var oer2goCatalogFilter = ["html"] // only manage these types as OER2GO; catalog
 var rachelStat = {}; // installed, enabled and whether content is installed and which is enabled
 
 var zimsInstalled = []; // list of zims already installed
-var zimsScheduled = []; // list of zims being installed (wip)
+var zimsDownloading = []; // list of zims being downloaded
+var zimsCopying = []; // list of zims being copied
 var oer2goInstalled = []; // list of Oer2go items already installed
-var oer2goScheduled = []; // list of Oer2go items being installed (wip)
+var oer2goDownloading = []; // list of Oer2go items being downloaded
+var oer2goCopying = []; // list of Oer2go items being copied
 var downloadedFiles = {};
-var externalDeviceContents = {}; // zims and other content on external device; currently only one allowed
+var externalDeviceContents = {}; // zims and other content on external devices, only one active at a time
 
 var langNames = []; // iso code, local name and English name for languages for which we have zims sorted by English name for language
 var topNames = ["ara","eng","spa","fra","hin","por"]; // languages for top language menu
@@ -214,7 +216,7 @@ function instContentButtonsEvents() {
       if (this.type == "checkbox")
       if (this.checked){
         zim_id = this.name;
-        if (zimsInstalled.indexOf(zim_id) == -1 && zimsScheduled.indexOf(zim_id) == -1)
+        if (zimsInstalled.indexOf(zim_id) == -1 && zimsDownloading.indexOf(zim_id) == -1)
         instZim(zim_id);
       }
     });
@@ -231,7 +233,7 @@ function instContentButtonsEvents() {
       if (this.type == "checkbox")
         if (this.checked){
           mod_id = this.name;
-          if (oer2goInstalled.indexOf(mod_id) == -1 && oer2goScheduled.indexOf(mod_id) == -1)
+          if (oer2goInstalled.indexOf(mod_id) == -1 && oer2goDownloading.indexOf(mod_id) == -1)
             instOer2goItem(mod_id);
         }
     });
@@ -246,12 +248,20 @@ function instContentButtonsEvents() {
     window.open(url);
   });
 
-  $("#ZIM-STATUS-REFRESH").click(function(){
-    refreshZimStat();
+  $("#REFRESH-CONTENT-DISPLAY").click(function(){
+    refreshAllInstalledList();
   });
 
-  $("#RESTART-KIWIX").click(function(){
-    restartKiwix();
+//  $("#ZIM-STATUS-REFRESH").click(function(){
+//    refreshZimStat();
+//  });
+
+//  $("#RESTART-KIWIX").click(function(){
+//   restartKiwix();
+  //});
+
+  $("#MAKE-KIWIX-LIB").click(function(){
+    reindexKiwix();
   });
 
   $("#KIWIX-LIB-REFRESH").click(function(){
@@ -328,8 +338,8 @@ function utilButtonsEvents() {
           if (job_status[job_id]["cmd_verb"] == "INST-ZIMS"){
           	var zim_id = job_status[job_id]["cmd_args"]["zim_id"];
           	//consoleLog (zim_id);
-            if (zimsScheduled.indexOf(zim_id) > -1){
-              zimsScheduled.pop(zim_id);
+            if (zimsDownloading.indexOf(zim_id) > -1){
+              zimsDownloading.pop(zim_id);
               updateZimDiskSpaceUtil(zim_id, false)
               procZimGroups();
               //$( "input[name*='" + zim_id + "']" ).checked = false;
@@ -911,8 +921,8 @@ function selectedLangsDefaults() {
     if (selectedLangs.indexOf(lang) == -1) // automatically select any language for which oer2go item is installed
       selectedLangs.push(lang);
   }
-  for (var id in oer2goScheduled){
-    lang = langCodesXRef[oer2goCatalog[oer2goScheduled[id]]['lang']];
+  for (var id in oer2goDownloading){
+    lang = langCodesXRef[oer2goCatalog[oer2goDownloading[id]]['lang']];
     if (selectedLangs.indexOf(lang) == -1) // automatically select any language for which oer2go item is wip
       selectedLangs.push(lang);
   }
@@ -1116,18 +1126,19 @@ function copyContent(){
 
   // Zims
 
-  modList = getRmCopyList(device, "zims");
+  modList = getCopyList(device, "zims");
   modList.forEach( function(item) {
-    cmd_args['file_ref'] = item;
+    cmd_args['zim_id'] = item.id;
+    cmd_args['file_ref'] = item.file_ref;
     cmd = "COPY-ZIMS " + JSON.stringify(cmd_args);
   	sendCmdSrvCmd(cmd, genericCmdHandler);
   });
 
   // OER2GO
 
-  modList = getRmCopyList(device, "modules");
+  modList = getCopyList(device, "modules");
   modList.forEach( function(item) {
-    cmd_args['file_ref'] = item;
+    cmd_args['file_ref'] = item.file_ref;
     cmd = "COPY-OER2GO-MOD " + JSON.stringify(cmd_args);
   	sendCmdSrvCmd(cmd, genericCmdHandler);
   });
@@ -1221,7 +1232,7 @@ function delModules(device, mod_type) {
   var delArgs = {}
 	var modList = [];
 
-  modList = getRmCopyList(device, mod_type);
+  modList = getRmList(device, mod_type);
   if (modList.length == 0)
     return;
 
@@ -1232,35 +1243,58 @@ function delModules(device, mod_type) {
   return sendCmdSrvCmd(delCmd, genericCmdHandler);
 }
 
-function getRmCopyList(device, mod_type){
-	var modList = [];
-	var selectorId;
-	var catalog = {};
+function getCopyList(device, mod_type){
+  var modList = [];
+	var params;
+	var id;
+	var item = {};
 	var zim_path;
 	var zim_file;
 
 	// compute jquery selector
 	// we only allow one external usb at a time
 
-	if (device == "internal"){
-	  selectorId = "installed";
-	  catalog = installedZimCatalog.INSTALLED;
-	}
-	else{
-		selectorId = "external";
-		catalog = externalZimCatalog;
-	}
-	if (mod_type == "zims")
-		selectorId += "ZimModules";
-  else if (mod_type == "modules")
-    selectorId += "Oer2goModules";
+	params = getRmCopyListParams(device, mod_type);
 
-  console.log(selectorId);
-  $("#" + selectorId + " input").each(function() {
+  console.log(params.selectorId);
+  $("#" + params.selectorId + " input").each(function() {
+    if (this.type == "checkbox") {
+      if (this.checked){
+        item = {};
+        item['id'] = this.name;
+        item['file_ref'] = this.name; // no separate id for modules
+        if (mod_type == "zims"){
+        	zim_path = params.catalog[this.name].path;
+        	zim_file = zim_path.split('/').pop(); // take only file name
+        	item['file_ref'] = zim_file.split('.zim')[0]; // remove .zim
+        }
+        modList.push(item);
+      }
+    }
+  });
+  console.log(modList);
+  return modList;
+}
+
+function getRmList(device, mod_type){
+	var modList = []; // just needs path
+	var params;
+	//var selectorId;
+	//var catalog = {};
+	var zim_path;
+	var zim_file;
+
+	// compute jquery selector
+	// we only allow one external usb at a time
+
+	params = getRmCopyListParams(device, mod_type);
+
+  console.log(params.selectorId);
+  $("#" + params.selectorId + " input").each(function() {
     if (this.type == "checkbox") {
       if (this.checked)
         if (mod_type == "zims"){
-        	zim_path = catalog[this.name].path;
+        	zim_path = params.catalog[this.name].path;
         	zim_file = zim_path.split('/').pop(); // take only file name
         	zim_file = zim_file.split('.zim')[0]; // remove .zim
           modList.push(zim_file);
@@ -1271,6 +1305,26 @@ function getRmCopyList(device, mod_type){
   });
   console.log(modList);
   return modList;
+}
+
+function getRmCopyListParams(device, mod_type){
+  // compute jquery selector
+	// we only allow one external usb at a time
+
+	var params = {};
+  if (device == "internal"){
+	  params.selectorId = "installed";
+	  params.catalog = installedZimCatalog.INSTALLED;
+	}
+	else{
+		params.selectorId = "external";
+		params.catalog = externalZimCatalog;
+	}
+	if (mod_type == "zims")
+		params.selectorId += "ZimModules";
+  else if (mod_type == "modules")
+    params.selectorId += "Oer2goModules";
+  return params;
 }
 
 // Utility Menu functions
@@ -1555,9 +1609,9 @@ function calcAllocatedSpace(){
 	var totalSpace = 0;
 	totalSpace += sumAllocationList(selectedZims, 'zim');
 	//consoleLog(totalSpace);
-	totalSpace += sumAllocationList(zimsScheduled, 'zim');
+	totalSpace += sumAllocationList(zimsDownloading, 'zim');
 	totalSpace += sumAllocationList(selectedOer2goItems, 'oer2go');
-	totalSpace += sumAllocationList(oer2goScheduled, 'oer2go');
+	totalSpace += sumAllocationList(oer2goDownloading, 'oer2go');
 	return totalSpace;
 }
 

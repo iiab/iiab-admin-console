@@ -5,7 +5,7 @@
 
   function instZim(zim_id)
   {
-    zimsScheduled.push(zim_id);
+    zimsDownloading.push(zim_id);
     var command = "INST-ZIMS"
     var cmd_args = {}
     cmd_args['zim_id'] = zim_id;
@@ -20,7 +20,7 @@
     //cmdargs = JSON.parse(command);
     //consoleLog(cmdargs);
     consoleLog(cmd_args["zim_id"]);
-    zimsScheduled.pop(cmd_args["zim_id"]);
+    zimsDownloading.pop(cmd_args["zim_id"]);
     procZimGroups();
     return true;
   }
@@ -30,6 +30,14 @@
     var command = "RESTART-KIWIX";
     sendCmdSrvCmd(command, genericCmdHandler);
     alert ("Restarting Kiwix Server.");
+    return true;
+  }
+
+  function reindexKiwix() // Restart Kiwix Server
+  {
+    var command = "MAKE-KIWIX-LIB";
+    sendCmdSrvCmd(command, genericCmdHandler);
+    alert ("Reindexing Kiwix Content.\n\nPlease view Utilities->Display Job Status to see the results.");
     return true;
   }
 
@@ -182,7 +190,7 @@ function genZimItem(zimId, zim, preChecked=true, onChangeFunc="updateZimDiskSpac
     colorClass = "installed";
     colorClass2 = 'class="installed"';
   }
-  if (zimsScheduled.indexOf(zimId) >= 0){
+  if (zimsDownloading.indexOf(zimId) >= 0){
     colorClass = "scheduled";
     colorClass2 = 'class="scheduled"';
   }
@@ -198,7 +206,7 @@ function genZimItem(zimId, zim, preChecked=true, onChangeFunc="updateZimDiskSpac
   html += '><input type="checkbox" name="' + zimId + '" zim_perma_ref="'+ zim.perma_ref + '"';
   //html += '><img src="images/' + zimId + '.png' + '"><input type="checkbox" name="' + zimId + '"';
   if (preChecked) {
-    if ((zimsInstalled.indexOf(zimId) >= 0) || (zimsScheduled.indexOf(zimId) >= 0)) // should this be matchList?
+    if ((zimsInstalled.indexOf(zimId) >= 0) || (zimsDownloading.indexOf(zimId) >= 0)) // should this be matchList?
       html += ' disabled="disabled" checked="checked"';
   }
   html += ' onChange="' + onChangeFunc + '(this)"></label>'; // end input
@@ -214,7 +222,7 @@ function genZimItem(zimId, zim, preChecked=true, onChangeFunc="updateZimDiskSpac
   html += '<span ' + colorClass2 +'> Size: ' + readableSize(zim.size);
   if (matchList.indexOf(zimId) >= 0)
     html += matchText;
-  if (zimsScheduled.indexOf(zimId) >= 0)
+  if (zimsDownloading.indexOf(zimId) >= 0)
     html += ' - WORKING ON IT';
   html += '</span><BR>';
   return html;
@@ -316,7 +324,7 @@ function checkKiwixCatalogDate() {
 
 function procZimCatalog() {
   // Uses installedZimCatalog, kiwixCatalog, langCodes, and langGroups
-  // Calculates zimCatalog, zimGroups, langNames, zimsInstalled, zimsScheduled
+  // Calculates zimCatalog, zimGroups, langNames, zimsInstalled, zimsDownloading
 
   zimCatalog = {};
   zimGroups = {};
@@ -330,7 +338,7 @@ function procZimCatalog() {
 
   // Create working arrays of installed and wip
   zimsInstalled = [];
-  zimsScheduled = [];
+  zimsDownloading = [];
 
   for (var id in installedZimCatalog['INSTALLED']){
     zimsInstalled.push(id);
@@ -343,7 +351,7 @@ function procZimCatalog() {
   zimsInstalled.sort(zimCompare);
 
   for (var id in installedZimCatalog['WIP']){
-    zimsScheduled.push(id);
+    zimsDownloading.push(id);
     lang = installedZimCatalog['WIP'][id]['language'];
     if (selectedLangs.indexOf(lang) == -1) // automatically select any language for which zim is being installed
     selectedLangs.push (lang);

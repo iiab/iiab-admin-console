@@ -67,7 +67,7 @@ function readOer2goCatalog(){
 function procOer2goStat(data) {
 	//consoleLog(data);
 	oer2goInstalled = data['INSTALLED']
-	oer2goScheduled = data['WIP']
+	oer2goDownloading = data['DOWNLOADING']
 }
 
 function renderOer2goCatalog() {
@@ -112,7 +112,8 @@ function renderOer2goCatalog() {
 
 function renderOer2goInstalledList() { // used by remove content
 	var html = "";
-	html = renderOer2goList(oer2goInstalled, preChecked=false, onChangeFunc="updateIntOer2goSpace",  matchList=externalDeviceContents[selectedUsb].oer2go_modules, matchText="ON USB");
+	if (selectedUsb != null)
+	  html = renderOer2goList(oer2goInstalled, preChecked=false, onChangeFunc="updateIntOer2goSpace",  matchList=externalDeviceContents[selectedUsb].oer2go_modules, matchText="ON USB");
 	$( "#installedOer2goModules" ).html(html);
 	activateTooltip();
 }
@@ -156,18 +157,17 @@ function renderOer2goList(mods, preChecked, onChangeFunc, matchList=oer2goInstal
 }
 
 function renderOer2goItem(item, preChecked, onChangeFunc, matchList, matchText) {
-
   var html = "";
   var colorClass = "";
   var colorClass2 = "";
-  //console.log(item);
+  // console.log(item);
   var itemId = item.moddir;
 
   if (matchList.indexOf(itemId) >= 0){
     colorClass = "installed";
     colorClass2 = 'class="installed"';
   }
-  if (oer2goScheduled.indexOf(itemId) >= 0){
+  if (oer2goDownloading.indexOf(itemId) >= 0){
     colorClass = "scheduled";
     colorClass2 = 'class="scheduled"';
   }
@@ -175,7 +175,7 @@ function renderOer2goItem(item, preChecked, onChangeFunc, matchList, matchText) 
   html += '><input type="checkbox" name="' + itemId + '"';
   //html += '><img src="images/' + zimId + '.png' + '"><input type="checkbox" name="' + zimId + '"';
   if (preChecked) {
-    if ((oer2goInstalled.indexOf(itemId) >= 0) || (oer2goScheduled.indexOf(itemId) >= 0)) // ? use matchList
+    if ((oer2goInstalled.indexOf(itemId) >= 0) || (oer2goDownloading.indexOf(itemId) >= 0)) // ? use matchList
       html += ' disabled="disabled" checked="checked"';
     if (selectedOer2goItems.indexOf(itemId) >= 0)
       html += ' checked="checked"';
@@ -189,7 +189,7 @@ function renderOer2goItem(item, preChecked, onChangeFunc, matchList, matchText) 
   html += '<span ' + colorClass2 + ' style="display:inline-block; width:120px;"> Size: ' + readableSize(item.ksize) + '</span>';
   if (matchList.indexOf(itemId) >= 0)
     html += '<span class="' + colorClass + '">' + matchText;
-  else if (oer2goScheduled.indexOf(itemId) >= 0)
+  else if (oer2goDownloading.indexOf(itemId) >= 0)
     html += '<span class="' + colorClass + '">WORKING ON IT';
   else if (item.index_mod_sample_url != null)
   	html += '<span> <a href="' + item.index_mod_sample_url + '" target="_blank">Sample</a>';
@@ -222,7 +222,7 @@ function instOer2goItem(mod_id) {
   cmd_args['moddir'] = mod_id;
   cmd = command + " " + JSON.stringify(cmd_args);
   sendCmdSrvCmd(cmd, genericCmdHandler);
-  oer2goScheduled.push(mod_id);
+  oer2goDownloading.push(mod_id);
   renderOer2goCatalog();
   return true;
 }
