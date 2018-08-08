@@ -31,9 +31,11 @@ var rachelStat = {}; // installed, enabled and whether content is installed and 
 var zimsInstalled = []; // list of zims already installed
 var zimsDownloading = []; // list of zims being downloaded
 var zimsCopying = []; // list of zims being copied
+var zimsExternal = []; // list of zims on external device
 var oer2goInstalled = []; // list of Oer2go items already installed
 var oer2goDownloading = []; // list of Oer2go items being downloaded
 var oer2goCopying = []; // list of Oer2go items being copied
+var oer2goExternal = []; // list of Oer2go items on external device
 var downloadedFiles = {};
 var externalDeviceContents = {}; // zims and other content on external devices, only one active at a time
 
@@ -966,12 +968,16 @@ var command = "GET-EXTDEV-INFO";
 
 function procExternalDevInfo(data){
   externalDeviceContents = data;
-  externalZimCatalog = [];
+  externalZimCatalog = {};
+  zimsExternal = [];
+  oer2goExternal = [];
   var haveUsb = calcExtUsb(); // also sets selectedUsb
   setCopyContentButtonText();
 
   if (haveUsb){
     externalZimCatalog = externalDeviceContents[selectedUsb].zim_modules;
+    zimsExternal = Object.keys(externalZimCatalog);
+    oer2goExternal = externalDeviceContents[selectedUsb].oer2go_modules;
     make_button_disabled("#COPY-CONTENT", false);
     $.each(Object.keys(externalDeviceContents).sort(), function(index, dev) {
   		initManContSelections(dev);
@@ -1204,7 +1210,7 @@ function renderExternalList() {
 	$("#instManageContentUsbTab").text("Content on " + selectedUsb);
 	setCopyContentButtonText();
 	renderExternalZimList();
-	renderexternalOer2goModules();
+	renderExternalOer2goModules();
 	renderZimInstalledList(); // update ON USB messages
 }
 

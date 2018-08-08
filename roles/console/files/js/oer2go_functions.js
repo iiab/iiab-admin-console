@@ -68,6 +68,7 @@ function procOer2goStat(data) {
 	//consoleLog(data);
 	oer2goInstalled = data['INSTALLED']
 	oer2goDownloading = data['DOWNLOADING']
+	oer2goCopying = data['COPYING']
 }
 
 function renderOer2goCatalog() {
@@ -110,19 +111,19 @@ function renderOer2goCatalog() {
   activateTooltip();
 }
 
-function renderOer2goInstalledList() { // used by remove content
+function renderOer2goInstalledList() { // used by manage content - internal
 	var html = "";
 	if (selectedUsb != null)
-	  html = renderOer2goList(oer2goInstalled, preChecked=false, onChangeFunc="updateIntOer2goSpace",  matchList=externalDeviceContents[selectedUsb].oer2go_modules, matchText="ON USB");
+	  html = renderOer2goList(oer2goInstalled, preChecked=false, onChangeFunc="updateIntOer2goSpace", noInstallStat = true);
 	$( "#installedOer2goModules" ).html(html);
 	activateTooltip();
 }
 
-function renderexternalOer2goModules() {
+function renderExternalOer2goModules() { // used by manage content - external (usb)
 	var html = "";
 
 	if (calcExtUsb){
-	  html = renderOer2goList(externalDeviceContents[selectedUsb].oer2go_modules, preChecked=false, onChangeFunc="updateExtOer2goSpace");
+	  html = renderOer2goList(externalDeviceContents[selectedUsb].oer2go_modules, preChecked=false, onChangeFunc="updateExtOer2goSpace", noInstallStat = false, noUsbStat = true);
     $( "#externalOer2goModules" ).html(html);
 	  activateTooltip();
   }
@@ -136,7 +137,7 @@ function renderOer2goItems(lang, mods) { //used by oer2go download
 	return html;
 }
 
-function renderOer2goList(mods, preChecked, onChangeFunc, matchList=oer2goInstalled, matchText="INSTALLED") {
+function renderOer2goList(mods, preChecked, onChangeFunc, noInstallStat = false, noUsbStat = false) { // generic
 	var html = "";
 
 	// sort mods
@@ -150,32 +151,32 @@ function renderOer2goList(mods, preChecked, onChangeFunc, matchList=oer2goInstal
   	//console.log(mod);
   	var item = oer2goCatalog[mod];
   	//html += oer2goCatalog[mod].title + "<BR>";
-  	html += renderOer2goItem(item, preChecked, onChangeFunc, matchList, matchText);
+  	html += genOer2goItem(item, preChecked, onChangeFunc, noInstallStat, noUsbStat);
   });
 
 	return html;
 }
 
-function renderOer2goItem(item, preChecked, onChangeFunc, matchList, matchText) {
+//function genOer2goItem(item, preChecked, onChangeFunc, matchList, matchText)
+function genOer2goItem(item, preChecked, onChangeFunc, noInstallStat, noUsbStat) {
   var html = "";
   var colorClass = "";
   var colorClass2 = "";
   // console.log(item);
   var itemId = item.moddir;
 
-  if (matchList.indexOf(itemId) >= 0){
-    colorClass = "installed";
-    colorClass2 = 'class="installed"';
-  }
-  if (oer2goDownloading.indexOf(itemId) >= 0){
-    colorClass = "scheduled";
-    colorClass2 = 'class="scheduled"';
-  }
+  var oer2goStat = genoer2goStatus(itemId, noInstallStat, noUsbStat);
+
+  colorClass = oer2goStat.colorClass;
+  if (colorClass != "")
+    colorClass2 = 'class="' + colorClass + '"';
+  var oer2goStatHtml = oer2goStat.html;
+
   html += '<label ';
   html += '><input type="checkbox" name="' + itemId + '"';
   //html += '><img src="images/' + zimId + '.png' + '"><input type="checkbox" name="' + zimId + '"';
   if (preChecked) {
-    if ((oer2goInstalled.indexOf(itemId) >= 0) || (oer2goDownloading.indexOf(itemId) >= 0)) // ? use matchList
+    if (oer2goStat.checkable)
       html += ' disabled="disabled" checked="checked"';
     if (selectedOer2goItems.indexOf(itemId) >= 0)
       html += ' checked="checked"';
@@ -187,10 +188,8 @@ function renderOer2goItem(item, preChecked, onChangeFunc, matchList, matchText) 
   html += '<span class="zim-desc ' + colorClass + '"' + oer2goToolTip + '>&nbsp;&nbsp;' + itemDesc + '</span>';
 
   html += '<span ' + colorClass2 + ' style="display:inline-block; width:120px;"> Size: ' + readableSize(item.ksize) + '</span>';
-  if (matchList.indexOf(itemId) >= 0)
-    html += '<span class="' + colorClass + '">' + matchText;
-  else if (oer2goDownloading.indexOf(itemId) >= 0)
-    html += '<span class="' + colorClass + '">WORKING ON IT';
+  if (oer2goStatHtml != "")
+    html += '<span class="' + colorClass + '">' + oer2goStatHtml;
   else if (item.index_mod_sample_url != null)
   	html += '<span> <a href="' + item.index_mod_sample_url + '" target="_blank">Sample</a>';
   html += '</span><BR>';
@@ -214,6 +213,41 @@ function genOer2goToolTip(item) {
 
   oer2goToolTip += '"'
   return oer2goToolTip;
+}
+
+function genoer2goStatus(itemId, noInstallStat, noUsbStat){
+	var oer2goStat = {};
+	var html = "";
+	var colorClass = "";
+	var checkable = false;
+
+	if (!noInstallStat && oer2goInstalled.indexOf(itemId) >= 0){
+	  html = " - INSTALLED";
+	  colorClass = "installed";
+	  checkable = true;
+	}
+
+	else	if (oer2goDownloading.indexOf(itemId) >= 0){
+	  html = " - DOWNLOADING";
+	  colorClass = "scheduled";
+	  checkable = true;
+	}
+
+	else	if (oer2goCopying.indexOf(itemId) >= 0){
+	  html = " - COPYING";
+	  colorClass = "scheduled";
+	  checkable = true;
+	}
+
+	else	if (!noUsbStat && (oer2goExternal.indexOf(itemId) >= 0)){
+	  html = " - ON USB";
+	  colorClass = "backed-up";
+	}
+
+	oer2goStat['html'] = html;
+	oer2goStat['colorClass'] = colorClass;
+	oer2goStat['checkable'] = checkable;
+  return oer2goStat;
 }
 
 function instOer2goItem(mod_id) {

@@ -5,10 +5,13 @@ Notes:
 
 Catalogs with metadata
 
-available zims - kiwix library.xml kiwixCatalog
-installed zims - local library.xml installedZimCatalog.INSTALLED
+available zims       - kiwix library.xml kiwixCatalog
+installed zims       - local library.xml installedZimCatalog.INSTALLED
+zims on usb          - externalDeviceContents[usb].zim_modules
+zims on selected usb - externalZimCatalog = copy of zims from externalDeviceContents[selected usb].zim_modules
+
 download scheduled zims - cmdsrv zims_downloading installedZimCatalog.DOWNLOADING
-copy scheduled zims - cmdsrv copying installedZimCatalog.COPYING
+copy scheduled zims - cmdsrv zims_copying installedZimCatalog.COPYING
 
 zims on usb    - usb library.xml   externalZimCatalog = copy of zims from externalDeviceContents[selected usb].zim_modules
 oer2go modules available - download from oer2go oer2goCatalog
@@ -20,9 +23,11 @@ externalDeviceContents[dev].oer2go_modules [what about modules subdirectories no
 Lists which index into catalogs
 
 zimsInstalled
-zimsScheduled
+zimsDownloading
+zimsCopying
 oer2goInstalled
-oer2goScheduled
+oer2goDownloading
+oer2goCopying
 manContSelections.internal.zims
 manContSelections.internal.modules
 manContSelections[dev].sum

@@ -159,7 +159,7 @@ function renderZimInstalledList() { // used by manage content
 	// zimsInstalled is sorted when computed
 	$.each( zimsInstalled, function( index, zimId ) {
 	//$.each( installedZimCatalog.INSTALLED, function( zimId, zim ) {
-    html += genZimItem(zimId, zimCatalog[zimId], preChecked=false, onChangeFunc="updateIntZimsSpace", matchList=Object.keys(externalZimCatalog), matchText=" - ON USB");
+    html += genZimItem(zimId, zimCatalog[zimId], preChecked=false, onChangeFunc="updateIntZimsSpace", noInstallStat = true);
   });
 
 	$( "#installedZimModules" ).html(html);
@@ -180,20 +180,19 @@ function renderExternalZimList() { // used by manage content
 	activateTooltip();
 }
 
-function genZimItem(zimId, zim, preChecked=true, onChangeFunc="updateZimDiskSpace", matchList=zimsInstalled, matchText=" - INSTALLED") {
+//function genZimItem(zimId, zim, preChecked=true, onChangeFunc="updateZimDiskSpace", matchList=zimsInstalled, matchText=" - INSTALLED") {
+function genZimItem(zimId, zim, preChecked=true, onChangeFunc="updateZimDiskSpace", noInstallStat = false, noUsbStat = false) {
   var html = "";
   var colorClass = "";
   var colorClass2 = "";
   var permaref = "";
 
-  if (matchList.indexOf(zimId) >= 0){
-    colorClass = "installed";
-    colorClass2 = 'class="installed"';
-  }
-  if (zimsDownloading.indexOf(zimId) >= 0){
-    colorClass = "scheduled";
-    colorClass2 = 'class="scheduled"';
-  }
+  var zimStat = genZimStatus(zimId, noInstallStat, noUsbStat);
+  //consoleLog (zimId, zimStat);
+  colorClass = zimStat.colorClass;
+  if (colorClass != "")
+    colorClass2 = 'class="' + colorClass + '"';
+  var zimStatHtml = zimStat.html;
 
   if (typeof zim.perma_ref !== 'undefined')
   	permaref = zim.perma_ref;
@@ -205,8 +204,7 @@ function genZimItem(zimId, zim, preChecked=true, onChangeFunc="updateZimDiskSpac
   html += '<label ';
   html += '><input type="checkbox" name="' + zimId + '" zim_perma_ref="'+ zim.perma_ref + '"';
   //html += '><img src="images/' + zimId + '.png' + '"><input type="checkbox" name="' + zimId + '"';
-  if (preChecked) {
-    if ((zimsInstalled.indexOf(zimId) >= 0) || (zimsDownloading.indexOf(zimId) >= 0)) // should this be matchList?
+  if (preChecked && zimStat.checkable) {
       html += ' disabled="disabled" checked="checked"';
   }
   html += ' onChange="' + onChangeFunc + '(this)"></label>'; // end input
@@ -220,10 +218,8 @@ function genZimItem(zimId, zim, preChecked=true, onChangeFunc="updateZimDiskSpac
 
   html += '<span ' + colorClass2 + 'style="display:inline-block; width:120px;"> Date: ' + zim.date + '</span>';
   html += '<span ' + colorClass2 +'> Size: ' + readableSize(zim.size);
-  if (matchList.indexOf(zimId) >= 0)
-    html += matchText;
-  if (zimsDownloading.indexOf(zimId) >= 0)
-    html += ' - WORKING ON IT';
+
+  html += zimStatHtml;
   html += '</span><BR>';
   return html;
 }
@@ -250,6 +246,40 @@ function genZimTooltip(zim) {
   return zimToolTip;
 }
 
+function genZimStatus(zimId, noInstallStat, noUsbStat){
+	var zimStat = {};
+	var html = "";
+	var colorClass = "";
+	var checkable = false;
+
+	if (!noInstallStat && zimsInstalled.indexOf(zimId) >= 0){
+	  html = " - INSTALLED";
+	  colorClass = "installed";
+	  checkable = true;
+	}
+
+	else	if (zimsDownloading.indexOf(zimId) >= 0){
+	  html = " - DOWNLOADING";
+	  colorClass = "scheduled";
+	  checkable = true;
+	}
+
+	else	if (zimsCopying.indexOf(zimId) >= 0){
+	  html = " - COPYING";
+	  colorClass = "scheduled";
+	  checkable = true;
+	}
+
+	else	if (!noUsbStat && (zimsExternal.indexOf(zimId) >= 0)){
+	  html = " - ON USB";
+	  colorClass = "backed-up";
+	}
+
+	zimStat['html'] = html;
+	zimStat['colorClass'] = colorClass;
+	zimStat['checkable'] = checkable;
+  return zimStat;
+}
 
 function zimCatCompare(lang) {
     return function(a, b) {
