@@ -56,7 +56,7 @@ def send_command(cmd, start_ms):
 
     try:
         context = zmq.Context()
-        print "Connecting to server..."
+        #print "Connecting to server..."
         socket = context.socket(zmq.DEALER)
         socket.connect ("ipc://%s" % ipc_sock)
         # socket.setsockopt(zmq.SOCKOPT_LINGER, 0) this should be the default for close() and is not in python binding
