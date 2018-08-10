@@ -1242,6 +1242,7 @@ function delModules(device, mod_type) {
   if (modList.length == 0)
     return;
 
+  delArgs['device'] = device;
   delArgs['mod_type'] = mod_type;
   delArgs['mod_list'] = modList;
 

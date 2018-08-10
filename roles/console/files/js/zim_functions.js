@@ -367,25 +367,11 @@ function procZimCatalog() {
   procOneCatalog(kiwixCatalog,1);
 
   // Create working arrays of installed and wip
-  zimsInstalled = [];
-  zimsDownloading = [];
+  procZimWorkingLists();
 
-  for (var id in installedZimCatalog['INSTALLED']){
-    zimsInstalled.push(id);
-    lang = installedZimCatalog['INSTALLED'][id]['language'];
-    if (selectedLangs.indexOf(lang) == -1) // automatically select any language for which zim is installed
-    selectedLangs.push (lang);
-  }
-  // sort installed zims by name for remove menu item
+  // sort installed zims by name for manage content
   var zimCompare = zimListCompare(zimCatalog);
   zimsInstalled.sort(zimCompare);
-
-  for (var id in installedZimCatalog['WIP']){
-    zimsDownloading.push(id);
-    lang = installedZimCatalog['WIP'][id]['language'];
-    if (selectedLangs.indexOf(lang) == -1) // automatically select any language for which zim is being installed
-    selectedLangs.push (lang);
-  }
 
   if (selectedLangs.length == 0)
   selectedLangs.push (defaultLang); // default
@@ -395,6 +381,32 @@ function procZimCatalog() {
   procZimGroups(); // Create zim list for selected languages
 
   return true;
+}
+
+function procZimWorkingLists() {
+  zimsInstalled = [];
+  zimsDownloading = [];
+  zimsCopying = [];
+
+  for (var arrayName in installedZimCatalog){
+    for (var id in installedZimCatalog[arrayName]){
+    	switch(arrayName) {
+      case 'INSTALLED':
+          zimsInstalled.push(id);
+          break;
+      case 'DOWNLOADING':
+          zimsDownloading.push(id);
+          break;
+      case 'COPYING':
+          zimsCopying.push(id);
+          break;
+      }
+
+      var lang = installedZimCatalog[arrayName][id]['language'];
+      if (selectedLangs.indexOf(lang) == -1) // automatically select any language for which zim is installed
+        selectedLangs.push (lang);
+    }
+  }
 }
 
 function procOneCatalog(catalog, priority){

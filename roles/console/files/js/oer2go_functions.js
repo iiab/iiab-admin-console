@@ -80,7 +80,7 @@ function renderOer2goCatalog() {
   // make sure langs are selected for
 
   selectedLangs.forEach((lang, index) => {
-    //console.log(lang);
+    console.log(lang, langCodes[lang].iso2);
     //langSelectedCodes.push(langCodes[lang].iso2); // ? not needed
     selectedLangsOer2goMods[langCodes[lang].iso2] = [];
   });
