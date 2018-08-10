@@ -1,3 +1,3 @@
 #!/bin/bash
 
-rsync -Pt --size-only  $1 $2
+rsync -Pav --size-only  $1 $2
