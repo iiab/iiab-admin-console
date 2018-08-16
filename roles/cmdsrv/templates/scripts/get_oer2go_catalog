@@ -92,7 +92,6 @@ def main ():
         try:
             url_handle = urllib2.urlopen(oer2go_cat_url)
             oer2go_catalog_json = url_handle.read()
-            oer2go_catalog = json.loads(oer2go_catalog_json)
             url_handle.close()
         except (urllib2.URLError) as exc:
             sys.stdout.write("GET-OER2GO-CAT ERROR - " + str(exc.reason) +'\n')
@@ -101,10 +100,18 @@ def main ():
         try:
             url_handle = urllib2.urlopen(iiab_cat_url)
             iiab_catalog_json = url_handle.read()
-            iiab_catalog = json.loads(iiab_catalog_json)
             url_handle.close()
         except (urllib2.URLError) as exc:
             sys.stdout.write("GET-OER2GO-CAT ERROR - " + str(exc.reason) +'\n')
+            sys.stdout.flush()
+            sys.exit(1)
+
+        # now try to parse
+        try:
+            oer2go_catalog = json.loads(oer2go_catalog_json)
+            iiab_catalog = json.loads(iiab_catalog_json)
+        except:
+            sys.stdout.write("GET-OER2GO-CAT ERROR - " + str(sys.exc_info()[0]) + "," +  str(sys.exc_info()[1])  + '\n')
             sys.stdout.flush()
             sys.exit(1)
 
