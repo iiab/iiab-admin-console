@@ -90,10 +90,19 @@ last_command_rowid = 0
 last_job_rowid = 0
 
 active_commands = {}
-zims_downloading = {}
-zims_copying = {}
-oer2go_downloading = {}
-oer2go_copying = {}
+zims_wip = {}
+#
+# CLEAN UP
+#
+#zims_wip["DOWNLOAD"] = {}
+#zims_wip["IMPORT"] = {}
+#zims_wip["EXPORT"] = {}
+
+zims_downloading = {} # not used
+zims_copying = {} # not used
+oer2go_wip = {}
+#oer2go_downloading = {}
+#oer2go_copying = {}
 oer2go_installed = []
 jobs_requested = {}
 jobs_to_restart = {}
@@ -435,38 +444,49 @@ def job_minder_thread(client_url, worker_control_url, context=None):
     #sys.exit()
 
 def add_wip(job_info):
-    global zims_downloading
-    global zims_copying
-    global oer2go_downloading
-    global oer2go_copying
+    global zims_wip
+    global oer2go_wip
 
-    #print "in add_wip"
-    #print job_info
-    if job_info['cmd'] == "INST-ZIMS":
-        zims_downloading[job_info['cmd_args']['zim_id']] = True
-    elif job_info['cmd'] == "COPY-ZIMS" and job_info['cmd_args']['dest'] == "internal":
-        zims_copying[job_info['cmd_args']['zim_id']] = True
-    elif job_info['cmd'] == "INST-OER2GO-MOD":
-        oer2go_downloading[job_info['cmd_args']['moddir']] = True
-    elif job_info['cmd'] == "COPY-OER2GO-MOD" and job_info['cmd_args']['dest'] == "internal":
-        oer2go_copying[job_info['cmd_args']['moddir']] = True
+    dest = "internal"
+    source = "kiwix"
+    action = ""
+
+    cmd = job_info['cmd']
+
+    if cmd in {"INST-ZIMS", "COPY-ZIMS"}:
+        zim_id = job_info['cmd_args']['zim_id']
+        if cmd == "INST-ZIMS":
+            action = "DOWNLOAD"
+        elif cmd == "COPY-ZIMS" and job_info['cmd_args']['dest'] == "internal":
+            action = "IMPORT"
+        elif cmd == "COPY-ZIMS" and job_info['cmd_args']['dest'] != "internal":
+            action = "EXPORT"
+        zims_wip[zim_id] = {"action":action, "dest":dest, "source":source}
+
+    elif cmd in {"INST-OER2GO-MOD", "COPY-OER2GO-MOD"}:
+        moddir = job_info['cmd_args']['moddir']
+        source = job_info['cmd_args']['source']
+        dest = job_info['cmd_args']['dest']
+
+        if cmd == "INST-OER2GO-MOD":
+            action = "DOWNLOAD"
+        elif cmd == "COPY-ZIMS" and dest == "internal":
+            action = "IMPORT"
+        elif cmd == "COPY-ZIMS" and dest != "internal":
+            action = "EXPORT"
+        oer2go_wip[moddir] = {"action":action, "dest":dest, "source":source}
 
 def remove_wip(job_info):
-    global zims_downloading
-    global zims_copying
-    global oer2go_downloading
-    global oer2go_copying
+    global zims_wip
+    global oer2go_wip
+
     #print job_info
     #print "in remove_wip"
 
-    if job_info['cmd'] == "INST-ZIMS":
-        zims_downloading.pop(job_info['cmd_args']['zim_id'], None)
-    elif job_info['cmd'] == "COPY-ZIMS":
-        zims_copying.pop(job_info['cmd_args']['zim_id'], None)
-    elif job_info['cmd'] == "INST-OER2GO-MOD":
-        oer2go_downloading.pop(job_info['cmd_args']['file_ref'], None)
-    elif job_info['cmd'] == "COPY-OER2GO-MOD":
-        oer2go_copying.pop(job_info['cmd_args']['file_ref'], None)
+    if job_info['cmd'] in ["INST-ZIMS", "COPY-ZIMS"]:
+        zims_wip.pop(job_info['cmd_args']['zim_id'], None)
+    elif job_info['cmd'] in ["INST-OER2GO-MOD", "COPY-OER2GO-MOD"]:
+        oer2go_wip.pop(job_info['cmd_args']['file_ref'], None)
 
 def start_job(job_id, job_info, status='STARTED'):
     global running_job_count
@@ -1161,8 +1181,8 @@ def get_kiwix_catalog(cmd_info):
 
 def get_zim_stat(cmd_info):
     all_zims = {}
-    all_zims['DOWNLOADING'] = zims_downloading
-    all_zims['COPYING'] = zims_copying
+    all_zims['WIP'] = zims_wip
+
     all_zims['INSTALLED'] = {}
 
     lib_xml_file = zim_dir + "/library.xml"
@@ -1535,8 +1555,8 @@ def get_oer2go_stat(cmd_info):
 
     all_oer2go = {}
 
-    all_oer2go['DOWNLOADING'] = oer2go_downloading.keys()
-    all_oer2go['COPYING'] = oer2go_copying.keys()
+    all_oer2go['WIP'] = oer2go_wip
+
     all_oer2go['INSTALLED'] = oer2go_installed
 
     resp = json.dumps(all_oer2go)
