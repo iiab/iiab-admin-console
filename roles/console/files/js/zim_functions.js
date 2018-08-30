@@ -84,13 +84,13 @@
   function procZimStatInit(data) {
     installedZimCatalog = data;
     addZimStatAttr('INSTALLED');
-    addZimStatAttr('WIP');
+    // addZimStatAttr('WIP'); - not used
   }
 
   function procZimStat(data) {
     installedZimCatalog = data;
     addZimStatAttr('INSTALLED');
-    addZimStatAttr('WIP');
+    // addZimStatAttr('WIP'); - not used
 
     procZimCatalog();
     procDiskSpace();
@@ -111,6 +111,22 @@
       installedZimCatalog[section][id]['perma_ref'] = permRef;
     }
   }
+
+function lookupZim(zimId) { // act as virtual merged zim catalog
+	var zim = {"language":"eng", "title":"Unknown Zim"}; // minimal dummy zim
+
+  if (zimId in installedZimCatalog['INSTALLED'])
+  	zim = installedZimCatalog['INSTALLED'][zimId];
+  else if	(zimId in kiwixCatalog)
+  	zim = kiwixCatalog[zimId];
+  else {
+    for (var dev in externalDeviceContents){
+    	if (zimId in externalDeviceContents[dev].zim_modules)
+    	  zim = externalDeviceContents[dev].zim_modules[zimId];
+    }
+  }
+  return zim;
+}
 
 function procZimGroups() {
   var html = "<br>";
@@ -251,25 +267,34 @@ function genZimStatus(zimId, noInstallStat, noUsbStat){
 	var html = "";
 	var colorClass = "";
 	var checkable = false;
+	var action = "";
 
-	if (!noInstallStat && zimsInstalled.indexOf(zimId) >= 0){
+	if (!noInstallStat && zimId in installedZimCatalog['INSTALLED']){
 	  html = " - INSTALLED";
 	  colorClass = "installed";
 	  checkable = true;
 	}
+  else if (zimId in installedZimCatalog['WIP']){
+  	action = installedZimCatalog['WIP'][zimId].action;
+  	switch(action) {
+      case "DOWNLOAD":
+        html = " - DOWNLOADING";
+  	    colorClass = "scheduled";
+  	    checkable = true;
+        break;
+      case "IMPORT":
+        html = " - COPYING";
+  	    colorClass = "scheduled";
+  	    checkable = true;
+        break;
+      case "EXPORT":
+        html = " - COPYING to USB";
+  	    colorClass = "backed-up";
+  	    checkable = true;
+        break;
 
-	else	if (zimsDownloading.indexOf(zimId) >= 0){
-	  html = " - DOWNLOADING";
-	  colorClass = "scheduled";
-	  checkable = true;
-	}
-
-	else	if (zimsCopying.indexOf(zimId) >= 0){
-	  html = " - COPYING";
-	  colorClass = "scheduled";
-	  checkable = true;
-	}
-
+    }
+  }
 	else	if (!noUsbStat && (zimsExternal.indexOf(zimId) >= 0)){
 	  html = " - ON USB";
 	  colorClass = "backed-up";

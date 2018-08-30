@@ -67,8 +67,7 @@ function readOer2goCatalog(){
 function procOer2goStat(data) {
 	//consoleLog(data);
 	oer2goInstalled = data['INSTALLED']
-	oer2goDownloading = data['DOWNLOADING']
-	oer2goCopying = data['COPYING']
+	oer2goWip = data['WIP']
 }
 
 function renderOer2goCatalog() {
@@ -227,17 +226,27 @@ function genoer2goStatus(itemId, noInstallStat, noUsbStat){
 	  checkable = true;
 	}
 
-	else	if (oer2goDownloading.indexOf(itemId) >= 0){
-	  html = " - DOWNLOADING";
-	  colorClass = "scheduled";
-	  checkable = true;
-	}
+  else if (itemId in oer2goWip){
+  	action = oer2goWip[itemId].action;
+  	switch(action) {
+      case "DOWNLOAD":
+        html = " - DOWNLOADING";
+  	    colorClass = "scheduled";
+  	    checkable = true;
+        break;
+      case "IMPORT":
+        html = " - COPYING";
+  	    colorClass = "scheduled";
+  	    checkable = true;
+        break;
+      case "EXPORT":
+        html = " - COPYING to USB";
+  	    colorClass = "backed-up";
+  	    checkable = true;
+        break;
 
-	else	if (oer2goCopying.indexOf(itemId) >= 0){
-	  html = " - COPYING";
-	  colorClass = "scheduled";
-	  checkable = true;
-	}
+    }
+  }
 
 	else	if (!noUsbStat && (oer2goExternal.indexOf(itemId) >= 0)){
 	  html = " - ON USB";

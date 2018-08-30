@@ -33,6 +33,7 @@ var zimsDownloading = []; // list of zims being downloaded
 var zimsCopying = []; // list of zims being copied
 var zimsExternal = []; // list of zims on external device
 var oer2goInstalled = []; // list of Oer2go items already installed
+var oer2goWip = {}; // list of copying, downloading, exporting
 var oer2goDownloading = []; // list of Oer2go items being downloaded
 var oer2goCopying = []; // list of Oer2go items being copied
 var oer2goExternal = []; // list of Oer2go items on external device
@@ -218,8 +219,10 @@ function instContentButtonsEvents() {
       if (this.type == "checkbox")
       if (this.checked){
         zim_id = this.name;
-        if (zimsInstalled.indexOf(zim_id) == -1 && zimsDownloading.indexOf(zim_id) == -1)
-        instZim(zim_id);
+        if (zim_id in installedZimCatalog['INSTALLED'] || zim_id in installedZimCatalog['WIP'])
+          consoleLog("Skipping installed Zim " + zim_id);
+        else
+          instZim(zim_id);
       }
     });
     procZimGroups();
@@ -235,7 +238,9 @@ function instContentButtonsEvents() {
       if (this.type == "checkbox")
         if (this.checked){
           mod_id = this.name;
-          if (oer2goInstalled.indexOf(mod_id) == -1 && oer2goDownloading.indexOf(mod_id) == -1)
+          if (oer2goInstalled.indexOf(mod_id) >= 0 || mod_id in oer2goWip)
+            consoleLog("Skipping installed Module " + mod_id);
+          else
             instOer2goItem(mod_id);
         }
     });
@@ -340,8 +345,8 @@ function utilButtonsEvents() {
           if (job_status[job_id]["cmd_verb"] == "INST-ZIMS"){
           	var zim_id = job_status[job_id]["cmd_args"]["zim_id"];
           	//consoleLog (zim_id);
-            if (zimsDownloading.indexOf(zim_id) > -1){
-              zimsDownloading.pop(zim_id);
+          	if (zim_id in installedZimCatalog['WIP']){
+              delete installedZimCatalog['WIP'][zim_id];
               updateZimDiskSpaceUtil(zim_id, false)
               procZimGroups();
               //$( "input[name*='" + zim_id + "']" ).checked = false;
@@ -914,17 +919,18 @@ function selectedLangsDefaults() {
       selectedLangs.push (lang);
   }
   for (var id in installedZimCatalog['WIP']){
-    lang = installedZimCatalog['WIP'][id]['language'];
+  	var zim = lookupZim(id);
+    lang = zim.language;
     if (selectedLangs.indexOf(lang) == -1) // automatically select any language for which zim is being installed
       selectedLangs.push (lang);
   }
-  for (var id in oer2goInstalled){
-    lang = langCodesXRef[oer2goCatalog[oer2goInstalled[id]]['lang']];
+  for (var idx in oer2goInstalled){ // this is an array
+    lang = langCodesXRef[oer2goCatalog[oer2goInstalled[idx]]['lang']];
     if (selectedLangs.indexOf(lang) == -1) // automatically select any language for which oer2go item is installed
       selectedLangs.push(lang);
   }
-  for (var id in oer2goDownloading){
-    lang = langCodesXRef[oer2goCatalog[oer2goDownloading[id]]['lang']];
+  for (var id in oer2goWip){ // this is an object
+    lang = langCodesXRef[oer2goCatalog[id]['lang']];
     if (selectedLangs.indexOf(lang) == -1) // automatically select any language for which oer2go item is wip
       selectedLangs.push(lang);
   }
@@ -1207,11 +1213,13 @@ function refreshExternalList() {
 }
 
 function renderExternalList() {
-	$("#instManageContentUsbTab").text("Content on " + selectedUsb);
-	setCopyContentButtonText();
-	renderExternalZimList();
-	renderExternalOer2goModules();
-	renderZimInstalledList(); // update ON USB messages
+	if (selectedUsb == null){ // only render content if we have some
+	  $("#instManageContentUsbTab").text("Content on " + selectedUsb);
+	  setCopyContentButtonText();
+	  renderExternalZimList();
+	  renderExternalOer2goModules();
+	  renderZimInstalledList(); // update ON USB messages
+  }
 }
 
 function delDownloadedFileList(id, sub_dir) {
@@ -1672,7 +1680,7 @@ function updateZimDiskSpaceUtil(zim_id, checked){
   var zimIdx = selectedZims.indexOf(zim_id);
 
   if (checked){
-    if (zimsInstalled.indexOf(zim_id) == -1){ // only update if not already installed zims
+    if (!(zim_id in installedZimCatalog['INSTALLED'])){ // only update if not already installed zims
       sysStorage.zims_selected_size += size;
       selectedZims.push(zim_id);
     }
@@ -1887,11 +1895,12 @@ function sendCmdSrvCmd(command, callback, buttonId, errCallback, cmdArgs) {
   //consoleLog ('buttonid = ' + buttonId);
 
   // skip command if init has already failed - not sure this works
-  if (initStat.active == true && initStat.error == true){
-  	var deferredObject = $.Deferred();
-  	logServerCommands (command, "failed", "Init already failed");
-  	return deferredObject.reject();
-  }
+
+  //if (initStat.active == true && initStat.error == true){ - This causes intermittant init failures
+  //	var deferredObject = $.Deferred();
+  //	logServerCommands (command, "failed", "Init already failed");
+  //	return deferredObject.reject();
+  //}
 
   var cmdVerb = command.split(" ")[0];
   // the ajax call escapes special characters, but converts space to plus sign
