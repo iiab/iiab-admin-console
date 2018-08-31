@@ -69,6 +69,10 @@ function main() {
 
 // Set jquery ajax calls not to cache in browser
   $.ajaxSetup({ cache: false });
+  //$.ajaxSetup({
+  // type: 'POST',
+  // headers: { "cache-control": "no-cache" }
+  //});
 
 // declare generic ajax error handler called by all .fail events
  $( document ).ajaxError(ajaxErrhandler);
@@ -1155,12 +1159,13 @@ function copyContent(){
   	sendCmdSrvCmd(cmd, genericCmdHandler);
   });
 
-  clearManContSelections(device);
+  clearManContSelections(device, reset=true);
 }
 
 function rmContent() {
 	var device = calcManContentDevice();
 	var clearFunction = clearRmSelections(device, reset=true);
+	var refreshFunction = refreshRemovePanel(device);
 	var calls =[delModules(device, "zims"),
               delModules(device, "modules")];
 	if (device == "internal"){
@@ -1173,7 +1178,7 @@ function rmContent() {
     //delDownloadedFileList("downloadedFilesZims", "zims"),
     //delModules("installedZimModules", "zims"),
     //delModules("installedOer2goModules", "modules"))
-    .done(clearFunction, refreshAllInstalledList);
+    .done(clearFunction, refreshFunction);
 }
 
 function calcManContentDevice(){
@@ -1189,6 +1194,13 @@ function clearRmSelections(dev, reset){
   return function() {
     initManContSelections(dev, reset);
   }
+}
+
+function refreshRemovePanel(dev){
+	if (dev == "internal")
+    return refreshAllInstalledList;
+  else
+  	return refreshExternalList;
 }
 
 function clearManContSelections(dev, reset=false){
@@ -1213,7 +1225,7 @@ function refreshExternalList() {
 }
 
 function renderExternalList() {
-	if (selectedUsb == null){ // only render content if we have some
+	if (selectedUsb != null){ // only render content if we have some
 	  $("#instManageContentUsbTab").text("Content on " + selectedUsb);
 	  setCopyContentButtonText();
 	  renderExternalZimList();
