@@ -260,7 +260,7 @@ function instContentButtonsEvents() {
   });
 
   $("#REFRESH-CONTENT-DISPLAY").click(function(){
-    refreshAllInstalledList();
+    refreshAllContentPanels();
   });
 
 //  $("#ZIM-STATUS-REFRESH").click(function(){
@@ -1154,6 +1154,7 @@ function copyContent(){
 
   modList = getCopyList(device, "modules");
   modList.forEach( function(item) {
+    cmd_args['moddir'] = item.id;
     cmd_args['file_ref'] = item.file_ref;
     cmd = "COPY-OER2GO-MOD " + JSON.stringify(cmd_args);
   	sendCmdSrvCmd(cmd, genericCmdHandler);
@@ -1212,6 +1213,11 @@ function clearManContSelections(dev, reset=false){
   else {
     renderExternalList();
   }
+}
+
+function refreshAllContentPanels() {
+	$.when(getDownloadList(), getOer2goStat(), getZimStat(), getExternalDevInfo())
+	.done(renderZimInstalledList, renderOer2goInstalledList, renderExternalList, refreshDiskSpace);
 }
 
 function refreshAllInstalledList() {
