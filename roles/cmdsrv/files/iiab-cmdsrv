@@ -972,6 +972,18 @@ def get_external_device_info(cmd_info):
     return (resp)
 
 def get_ext_zim_catalog(dev_name):
+    iiab_zim_path = dev_name + zim_dir
+    kiwix_library_xml_tmp = iiab_zim_path + "/library.xml"
+    command = "/usr/bin/iiab-make-kiwix-lib.py --no_tmp --device " + dev_name
+    args = shlex.split(command)
+    try:
+        outp = subprocess.check_output(args)
+    except: #skip things that don't work
+        pass
+    usb_catalog = read_library_xml(kiwix_library_xml_tmp)
+    return (usb_catalog)
+
+def get_ext_zim_catalog2(dev_name): # keeping for the moment, but not used
     kiwix_manage = iiab_base + "/kiwix/bin/kiwix-manage"
     kiwix_library_xml_tmp = "/tmp/library.xml"
     kiwix_exclude_attr = ["favicon"]
