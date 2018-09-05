@@ -1810,10 +1810,11 @@ def cancel_job(cmd_info):
         return ('{"Error": "Job  ' + str(job_id) + ' Not Running or Scheduled."}')
 
 def get_last_jobs_stat(cmd_info):
+    # make changes to cut down on volumn of data
     db_lock.acquire() # will block if lock is already held
     try:
         conn = sqlite3.connect(cmdsrv_dbpath)
-        cur = conn.execute ("SELECT jobs.rowid, job_command, job_output, job_status, last_update_datetime, cmd_msg FROM jobs, commands where cmd_rowid = commands.rowid ORDER BY jobs.rowid DESC LIMIT 30")
+        cur = conn.execute ("SELECT jobs.rowid, job_command, 'log too long' as job_output, job_status, last_update_datetime, cmd_msg FROM jobs, commands where cmd_rowid = commands.rowid ORDER BY jobs.rowid DESC LIMIT 30")
         last_jobs = cur.fetchall()
         conn.close()
     except sqlite3.Error, e:
@@ -1839,10 +1840,11 @@ def get_last_jobs_stat(cmd_info):
             if jobs_running[job_id]['status'] == "STARTED" or jobs_running[job_id]['status'] == "RESTARTED":
                 # load output from tmp file
                 output_file = jobs_running[job_id]['output_file']
-                file = open(output_file, 'r')
-                job_output = file.read()
+                #file = open(output_file, 'r')
+                #job_output = file.read()
+                job_output = subprocess.check_output("tail " + output_file)
                 #job_output = escape_html(job_output)
-                file.close()
+                #file.close()
                 #print "job output" + job_output
 
             job_cc.append(job_output)
