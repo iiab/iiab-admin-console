@@ -1840,9 +1840,13 @@ def get_last_jobs_stat(cmd_info):
             if jobs_running[job_id]['status'] == "STARTED" or jobs_running[job_id]['status'] == "RESTARTED":
                 # load output from tmp file
                 output_file = jobs_running[job_id]['output_file']
+                #print output_file
                 #file = open(output_file, 'r')
                 #job_output = file.read()
-                job_output = subprocess.check_output("tail " + output_file)
+                command = "tail " + output_file
+                args = shlex.split(command)
+                job_output = subprocess.check_output(args)
+                #print job_output
                 #job_output = escape_html(job_output)
                 #file.close()
                 #print "job output" + job_output
