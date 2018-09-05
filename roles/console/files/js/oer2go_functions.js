@@ -164,7 +164,7 @@ function genOer2goItem(item, preChecked, onChangeFunc, noInstallStat, noUsbStat)
   // console.log(item);
   var itemId = item.moddir;
 
-  var oer2goStat = genoer2goStatus(itemId, noInstallStat, noUsbStat);
+  var oer2goStat = genOer2goStatus(itemId, noInstallStat, noUsbStat);
 
   colorClass = oer2goStat.colorClass;
   if (colorClass != "")
@@ -214,7 +214,7 @@ function genOer2goToolTip(item) {
   return oer2goToolTip;
 }
 
-function genoer2goStatus(itemId, noInstallStat, noUsbStat){
+function genOer2goStatus(itemId, noInstallStat, noUsbStat){
 	var oer2goStat = {};
 	var html = "";
 	var colorClass = "";

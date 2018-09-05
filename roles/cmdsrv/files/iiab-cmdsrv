@@ -470,9 +470,9 @@ def add_wip(job_info):
 
         if cmd == "INST-OER2GO-MOD":
             action = "DOWNLOAD"
-        elif cmd == "COPY-ZIMS" and dest == "internal":
+        elif cmd == "COPY-OER2GO-MOD" and dest == "internal":
             action = "IMPORT"
-        elif cmd == "COPY-ZIMS" and dest != "internal":
+        elif cmd == "COPY-OER2GO-MOD" and dest != "internal":
             action = "EXPORT"
         oer2go_wip[moddir] = {"action":action, "dest":dest, "source":source}
 
@@ -1820,7 +1820,7 @@ def get_last_jobs_stat(cmd_info):
     db_lock.acquire() # will block if lock is already held
     try:
         conn = sqlite3.connect(cmdsrv_dbpath)
-        cur = conn.execute ("SELECT jobs.rowid, job_command, 'log too long' as job_output, job_status, last_update_datetime, cmd_msg FROM jobs, commands where cmd_rowid = commands.rowid ORDER BY jobs.rowid DESC LIMIT 30")
+        cur = conn.execute ("SELECT jobs.rowid, job_command, job_output, job_status, last_update_datetime, cmd_msg FROM jobs, commands where cmd_rowid = commands.rowid ORDER BY jobs.rowid DESC LIMIT 30")
         last_jobs = cur.fetchall()
         conn.close()
     except sqlite3.Error, e:

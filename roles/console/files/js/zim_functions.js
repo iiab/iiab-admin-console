@@ -398,8 +398,8 @@ function procZimCatalog() {
   var zimCompare = zimListCompare(zimCatalog);
   zimsInstalled.sort(zimCompare);
 
-  if (selectedLangs.length == 0)
-  selectedLangs.push (defaultLang); // default
+  // if (selectedLangs.length == 0) done elsewhere but keep for now
+  //   selectedLangs.push (defaultLang); // default
 
   sortZimLangs(); // Create langNames from zimLangs and sort
   procContentLangs(); // Create language menu
@@ -427,9 +427,9 @@ function procZimWorkingLists() {
           break;
       }
 
-      var lang = installedZimCatalog[arrayName][id]['language'];
-      if (selectedLangs.indexOf(lang) == -1) // automatically select any language for which zim is installed
-        selectedLangs.push (lang);
+      //var lang = installedZimCatalog[arrayName][id]['language']; done elsewhere but keep for now
+      //if (selectedLangs.indexOf(lang) == -1) // automatically select any language for which zim is installed
+      //  selectedLangs.push (lang);
     }
   }
 }
