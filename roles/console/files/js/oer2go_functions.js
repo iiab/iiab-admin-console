@@ -121,7 +121,7 @@ function renderOer2goInstalledList() { // used by manage content - internal
 function renderExternalOer2goModules() { // used by manage content - external (usb)
 	var html = "";
 
-	if (calcExtUsb){
+	if (calcExtUsb()){
 	  html = renderOer2goList(externalDeviceContents[selectedUsb].oer2go_modules, preChecked=false, onChangeFunc="updateExtOer2goSpace", noInstallStat = false, noUsbStat = true);
     $( "#externalOer2goModules" ).html(html);
 	  activateTooltip();
@@ -248,7 +248,7 @@ function genOer2goStatus(itemId, noInstallStat, noUsbStat){
     }
   }
 
-	else	if (!noUsbStat && (oer2goExternal.indexOf(itemId) >= 0)){
+	else if (!noUsbStat && (oer2goExternal.indexOf(itemId) >= 0)){
 	  html = " - ON USB";
 	  colorClass = "backed-up";
 	}
