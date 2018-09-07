@@ -466,7 +466,7 @@ def add_wip(job_info):
                 action = "IMPORT"
             elif cmd == "COPY-ZIMS" and dest != "internal":
                 action = "EXPORT"
-        zims_wip[zim_id] = {"action":action, "dest":dest, "source":source}
+        zims_wip[zim_id] = {"cmd":cmd, "action":action, "dest":dest, "source":source}
 
     elif cmd in {"INST-OER2GO-MOD", "COPY-OER2GO-MOD"}:
         moddir = job_info['cmd_args']['moddir']
@@ -480,7 +480,7 @@ def add_wip(job_info):
                 action = "IMPORT"
             elif cmd == "COPY-OER2GO-MOD" and dest != "internal":
                 action = "EXPORT"
-        oer2go_wip[moddir] = {"action":action, "dest":dest, "source":source}
+        oer2go_wip[moddir] = {"cmd":cmd, "action":action, "dest":dest, "source":source}
 
 def remove_wip(job_info):
     global zims_wip
