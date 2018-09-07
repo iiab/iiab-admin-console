@@ -457,23 +457,29 @@ def add_wip(job_info):
         zim_id = job_info['cmd_args']['zim_id']
         if cmd == "INST-ZIMS":
             action = "DOWNLOAD"
-        elif cmd == "COPY-ZIMS" and job_info['cmd_args']['dest'] == "internal":
-            action = "IMPORT"
-        elif cmd == "COPY-ZIMS" and job_info['cmd_args']['dest'] != "internal":
-            action = "EXPORT"
+            dest = "internal"
+            source = "kiwix"
+        else:
+            dest = job_info['cmd_args']['dest']
+            source = job_info['cmd_args']['source']
+            if cmd == "COPY-ZIMS" and dest == "internal":
+                action = "IMPORT"
+            elif cmd == "COPY-ZIMS" and dest != "internal":
+                action = "EXPORT"
         zims_wip[zim_id] = {"action":action, "dest":dest, "source":source}
 
     elif cmd in {"INST-OER2GO-MOD", "COPY-OER2GO-MOD"}:
         moddir = job_info['cmd_args']['moddir']
-        source = job_info['cmd_args']['source']
-        dest = job_info['cmd_args']['dest']
-
         if cmd == "INST-OER2GO-MOD":
             action = "DOWNLOAD"
-        elif cmd == "COPY-OER2GO-MOD" and dest == "internal":
-            action = "IMPORT"
-        elif cmd == "COPY-OER2GO-MOD" and dest != "internal":
-            action = "EXPORT"
+            source = "oer2go"
+        else:
+            dest = job_info['cmd_args']['dest']
+            source = job_info['cmd_args']['source']
+            if cmd == "COPY-OER2GO-MOD" and dest == "internal":
+                action = "IMPORT"
+            elif cmd == "COPY-OER2GO-MOD" and dest != "internal":
+                action = "EXPORT"
         oer2go_wip[moddir] = {"action":action, "dest":dest, "source":source}
 
 def remove_wip(job_info):
