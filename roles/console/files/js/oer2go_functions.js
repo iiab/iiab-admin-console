@@ -111,9 +111,7 @@ function renderOer2goCatalog() {
 }
 
 function renderOer2goInstalledList() { // used by manage content - internal
-	var html = "";
-	if (selectedUsb != null)
-	  html = renderOer2goList(oer2goInstalled, preChecked=false, onChangeFunc="updateIntOer2goSpace", noInstallStat = true);
+	var html = renderOer2goList(oer2goInstalled, preChecked=false, onChangeFunc="updateIntOer2goSpace", noInstallStat = true);
 	$( "#installedOer2goModules" ).html(html);
 	activateTooltip();
 }
