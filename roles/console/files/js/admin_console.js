@@ -320,6 +320,14 @@ function instContentButtonsEvents() {
     alert ("Selected Content scheduled to be copied.\n\nPlease view Utilities->Display Job Status to see the results.");
     make_button_disabled("#COPY-CONTENT", false);
   });
+
+  $("#REMOVE-USB").click(function(){
+  	if (selectedUsb != null)
+      removeUsb();
+    else
+    	alert ("No USB is attached.");
+  });
+
 }
 
   // Util Buttons
@@ -989,6 +997,7 @@ function procExternalDevInfo(data){
     zimsExternal = Object.keys(externalZimCatalog);
     oer2goExternal = externalDeviceContents[selectedUsb].oer2go_modules;
     make_button_disabled("#COPY-CONTENT", false);
+    make_button_disabled("#REMOVE-USB", false);
     $.each(Object.keys(externalDeviceContents).sort(), function(index, dev) {
   		initManContSelections(dev);
       });
@@ -997,6 +1006,7 @@ function procExternalDevInfo(data){
   else{
   	$("#instManageContentUsbTab").hide();
   	make_button_disabled("#COPY-CONTENT", true);
+  	make_button_disabled("#REMOVE-USB", true);
   }
 }
 
@@ -1358,6 +1368,24 @@ function getRmCopyListParams(device, mod_type){
   else if (mod_type == "modules")
     params.selectorId += "Oer2goModules";
   return params;
+}
+
+removeUsb(){
+  make_button_disabled("#REMOVE-USB", true);
+  var cmd = ""
+  var cmd_args = {}
+  cmd_args['device'] = selectedUsb;
+  cmd = "COPY-ZIMS " + JSON.stringify(cmd_args);
+  $.when(sendCmdSrvCmd(cmd, genericCmdHandler))
+  .done(getExternalDevInfo);
+  return true;
+}
+
+procRemoveUsb(){
+  make_button_disabled("#REMOVE-USB", false);
+  var command = "REMOVE-USB"
+  sendCmdSrvCmd(command, procJobStat);
+  return true;
 }
 
 // Utility Menu functions

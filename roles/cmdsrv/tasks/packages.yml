@@ -11,6 +11,7 @@
     - python-dev
     - python-pip
     - libapache2-mod-wsgi
+    - lsof
   tags:
     - download
   when: is_debuntu
@@ -38,6 +39,7 @@
     - python-devel
     - python-pip
     - mod_wsgi
+    - lsof
 
   tags:
     - download

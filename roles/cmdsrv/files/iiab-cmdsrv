@@ -666,6 +666,7 @@ def cmd_handler(cmd_msg):
         "GET-SPACE-AVAIL": get_space_avail,
         "GET-STORAGE-INFO": get_storage_info_lite,
         "GET-EXTDEV-INFO": get_external_device_info,
+        "REMOVE-USB": umount_usb,
         "RUN-ANSIBLE": run_ansible,
         "RESET-NETWORK": run_ansible,
         "GET-JOB-STAT": get_last_jobs_stat,
@@ -1032,6 +1033,37 @@ def get_ext_zim_catalog2(dev_name): # keeping for the moment, but not used
     except OSError:
         pass
     return (usb_catalog)
+
+def umount_usb(cmd_info):
+    if 'device' in cmd_info['cmd_args']:
+        device = cmd_info['cmd_args']['device']
+    else:
+        return cmd_malformed(cmd_info['cmd'])
+
+    device = '/media/usb' + device[-1] # prevent injection of other device
+
+    # see if device involved in a running command
+    for job_id in jobs_running:
+        job_info = jobs_running[job_id]
+        if job_info['cmd'] in ["COPY-ZIMS","COPY-OER2GO-MOD"]:
+            if job_info['cmd_args']['source'] == device or job_info['cmd_args']['dest'] == device:
+                resp = cmd_error(cmd="REMOVE-USB", msg="Device " + device + " in use by another command.")
+                return resp
+
+    check_use = "lsof -t " + device
+    umount = "umount " + device
+    rc = subprocess.call(check_use, shell=True) # 1 means nothing open
+    if rc != 1:
+        resp = cmd_error(cmd="REMOVE-USB", msg="Device " + device + " has open files.")
+        return resp
+
+    rc = subprocess.call(umount, shell=True) # 32 means not mounted
+    if rc == 32:
+        resp = cmd_error(cmd="REMOVE-USB", msg="Device " + device + " is not mounted.")
+        return resp
+
+    resp = cmd_success(cmd_info['cmd'])
+    return resp
 
 # the following does not work on lvm or raid or iso usb drives
 # we wil fix later
