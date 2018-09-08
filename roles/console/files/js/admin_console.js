@@ -1370,7 +1370,7 @@ function getRmCopyListParams(device, mod_type){
   return params;
 }
 
-removeUsb(){
+function removeUsb(){
   make_button_disabled("#REMOVE-USB", true);
   var cmd = ""
   var cmd_args = {}
@@ -1378,13 +1378,6 @@ removeUsb(){
   cmd = "COPY-ZIMS " + JSON.stringify(cmd_args);
   $.when(sendCmdSrvCmd(cmd, genericCmdHandler))
   .done(getExternalDevInfo);
-  return true;
-}
-
-procRemoveUsb(){
-  make_button_disabled("#REMOVE-USB", false);
-  var command = "REMOVE-USB"
-  sendCmdSrvCmd(command, procJobStat);
   return true;
 }
 
@@ -1670,9 +1663,9 @@ function calcAllocatedSpace(){
 	var totalSpace = 0;
 	totalSpace += sumAllocationList(selectedZims, 'zim');
 	//consoleLog(totalSpace);
-	totalSpace += sumAllocationList(zimsDownloading, 'zim');
+	totalSpace += sumZimWip();
 	totalSpace += sumAllocationList(selectedOer2goItems, 'oer2go');
-	totalSpace += sumAllocationList(oer2goDownloading, 'oer2go');
+	totalSpace += sumOer2goWip();
 	return totalSpace;
 }
 
@@ -1690,6 +1683,27 @@ function sumAllocationList(list, type){
       totalSpace += parseInt(oer2goCatalog[id].ksize);
   }
   // sysStorage.oer2go_selected_size = totalSpace;
+  return totalSpace;
+}
+
+function sumZimWip(){
+  var totalSpace = 0;
+
+  for (var zimId in installedZimCatalog["WIP"]){
+  	var zim = lookupZim(zimId);
+  	totalSpace += parseInt(zim.size);
+  	if (zim.source == "portable")
+  	  totalSpace += parseInt(zim.size); //add twice to account for zip download
+  }
+  return totalSpace;
+}
+
+function sumOer2goWip(){
+  var totalSpace = 0;
+
+  for (var moddir in oer2goWip){
+  	totalSpace += parseInt(oer2goCatalog[moddir].ksize);
+  }
   return totalSpace;
 }
 

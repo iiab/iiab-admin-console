@@ -132,6 +132,8 @@ Because copying happens in the background you can watch its status on **Display 
 
 You can also click **Refresh Display** to update the tags beside items is various lists.
 
+Before pulling the USB device out please selected it with the device radio button if there is more than one and then clicking **Remove USB from Server**
+
 Actions
 -------
 

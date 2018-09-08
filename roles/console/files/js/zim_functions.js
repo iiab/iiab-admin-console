@@ -190,7 +190,7 @@ function renderExternalZimList() { // used by manage content
 
   zimList.sort(zimCompare)
   $.each( zimList, function( index, zimId ) {
-	  html += genZimItem(zimId, externalZimCatalog[zimId], preChecked=false, onChangeFunc="updateExtZimsSpace");
+	  html += genZimItem(zimId, externalZimCatalog[zimId], preChecked=false, onChangeFunc="updateExtZimsSpace", noInstallStat = false, noUsbStat = true);
   });
 	$( "#externalZimModules" ).html(html);
 	activateTooltip();
