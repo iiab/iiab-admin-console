@@ -1042,6 +1042,10 @@ def umount_usb(cmd_info):
 
     device = '/media/usb' + device[-1] # prevent injection of other device
 
+    # df device |grep device
+    # first field is block dev
+    # can then umount /dev/sdx* to get boot partition of sdcard
+
     # see if device involved in a running command
     for job_id in jobs_running:
         job_info = jobs_running[job_id]
