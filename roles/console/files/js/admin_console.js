@@ -1375,7 +1375,7 @@ function removeUsb(){
   var cmd = ""
   var cmd_args = {}
   cmd_args['device'] = selectedUsb;
-  cmd = "COPY-ZIMS " + JSON.stringify(cmd_args);
+  cmd = "REMOVE-USB " + JSON.stringify(cmd_args);
   $.when(sendCmdSrvCmd(cmd, genericCmdHandler))
   .done(getExternalDevInfo);
   return true;
