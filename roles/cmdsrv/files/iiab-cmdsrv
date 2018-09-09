@@ -1272,7 +1272,18 @@ def read_library_xml(lib_xml_file, kiwix_exclude_attr=[""]):
     return zims_installed
 
 def get_oer2go_catalog(cmd_info):
-    outp = subprocess.check_output(["scripts/get_oer2go_catalog"])
+    err_msg = {
+    "1":"Aw Jeez! The OER2GO catalog is offline again. Keeping the previous catalog.",
+    "2":"Now where did our catalog go? Was here a minute ago.",
+    "3":"Dang! Can't parse the OER2GO catalog because of junk characters. Keeping the previous catalog.",
+    "99":"Syntax Error"
+    }
+    try:
+        outp = subprocess.check_output(["scripts/get_oer2go_catalog"])
+    except subprocess.CalledProcessError as e:
+        resp = cmd_error(cmd='GET-OER2GO-CAT', msg=err_msg[str(e.returncode)])
+        return resp
+
     if outp == "SUCCESS":
         read_oer2go_catalog()
         resp = cmd_success("GET-OER2GO-CAT")
