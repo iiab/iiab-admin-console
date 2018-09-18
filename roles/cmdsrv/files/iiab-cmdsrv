@@ -492,7 +492,7 @@ def remove_wip(job_info):
     if job_info['cmd'] in ["INST-ZIMS", "COPY-ZIMS"]:
         zims_wip.pop(job_info['cmd_args']['zim_id'], None)
     elif job_info['cmd'] in ["INST-OER2GO-MOD", "COPY-OER2GO-MOD"]:
-        oer2go_wip.pop(job_info['cmd_args']['file_ref'], None)
+        oer2go_wip.pop(job_info['cmd_args']['moddir'], None)
 
 def start_job(job_id, job_info, status='STARTED'):
     global running_job_count
