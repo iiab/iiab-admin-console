@@ -65,6 +65,9 @@ cmdsrv_no_workers = 5
 cmdsrv_job_poll_sleep_interval = 1
 cmdsrv_max_concurrent_jobs = 7
 
+cmdsrv_lower_job_priority_flag = None
+cmdsrv_lower_job_priority_str= None
+
 # Derived Variables
 cmdsrv_dbpath = None
 
@@ -498,10 +501,15 @@ def start_job(job_id, job_info, status='STARTED'):
     global running_job_count
     global ansible_running_flag
     global prereq_jobs
+    global cmdsrv_lower_job_priority_flag
+    global cmdsrv_lower_job_priority_str
 
     job_info['output_file'] = '/tmp/job-' + str(job_id)
     job_info['file'] = open(job_info['output_file'], 'w')
-    args = shlex.split(job_info['job_command'])
+    if cmdsrv_lower_job_priority_flag:
+        args = shlex.split(cmdsrv_lower_job_priority_str + job_info['job_command'])
+    else:
+        args = shlex.split(job_info['job_command'])
     job_info['subproc'] = subprocess.Popen(args, stdout=job_info['file'], stderr=subprocess.STDOUT)
     job_info['job_pid'] = job_info['subproc'].pid
     job_info['status'] = status
@@ -2425,6 +2433,8 @@ def app_config():
     global cmdsrv_no_workers
     global cmdsrv_job_poll_sleep_interval
     global cmdsrv_max_concurrent_jobs
+    global cmdsrv_lower_job_priority_flag
+    global cmdsrv_lower_job_priority_str
     global cmdsrv_pid_file
     global cmdsrv_ready_file
     global kiwix_catalog_file
@@ -2467,6 +2477,8 @@ def app_config():
     cmdsrv_no_workers = conf['cmdsrv_no_workers']
     cmdsrv_job_poll_sleep_interval = conf['cmdsrv_job_poll_sleep_interval']
     cmdsrv_max_concurrent_jobs = conf['cmdsrv_max_concurrent_jobs']
+    cmdsrv_lower_job_priority_flag = conf['cmdsrv_lower_job_priority_flag']
+    cmdsrv_lower_job_priority_str = conf['cmdsrv_lower_job_priority_str']
     cmdsrv_pid_file = conf['cmdsrv_pid_file']
     cmdsrv_ready_file = conf['cmdsrv_ready_file']
     kiwix_catalog_file = conf['kiwix_catalog_file']
