@@ -1395,6 +1395,8 @@ function procJobStat(data)
   job_status = {};
   var html = "";
   var html_break = '<br>';
+  var duration = 0;
+  var durationStr = "";
 
   data.forEach(function(entry) {
     //console.log(entry);
@@ -1425,8 +1427,15 @@ function procJobStat(data)
 
     job_info['status'] = entry[3];
     html += "<td>" + entry[3] + "</td>";
-    job_info['status_date'] = entry[4];
-    html += "<td>" + entry[4] + "</td>";
+    duration = entry[5] - entry[4]; // unless is running
+
+    if (["STARTED","RESTARTED"].includes(entry[3]))
+      duration = entry[6] - entry[4]; // then use current time on server
+    durationStr = secondsToDuration(duration)
+
+    job_info['duration'] = durationStr;
+
+    html += "<td>" + durationStr + "</td>";
 
     html += "</tr>";
 
@@ -1929,6 +1938,15 @@ function getServerInfoError (jqXHR, textStatus, errorThrown){
   alert ("Connection to Server failed.\n Please make sure your network settings are correct,\n that the server is turned on,\n and that the web server is running.");
 }
 
+function secondsToDuration(seconds){
+  var d = Number(seconds);
+
+  var h = Math.floor(d / 3600);
+  var m = Math.floor(d % 3600 / 60);
+  var s = Math.floor(d % 3600 % 60);
+
+  return ('0' + h).slice(-2) + ":" + ('0' + m).slice(-2) + ":" + ('0' + s).slice(-2);
+}
 
 function formCommand(cmd_verb, args_name, args_obj)
 {
