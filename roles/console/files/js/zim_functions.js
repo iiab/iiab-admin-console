@@ -5,7 +5,7 @@
 
   function instZim(zim_id)
   {
-    zimsScheduled.push(zim_id);
+    zimsDownloading.push(zim_id);
     var command = "INST-ZIMS"
     var cmd_args = {}
     cmd_args['zim_id'] = zim_id;
@@ -20,7 +20,7 @@
     //cmdargs = JSON.parse(command);
     //consoleLog(cmdargs);
     consoleLog(cmd_args["zim_id"]);
-    zimsScheduled.pop(cmd_args["zim_id"]);
+    zimsDownloading.pop(cmd_args["zim_id"]);
     procZimGroups();
     return true;
   }
@@ -30,6 +30,14 @@
     var command = "RESTART-KIWIX";
     sendCmdSrvCmd(command, genericCmdHandler);
     alert ("Restarting Kiwix Server.");
+    return true;
+  }
+
+  function reindexKiwix() // Restart Kiwix Server
+  {
+    var command = "MAKE-KIWIX-LIB";
+    sendCmdSrvCmd(command, genericCmdHandler);
+    alert ("Reindexing Kiwix Content.\n\nPlease view Utilities->Display Job Status to see the results.");
     return true;
   }
 
@@ -76,13 +84,13 @@
   function procZimStatInit(data) {
     installedZimCatalog = data;
     addZimStatAttr('INSTALLED');
-    addZimStatAttr('WIP');
+    // addZimStatAttr('WIP'); - not used
   }
 
   function procZimStat(data) {
     installedZimCatalog = data;
     addZimStatAttr('INSTALLED');
-    addZimStatAttr('WIP');
+    // addZimStatAttr('WIP'); - not used
 
     procZimCatalog();
     procDiskSpace();
@@ -103,6 +111,22 @@
       installedZimCatalog[section][id]['perma_ref'] = permRef;
     }
   }
+
+function lookupZim(zimId) { // act as virtual merged zim catalog
+	var zim = {"language":"eng", "title":"Unknown Zim"}; // minimal dummy zim
+
+  if (zimId in installedZimCatalog['INSTALLED'])
+  	zim = installedZimCatalog['INSTALLED'][zimId];
+  else if	(zimId in kiwixCatalog)
+  	zim = kiwixCatalog[zimId];
+  else {
+    for (var dev in externalDeviceContents){
+    	if (zimId in externalDeviceContents[dev].zim_modules)
+    	  zim = externalDeviceContents[dev].zim_modules[zimId];
+    }
+  }
+  return zim;
+}
 
 function procZimGroups() {
   var html = "<br>";
@@ -134,52 +158,75 @@ function renderZimCategory(lang, category) {
   return html;
 }
 
-function renderZimInstalledList() { // used by remove content
+function renderZimList(zimList, preChecked=true, onChangeFunc="updateZimDiskSpace") { //used by zim download
 	var html = "";
+	var zimCompare = zimListCompare(zimCatalog);
+
+  zimList.sort(zimCompare);
+  $.each(zimList, function(key, zimId) {
+    html += genZimItem(zimId, zimCatalog[zimId], preChecked, onChangeFunc);
+  });
+
+  return html;
+}
+
+function renderZimInstalledList() { // used by manage content
+	var html = "";
+	// zimsInstalled is sorted when computed
 	$.each( zimsInstalled, function( index, zimId ) {
 	//$.each( installedZimCatalog.INSTALLED, function( zimId, zim ) {
-    html += genZimItem(zimId , preChecked=false, onChangeFunc="nop");
+    html += genZimItem(zimId, zimCatalog[zimId], preChecked=false, onChangeFunc="updateIntZimsSpace", noInstallStat = true);
   });
 
 	$( "#installedZimModules" ).html(html);
 	activateTooltip();
 }
 
-function renderZimList(zimList, preChecked=true, onChangeFunc="updateZimDiskSpace") { //used by zim download
+function renderExternalZimList() { // used by manage content
 	var html = "";
-  zimList.sort(zimCompare);
+  externalZimCatalog = externalDeviceContents[selectedUsb].zim_modules;
+	var zimList = Object.keys(externalZimCatalog);
+	var zimCompare = zimListCompare(externalZimCatalog);
 
-  $.each(zimList, function(key, zimId) {
-    html += genZimItem(zimId , preChecked=true, onChangeFunc="updateZimDiskSpace");
+  zimList.sort(zimCompare)
+  $.each( zimList, function( index, zimId ) {
+	  html += genZimItem(zimId, externalZimCatalog[zimId], preChecked=false, onChangeFunc="updateExtZimsSpace", noInstallStat = false, noUsbStat = true);
   });
-
-  return html;
+	$( "#externalZimModules" ).html(html);
+	activateTooltip();
 }
 
-function genZimItem(zimId , preChecked=true, onChangeFunc="updateZimDiskSpace") {
-  var zim = zimCatalog[zimId];
+//function genZimItem(zimId, zim, preChecked=true, onChangeFunc="updateZimDiskSpace", matchList=zimsInstalled, matchText=" - INSTALLED") {
+function genZimItem(zimId, zim, preChecked=true, onChangeFunc="updateZimDiskSpace", noInstallStat = false, noUsbStat = false) {
   var html = "";
   var colorClass = "";
   var colorClass2 = "";
-  if (zimsInstalled.indexOf(zimId) >= 0){
-    colorClass = "installed";
-    colorClass2 = 'class="installed"';
+  var permaref = "";
+
+  var zimStat = genZimStatus(zimId, noInstallStat, noUsbStat);
+  //consoleLog (zimId, zimStat);
+  colorClass = zimStat.colorClass;
+  if (colorClass != "")
+    colorClass2 = 'class="' + colorClass + '"';
+  var zimStatHtml = zimStat.html;
+
+  if (typeof zim.perma_ref !== 'undefined')
+  	permaref = zim.perma_ref;
+  else{
+  	permaref = zim.path.split("/").pop();
+  	permaref = permaref.substring(0, permaref.lastIndexOf("_"));
   }
-  if (zimsScheduled.indexOf(zimId) >= 0){
-    colorClass = "scheduled";
-    colorClass2 = 'class="scheduled"';
-  }
+
   html += '<label ';
-  html += '><input type="checkbox" name="' + zimId + '"';
+  html += '><input type="checkbox" name="' + zimId + '" zim_perma_ref="'+ zim.perma_ref + '"';
   //html += '><img src="images/' + zimId + '.png' + '"><input type="checkbox" name="' + zimId + '"';
-  if (preChecked) {
-    if ((zimsInstalled.indexOf(zimId) >= 0) || (zimsScheduled.indexOf(zimId) >= 0))
+  if (preChecked && zimStat.checkable) {
       html += ' disabled="disabled" checked="checked"';
   }
   html += ' onChange="' + onChangeFunc + '(this)"></label>'; // end input
 
   //var zimDesc = zim.title + ' (' + zim.description + ') [' + zim.perma_ref + ']';
-  var zimDesc = zim.title + ' (' + zim.perma_ref + ')';
+  var zimDesc = zim.title + ' (' + permaref + ')';
   //html += '<span class="zim-desc ' + colorClass + '" >&nbsp;&nbsp;' + zimDesc + '</span>';
 
   var zimToolTip = genZimTooltip(zim);
@@ -187,10 +234,8 @@ function genZimItem(zimId , preChecked=true, onChangeFunc="updateZimDiskSpace") 
 
   html += '<span ' + colorClass2 + 'style="display:inline-block; width:120px;"> Date: ' + zim.date + '</span>';
   html += '<span ' + colorClass2 +'> Size: ' + readableSize(zim.size);
-  if (zimsInstalled.indexOf(zimId) >= 0)
-  html += ' - INSTALLED';
-  if (zimsScheduled.indexOf(zimId) >= 0)
-  html += ' - WORKING ON IT';
+
+  html += zimStatHtml;
   html += '</span><BR>';
   return html;
 }
@@ -200,7 +245,11 @@ function genZimTooltip(zim) {
   zimToolTip += 'title="<h3>' + zim.title + '</h3>' + zim.description + '<BR>';
   zimToolTip += 'Articles: ' + Intl.NumberFormat().format(zim.articleCount) + '<BR>';
   zimToolTip += 'Media: ' + Intl.NumberFormat().format(zim.mediaCount) + '<BR>';
-  zimToolTip += 'Download URL: ' + zim.download_url + '<BR>';
+  if (typeof zim.download_url !== 'undefined')
+  	zimToolTip += 'Download URL: ' + zim.download_url + '<BR>';
+  else
+  	zimToolTip += 'Path: ' + zim.path + '<BR>';
+
   zimToolTip += 'With:<ul>';
   zimToolTip += zim.has_embedded_index ? '<li>Internal Full Text Index</li>' : '';
   zimToolTip += zim.has_video ? '<li>Videos</li>' : '';
@@ -211,6 +260,50 @@ function genZimTooltip(zim) {
   zimToolTip += '</ul></b>"'
   //zimToolTip += 'title="<em><b>' + zim.description + '</b><BR>some more text that is rather long"';
   return zimToolTip;
+}
+
+function genZimStatus(zimId, noInstallStat, noUsbStat){
+	var zimStat = {};
+	var html = "";
+	var colorClass = "";
+	var checkable = false;
+	var action = "";
+
+	if (!noInstallStat && zimId in installedZimCatalog['INSTALLED']){
+	  html = " - INSTALLED";
+	  colorClass = "installed";
+	  checkable = true;
+	}
+  else if (zimId in installedZimCatalog['WIP']){
+  	action = installedZimCatalog['WIP'][zimId].action;
+  	switch(action) {
+      case "DOWNLOAD":
+        html = " - DOWNLOADING";
+  	    colorClass = "scheduled";
+  	    checkable = true;
+        break;
+      case "IMPORT":
+        html = " - COPYING";
+  	    colorClass = "scheduled";
+  	    checkable = true;
+        break;
+      case "EXPORT":
+        html = " - COPYING to USB";
+  	    colorClass = "backed-up";
+  	    checkable = true;
+        break;
+
+    }
+  }
+	else	if (!noUsbStat && (zimsExternal.indexOf(zimId) >= 0)){
+	  html = " - ON USB";
+	  colorClass = "backed-up";
+	}
+
+	zimStat['html'] = html;
+	zimStat['colorClass'] = colorClass;
+	zimStat['checkable'] = checkable;
+  return zimStat;
 }
 
 function zimCatCompare(lang) {
@@ -233,26 +326,28 @@ function zimCatCompare(lang) {
   }
 }
 
-function zimCompare(a,b) {
-  // Compare function to sort list of zims by name, date, sequence
-  var zimA = zimCatalog[a];
-  var zimB = zimCatalog[b];
-  if (zimA.title == zimB.title)
-    if (zimA.date == zimB.date)
-      if (zimA.sequence == zimB.sequence)
-        return 0;
-      else if (zimA.sequence < zimB.sequence)
+function zimListCompare(catalog) {
+	// Compare function to sort list of zims by name, date, sequence
+  return function(a, b) {
+    var zimA = catalog[a];
+    var zimB = catalog[b];
+    if (zimA.title == zimB.title)
+      if (zimA.date == zimB.date)
+        if (zimA.sequence == zimB.sequence)
+          return 0;
+        else if (zimA.sequence < zimB.sequence)
+        	return -1;
+        else
+        	return 1;
+      else if (zimA.date < zimB.date)
       	return -1;
       else
-      	return 1;
-    else if (zimA.date < zimB.date)
-    	return -1;
+        return 1;
+    else if (zimA.title < zimB.title)
+      return -1;
     else
       return 1;
-  else if (zimA.title < zimB.title)
-    return -1;
-  else
-    return 1;
+  }
 }
 
 function readKiwixCatalog() { // Reads kiwix catalog from file system as json
@@ -284,7 +379,7 @@ function checkKiwixCatalogDate() {
 
 function procZimCatalog() {
   // Uses installedZimCatalog, kiwixCatalog, langCodes, and langGroups
-  // Calculates zimCatalog, zimGroups, langNames, zimsInstalled, zimsScheduled
+  // Calculates zimCatalog, zimGroups, langNames, zimsInstalled, zimsDownloading
 
   zimCatalog = {};
   zimGroups = {};
@@ -297,33 +392,46 @@ function procZimCatalog() {
   procOneCatalog(kiwixCatalog,1);
 
   // Create working arrays of installed and wip
-  zimsInstalled = [];
-  zimsScheduled = [];
+  procZimWorkingLists();
 
-  for (var id in installedZimCatalog['INSTALLED']){
-    zimsInstalled.push(id);
-    lang = installedZimCatalog['INSTALLED'][id]['language'];
-    if (selectedLangs.indexOf(lang) == -1) // automatically select any language for which zim is installed
-    selectedLangs.push (lang);
-  }
-  // sort installed zims by name for remove menu item
+  // sort installed zims by name for manage content
+  var zimCompare = zimListCompare(zimCatalog);
   zimsInstalled.sort(zimCompare);
 
-  for (var id in installedZimCatalog['WIP']){
-    zimsScheduled.push(id);
-    lang = installedZimCatalog['WIP'][id]['language'];
-    if (selectedLangs.indexOf(lang) == -1) // automatically select any language for which zim is being installed
-    selectedLangs.push (lang);
-  }
-
-  if (selectedLangs.length == 0)
-  selectedLangs.push (defaultLang); // default
+  // if (selectedLangs.length == 0) done elsewhere but keep for now
+  //   selectedLangs.push (defaultLang); // default
 
   sortZimLangs(); // Create langNames from zimLangs and sort
   procContentLangs(); // Create language menu
   procZimGroups(); // Create zim list for selected languages
 
   return true;
+}
+
+function procZimWorkingLists() {
+  zimsInstalled = [];
+  zimsDownloading = [];
+  zimsCopying = [];
+
+  for (var arrayName in installedZimCatalog){
+    for (var id in installedZimCatalog[arrayName]){
+    	switch(arrayName) {
+      case 'INSTALLED':
+          zimsInstalled.push(id);
+          break;
+      case 'DOWNLOADING':
+          zimsDownloading.push(id);
+          break;
+      case 'COPYING':
+          zimsCopying.push(id);
+          break;
+      }
+
+      //var lang = installedZimCatalog[arrayName][id]['language']; done elsewhere but keep for now
+      //if (selectedLangs.indexOf(lang) == -1) // automatically select any language for which zim is installed
+      //  selectedLangs.push (lang);
+    }
+  }
 }
 
 function procOneCatalog(catalog, priority){
