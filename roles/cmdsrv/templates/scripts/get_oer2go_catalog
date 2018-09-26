@@ -42,7 +42,7 @@ iiab_oer2go_catalog = {}
 
 oer2go_cat_url = 'http://dev.worldpossible.org/cgi/json_api_v1.pl'
 rachel_mods_url = "rsync://dev.worldpossible.org/rachelmods/"
-iiab_cat_url = "http://medbox.iiab.me/catalog/iiab_catalog.json"
+iiab_cat_url = "http://med.iiab.me/catalog/iiab_catalog.json"
 
 # output files
 

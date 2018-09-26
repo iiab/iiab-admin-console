@@ -49,18 +49,19 @@ kiwix_catalog = jsonPath + "/kiwix_catalog.json"
 if verbose:
     print "Starting xml download from Kiwix"
 
-try:
-    xmlsrc = urllib2.urlopen(kiwixLibUrl)
-    portable_tree = ET.parse(xmlsrc)
-    xmlsrc.close()
-    if verbose:
-        print "library.xml received from Kiwix"
-except (urllib2.URLError) as exc:
-    if verbose:
-        print "Error getting library.xml from Kiwix"
-    sys.stdout.write("GET-KIWIX-CAT ERROR - " + str(exc.reason))
-    sys.stdout.flush()
-    sys.exit(1)
+# As of 9/26/2018 we stop using zims from http://download.kiwix.org/portable/ as Kiwix intends to remove it
+#try:
+#    xmlsrc = urllib2.urlopen(kiwixLibUrl)
+#    portable_tree = ET.parse(xmlsrc)
+#    xmlsrc.close()
+#    if verbose:
+#        print "library.xml received from Kiwix"
+#except (urllib2.URLError) as exc:
+#    if verbose:
+#        print "Error getting library.xml from Kiwix"
+#    sys.stdout.write("GET-KIWIX-CAT ERROR - " + str(exc.reason))
+#    sys.stdout.flush()
+#    sys.exit(1)
 
 try:
     xmlsrc = urllib2.urlopen(kiwixZimLibUrl)
@@ -86,7 +87,7 @@ zimCount = 0
 def main():
     global portable_list, zimCount
     zimCount = 0
-    portable_list = xml_to_list(portable_tree.getroot())
+    # portable_list = xml_to_list(portable_tree.getroot())
     #zim_dict = xml_to_dict(zim_tree.getroot())
     #portable_dict = xml_to_dict(portable_tree.getroot())
 
