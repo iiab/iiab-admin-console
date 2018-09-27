@@ -1881,8 +1881,8 @@ def get_last_jobs_stat(cmd_info):
     db_lock.acquire() # will block if lock is already held
     try:
         conn = sqlite3.connect(cmdsrv_dbpath)
-        cur = conn.execute ("SELECT jobs.rowid, job_command, job_output, job_status, strftime('%s',jobs.create_datetime), strftime('%s',last_update_datetime), strftime('%s','now', 'localtime'), cmd_msg FROM jobs, commands where cmd_rowid = commands.rowid ORDER BY jobs.rowid DESC LIMIT 30")
-        last_jobs = cur.fetchall()
+        cur = conn.execute ("SELECT jobs.rowid, job_command, job_output, job_status, strftime('%m-%d %H:%M', jobs.create_datetime), strftime('%s', jobs.create_datetime), strftime('%s',last_update_datetime), strftime('%s','now', 'localtime'), cmd_msg FROM jobs, commands where cmd_rowid = commands.rowid ORDER BY jobs.rowid DESC LIMIT 30")
+        status_jobs = cur.fetchall()
         conn.close()
     except sqlite3.Error, e:
         tprint ("Error %s:" % e.args[0])
@@ -1894,42 +1894,40 @@ def get_last_jobs_stat(cmd_info):
 
     #print "job running"
     #print jobs_running
-    # get status output for incomplete ansible jobs
-    last_jobs_cc = []
-    for job in last_jobs:
+    # get status output for recent jobs
+    status_jobs_return = []
+    for job in status_jobs:
+        status_job = {}
         job_id = job[0]
+        status_job['job_id'] = job_id
+        status_job['job_command'] = job[1]
+        status_job['job_output'] = job[2]
+        status_job['job_status'] = job[3]
+        status_job['create_datetime'] = job[4]
+        create_datetime_sec = job[5]
+        last_update_datetime_sec = job[6]
+        cur_time_sec = job[7]
+        # elapsed time is from creation, not start
+        status_job['elapsed_sec'] = int(last_update_datetime_sec) - int(create_datetime_sec) # not valid for running jobs
+        status_job['cmd_msg'] = job[8]
+
         if job_id in jobs_running:
-            job_cc = []
-            job_cc.append(job[0])
-            job_cc.append(job[1])
-            job_output = job[2]
-            #if jobs_running[job_id]['cmd'] == "RUN-ANSIBLE" and jobs_running[job_id]['status'] == "STARTED":
             if jobs_running[job_id]['status'] == "STARTED" or jobs_running[job_id]['status'] == "RESTARTED":
+                status_job['elapsed_sec'] = int(cur_time_sec) - int(create_datetime_sec) # last_update_datetime not update while running
                 # load output from tmp file
                 output_file = jobs_running[job_id]['output_file']
                 #print output_file
-                #file = open(output_file, 'r')
-                #job_output = file.read()
+
                 command = "tail " + output_file
                 args = shlex.split(command)
                 job_output = subprocess.check_output(args)
-                #print job_output
-                #job_output = escape_html(job_output)
-                #file.close()
+                status_job['job_output'] = job_output
+
                 #print "job output" + job_output
 
-            job_cc.append(job_output)
-            job_cc.append(job[3])
-            job_cc.append(job[4])
-            job_cc.append(job[5])
-            job_cc.append(job[6])
-            job_cc.append(job[7])
+        status_jobs_return.append(status_job)
 
-            last_jobs_cc.append(job_cc)
-        else:
-            last_jobs_cc.append(job)
-
-    resp = json.dumps(last_jobs_cc)
+    resp = json.dumps(status_jobs_return)
     return resp
 
 def get_jobs_running(cmd_info): # Not used

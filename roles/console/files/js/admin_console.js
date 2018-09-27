@@ -1395,60 +1395,49 @@ function procJobStat(data)
   job_status = {};
   var html = "";
   var html_break = '<br>';
-  var duration = 0;
-  var durationStr = "";
 
-  data.forEach(function(entry) {
-    //console.log(entry);
+
+  data.forEach(function(statusJob) {
+    //console.log(statusJob);
     html += "<tr>";
-    var job_info = {};
+    //var job_info = {};
 
-    job_info['job_no'] = entry[0];
-    html += "<td>" + entry[0] + "<BR>"; // job number
-    // html +=  '<input type="checkbox" name="' gw_squid_whitelist + '" id="' xo-gw_squid_whitelist +'">';
-    var jobId = "job_stat_id-" + entry[0];
-    html +=  '<input type="checkbox" id="' + jobId + '">';
+    //job_info['job_no'] = entry[0];
+    html += "<td>" + statusJob.job_id + "<BR>"; // job number
+    html +=  '<input type="checkbox" id="' + statusJob.job_id + '">';
     html += "</td>";
-    job_info['command'] = entry[1];
-    html += '<td style="overflow: hidden; text-overflow: ellipsis">' + entry[1] + "</td>";
+    html += '<td style="overflow: hidden; text-overflow: ellipsis">' + statusJob.job_command + "</td>";
 
-    result = entry[2].replace(/(?:\r\n|\r|\n)/g, html_break); // change newline to BR
+    var result = statusJob.job_output.replace(/(?:\r\n|\r|\n)/g, html_break); // change newline to BR
     // result = result.replace(html_break+html_break, html_break); // remove blank lines, but doesn't work
     var idx = result.indexOf(html_break);
-    if (idx =0) result = result.substring(html_break.length); // strip off first newline
+    if (idx == 0) result = result.substring(html_break.length); // strip off first newline
     idx = result.lastIndexOf(html_break);
-    if (idx >=0) result = result.substring(0,idx); // strip off last newline
-    job_info['result'] = result;
+    if (idx >= 0) result = result.substring(0,idx); // strip off last newline
+    //job_info['result'] = result;
 
     idx = result.lastIndexOf(html_break);  // find 2nd to last newline
     var result_end = "";
-    if (idx >=0) result_end = result.substring(0,idx + html_break.length);
+    if (idx >= 0) result_end = result.substring(0,idx + html_break.length);
     html += '<td> <div class = "statusJobResult">' + result + "</div></td>";
 
-    job_info['status'] = entry[3];
-    html += "<td>" + entry[3] + "</td>";
-    duration = entry[5] - entry[4]; // unless is running
+    html += "<td>" + statusJob.job_status + "</td>";
 
-    if (["STARTED","RESTARTED"].includes(entry[3]))
-      duration = entry[6] - entry[4]; // then use current time on server
-    durationStr = secondsToDuration(duration)
-
-    job_info['duration'] = durationStr;
-
-    html += "<td>" + durationStr + "</td>";
+    var elapsedStr = secondsToDuration(statusJob.elapsed_sec);
+    html += "<td>" + statusJob.create_datetime + '<BR>' + elapsedStr + "</td>";
 
     html += "</tr>";
 
-    // there should be one or two parts
-    var cmd_parse = entry[5].split(" ");
-    job_info['cmd_verb'] = cmd_parse[0];
+    // there should be one or two parts - ? still need this; for cancel
+    var cmd_parse = statusJob.cmd_msg.split(" ");
+    job_status['cmd_verb'] = cmd_parse[0];
     if(cmd_parse.length == 0 || typeof cmd_parse[1] === 'undefined')
-      job_info['cmd_args'] = ""
+      job_status['cmd_args'] = ""
     else
-      job_info['cmd_args'] = JSON.parse(cmd_parse[1]);
+      job_status['cmd_args'] = JSON.parse(cmd_parse[1]);
 
-    consoleLog(job_info);
-    job_status[job_info['job_no']] = job_info;
+    consoleLog(statusJob);
+    job_status[statusJob.job_no] = statusJob;
 
   });
   $( "#jobStatTable tbody" ).html(html);
