@@ -1,0 +1,10 @@
+{
+"intended_use" : "zim",
+"lang" : "es",
+"logo_url" : "wikiquote.png",
+"menu_item_name" : "es-wikiquote_es_all",
+"zim_name" : "wikiquote_es_all",
+"title" : "Wikiquote en Español",
+"description" : "La colección de citas donde tú puedes colaborar.",
+"extra_html" : ""
+}

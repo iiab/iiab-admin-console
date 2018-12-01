@@ -1,0 +1,10 @@
+{
+"intended_use":"zim",
+"lang" : "es",
+"logo_url" : "es-wikivoyage.png",
+"menu_item_name" : "es-wikivoyage_es_all",
+"zim_name" : "wikivoyage_es_all",
+"title" : "Wikiviajes",
+"description" : "Guía de viaje de todo el mundo con una gran cantidad de información sobre los destinos de todo el mundo. Hacer la geografía cobran vida! Este módulo es proporcionado por Kiwix.",
+"extra_html":""
+}

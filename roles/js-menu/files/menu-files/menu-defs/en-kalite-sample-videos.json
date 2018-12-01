@@ -1,0 +1,11 @@
+{
+"intended_use":"kalite",
+"lang" : "en",
+"logo_url" : "khan-logo-vertical-transparent.png",
+"menu_item_name" : "en-kalite-sample-videos",
+"title" : "Khan Academy Lite",
+"start_url" : "",
+"description":"Sample Videos from Khan Academy.",
+"extra_html" : "en-kalite-sample-videos.html"
+}
+

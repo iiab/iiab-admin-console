@@ -1,0 +1,10 @@
+{
+"intended_use" : "zim",
+"lang" : "es",
+"logo_url" : "220px-Wiktionary-logo.svg.png",
+"menu_item_name" : "es-wiktionary_es_all",
+"zim_name" : "wiktionary_es_all",
+"title" : "Wiktionary en Español",
+"description" : "Wikcionario es un proyecto colaborativo para producir un diccionario multilingüe libre de contenido. Su objetivo es describir todas las palabras de todas las lenguas que utilizan definiciones y descripciones en español",
+"extra_html" : ""
+}

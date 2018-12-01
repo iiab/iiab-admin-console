@@ -1,0 +1,10 @@
+{
+"intended_use":"html",
+"lang" : "en",
+"logo_url" : "college-credit-courses.jpg",
+"menu_item_name" : "en-college-credit-courses",
+"moddir" : "en-rachelcourses",
+"title" : "College Credit Courses",
+"description":"A collection of online courses in the areas of mathematics, computer science, economics, and game design from MIT.",
+"extra_html":""
+}

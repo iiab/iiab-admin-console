@@ -1,0 +1,8 @@
+{
+"intended_use":"html",
+"moddir": "en-osm-omt-min",
+"lang" : "en",
+"logo_url" : "osm.jpg",
+"title" : "OpenStreetMap of World Level 10",
+"description" : "Open-source maps for World made by OpenMapTiles using OpenStreetMap software. Maximum Level 10."
+}

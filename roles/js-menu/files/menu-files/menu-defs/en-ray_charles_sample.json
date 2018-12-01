@@ -1,0 +1,11 @@
+{
+"intended_use":"zim",
+"lang" : "en",
+"logo_url" : "220px-Wikipedia-logo-v2.svg.png",
+"menu_item_name" : "en-ray_charles_sample",
+"start_url" : "A/Ray_Charles_at_Newport.html",
+"zim_name" : "wikipedia_en_ray_charles",
+"title" : "Ray Charles Wikipedia Sample",
+"description":"This is a sample extract from the Wikipedia on Ray Charles.",
+"extra_html":""
+}

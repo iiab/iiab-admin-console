@@ -1,0 +1,10 @@
+{
+    "intended_use": "webroot",
+    "lang": "en",
+    "logo_url": "content.jpg",
+    "menu_item_name": "en-usb",
+    "moddir": "usb",
+    "title": "Inserte una Unidad USB para Publicar Archivos Aquí",
+    "description": "Maestros y Bibliotecarios: los folletos de su clase (contenido en PDF, fotos, avisos públicos, etc) <a href=/usb>Aparecerán Inmediatamente Aquí</a> después de insertar una unidad USB o disco duro USB en Internet-in-a-Box.",
+    "extra_html": "es-usb_plus.html"
+}

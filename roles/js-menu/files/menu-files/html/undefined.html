@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" type="text/css" media="all" href="xs-portal.css" />
+<HTML>
+<HEAD>
+<TITLE>Undefined Zim</TITLE>
+
+</HEAD>
+<BODY>
+  <h1>Undefined Zim in a Menu Definition</h1>
+
+  This menu item has an 'undefined' zim<BR>
+  Please try the following:<BR>
+  1. Refresh your browser to eliminate the cache - shift plus click refresh on chrome<BR>
+  2. Run iiab-make-kiwix-lib<BR>
+  3. Make sure the spelling of the field zim_name in the menu definition matches the zim you want to access <b>without the date and month and .zim at the end.</b><BR>
+  <BR><BR>
+  There are two levels of indirection here:<BR>
+  The menu definition .json file needs its name in the menu array, like "en-wikipedia_en_medicine_novid".<BR>
+  In that .json file is a field zim_name which contains the generic name of the zim you want, like wikipedia_en_medicine_novid<BR>
+  That indexes into a file /library/www/html/common/assets/zim_version_idx.json which maps the generic name to the actual version installed like wikipedia_en_medicine_novid_2018-07.zim<BR>
+  zim_version_idx.json get rebuilt when you run iiab-make-kiwix-lib.<BR>
+
+</BODY>
+
+</HTML>

@@ -1,0 +1,10 @@
+{
+"intended_use":"zim",
+"lang" : "es",
+"logo_url" : "es-wikibooks.png",
+"menu_item_name" : "es-wikibooks_es_all",
+"zim_name" : "wikibooks_es_all",
+"title" : "Wiki Libros",
+"description" : "Una colección de libros de texto gratuitos para uso educativo, creado y mantenido por los usuarios, para los usuarios. Este contenido es proporcionado por Kiwix.",
+"extra_html":""
+}

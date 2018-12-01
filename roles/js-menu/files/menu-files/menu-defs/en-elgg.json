@@ -1,0 +1,9 @@
+{
+"intended_use" : "webroot",
+"lang" : "en",
+"logo_url" : "elgg.png",
+"menu_item_name" : "en-elgg",
+"moddir" : "elgg",
+"title" : "Elgg",
+"description" : "A powerful open source social networking engine, providing you with the core components needed to build a socially aware web application."
+}

@@ -1,0 +1,8 @@
+{
+"intended_use":"html",
+"moddir": "en-osm-omt-central-am",
+"lang" : "en",
+"logo_url" : "osm.jpg",
+"title" : "OpenStreetMap of Central America Level 15",
+"description" : "Open-source maps for Central America made by OpenMapTiles using OpenStreetMap software."
+}
