@@ -1,15 +1,16 @@
 {
-  "kiwixPort" : "3000",
-  "en-kalitePort" : "8008",
+  "kiwixPort" : {{ kiwix_port }},
+  "kiwixUrl" : {{ kiwix_url }},
+  "en-kalitePort" : {{ kalite_server_port }},
   "es-kalitePort" : "8007",
   "fr-kalitePort" : "8006",
-  "calibrePort" : "8080",
+  "calibrePort" : {{ calibre_port }},
+  "kolibriPort" : {{ kolibri_http_port }},
   "downloadBaseUrl" : "/files",
   "apkBaseUrl" : "http://download.iiab.io/content/",
   "apkLocalUrl" : "/files/apk/",
   "apkLinkPhrase" : {"ar" : "إضغط هنا لتحميل", "en": "Download the offline app ", "es": "Descargar la aplicación sin conexión", "fr": "Télécharger l'application en mode hors connexion "},
   "mobilePortraitSize" : "48px",
   "poweroffPin" : "1234",
-  "poweroffPinHash" : "81dc9bdb52d04dc20036dbd8313ed055",
-  "kiwixUrl" : "/kiwix/"
+  "poweroffPinHash" : "81dc9bdb52d04dc20036dbd8313ed055"
 }

@@ -24,7 +24,9 @@
     # these belong somewhere else, but this makes them overrideable by iiab local vars
     cmdsrv_lower_job_priority_flag: "true" # json requires true, not True
     cmdsrv_lower_job_priority_str: "/usr/bin/nice -n19 /usr/bin/ionice -c2 -n7 "
-    
+    # because this is not globally in local vars we won't see iiab's role defaults
+    kiwix_url: /kiwix/
+
   vars_files:
   - "{{ iiab_repo }}/vars/default_vars.yml"
   - "{{ iiab_repo }}/vars/{{ ansible_local.local_facts.os_ver }}.yml"
@@ -36,3 +38,4 @@
       - { role: common }
       - { role: cmdsrv }
       - { role: console }
+      - { role: js-menu }

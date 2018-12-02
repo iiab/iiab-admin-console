@@ -1,0 +1,15 @@
+#!/bin/bash
+
+WWWROOT=/var/www/html
+# maintain backwards compatibility
+if [ -f /etc/xsce/xsce.env ]; then
+  source /etc/xsce/xsce.env
+fi
+if [ -f /etc/iiab/iiab.env ]; then
+  source /etc/iiab/iiab.env
+fi
+
+for f in `diff -q $WWWROOT/iiab-menu/menu-files/menu-defs/ /opt/iiab/iiab-menu/menu-files/menu-defs |grep differ | gawk '{print $2;}'`; do
+  cp -p $f /library/www/html/iiab-menu/local/menu-defs
+done
+
