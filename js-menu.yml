@@ -1,0 +1,38 @@
+---
+- hosts: all
+  become: yes
+
+  vars:
+    iiab_base: /opt/iiab
+    iiab_repo: "{{ iiab_base }}/iiab"
+    iiab_config_dir: /etc/iiab
+    # this is for backwards compatibility to before move of local vars in iiab 6.6
+    # default vars will override this below
+    iiab_local_vars_file: "{{ iiab_repo }}/vars/local_vars.yml"
+    admin_install_base : /opt/admin
+    #admin_install_base : /opt/schoolserver/admin
+
+    #xsce_base: "{{ iiab_base }}"
+    pip_packages_dir: "{{ iiab_base }}/pip-packages"
+    yum_packages_dir: "{{ iiab_base }}/yum-packages"
+    downloads_dir: "{{ iiab_base }}/downloads"
+    use_cache: False
+    no_network: False
+    # doc_root: /library/www/html inherited from iiab
+    adm_cons_force_ssl: False
+    iiab_home_url: /home
+    # these belong somewhere else, but this makes them overrideable by iiab local vars
+    cmdsrv_lower_job_priority_flag: "true" # json requires true, not True
+    cmdsrv_lower_job_priority_str: "/usr/bin/nice -n19 /usr/bin/ionice -c2 -n7 "
+    # because this is not globally in local vars we won't see iiab's role defaults
+    kiwix_url: /kiwix/
+
+  vars_files:
+  - "{{ iiab_repo }}/vars/default_vars.yml"
+  - "{{ iiab_repo }}/vars/{{ ansible_local.local_facts.os_ver }}.yml"
+  - "{{ iiab_local_vars_file }}"
+  - vars/default_vars.yml
+  - vars/{{ ansible_distribution }}.yml
+
+  roles:
+      - { role: js-menu }
