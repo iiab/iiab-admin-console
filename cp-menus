@@ -9,7 +9,7 @@ if [ -f /etc/iiab/iiab.env ]; then
   source /etc/iiab/iiab.env
 fi
 
-MENUDIR=$WWWROOT/js-menu
+MENUDIR=$WWWROOT/js-menu/
 
 mkdir -p $MENUDIR/local/menu-defs
 mkdir -p $MENUDIR/local/html
@@ -23,7 +23,7 @@ if [ -f $MENUDIR/menu-defs.lst ]; then
   ./bu-local $MENUDIR
 fi
 
-rsync -av menu-files $MENUDIR
+rsync -av roles/js-menu/files/menu-files $MENUDIR
 
 # refresh kiwix zim index - should already be done
 # iiab-make-kiwix-lib
