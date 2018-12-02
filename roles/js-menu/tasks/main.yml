@@ -8,8 +8,8 @@
         state=directory
   with_items:
     - "{{ js_menu_dir }}"
-    - "{{ js_menu_dir }}/menu-files"
-    - "{{ js_menu_dir }}/sample-menus"
+    - "{{ js_menu_dir }}menu-files"
+    - "{{ js_menu_dir }}sample-menus"
 
 # need to merge locally edited menu-defs
 # continue to use cp-menu until we have forms-based menu-def editing
@@ -25,7 +25,7 @@
 
 - name: Install js-menu config file
   template: src=config.json.j2
-            dest=/etc/{{ js_menu_dir }}/config.json
+            dest={{ js_menu_dir }}/config.json
             owner=root
             group=root
             mode=0644
