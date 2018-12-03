@@ -1,0 +1,9 @@
+{
+    "intended_use" : "zim",
+    "lang" : "es",
+    "logo_url" : "phet-logo-48x48.png",
+    "zim_name" : "phet_es",
+    "title" : "PhET en Español",
+    "description" : "Experimentos interactivos de ciencia / matemáticas, para ayudarlo a visualizar conceptos básicos.",
+    "extra_html" : "es-phet_html.html"
+}

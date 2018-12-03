@@ -1,0 +1,10 @@
+{
+    "intended_use": "webroot",
+    "lang": "en",
+    "logo_url": "content.jpg",
+    "menu_item_name": "en-usb",
+    "moddir": "usb",
+    "title": "Insert a USB Stick/Drive to Publish Files Here",
+    "description": "",
+    "extra_html": "en-usb-plus.html"
+}

@@ -1,0 +1,23 @@
+{
+ "rating": "4.0",
+ "age_range": null,
+ "zip_ftp_url": null,
+ "module_id": "101",
+ "is_hidden": false,
+ "intended_use": "html",
+ "category": null,
+ "title": "OER Africa - Reading",
+ "prereq_id": null,
+ "moddir": "en-oerafrica-reading",
+ "start_url": "GSG_3_index.html",
+ "ksize": "",
+ "logo_url": "OER-Logo_400x400.jpg",
+ "description": "Reading is an essential skill for all of us and developing our skills in reading is a good investment. This unit is packed with practical activities which are aimed at making reading more enjoyable and rewarding. This unit also includes sections on how to read actively and critically.",
+ "extra_html": "",
+ "index_mod_sample_url": "http://dev.worldpossible.org/cgi/sample_wrap.php?moddir=en-oerafrica-reading",
+ "source_url": "http://www.oerafrica.org/resource/reading",
+ "rsync_url": "rsync://dev.worldpossible.org/rachelmods/en-oerafrica-reading",
+ "lang": "en",
+ "prereq_note": null,
+ "zip_http_url": null
+}

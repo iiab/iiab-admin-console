@@ -1,0 +1,9 @@
+{
+"intended_use":"calibre",
+"lang" : "en",
+"logo_url" : "calibre2.png",
+"menu_item_name" : "en-calibre",
+"title" : "Calibre",
+"start_url" : "",
+"description":"Calibre Offline eBook Server."
+}

@@ -1,0 +1,9 @@
+{
+    "intended_use": "html",
+    "lang": "es",
+    "logo_url": "osm.jpg",
+    "start_url": "map.html",
+    "moddir": "en-worldmap-10",
+    "title": "OpenStreetMap",
+    "description": "Mapas del mundo, con 10 niveles de zoom. Busca 5000 ciudades. Presione 'Enter' después de escribir el nombre de la ciudad."
+}

@@ -1,0 +1,10 @@
+{
+"intended_use":"zim",
+"lang" : "en",
+"logo_url" : "220px-Wiktionary-logo.svg.png",
+"menu_item_name" : "en-wiktionary_en_simple_all",
+"zim_name" : "wiktionary_en_simple_all",
+"title" : "Wiktionary in Simple English",
+"description": "A simple dictionary of 24,467 words for children and non-native speakers.",
+"extra_html": ""
+}

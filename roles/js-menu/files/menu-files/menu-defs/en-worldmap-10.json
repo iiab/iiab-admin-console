@@ -1,0 +1,9 @@
+{
+    "intended_use" : "html",
+    "lang" : "en",
+    "logo_url" : "osm.jpg",
+    "start_url" : "map.html",
+    "moddir" : "en-worldmap-10",
+    "title" : "OpenStreetMap",
+    "description" : "Maps of the entire world, with 10 levels of zoom."
+}

@@ -1,0 +1,8 @@
+{
+"intended_use" : "webroot",
+"lang" : "en",
+"logo_url" : "Stethoscope-2.jpg",
+"moddir" : "emr",
+"title" : "Electronic Medical Record App",
+"description" : "This application allows medical practitioners to record patient information including consultations."
+}

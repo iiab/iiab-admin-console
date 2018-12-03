@@ -1,0 +1,10 @@
+{
+    "intended_use": "kalite",
+    "lang" : "en",
+    "logo_url" : "khan-logo-vertical-transparent.png",
+    "menu_item_name" : "en-kalite_health",
+    "start_url": "learn/khan/science/health-and-medicine/",
+    "title" : "Khan Academy Lite: Health and Medicine",
+    "description": "1949 total video lessons.  And associated exercises.",
+    "extra_html": "en-kalite_health.html"
+}

@@ -1,0 +1,10 @@
+{
+"intended_use" : "zim",
+"lang" : "es",
+"logo_url" : "wikinews-logo.png",
+"menu_item_name" : "es-wikinews_es_all",
+"zim_name" : "wikinews_es_all",
+"title" : "Wikinoticias",
+"description" : "La fuente de noticias libres en la que todos pueden ser reporteros.",
+"extra_html" : ""
+}

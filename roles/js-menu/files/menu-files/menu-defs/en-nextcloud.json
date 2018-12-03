@@ -1,0 +1,9 @@
+{
+"intended_use" : "webroot",
+"lang" : "en",
+"logo_url" : "nextcloud.png",
+"menu_item_name" : "en-nextcloud",
+"moddir" : "nextcloud",
+"title" : "Nextcloud",
+"description" : "Nextcloud puts your data at your fingertips, under your control. Store your documents, calendar, contacts and photos on your local server."
+}

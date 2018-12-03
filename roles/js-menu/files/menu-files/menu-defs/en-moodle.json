@@ -1,0 +1,9 @@
+{
+"intended_use" : "webroot",
+"lang" : "en",
+"logo_url" : "moodle-logo.png",
+"menu_item_name" : "en-moodle",
+"moddir" : "moodle",
+"title" : "Moodle",
+"description" : "Moodle is a learning platform designed to provide educators, administrators and learners with a single robust, secure and integrated system to create personalised learning environments."
+}

@@ -1,0 +1,9 @@
+{
+    "intended_use" : "zim",
+    "lang" : "en",
+    "logo_url" : "220px-Wikipedia-logo-v2.svg.png",
+    "zim_name" : "wikipedia_ig_all_novid",    
+    "title" : "Wikipedia in Igbo",
+    "description" : "Searchable encyclopedia including 1,357 articles and 1,171 illustrations, from August 2017.",
+    "extra_html" : "en-wikipedia_ig_all_novid.html"
+}

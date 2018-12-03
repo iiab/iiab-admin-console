@@ -1,0 +1,9 @@
+{
+"intended_use" : "webroot",
+"lang" : "en",
+"logo_url" : "owncloud.jpg",
+"menu_item_name" : "en-owncloud",
+"moddir" : "owncloud",
+"title" : "Owncloud",
+"description" : "A safe home for all your data. Access and share your files, calendars, contacts, mail and more from any device, on your terms."
+}
