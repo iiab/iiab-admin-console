@@ -1,0 +1,8 @@
+{
+"intended_use" : "info",
+"lang" : "en",
+"logo_url" : "credits.png",
+"moddir" : "",
+"title" : "Sample Menu",
+"description" : "The menu items below are not active on a newly installed Internet in a Box.<p> To download content go to the <a href='/admin'>Admin Console</a> and take the link 'Install Content'."
+}
