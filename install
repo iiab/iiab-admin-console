@@ -36,6 +36,3 @@ export ANSIBLE_LOG_PATH="$IIAB_ADMIN_DIR/admin-install.log"
 
 #ansible-playbook -i $INVENTORY $PLAYBOOK --extra-vars "${ARGS}" --connection=local
 ansible-playbook -i $INVENTORY $PLAYBOOK --connection=local
-
-# now copy all the menu-defs, etc.
-./cp-menus

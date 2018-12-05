@@ -44,3 +44,6 @@
         group=root
         mode=0644
         force=no
+
+- name: Copy Menu Files and Create Feedback Database
+  shell: ./cp-menus
