@@ -15,18 +15,15 @@
   "tab_names" : ["Main"],
   "menu_items_1" :
     [
-      "es-wikipedia_es_medicine_novid_noapk",
-      "en-wikipedia_en_medicine_novid_noapk",
-      "es-wikipedia_es_all_novid",
-      "en-wikem",
-      "es-dr_SNS",
-      "es-dr_min_salud",
-      "es-dr_PAI",
-      "es-WHO_guidelines",
-      "es-hesperian_health",
-      "en-hesperian_health",
-      "en-stanford_em",
-      "es-soluciones",
-      "es-creditos"
+      "en-oob",
+      "en-wikipedia_en_all_novid",
+      "en-kalite",
+      "en-medline_plus",
+      "en-nextcloud",
+      "en-phet_zim",
+      "en-worldmap-10",
+      "en-moodle",
+      "en-usb",
+      "en-credits"
      ]
 }
