@@ -4,7 +4,7 @@
     "age_range": null,
     "rating": "3.1",
     "description": "Basic medical encyclopedia from ADAM / Animated Dissection of Anatomy for Medicine, Inc.",
-    "extra_html": "en-medline_plus.html",
+    "extra_html": "",
     "intended_use": "html",
     "prereq_note": null,
     "zip_http_url": null,
