@@ -1,16 +1,12 @@
 // iiab-menu.js
 // copyright 2018 Tim Moody
 
-// Ports used by services - not currently tied to iiab ansible
 var menuConfig = {};
-//menuConfig['kiwixPort'] = "3000";
-//menuConfig['kalitePort'] = "8008";
-//menuConfig['calibrePort'] = "8010";
 
 // Flags
 var debug = true; // start with on a let it be turned off by menu.json so can catch initial read errors
 // var forceFullDisplay = false; // not used
-var dynamicHtml = true; // not used
+var dynamicHtml = true; // not used. is a hook for generation of static html
 
 var include_apk_links = false; // for now make this conditional
 // constants
@@ -125,33 +121,35 @@ var getLangCodes = $.getJSON(consoleJsonDir + 'lang_codes.json')
 $.when(getMenuJson, getZimVersions, getConfigJson, getLangCodes).always(procMenu);
 
 // This is the main processing
+function jsMenuMain () {
 genRegEx(); // regular expressions for subtitution
-if (dynamicHtml){
-	getLocalStore();
-  //$.when(scaffold, getZimVersions, getConfigJson).then(procMenu);
-  $.when(getMenuJson, getZimVersions, getConfigJson).always(procMenu); // ignore errors like kiwix not installed
-  // create scaffolding for menu items
-  var html = "";
-  for (i = 0; i < menuItems.length; i++) {
-  	var menu_item_name = menuItems[i];
-  	menuDefs[menu_item_name] = {}
-  	menuItemDivId = i.toString() + "-" + menu_item_name;
-  	menuDefs[menu_item_name]['menu_id'] = menuItemDivId;
+  if (dynamicHtml){
+  	getLocalStore();
+    //$.when(scaffold, getZimVersions, getConfigJson).then(procMenu);
+    $.when(getMenuJson, getZimVersions, getConfigJson).always(procMenu); // ignore errors like kiwix not installed
+    // create scaffolding for menu items
+    var html = "";
+    for (i = 0; i < menuItems.length; i++) {
+    	var menu_item_name = menuItems[i];
+    	menuDefs[menu_item_name] = {}
+    	menuItemDivId = i.toString() + "-" + menu_item_name;
+    	menuDefs[menu_item_name]['menu_id'] = menuItemDivId;
 
-  	html += '<div id="' + menuItemDivId + '" class="content-item" dir="auto">&emsp;Attempting to load ' + menu_item_name + ' </div>';
+    	html += '<div id="' + menuItemDivId + '" class="content-item" dir="auto">&emsp;Attempting to load ' + menu_item_name + ' </div>';
+    }
+    $("#content").html(html);
+    $(".toggleExtraHtml").toggle(showFullDisplay);
+    scaffold.resolve();
   }
-  $("#content").html(html);
-  $(".toggleExtraHtml").toggle(showFullDisplay);
-  scaffold.resolve();
-}
-else {
-  $.when(getConfigJson).then(procStatic);
-}
+  else {
+    $.when(getConfigJson).then(procStatic);
+  }
 
-// click function for full display toggle
-$( "#toggleFullDisplay" ).click(function() {
-  $(".toggleExtraHtml").toggle();
-});
+  // click function for full display toggle - no longer used, but keep for now
+  // $( "#toggleFullDisplay" ).click(function() {
+  //  $(".toggleExtraHtml").toggle();
+  // });
+}
 
 function genRegEx(){
 	hrefRegEx = new RegExp('##HREF-BASE##', 'g');
