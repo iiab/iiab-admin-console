@@ -105,13 +105,13 @@
   when: is_debuntu and not adm_cons_force_ssl
 
 # with ssl
-- name: add link for admin-console config file with ssl support
+- name: Add link for admin-console config file with ssl support
   file: path=/etc/apache2/sites-enabled/admin-console-ssl.conf
         src=/etc/{{ apache_config_dir }}/admin-console-ssl.conf
         state=link
   when: is_debuntu and adm_cons_force_ssl
 
-- name: remove link for admin-console config file with ssl support
+- name: Remove link for admin-console config file with ssl support
   file: path=/etc/apache2/sites-enabled/admin-console.conf
         state=absent
   when: adm_cons_force_ssl and is_debuntu
