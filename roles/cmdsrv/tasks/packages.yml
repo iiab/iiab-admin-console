@@ -16,7 +16,7 @@
     - download
   when: is_debuntu
 
-- name: install ubuntu connector apache to php
+- name: Install ubuntu connector apache to php
   package: name=libapache2-mod-php
            state=present
   tags:

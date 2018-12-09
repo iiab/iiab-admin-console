@@ -224,7 +224,7 @@
         src="{{ iiab_repo }}/ansible.cfg"
         state=link
 
-- name: ask systemd to reread the unit files, picks up changes done
+- name: Ask systemd to reread the unit files, picks up changes done
   shell: systemctl daemon-reload
 
 - name: Enable iiab-cmdsrv service
