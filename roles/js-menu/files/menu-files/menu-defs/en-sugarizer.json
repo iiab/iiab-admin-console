@@ -1,0 +1,9 @@
+{
+"intended_use" : "webroot",
+"lang" : "en",
+"logo_url" : "sugarizer.png",
+"menu_item_name" : "en-sugarizer",
+"moddir" : "sugarizer",
+"title" : "Sugarizer",
+"description" : "A taste of Sugar on any device, used every day by children around the world on the One Laptop per Child project."
+}

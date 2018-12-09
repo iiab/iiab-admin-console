@@ -1,0 +1,9 @@
+{
+    "intended_use": "html",
+    "lang": "ht",
+    "logo_url": "hesperianlogo.png",
+    "moddir" : "ht-hesperian_educavision_health",
+    "title" : "Sante Gid Hesperian nan Ayisyen Kreyòl",
+    "description": "Fasil yo konprann gid, pratik, egzat ak trè ilistre sou pwoblèm sante nan zòn rekile kote aksè nan pèsonèl medikal yo ak fasilite yo limite.",
+    "extra_html": "ht-hesperian_educavision_health.html"
+}

@@ -1,0 +1,9 @@
+{
+    "intended_use" : "zim",
+    "lang" : "en",
+    "logo_url" : "220px-Wiktionary-logo.svg.png",
+    "zim_name" : "wiktionary_en_all_novid",
+    "title" : "Wiktionary in English",
+    "description" : "English dictionary with 5,309,521 entries.",
+    "extra_html" : "en-wiktionary_en_all_novid.html"
+}

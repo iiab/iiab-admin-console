@@ -1,0 +1,9 @@
+{
+"intended_use" : "webroot",
+"lang" : "en",
+"logo_url" : "wordpress-logo.png",
+"menu_item_name" : "en-wordpress",
+"moddir" : "wordpress",
+"title" : "WordPress",
+"description" : "Our personal articles and blogs."
+}

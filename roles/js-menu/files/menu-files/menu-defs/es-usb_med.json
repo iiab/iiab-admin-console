@@ -1,0 +1,9 @@
+{
+    "intended_use": "webroot",
+    "lang": "es",
+    "logo_url": "content.jpg",
+    "moddir": "usb",
+    "title": "Inserte una memoria USB para publicar actualizaciones de la comunidad",
+    "description": "Profesionales Médicos Locales: distribuya avisos a tiempo (contenido en PDF, advertencias de enfermedades infecciosas, boletines de medicina preventiva) insertando una memoria en el Internet-in-a-Box.<br><br><ol><li>1. Cree una carpeta denominada <b>usb</b> en su memoria<li>2. Coloque archivos de avisos PDF útiles en esta carpeta<li>3. Inserte tu memoria en el Internet-in-a-Box<li>4. Sus materiales de servicio público <a href=/usb>aparecerán inmediatamente aquí !</a></i></ol>",
+    "extra_html": "es-usb_med.html"
+}

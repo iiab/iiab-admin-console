@@ -1,0 +1,9 @@
+{
+    "intended_use": "zim",
+    "lang": "es",
+    "logo_url": "stackoverflow3.png",
+    "zim_name" : "es.stackoverflow.com_es_all",
+    "title": "Stack Overflow en Español",
+    "description": "Preguntas y respuestas para programadores y profesionales de la informática.",
+    "extra_html": ""
+}

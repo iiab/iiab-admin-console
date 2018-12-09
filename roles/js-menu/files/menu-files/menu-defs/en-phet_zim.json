@@ -1,0 +1,9 @@
+{
+    "intended_use": "zim",
+    "lang": "en",
+    "logo_url": "phet-logo-48x48.png",
+    "zim_name" : "phet_en",
+    "title": "PhET in English",
+    "description": "Physics and Math Interactive Simulations for young students.<p>PhET is a project of the University of Colorado Boulder, founded in 2002 by Nobel Laureate Carl Wieman, to improve the way science is taught and learned worldwide, through free interactive simulations.",
+    "extra_html": ""
+}

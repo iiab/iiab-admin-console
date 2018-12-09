@@ -1,0 +1,23 @@
+{
+ "rating": "3.0",
+ "age_range": null,
+ "zip_ftp_url": null,
+ "module_id": "111",
+ "is_hidden": false,
+ "intended_use": "html",
+ "category": null,
+ "title": "Algebra2go",
+ "prereq_id": null,
+ "moddir": "en-algebra2go",
+ "start_url": "pagefiles/",
+ "ksize": "",
+ "logo_url": "en-algebra2go.jpg",
+ "description": "Pre-algebra lessons with videos and notes from Saddleback College.",
+ "extra_html": "",
+ "index_mod_sample_url": "http://dev.worldpossible.org/cgi/sample_wrap.php?moddir=en-algebra2go",
+ "source_url": "https://www.saddleback.edu/faculty/lperez/algebra2go/",
+ "rsync_url": "rsync://dev.worldpossible.org/rachelmods/en-algebra2go",
+ "lang": "en",
+ "prereq_note": null,
+ "zip_http_url": null
+}

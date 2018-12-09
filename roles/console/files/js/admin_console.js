@@ -22,16 +22,23 @@ var zimCategories = {}; // zim categories grouped by language and priority to al
 var kiwixCatalog = {}; // catalog of kiwix zims, read from file downloaded from kiwix.org
 var kiwixCatalogDate = new Date; // date of download, stored in json file
 var installedZimCatalog = {}; // catalog of installed, and wip zims
+var externalZimCatalog = {}; // catalog of zims on an external device
 var oer2goCatalog = {}; // catalog of rachel/oer2go modules, read from file downloaded from rachel
 var oer2goCatalogDate = new Date; // date of download, stored in json file
 var oer2goCatalogFilter = ["html"] // only manage these types as OER2GO; catalog can contain zims and kalite that we do elsewhere
 var rachelStat = {}; // installed, enabled and whether content is installed and which is enabled
 
 var zimsInstalled = []; // list of zims already installed
-var zimsScheduled = []; // list of zims being installed (wip)
+var zimsDownloading = []; // list of zims being downloaded
+var zimsCopying = []; // list of zims being copied
+var zimsExternal = []; // list of zims on external device
 var oer2goInstalled = []; // list of Oer2go items already installed
-var oer2goScheduled = []; // list of Oer2go items being installed (wip)
+var oer2goWip = {}; // list of copying, downloading, exporting
+var oer2goDownloading = []; // list of Oer2go items being downloaded
+var oer2goCopying = []; // list of Oer2go items being copied
+var oer2goExternal = []; // list of Oer2go items on external device
 var downloadedFiles = {};
+var externalDeviceContents = {}; // zims and other content on external devices, only one active at a time
 
 var langNames = []; // iso code, local name and English name for languages for which we have zims sorted by English name for language
 var topNames = ["ara","eng","spa","fra","hin","por"]; // languages for top language menu
@@ -40,6 +47,9 @@ var langGroups = {"en":"eng","fr":"fra"}; // language codes to treat as a single
 var selectedLangs = []; // languages selected by gui for display of content
 var selectedZims = [];
 var selectedOer2goItems = [];
+var manContSelections = {};
+var selectedUsb = null;
+
 var sysStorage = {};
 sysStorage.root = {};
 sysStorage.library = {};
@@ -59,6 +69,10 @@ function main() {
 
 // Set jquery ajax calls not to cache in browser
   $.ajaxSetup({ cache: false });
+  //$.ajaxSetup({
+  // type: 'POST',
+  // headers: { "cache-control": "no-cache" }
+  //});
 
 // declare generic ajax error handler called by all .fail events
  $( document ).ajaxError(ajaxErrhandler);
@@ -209,8 +223,10 @@ function instContentButtonsEvents() {
       if (this.type == "checkbox")
       if (this.checked){
         zim_id = this.name;
-        if (zimsInstalled.indexOf(zim_id) == -1 && zimsScheduled.indexOf(zim_id) == -1)
-        instZim(zim_id);
+        if (zim_id in installedZimCatalog['INSTALLED'] || zim_id in installedZimCatalog['WIP'])
+          consoleLog("Skipping installed Zim " + zim_id);
+        else
+          instZim(zim_id);
       }
     });
     procZimGroups();
@@ -226,7 +242,9 @@ function instContentButtonsEvents() {
       if (this.type == "checkbox")
         if (this.checked){
           mod_id = this.name;
-          if (oer2goInstalled.indexOf(mod_id) == -1 && oer2goScheduled.indexOf(mod_id) == -1)
+          if (oer2goInstalled.indexOf(mod_id) >= 0 || mod_id in oer2goWip)
+            consoleLog("Skipping installed Module " + mod_id);
+          else
             instOer2goItem(mod_id);
         }
     });
@@ -241,12 +259,20 @@ function instContentButtonsEvents() {
     window.open(url);
   });
 
-  $("#ZIM-STATUS-REFRESH").click(function(){
-    refreshZimStat();
+  $("#REFRESH-CONTENT-DISPLAY").click(function(){
+    refreshAllContentPanels();
   });
 
-  $("#RESTART-KIWIX").click(function(){
-    restartKiwix();
+//  $("#ZIM-STATUS-REFRESH").click(function(){
+//    refreshZimStat();
+//  });
+
+//  $("#RESTART-KIWIX").click(function(){
+//   restartKiwix();
+  //});
+
+  $("#MAKE-KIWIX-LIB").click(function(){
+    reindexKiwix();
   });
 
   $("#KIWIX-LIB-REFRESH").click(function(){
@@ -267,14 +293,41 @@ function instContentButtonsEvents() {
     alert ("RACHEL scheduled to be downloaded and installed.\n\nPlease view Utilities->Display Job Status to see the results.");
   });
 
-  $("#DEL-DOWNLOADS").click(function(){
-  	var r = confirm("Press OK to Delete Checked Files");
+  $("#instManContExternal").click(function(){
+  	consoleLog ("in instManContExternal click");
+  	selectedUsb = $('#instManContExternal input:radio:checked').val();
+    renderExternalList();
+  });
+
+  $("#REMOVE-CONTENT").click(function(){
+  	var r = confirm("Press OK to Remove Checked Content");
     if (r != true)
       return;
-  	make_button_disabled("#DEL-DOWNLOADS", true);
-    delDownloadedFiles();
-    make_button_disabled("#DEL-DOWNLOADS", false);
+  	make_button_disabled("#REMOVE-CONTENT", true);
+    rmContent();
+    make_button_disabled("#REMOVE-CONTENT", false);
   });
+
+    $("#FIND-USB").click(function(){
+    refreshExternalList();
+  });
+
+  $("#COPY-CONTENT").click(function(){
+  	// assume that we can only get here if there are both internal and external devices
+  	make_button_disabled("#COPY-CONTENT", true);
+  	copyContent();
+  	// clean up - empty arrays, sum, and redraw input
+    alert ("Selected Content scheduled to be copied.\n\nPlease view Utilities->Display Job Status to see the results.");
+    make_button_disabled("#COPY-CONTENT", false);
+  });
+
+  $("#REMOVE-USB").click(function(){
+  	if (selectedUsb != null)
+      removeUsb();
+    else
+    	alert ("No USB is attached.");
+  });
+
 }
 
   // Util Buttons
@@ -304,8 +357,8 @@ function utilButtonsEvents() {
           if (job_status[job_id]["cmd_verb"] == "INST-ZIMS"){
           	var zim_id = job_status[job_id]["cmd_args"]["zim_id"];
           	//consoleLog (zim_id);
-            if (zimsScheduled.indexOf(zim_id) > -1){
-              zimsScheduled.pop(zim_id);
+          	if (zim_id in installedZimCatalog['WIP']){
+              delete installedZimCatalog['WIP'][zim_id];
               updateZimDiskSpaceUtil(zim_id, false)
               procZimGroups();
               //$( "input[name*='" + zim_id + "']" ).checked = false;
@@ -878,17 +931,18 @@ function selectedLangsDefaults() {
       selectedLangs.push (lang);
   }
   for (var id in installedZimCatalog['WIP']){
-    lang = installedZimCatalog['WIP'][id]['language'];
+  	var zim = lookupZim(id);
+    lang = zim.language;
     if (selectedLangs.indexOf(lang) == -1) // automatically select any language for which zim is being installed
       selectedLangs.push (lang);
   }
-  for (var id in oer2goInstalled){
-    lang = langCodesXRef[oer2goCatalog[oer2goInstalled[id]]['lang']];
+  for (var idx in oer2goInstalled){ // this is an array
+    lang = langCodesXRef[oer2goCatalog[oer2goInstalled[idx]]['lang']];
     if (selectedLangs.indexOf(lang) == -1) // automatically select any language for which oer2go item is installed
       selectedLangs.push(lang);
   }
-  for (var id in oer2goScheduled){
-    lang = langCodesXRef[oer2goCatalog[oer2goScheduled[id]]['lang']];
+  for (var id in oer2goWip){ // this is an object
+    lang = langCodesXRef[oer2goCatalog[id]['lang']];
     if (selectedLangs.indexOf(lang) == -1) // automatically select any language for which oer2go item is wip
       selectedLangs.push(lang);
   }
@@ -920,6 +974,76 @@ function readableSize(kbytes) {
 // Put oer2go_functions here
 // **************************************
 
+function manageContentInit(){
+	refreshAllInstalledList();
+	refreshExternalList();
+}
+
+function getExternalDevInfo(){
+var command = "GET-EXTDEV-INFO";
+  return sendCmdSrvCmd(command, procExternalDevInfo, "FIND-USB");
+}
+
+function procExternalDevInfo(data){
+  externalDeviceContents = data;
+  externalZimCatalog = {};
+  zimsExternal = [];
+  oer2goExternal = [];
+  var haveUsb = calcExtUsb(); // also sets selectedUsb
+  setCopyContentButtonText();
+
+  if (haveUsb){
+    externalZimCatalog = externalDeviceContents[selectedUsb].zim_modules;
+    zimsExternal = Object.keys(externalZimCatalog);
+    oer2goExternal = externalDeviceContents[selectedUsb].oer2go_modules;
+    make_button_disabled("#COPY-CONTENT", false);
+    make_button_disabled("#REMOVE-USB", false);
+    $.each(Object.keys(externalDeviceContents).sort(), function(index, dev) {
+  		initManContSelections(dev);
+      });
+    $("#instManageContentUsbTab").show();
+  }
+  else{
+  	$("#instManageContentUsbTab").hide();
+  	make_button_disabled("#COPY-CONTENT", true);
+  	make_button_disabled("#REMOVE-USB", true);
+  }
+}
+
+function calcExtUsb(){ // checks if any usb devices are attached and selects the one to display
+	if (Object.keys(externalDeviceContents).length > 0){
+	  if (Object.keys(externalDeviceContents).indexOf(selectedUsb)== -1)
+      selectedUsb = Object.keys(externalDeviceContents)[0];
+    return true;
+  }
+  else {
+    selectedUsb = null;
+    return false;
+  }
+}
+
+function setCopyContentButtonText(){
+  var activeDev = calcManContentDevice();
+  var text = "Copy Unavailable"; // for selectedUsb is null
+  if (selectedUsb != null){
+  	if (activeDev == "internal")
+  	  text = "Copy Installed to " + selectedUsb;
+    else
+      text = "Copy " + selectedUsb + " to Installed";
+  }
+  $("#COPY-CONTENT").text(text);
+}
+
+function procDnldList(){
+
+  $("#downloadedFilesRachel").html(calcDnldListHtml(downloadedFiles.rachel.file_list));
+  $("#downloadedFilesZims").html(calcDnldListHtml(downloadedFiles.zims.file_list));
+  //console.log("in procDnldList");
+}
+
+
+
+// Not currently used
 function getRachelStat(){
   var command = "GET-RACHEL-STAT";
   sendCmdSrvCmd(command, procRachelStat);
@@ -1012,18 +1136,118 @@ function calcDnldListHtml(list) {
   return html;
 }
 
-function delDownloadedFiles() {
-  $.when(
-    delDownloadedFileList("downloadedFilesRachel", "rachel"),
-    delDownloadedFileList("downloadedFilesZims", "zims"),
-    delModules("installedZimModules", "zims"),
-    delModules("installedOer2goModules", "modules"))
-    .done(refreshAllInstalledList);
+function copyContent(){
+  var device = calcManContentDevice();
+  var source = "internal";
+  var dest = "internal";
+  var cmd_args = {};
+  var modList = [];
+  if (device == "internal")
+  	dest = selectedUsb;
+  else
+  	source = selectedUsb;
+
+  cmd_args['source'] = source;
+  cmd_args['dest'] = dest;
+
+  // Zims
+
+  modList = getCopyList(device, "zims");
+  modList.forEach( function(item) {
+    cmd_args['zim_id'] = item.id;
+    cmd_args['file_ref'] = item.file_ref;
+    cmd = "COPY-ZIMS " + JSON.stringify(cmd_args);
+  	sendCmdSrvCmd(cmd, genericCmdHandler);
+  });
+
+  // OER2GO
+
+  modList = getCopyList(device, "modules");
+  modList.forEach( function(item) {
+    cmd_args['moddir'] = item.id;
+    cmd_args['file_ref'] = item.file_ref;
+    cmd = "COPY-OER2GO-MOD " + JSON.stringify(cmd_args);
+  	sendCmdSrvCmd(cmd, genericCmdHandler);
+  });
+
+  clearManContSelections(device, reset=true);
+}
+
+function rmContent() {
+	var device = calcManContentDevice();
+	var clearFunction = clearRmSelections(device, reset=true);
+	var refreshFunction = refreshRemovePanel(device);
+	var calls =[delModules(device, "zims"),
+              delModules(device, "modules")];
+	if (device == "internal"){
+		calls.push(delDownloadedFileList("downloadedFilesRachel", "zims"));
+		calls.push(delDownloadedFileList("downloadedFilesRachel", "rachel"));
+	}
+
+  $.when.apply($, calls)
+    //delDownloadedFileList("downloadedFilesRachel", "rachel"),
+    //delDownloadedFileList("downloadedFilesZims", "zims"),
+    //delModules("installedZimModules", "zims"),
+    //delModules("installedOer2goModules", "modules"))
+    .done(clearFunction, refreshFunction);
+}
+
+function calcManContentDevice(){
+	var tab = $("ul#instManageContentTabs li.active a").attr('href');
+	var device = tab.split("Content")[1].toLowerCase();
+
+  if (device != "internal")
+    device = selectedUsb;
+  return device;
+}
+
+function clearRmSelections(dev, reset){
+  return function() {
+    initManContSelections(dev, reset);
+  }
+}
+
+function refreshRemovePanel(dev){
+	if (dev == "internal")
+    return refreshAllInstalledList;
+  else
+  	return refreshExternalList;
+}
+
+function clearManContSelections(dev, reset=false){
+  initManContSelections(dev, reset);
+  if (dev == "internal"){
+    renderZimInstalledList();
+    renderOer2goInstalledList();
+  }
+  else {
+    renderExternalList();
+  }
+}
+
+function refreshAllContentPanels() {
+	$.when(getDownloadList(), getOer2goStat(), getZimStat(), getExternalDevInfo())
+	.done(renderZimInstalledList, renderOer2goInstalledList, renderExternalList, refreshDiskSpace);
 }
 
 function refreshAllInstalledList() {
 	$.when(getDownloadList(), getOer2goStat(), getZimStat())
 	.done(renderZimInstalledList, renderOer2goInstalledList, refreshDiskSpace);
+}
+
+function refreshExternalList() {
+	$.when(getExternalDevInfo())
+	.done(renderExternalList, refreshDiskSpace);
+}
+
+function renderExternalList() {
+	if (selectedUsb != null){ // only render content if we have some
+	  $("#instManageContentUsbTab").text("Content on " + selectedUsb);
+	  setCopyContentButtonText();
+	  renderExternalZimList();
+	  renderExternalOer2goModules();
+	  renderZimInstalledList(); // update ON USB messages
+  }
 }
 
 function delDownloadedFileList(id, sub_dir) {
@@ -1046,27 +1270,115 @@ function delDownloadedFileList(id, sub_dir) {
   return sendCmdSrvCmd(delCmd, genericCmdHandler);
 }
 
-function delModules(id, mod_type) {
+function delModules(device, mod_type) {
   var delArgs = {}
 	var modList = [];
-  $("#" + id + " input").each(function() {
-    if (this.type == "checkbox") {
-      if (this.checked)
-        if (mod_type == "zims")
-          modList.push(installedZimCatalog.INSTALLED[this.name].perma_ref);
-        else
-        	modList.push(this.name);
-    }
-  });
 
+  modList = getRmList(device, mod_type);
   if (modList.length == 0)
     return;
 
+  delArgs['device'] = device;
   delArgs['mod_type'] = mod_type;
   delArgs['mod_list'] = modList;
 
   var delCmd = 'DEL-MODULES ' + JSON.stringify(delArgs);
   return sendCmdSrvCmd(delCmd, genericCmdHandler);
+}
+
+function getCopyList(device, mod_type){
+  var modList = [];
+	var params;
+	var id;
+	var item = {};
+	var zim_path;
+	var zim_file;
+
+	// compute jquery selector
+	// we only allow one external usb at a time
+
+	params = getRmCopyListParams(device, mod_type);
+
+  console.log(params.selectorId);
+  $("#" + params.selectorId + " input").each(function() {
+    if (this.type == "checkbox") {
+      if (this.checked){
+        item = {};
+        item['id'] = this.name;
+        item['file_ref'] = this.name; // no separate id for modules
+        if (mod_type == "zims"){
+        	zim_path = params.catalog[this.name].path;
+        	zim_file = zim_path.split('/').pop(); // take only file name
+        	item['file_ref'] = zim_file.split('.zim')[0]; // remove .zim
+        }
+        modList.push(item);
+      }
+    }
+  });
+  console.log(modList);
+  return modList;
+}
+
+function getRmList(device, mod_type){
+	var modList = []; // just needs path
+	var params;
+	//var selectorId;
+	//var catalog = {};
+	var zim_path;
+	var zim_file;
+
+	// compute jquery selector
+	// we only allow one external usb at a time
+
+	params = getRmCopyListParams(device, mod_type);
+
+  console.log(params.selectorId);
+  $("#" + params.selectorId + " input").each(function() {
+    if (this.type == "checkbox") {
+      if (this.checked)
+        if (mod_type == "zims"){
+        	zim_path = params.catalog[this.name].path;
+        	zim_file = zim_path.split('/').pop(); // take only file name
+        	zim_file = zim_file.split('.zim')[0]; // remove .zim
+          modList.push(zim_file);
+        }
+        else
+        	modList.push(this.name);
+    }
+  });
+  console.log(modList);
+  return modList;
+}
+
+function getRmCopyListParams(device, mod_type){
+  // compute jquery selector
+	// we only allow one external usb at a time
+
+	var params = {};
+  if (device == "internal"){
+	  params.selectorId = "installed";
+	  params.catalog = installedZimCatalog.INSTALLED;
+	}
+	else{
+		params.selectorId = "external";
+		params.catalog = externalZimCatalog;
+	}
+	if (mod_type == "zims")
+		params.selectorId += "ZimModules";
+  else if (mod_type == "modules")
+    params.selectorId += "Oer2goModules";
+  return params;
+}
+
+function removeUsb(){
+  make_button_disabled("#REMOVE-USB", true);
+  var cmd = ""
+  var cmd_args = {}
+  cmd_args['device'] = selectedUsb;
+  cmd = "REMOVE-USB " + JSON.stringify(cmd_args);
+  $.when(sendCmdSrvCmd(cmd, genericCmdHandler))
+  .done(getExternalDevInfo);
+  return true;
 }
 
 // Utility Menu functions
@@ -1084,50 +1396,48 @@ function procJobStat(data)
   var html = "";
   var html_break = '<br>';
 
-  data.forEach(function(entry) {
-    //console.log(entry);
+
+  data.forEach(function(statusJob) {
+    //console.log(statusJob);
     html += "<tr>";
-    var job_info = {};
+    //var job_info = {};
 
-    job_info['job_no'] = entry[0];
-    html += "<td>" + entry[0] + "<BR>"; // job number
-    // html +=  '<input type="checkbox" name="' gw_squid_whitelist + '" id="' xo-gw_squid_whitelist +'">';
-    var jobId = "job_stat_id-" + entry[0];
-    html +=  '<input type="checkbox" id="' + jobId + '">';
+    //job_info['job_no'] = entry[0];
+    html += "<td>" + statusJob.job_id + "<BR>"; // job number
+    html +=  '<input type="checkbox" id="' + statusJob.job_id + '">';
     html += "</td>";
-    job_info['command'] = entry[1];
-    html += '<td style="overflow: hidden; text-overflow: ellipsis">' + entry[1] + "</td>";
+    html += '<td style="overflow: hidden; text-overflow: ellipsis">' + statusJob.job_command + "</td>";
 
-    result = entry[2].replace(/(?:\r\n|\r|\n)/g, html_break); // change newline to BR
+    var result = statusJob.job_output.replace(/(?:\r\n|\r|\n)/g, html_break); // change newline to BR
     // result = result.replace(html_break+html_break, html_break); // remove blank lines, but doesn't work
     var idx = result.indexOf(html_break);
-    if (idx =0) result = result.substring(html_break.length); // strip off first newline
+    if (idx == 0) result = result.substring(html_break.length); // strip off first newline
     idx = result.lastIndexOf(html_break);
-    if (idx >=0) result = result.substring(0,idx); // strip off last newline
-    job_info['result'] = result;
+    if (idx >= 0) result = result.substring(0,idx); // strip off last newline
+    //job_info['result'] = result;
 
     idx = result.lastIndexOf(html_break);  // find 2nd to last newline
     var result_end = "";
-    if (idx >=0) result_end = result.substring(0,idx + html_break.length);
+    if (idx >= 0) result_end = result.substring(0,idx + html_break.length);
     html += '<td> <div class = "statusJobResult">' + result + "</div></td>";
 
-    job_info['status'] = entry[3];
-    html += "<td>" + entry[3] + "</td>";
-    job_info['status_date'] = entry[4];
-    html += "<td>" + entry[4] + "</td>";
+    html += "<td>" + statusJob.job_status + "</td>";
+
+    var elapsedStr = secondsToDuration(statusJob.elapsed_sec);
+    html += "<td>" + statusJob.create_datetime + '<BR>' + elapsedStr + "</td>";
 
     html += "</tr>";
 
-    // there should be one or two parts
-    var cmd_parse = entry[5].split(" ");
-    job_info['cmd_verb'] = cmd_parse[0];
+    // there should be one or two parts - ? still need this; for cancel
+    var cmd_parse = statusJob.cmd_msg.split(" ");
+    job_status['cmd_verb'] = cmd_parse[0];
     if(cmd_parse.length == 0 || typeof cmd_parse[1] === 'undefined')
-      job_info['cmd_args'] = ""
+      job_status['cmd_args'] = ""
     else
-      job_info['cmd_args'] = JSON.parse(cmd_parse[1]);
+      job_status['cmd_args'] = JSON.parse(cmd_parse[1]);
 
-    consoleLog(job_info);
-    job_status[job_info['job_no']] = job_info;
+    consoleLog(statusJob);
+    job_status[statusJob.job_no] = statusJob;
 
   });
   $( "#jobStatTable tbody" ).html(html);
@@ -1216,6 +1526,7 @@ function procSysStorageLite(data)
 }
 
 // need to rewrite the function below for lvm, etc.
+// 6/28/2018 is not being used
 function procSysStorage()
 {
   //alert ("in procSysStorage");
@@ -1279,7 +1590,13 @@ function displaySpaceAvail(){
 	// display space available on various panels
 	// assumes all data has been retrieved and is in data structures
 
-	var availableSpace = calcLibraryDiskSpace();
+	var availableSpace = 0;
+	var usedSpace = 0;
+	var internalContentSelected = 0;
+	var internalSpace = calcLibraryDiskSpace();
+	availableSpace = internalSpace.availableSpace;
+	usedSpace = internalSpace.usedSpace;
+
 	var allocatedSpace = calcAllocatedSpace();
 	var warningStyle = '';
 
@@ -1298,15 +1615,55 @@ function displaySpaceAvail(){
 
   $( "#zimDiskSpace" ).html(html);
   $( "#oer2goDiskSpace" ).html(html);
+
+  // calc internalContentSelected
+
+  manContInternalStat(usedSpace, availableSpace, manContSelections.internal.sum);
+  var html = "";
+
+  if (calcExtUsb()){
+  	$.each(Object.keys(externalDeviceContents).sort(), function(index, dev) {
+  		html += manContUsbStat(dev)
+      });
+    }
+    $("#instManContExternal").html(html);
+}
+
+function manContInternalStat(usedSpace, availableSpace, internalContentSelected){
+	var html = "";
+  html += '<tr>';
+  html += "<td></td>";
+  html += "<td>Internal</td>";
+  html += '<td style="text-align:right">' + readableSize(usedSpace) + "</td>";
+  html += '<td style="text-align:right">' + readableSize(availableSpace) + "</td>";
+  html += '<td style="text-align:right">' + readableSize(internalContentSelected) + "</td>";
+  html +=  '</tr>';
+  $("#instManContInternal").html(html);
+}
+
+function manContUsbStat(dev){
+	var html = "";
+	var usedSpace = externalDeviceContents[dev].dev_size_k - externalDeviceContents[dev].dev_sp_avail_k;
+	var checked = (dev == selectedUsb) ? "checked" : "";
+	//var status = (age >= 18) ? 'adult' : 'minor';
+
+  html += '<tr>';
+  html += '<td><input type="radio" name="usbList" value="' + dev + '"' + checked + '></td>';
+  html += "<td>" + dev + "</td>";
+  html += '<td style="text-align:right">' + readableSize(usedSpace) + "</td>";
+  html += '<td style="text-align:right">' + readableSize(externalDeviceContents[dev].dev_sp_avail_k) + "</td>";
+  html += '<td style="text-align:right">' + readableSize(manContSelections[dev].sum) + "</td>";
+  html +=  '</tr>';
+  return(html);
 }
 
 function calcAllocatedSpace(){
 	var totalSpace = 0;
 	totalSpace += sumAllocationList(selectedZims, 'zim');
 	//consoleLog(totalSpace);
-	totalSpace += sumAllocationList(zimsScheduled, 'zim');
+	totalSpace += sumZimWip();
 	totalSpace += sumAllocationList(selectedOer2goItems, 'oer2go');
-	totalSpace += sumAllocationList(oer2goScheduled, 'oer2go');
+	totalSpace += sumOer2goWip();
 	return totalSpace;
 }
 
@@ -1327,14 +1684,42 @@ function sumAllocationList(list, type){
   return totalSpace;
 }
 
+function sumZimWip(){
+  var totalSpace = 0;
+
+  for (var zimId in installedZimCatalog["WIP"]){
+  	var zim = lookupZim(zimId);
+  	totalSpace += parseInt(zim.size);
+  	if (zim.source == "portable")
+  	  totalSpace += parseInt(zim.size); //add twice to account for zip download
+  }
+  return totalSpace;
+}
+
+function sumOer2goWip(){
+  var totalSpace = 0;
+
+  for (var moddir in oer2goWip){
+  	totalSpace += parseInt(oer2goCatalog[moddir].ksize);
+  }
+  return totalSpace;
+}
+
 function calcLibraryDiskSpace(){
   var availableSpace = 0;
+  var usedSpace = 0;
   // library space is accurate whether separate partition or not
-	if (sysStorage.library_on_root)
-	  availableSpace = sysStorage.root.avail_in_megs * 1024;
-	else
-    availableSpace = sysStorage.library.avail_in_megs * 1024;
-  return availableSpace;
+	if (sysStorage.library_on_root){
+	  availableSpace = sysStorage.root.avail_in_k;
+	  usedSpace = sysStorage.root.size_in_k - sysStorage.root.avail_in_k;
+	}
+	else{
+    availableSpace = sysStorage.library.avail_in_k;
+    usedSpace = sysStorage.library.size_in_k - sysStorage.library.avail_in_k;
+  }
+  return { availableSpace : availableSpace,
+  	       usedSpace : usedSpace
+  };
 }
 
 function updateZimDiskSpace(cb){
@@ -1353,7 +1738,7 @@ function updateZimDiskSpaceUtil(zim_id, checked){
   var zimIdx = selectedZims.indexOf(zim_id);
 
   if (checked){
-    if (zimsInstalled.indexOf(zim_id) == -1){ // only update if not already installed zims
+    if (!(zim_id in installedZimCatalog['INSTALLED'])){ // only update if not already installed zims
       sysStorage.zims_selected_size += size;
       selectedZims.push(zim_id);
     }
@@ -1362,6 +1747,62 @@ function updateZimDiskSpaceUtil(zim_id, checked){
     if (zimIdx != -1){
       sysStorage.zims_selected_size -= size;
       selectedZims.splice(zimIdx, 1);
+    }
+  }
+  displaySpaceAvail();
+}
+
+function updateIntZimsSpace(cb){
+  var zim_id = cb.name
+  updateManContSelectedSpace(zim_id, "zims", installedZimCatalog.INSTALLED, "internal", cb.checked);
+}
+
+function updateIntOer2goSpace(cb){
+  var id = cb.name
+  updateManContSelectedSpace(id, "modules", oer2goCatalog, "internal", cb.checked);
+}
+
+function updateExtZimsSpace(cb){
+  var zim_id = cb.name
+  updateManContSelectedSpace(zim_id, "zims", externalZimCatalog, selectedUsb, cb.checked);
+}
+
+function updateExtOer2goSpace(cb){
+  var id = cb.name
+  updateManContSelectedSpace(id, "modules", oer2goCatalog, selectedUsb, cb.checked);
+}
+
+
+function updateManContSelectedSpace(id, contType, catalog, dev, checked){
+  var item = catalog[id]
+  var sizeStr = "0";
+  switch (contType) {
+  	case "zims":
+  	  sizeStr =  item.size;
+  	  break;
+  	case "modules":
+  	  sizeStr =  item.ksize;
+  	  break;
+  	default:
+        consoleLog("Unknown content type in updateManContSelectedSpace");
+        return false;
+  }
+
+  var size =  parseInt(sizeStr);
+  var idx = manContSelections[dev][contType].indexOf(id);
+
+  if (checked){
+    if (idx == -1){ // only update if not already selected
+      manContSelections[dev].sum += size;
+      manContSelections[dev][contType].push(id);
+    }
+    else
+    	consoleLog("ID in array that should not be in updateManContSelectedSpace");
+  }
+  else {
+    if (idx != -1){
+      manContSelections[dev].sum -= size;
+      manContSelections[dev][contType].splice(idx, 1);
     }
   }
   displaySpaceAvail();
@@ -1486,6 +1927,15 @@ function getServerInfoError (jqXHR, textStatus, errorThrown){
   alert ("Connection to Server failed.\n Please make sure your network settings are correct,\n that the server is turned on,\n and that the web server is running.");
 }
 
+function secondsToDuration(seconds){
+  var d = Number(seconds);
+
+  var h = Math.floor(d / 3600);
+  var m = Math.floor(d % 3600 / 60);
+  var s = Math.floor(d % 3600 % 60);
+
+  return ('0' + h).slice(-2) + ":" + ('0' + m).slice(-2) + ":" + ('0' + s).slice(-2);
+}
 
 function formCommand(cmd_verb, args_name, args_obj)
 {
@@ -1512,11 +1962,12 @@ function sendCmdSrvCmd(command, callback, buttonId, errCallback, cmdArgs) {
   //consoleLog ('buttonid = ' + buttonId);
 
   // skip command if init has already failed - not sure this works
-  if (initStat.active == true && initStat.error == true){
-  	var deferredObject = $.Deferred();
-  	logServerCommands (command, "failed", "Init already failed");
-  	return deferredObject.reject();
-  }
+
+  //if (initStat.active == true && initStat.error == true){ - This causes intermittant init failures
+  //	var deferredObject = $.Deferred();
+  //	logServerCommands (command, "failed", "Init already failed");
+  //	return deferredObject.reject();
+  //}
 
   var cmdVerb = command.split(" ")[0];
   // the ajax call escapes special characters, but converts space to plus sign
@@ -1564,7 +2015,8 @@ function sendCmdSrvCmd(command, callback, buttonId, errCallback, cmdArgs) {
     })
     .fail(jsonErrhandler)
     .always(function() {
-      make_button_disabled('#' + this.buttonId, false);
+    	if (this.buttonId != "")
+        make_button_disabled('#' + this.buttonId, false);
     });
 
     return resp;
@@ -1690,18 +2142,38 @@ function init ()
 
   getServerInfo(); // see if we can connect
 
+  initVars();
+
   $.when(
     //sendCmdSrvCmd("GET-ANS-TAGS", getAnsibleTags),
     sendCmdSrvCmd("GET-WHLIST", getWhitelist),
     $.when(sendCmdSrvCmd("GET-VARS", getInstallVars), sendCmdSrvCmd("GET-ANS", getAnsibleFacts),sendCmdSrvCmd("GET-CONF", getConfigVars),sendCmdSrvCmd("GET-IIAB-INI", procXsceIni)).done(initConfigVars),
     $.when(getLangCodes(),readKiwixCatalog(),sendCmdSrvCmd("GET-ZIM-STAT", procZimStatInit)).done(procZimCatalog),
     getOer2goStat(),
-    getSpaceAvail())
+    getSpaceAvail(),
+    getExternalDevInfo())
     .done(initDone)
     .fail(function () {
     	displayServerCommandStatus('<span style="color:red">Init Failed</span>');
     	consoleLog("Init failed");
     	})
+}
+
+function initVars(){
+	initManContSelections("internal");
+}
+
+function initManContSelections(dev, reset=false){
+	if (! manContSelections.hasOwnProperty(dev)){
+	  manContSelections[dev] = {};
+	  reset=true;
+	}
+
+	if (reset){
+	  manContSelections[dev]["zims"] = [];
+	  manContSelections[dev]["modules"] = [];
+	  manContSelections[dev]["sum"] = 0;
+  }
 }
 
 function initDone ()

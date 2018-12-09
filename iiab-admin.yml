@@ -21,7 +21,12 @@
     # doc_root: /library/www/html inherited from iiab
     adm_cons_force_ssl: False
     iiab_home_url: /home
-
+    # these belong somewhere else, but this makes them overrideable by iiab local vars
+    js_menu_install: True
+    cmdsrv_lower_job_priority_flag: "true" # json requires true, not True
+    cmdsrv_lower_job_priority_str: "/usr/bin/nice -n19 /usr/bin/ionice -c2 -n7 "
+    # because this is not globally in local vars we won't see iiab's role defaults
+    kiwix_url: /kiwix/
 
   vars_files:
   - "{{ iiab_repo }}/vars/default_vars.yml"
@@ -30,7 +35,21 @@
   - vars/default_vars.yml
   - vars/{{ ansible_distribution }}.yml
 
-  roles:
-      - { role: common }
-      - { role: cmdsrv }
-      - { role: console }
+  tasks:
+
+  - name: common
+    include_role:
+      name: common
+
+  - name: cmdsrv
+    include_role:
+      name: cmdsrv
+
+  - name: console
+    include_role:
+      name: console
+
+  - name: js-menu
+    include_role:
+      name: js-menu
+    when: js_menu_install

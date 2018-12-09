@@ -1,0 +1,20 @@
+{
+  "debug" : false,
+  "menu_lang" : "en",
+  "force_mobile_layout" : false,
+  "mobile_header_font" : "Open Sans",
+  "mobile_incl_description" : false,
+  "mobile_incl_extra_html" : false,
+  "desktop_header_font" : "Open Sans",
+  "desktop_incl_description" : true,
+  "desktop_incl_extra_html" : true,
+  "allow_kiwix_search" : true,
+  "allow_poweroff" : true,
+  "poweroff_prompt" : "Power Off",
+  "multi_tab" : false,
+  "tab_names" : ["Main"],
+  "menu_items_1" :
+    [
+
+    ]
+}

@@ -1,0 +1,23 @@
+{
+  "intended_use" : "html",
+  "lang" : "ar",
+  "logo_url" : "kaos.png",
+  "moddir" : "ar-kaos",
+  "menu_item_name" : "ar-kaos",
+  "title" : "أكاديمية خان",
+  "description" : "أكثر من 1800 أشرطة الفيديو على الرياضيات والعلوم، من الأساسي إلى مرحلة متقدمة. جميع محتوى خان أكاديمية متاح مجانا على <a href='http://www.khanacademy.org/'>www.khanacademy.org</a>",
+  "age_range" : "children,young adult,adult",
+  "category" : "educational",
+  "file_count" : null,
+  "index_mod_sample_url" : "http://dev.worldpossible.org/cgi/sample_wrap.php?moddir=ar-kaos",
+  "is_hidden" : false,
+  "ksize" : "10076768",
+  "module_id" : "106",
+  "prereq_id" : null,
+  "prereq_note" : "",
+  "rating" : "0.0",
+  "rsync_url" : "rsync://dev.worldpossible.org/rachelmods/ar-kaos",
+  "source_url" : "https://ar.khanacademy.org/",
+  "zip_ftp_url" : null,
+  "zip_http_url" : null
+}

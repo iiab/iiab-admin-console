@@ -1,0 +1,9 @@
+{
+    "intended_use": "zim",
+    "lang": "en",
+    "logo_url": "stackoverflow3.png",
+    "zim_name" : "raspberrypi.stackexchange.com_eng_all",
+    "title": "Raspberry Pi Stack Exchange",
+    "description": "Q&A for users and developers of hardware and software for Raspberry Pi.",
+    "extra_html": ""
+}

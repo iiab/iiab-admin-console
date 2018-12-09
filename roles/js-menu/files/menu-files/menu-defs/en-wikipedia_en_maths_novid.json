@@ -1,0 +1,9 @@
+{
+    "intended_use" : "zim",
+    "lang" : "en",
+    "logo_url" : "220px-Wikipedia-logo-v2.svg.png",
+    "zim_name" : "wikipedia_en_maths_novid",
+    "title" : "Wikipedia Math",
+    "description" : "Math articles from Wikipedia.",
+    "extra_html" : ""
+}

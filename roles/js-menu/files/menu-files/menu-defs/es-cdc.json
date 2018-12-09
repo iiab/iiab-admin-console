@@ -1,0 +1,10 @@
+{
+"intended_use" : "html",
+"lang" : "en",
+"logo_url" : "200px-US_CDC_logo.svg.png",
+"moddir": "en-cdc",
+"start_url" : "www.cdc.gov/spanish/index.html",
+"title" : "Artículos del sitio web de los CDC",
+"description" : "El CDC (Centros para el Control y la Prevención de Enfermedades) es uno de los principales componentes operativos del Departamento de Salud y Servicios Humanos de EE. UU. <BR> Este extracto es una pequeña parte del material en www.cdc.gov y no incluye audio, videos, pdfs y otros archivos de gran tamaño. Por lo tanto, algunos enlaces, incluso a otras partes de cdc.gov, solo funcionarán si está conectado a Internet.",
+"extra_html" : ""
+}

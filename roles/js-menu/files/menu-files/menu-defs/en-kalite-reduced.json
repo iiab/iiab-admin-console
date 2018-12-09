@@ -1,0 +1,10 @@
+{
+    "intended_use" : "kalite",
+    "lang" : "en",
+    "logo_url" : "khan-logo-vertical-transparent.png",
+    "menu_item_name" : "en-kalite",
+    "title" : "Khan Academy Lite",
+    "start_url" : "learn/khan/science/",
+    "description" : "Offline version of Khan Academy with almost 10,000 video lessons and also exercises &mdash; suitable for middle school, secondary school, and university.",
+    "extra_html" : ""
+}

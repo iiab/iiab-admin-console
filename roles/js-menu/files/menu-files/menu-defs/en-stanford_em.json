@@ -1,0 +1,9 @@
+{
+"intended_use" : "html",
+"lang" : "en",
+"logo_url" : "stanford_em2.jpg",
+"moddir": "en-stanford_em",
+"title" : "Stanford Emergency Medicine Videos",
+"description" : "A collection of Emergency Medicine training videos from the Stanford School of Medicine.",
+"extra_html" : ""
+}

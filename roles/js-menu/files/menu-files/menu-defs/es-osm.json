@@ -1,0 +1,8 @@
+{
+"intended_use":"osm",
+"lang" : "es",
+"logo_url" : "osm.jpg",
+"menu_item_name" : "es-osm",
+"title" : "OpenStreetMap",
+"description":"Mapas del mundo entero desde Internet-in-a-Box."
+}

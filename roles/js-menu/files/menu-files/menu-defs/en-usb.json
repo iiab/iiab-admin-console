@@ -1,0 +1,9 @@
+{
+"intended_use" : "webroot",
+"lang" : "en",
+"logo_url" : "content.jpg",
+"menu_item_name" : "en-usb",
+"moddir" : "usb",
+"title" : "USB",
+"description" : "Insert a USB stick/drive with content in a folder called 'usb' to publish [http://HOST/usb live content here]."
+}

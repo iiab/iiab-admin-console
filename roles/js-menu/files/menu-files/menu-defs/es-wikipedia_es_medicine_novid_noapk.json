@@ -1,0 +1,10 @@
+{
+"intended_use" : "zim",
+"lang" : "es",
+"logo_url" : "medwiki.png",
+"menu_item_name" : "es-wikipedia_es_medicine_novid",
+"zim_name" : "wikipedia_es_medicine_novid",
+"title" : "Enciclopedia Médica Offline de Wikipedia",
+"description" : "Se trata de una colección completa de todos los temas de Wikipedia sobre los cuidados relacionados con la salud, la anatomía y la medicación, en un formato que no necesita conexión a Internet.",
+"extra_html":""
+}

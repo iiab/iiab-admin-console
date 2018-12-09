@@ -42,7 +42,7 @@ iiab_oer2go_catalog = {}
 
 oer2go_cat_url = 'http://dev.worldpossible.org/cgi/json_api_v1.pl'
 rachel_mods_url = "rsync://dev.worldpossible.org/rachelmods/"
-iiab_cat_url = "http://medbox.iiab.me/catalog/iiab_catalog.json"
+iiab_cat_url = "http://med.iiab.me/catalog/iiab_catalog.json"
 
 # output files
 
@@ -79,11 +79,11 @@ def main ():
         if args.no_download:
             sys.stdout.write("GET-OER2GO-CAT ERROR - --no_download and --menu options are incompatible\n")
             sys.stdout.flush()
-            sys.exit(1)
+            sys.exit(99)
         if not os.path.isdir(iiab_menu_dir):
             sys.stdout.write("GET-OER2GO-CAT ERROR - iiab-menu not installed and --menu option given\n")
             sys.stdout.flush()
-            sys.exit(1)
+            sys.exit(99)
 
     # for now we will assume that old modules are still in the current catalog
     # get new oer2go catalog unless told not to
@@ -104,7 +104,7 @@ def main ():
         except (urllib2.URLError) as exc:
             sys.stdout.write("GET-OER2GO-CAT ERROR - " + str(exc.reason) +'\n')
             sys.stdout.flush()
-            sys.exit(1)
+            sys.exit(2)
 
         # now try to parse
         try:
@@ -113,7 +113,7 @@ def main ():
         except:
             sys.stdout.write("GET-OER2GO-CAT ERROR - " + str(sys.exc_info()[0]) + "," +  str(sys.exc_info()[1])  + '\n')
             sys.stdout.flush()
-            sys.exit(1)
+            sys.exit(3)
 
         # merge iiab_catalog.json if was downloaded otherwise assume was previously merged
         for item in iiab_catalog:

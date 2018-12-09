@@ -58,12 +58,15 @@ iiab_local_vars_file = None
 # Variables that should be read from config file
 # All of these variables will be read from config files and recomputed in init()
 iiab_repo = None
-iiab_base_path = None
+iiab_base = None
 cmdsrv_dbname = None
 
 cmdsrv_no_workers = 5
 cmdsrv_job_poll_sleep_interval = 1
 cmdsrv_max_concurrent_jobs = 7
+
+cmdsrv_lower_job_priority_flag = None
+cmdsrv_lower_job_priority_str= None
 
 # Derived Variables
 cmdsrv_dbpath = None
@@ -71,6 +74,7 @@ cmdsrv_dbpath = None
 # Constants - ToDo add to cmdsrv_config_file
 # for kiwix zims
 kiwix_catalog_file = None
+content_base = None
 zim_downloads_dir = None
 zim_download_prefix = None
 zim_working_dir = None
@@ -83,14 +87,25 @@ rachel_downloads_dir = None
 rachel_working_dir = None
 rachel_version = None
 modules_dir = None
-
+small_device_size = 250000
 # Global Variables
 last_command_rowid = 0
 last_job_rowid = 0
 
 active_commands = {}
 zims_wip = {}
+#
+# CLEAN UP
+#
+#zims_wip["DOWNLOAD"] = {}
+#zims_wip["IMPORT"] = {}
+#zims_wip["EXPORT"] = {}
+
+zims_downloading = {} # not used
+zims_copying = {} # not used
 oer2go_wip = {}
+#oer2go_downloading = {}
+#oer2go_copying = {}
 oer2go_installed = []
 jobs_requested = {}
 jobs_to_restart = {}
@@ -272,6 +287,8 @@ def job_minder_thread(client_url, worker_control_url, context=None):
         if job_info['has_dependent'] == "Y":
             prereq_info ['status'] = 'STARTED' # for both 'STARTED' and 'RESTARTED'
             prereq_jobs[job_id] = prereq_info
+        else:
+            add_wip(job_info)
         job_info = start_job(job_id, job_info, status='RESTARTED')
         jobs_running[job_id] = job_info
 
@@ -398,16 +415,12 @@ def job_minder_thread(client_url, worker_control_url, context=None):
                 # flag job for removal
                 jobs_to_close.append(job_id)
 
-        #print 'starting close jobs'
+        # print 'starting close jobs'
         # now remove closed jobs from running list
         for key in jobs_to_close:
             if jobs_running[key]['has_dependent'] == "N": # delete from command list if last step of command
                 active_commands.pop(jobs_running[key]['cmd_rowid'], None)
-                if jobs_running[key]['cmd'] == "INST-ZIMS":
-                    zims_wip.pop(jobs_running[key]['cmd_args']['zim_id'], None)
-                elif jobs_running[key]['cmd'] == "INST-OER2GO-MOD":
-                    oer2go_wip.pop(jobs_running[key]['cmd_args']['moddir'], None)
-
+                remove_wip(jobs_running[key])
             jobs_running.pop(key, None)
             if key in jobs_to_cancel:
                 jobs_to_cancel.pop(key, None)
@@ -433,20 +446,77 @@ def job_minder_thread(client_url, worker_control_url, context=None):
     #context.term()
     #sys.exit()
 
+def add_wip(job_info):
+    global zims_wip
+    global oer2go_wip
+
+    dest = "internal"
+    source = "kiwix"
+    action = ""
+
+    cmd = job_info['cmd']
+
+    if cmd in {"INST-ZIMS", "COPY-ZIMS"}:
+        zim_id = job_info['cmd_args']['zim_id']
+        if cmd == "INST-ZIMS":
+            action = "DOWNLOAD"
+            dest = "internal"
+            source = "kiwix"
+        else:
+            dest = job_info['cmd_args']['dest']
+            source = job_info['cmd_args']['source']
+            if cmd == "COPY-ZIMS" and dest == "internal":
+                action = "IMPORT"
+            elif cmd == "COPY-ZIMS" and dest != "internal":
+                action = "EXPORT"
+        zims_wip[zim_id] = {"cmd":cmd, "action":action, "dest":dest, "source":source}
+
+    elif cmd in {"INST-OER2GO-MOD", "COPY-OER2GO-MOD"}:
+        moddir = job_info['cmd_args']['moddir']
+        if cmd == "INST-OER2GO-MOD":
+            action = "DOWNLOAD"
+            source = "oer2go"
+        else:
+            dest = job_info['cmd_args']['dest']
+            source = job_info['cmd_args']['source']
+            if cmd == "COPY-OER2GO-MOD" and dest == "internal":
+                action = "IMPORT"
+            elif cmd == "COPY-OER2GO-MOD" and dest != "internal":
+                action = "EXPORT"
+        oer2go_wip[moddir] = {"cmd":cmd, "action":action, "dest":dest, "source":source}
+
+def remove_wip(job_info):
+    global zims_wip
+    global oer2go_wip
+
+    #print job_info
+    #print "in remove_wip"
+
+    if job_info['cmd'] in ["INST-ZIMS", "COPY-ZIMS"]:
+        zims_wip.pop(job_info['cmd_args']['zim_id'], None)
+    elif job_info['cmd'] in ["INST-OER2GO-MOD", "COPY-OER2GO-MOD"]:
+        oer2go_wip.pop(job_info['cmd_args']['moddir'], None)
+
 def start_job(job_id, job_info, status='STARTED'):
     global running_job_count
     global ansible_running_flag
     global prereq_jobs
+    global cmdsrv_lower_job_priority_flag
+    global cmdsrv_lower_job_priority_str
 
     job_info['output_file'] = '/tmp/job-' + str(job_id)
     job_info['file'] = open(job_info['output_file'], 'w')
-    args = shlex.split(job_info['job_command'])
+    if cmdsrv_lower_job_priority_flag:
+        args = shlex.split(cmdsrv_lower_job_priority_str + job_info['job_command'])
+    else:
+        args = shlex.split(job_info['job_command'])
     job_info['subproc'] = subprocess.Popen(args, stdout=job_info['file'], stderr=subprocess.STDOUT)
     job_info['job_pid'] = job_info['subproc'].pid
     job_info['status'] = status
     job_info['status_datetime'] = str(datetime.now())
     job_info['job_output'] = ""
 
+    #print job_info
     if job_id in prereq_jobs:
         prereq_jobs[job_id]['status'] = 'STARTED'
 
@@ -466,7 +536,7 @@ def start_job(job_id, job_info, status='STARTED'):
 
     return (job_info)
 
-def end_job(job_id, job_info, status):
+def end_job(job_id, job_info, status): # modify to use tail of job_output
 
     global prereq_jobs
     global jobs_running
@@ -477,8 +547,14 @@ def end_job(job_id, job_info, status):
 
     # load output from tmp file
     output_file = jobs_running[job_id]['output_file']
-    file = open(output_file, 'r')
-    job_output = file.read()
+    #file = open(output_file, 'r')
+    #job_output = file.read()
+    #file.close()
+
+    command = "tail " + output_file
+    args = shlex.split(command)
+    job_output = subprocess.check_output(args)
+
     # make html safe
     #job_output = escape_html(job_output)
 
@@ -486,7 +562,7 @@ def end_job(job_id, job_info, status):
     job_output = filter(lambda x: x in string.printable, job_output)
 
     jobs_running[job_id]['job_output'] = job_output
-    file.close()
+
 
     # job_info['status_datetime'] = str(datetime.now()) ?
     jobs_running[job_id]['status'] = status
@@ -533,11 +609,7 @@ def cancel_req_job(job_id, job_info):
     # Remove Active Command and any WIP tracking
     if job_info['has_dependent'] == "N": # delete from command list if last step of command
         active_commands.pop(job_info['cmd_rowid'], None)
-        if job_info['cmd'] == "INST-ZIMS":
-            zims_wip.pop(job_info['cmd_args']['zim_id'], None)
-        elif jobs_running[key]['cmd'] == "INST-OER2GO-MOD":
-            oer2go_wip.pop(jobs_running[key]['cmd_args']['moddir'], None)
-
+        remove_wip(job_info)
     return (job_info)
 
 def cmd_proc_thread(worker_data_url, worker_control_url, context=None):
@@ -601,6 +673,8 @@ def cmd_handler(cmd_msg):
         "GET-MEM-INFO": get_mem_info,
         "GET-SPACE-AVAIL": get_space_avail,
         "GET-STORAGE-INFO": get_storage_info_lite,
+        "GET-EXTDEV-INFO": get_external_device_info,
+        "REMOVE-USB": umount_usb,
         "RUN-ANSIBLE": run_ansible,
         "RESET-NETWORK": run_ansible,
         "GET-JOB-STAT": get_last_jobs_stat,
@@ -612,18 +686,21 @@ def cmd_handler(cmd_msg):
         "GET-KIWIX-CAT": get_kiwix_catalog,
         "GET-ZIM-STAT": get_zim_stat,
         "INST-ZIMS": install_zims,
+        "COPY-ZIMS": copy_zims,
+        "MAKE-KIWIX-LIB": make_kiwix_lib, # runs as job
+        "RESTART-KIWIX": restart_kiwix, # runs immediately
         "GET-OER2GO-CAT": get_oer2go_catalog,
         "INST-OER2GO-MOD": install_oer2go_mod,
+        "COPY-OER2GO-MOD": copy_oer2go_mod,
         "GET-OER2GO-STAT": get_oer2go_stat,
         "GET-RACHEL-STAT": get_rachel_stat,
         "INST-RACHEL": install_rachel,
         "DEL-DOWNLOADS": del_downloads,
         "DEL-MODULES": del_modules,
-        "RESTART-KIWIX": restart_kiwix,
         "REBOOT": reboot_server,
         "POWEROFF": poweroff_server,
-        "REMOTE-ADMIN-CTL": remote_admin_ctl, #true/false
-        "GET-REMOTE-ADMIN-STATUS": get_remote_admin_status, #returns activated
+        #"REMOTE-ADMIN-CTL": remote_admin_ctl, #true/false
+        #"GET-REMOTE-ADMIN-STATUS": get_remote_admin_status, #returns activated
         "CHGPW": change_password
         }
 
@@ -774,6 +851,7 @@ def del_downloads(cmd_info):
     return (resp)
 
 def del_modules(cmd_info): # includes zims
+    device = cmd_info['cmd_args']['device']
     mod_type = cmd_info['cmd_args']['mod_type']
     if mod_type not in ["zims", "modules"]:
         return cmd_malformed(cmd_info['cmd'])
@@ -781,23 +859,32 @@ def del_modules(cmd_info): # includes zims
     mod_list = cmd_info['cmd_args']['mod_list']
     error_flag = False
 
+    if mod_type == "zims":
+        target_dir = zim_dir
+    else:
+        target_dir = modules_dir
+
+    if device != "internal":
+        target_dir = '/media/usb' + device[-1] + target_dir # prevent injection of other device
+
     for mod in mod_list:
         try:
             if mod_type == "zims":
-                filelist=glob(zim_dir + "content/" + mod + "*")
+                filelist=glob(target_dir + "content/" + mod + "*")
                 for file in filelist:
                     os.remove(file)
 
-                shutil.rmtree(zim_dir + "index/" + mod + ".idx", ignore_errors=True)
+                shutil.rmtree(target_dir + "index/" + mod + ".idx", ignore_errors=True)
             else: # modules
-                shutil.rmtree(modules_dir + mod)
+                shutil.rmtree(target_dir + mod)
         except:
             # ignore for now but report
             error_flag = True
             pass
 
-    if mod_type == "zims":
-        rc = subprocess.call(["/usr/bin/iiab-make-kiwix-lib"])
+    if mod_type == "zims" and device == "internal":
+        make_kiwix_lib(cmd_info) # create job to reindex kiwix
+        #rc = subprocess.call(["/usr/bin/iiab-make-kiwix-lib"])
 
     if error_flag:
         resp = cmd_success_msg(cmd_info['cmd'], "- Some errors occurred")
@@ -847,16 +934,17 @@ def get_space_avail(cmd_info):
     space_avail = {}
     space_avail['library_on_root'] = True
     libr_attr = {}
-    cmd = df_program + " -m"
+    #cmd = df_program + " -m" get size info in K not M
+    cmd = df_program
     cmd_args = shlex.split(cmd)
     outp = subprocess.check_output(cmd_args)
     dev_arr = outp.split('\n')
     for dev_str in dev_arr[1:-1]:
        dev_attr = dev_str.split()
        if dev_attr[5] == '/':
-           space_avail['root'] = parse_df_str(dev_str)
+           space_avail['root'] = parse_df_str(dev_str, "in k")
        if dev_attr[5] == '/library':
-           space_avail['library'] = parse_df_str(dev_str)
+           space_avail['library'] = parse_df_str(dev_str, "in k")
            space_avail['library_on_root'] = False
     if ('root' in space_avail):
         resp = json.dumps(space_avail)
@@ -868,6 +956,126 @@ def get_storage_info_lite(cmd_info):
     outp = subprocess.check_output([df_program, "-lh"])
     json_outp = json_array("system_fs", outp)
     return (json_outp)
+
+def get_external_device_info(cmd_info):
+    extdev_info = {}
+    outp = subprocess.check_output("scripts/get_ext_devs.sh")
+    dev_arr = outp.split('\n')
+
+    # dev_arr gets a dummy element due to final \n
+    for dev in dev_arr:
+        if len(dev) == 0:
+            continue
+        dev_info = dev.split()
+        #print dev
+        #print dev_info
+        if float(dev_info[1]) < small_device_size: # don't include small partitions that might be boot
+            continue
+        dev_name = dev_info[5]
+        extdev_info[dev_name] = {}
+        extdev_info[dev_name]['dev_size_k'] = dev_info[1]
+        extdev_info[dev_name]['dev_used_k'] = dev_info[2]
+        extdev_info[dev_name]['dev_sp_avail_k'] = dev_info[3]
+        extdev_info[dev_name]['oer2go_modules'] = []
+        extdev_info[dev_name]['zim_modules'] = {}
+        lib_dir = dev_name + content_base
+
+        # in future we may lookup fs type and other properties with blkid
+
+        if os.path.exists(lib_dir):
+            extdev_info[dev_name]['oer2go_modules'] = get_oer2go_installed_list(dev_name)
+            if iiab_ini['kiwix']: # if kiwix installed catalog zims
+                extdev_info[dev_name]['zim_modules'] = get_ext_zim_catalog(dev_name)
+
+            # put local_content here
+
+    resp = json.dumps(extdev_info)
+    return (resp)
+
+def get_ext_zim_catalog(dev_name):
+    iiab_zim_path = dev_name + zim_dir
+    kiwix_library_xml_tmp = iiab_zim_path + "/library.xml"
+    command = "/usr/bin/iiab-make-kiwix-lib.py --no_tmp --device " + dev_name
+    args = shlex.split(command)
+    try:
+        outp = subprocess.check_output(args)
+    except: #skip things that don't work
+        pass
+    usb_catalog = read_library_xml(kiwix_library_xml_tmp)
+    return (usb_catalog)
+
+def get_ext_zim_catalog2(dev_name): # keeping for the moment, but not used
+    kiwix_manage = iiab_base + "/kiwix/bin/kiwix-manage"
+    kiwix_library_xml_tmp = "/tmp/library.xml"
+    kiwix_exclude_attr = ["favicon"]
+    iiab_zim_path = dev_name + zim_dir
+    content = iiab_zim_path + "/content/"
+    index = iiab_zim_path + "/index/"
+    usb_catalog = {}
+
+    files_processed = {}
+    flist = os.listdir(content)
+    flist.sort()
+    for filename in flist:
+        zimpos = filename.find(".zim")
+        if zimpos != -1:
+            filename = filename[:zimpos]
+            if filename not in files_processed:
+                files_processed[filename] = True
+                zimname = content + filename + ".zim"
+                zimidx = index + filename + ".zim.idx"
+                command = kiwix_manage + " " + kiwix_library_xml_tmp + " add " + zimname
+                if os.path.isdir (zimidx): # only declare index if exists (could be embedded)
+                    command += " -i " + zimidx
+                #print command
+                args = shlex.split(command)
+                try:
+                    outp = subprocess.check_output(args)
+                except: #skip things that don't work
+                    #print 'skipping ' + filename
+                    pass
+
+    usb_catalog = read_library_xml(kiwix_library_xml_tmp, kiwix_exclude_attr)
+    try:
+        os.remove(kiwix_library_xml_tmp)
+    except OSError:
+        pass
+    return (usb_catalog)
+
+def umount_usb(cmd_info):
+    if 'device' in cmd_info['cmd_args']:
+        device = cmd_info['cmd_args']['device']
+    else:
+        return cmd_malformed(cmd_info['cmd'])
+
+    device = '/media/usb' + device[-1] # prevent injection of other device
+
+    # df device |grep device
+    # first field is block dev
+    # can then umount /dev/sdx* to get boot partition of sdcard
+
+    # see if device involved in a running command
+    for job_id in jobs_running:
+        job_info = jobs_running[job_id]
+        if job_info['cmd'] in ["COPY-ZIMS","COPY-OER2GO-MOD"]:
+            if job_info['cmd_args']['source'] == device or job_info['cmd_args']['dest'] == device:
+                resp = cmd_error(cmd="REMOVE-USB", msg="Device " + device + " in use by another command.")
+                return resp
+
+    check_use = "lsof -t " + device
+    umount = "umount " + device
+    rc = subprocess.call(check_use, shell=True) # 1 means nothing open
+    if rc != 1:
+        resp = cmd_error(cmd="REMOVE-USB", msg="Device " + device + " has open files.")
+        return resp
+
+    rc = subprocess.call(umount, shell=True) # 32 means not mounted
+    if rc == 32:
+        resp = cmd_error(cmd="REMOVE-USB", msg="Device " + device + " is not mounted.")
+        return resp
+
+    resp = cmd_success(cmd_info['cmd'])
+    return resp
 
 # the following does not work on lvm or raid or iso usb drives
 # we wil fix later
@@ -979,13 +1187,18 @@ def get_storage_info_df(part_dev):
     #print part_prop
     return (part_prop)
 
-def parse_df_str(df_str):
+def parse_df_str(df_str, size_unit="megs"):
     dev_attr = {}
     dev_attr_array = df_str.split()
     dev_attr_array = [a for a in dev_attr_array if a not in ['']]
     dev_attr['dev'] = dev_attr_array[0]
-    dev_attr['size_in_megs'] = dev_attr_array[1]
-    dev_attr['avail_in_megs'] = dev_attr_array[3]
+    if size_unit == "megs":
+        dev_attr['size_in_megs'] = dev_attr_array[1]
+        dev_attr['avail_in_megs'] = dev_attr_array[3]
+    else:
+        dev_attr['size_in_k'] = dev_attr_array[1]
+        dev_attr['avail_in_k'] = dev_attr_array[3]
+
     dev_attr['mount_point'] = dev_attr_array[5]
     return (dev_attr)
 
@@ -1037,27 +1250,48 @@ def get_kiwix_catalog(cmd_info):
 def get_zim_stat(cmd_info):
     all_zims = {}
     all_zims['WIP'] = zims_wip
+
     all_zims['INSTALLED'] = {}
 
     lib_xml_file = zim_dir + "/library.xml"
+    all_zims['INSTALLED'] = read_library_xml(lib_xml_file)
 
+    resp = json.dumps(all_zims)
+    return (resp)
+
+def read_library_xml(lib_xml_file, kiwix_exclude_attr=[""]):
+    kiwix_exclude_attr.append("id") # don't include id
+    kiwix_exclude_attr.append("favicon") # don't include large favicon
+    zims_installed = {}
     try:
         tree = ET.parse(lib_xml_file)
         root = tree.getroot()
 
         for child in root:
-            attributes = child.attrib
-            if 'id' in attributes:
-                id = attributes['id']
-                all_zims['INSTALLED'][id] = attributes
+            attributes = {}
+            if 'id' in child.attrib:
+                id = child.attrib['id']
+                for attr in child.attrib:
+                    if attr not in kiwix_exclude_attr:
+                        attributes[attr] = child.attrib[attr] # copy if not id or in exclusion list
+                zims_installed[id] = attributes
     except IOError:
-        all_zims['INSTALLED'] = {}
-
-    resp = json.dumps(all_zims)
-    return (resp)
+        zims_installed = {}
+    return zims_installed
 
 def get_oer2go_catalog(cmd_info):
-    outp = subprocess.check_output(["scripts/get_oer2go_catalog"])
+    err_msg = {
+    "1":"Aw Jeez! The OER2GO catalog is offline again. Keeping the previous catalog.",
+    "2":"Now where did our catalog go? Was here a minute ago.",
+    "3":"Dang! Can't parse the OER2GO catalog because of junk characters. Keeping the previous catalog.",
+    "99":"Syntax Error"
+    }
+    try:
+        outp = subprocess.check_output(["scripts/get_oer2go_catalog"])
+    except subprocess.CalledProcessError as e:
+        resp = cmd_error(cmd='GET-OER2GO-CAT', msg=err_msg[str(e.returncode)])
+        return resp
+
     if outp == "SUCCESS":
         read_oer2go_catalog()
         resp = cmd_success("GET-OER2GO-CAT")
@@ -1195,8 +1429,8 @@ def install_zims(cmd_info):
                 except OSError:
                     resp = cmd_error(cmd='INST-ZIMS', msg='Error creating directory in Command')
                     return resp
-            else:
-                return cmd_malformed(cmd_info['cmd'])
+    else:
+        return cmd_malformed(cmd_info['cmd'])
 
     # at this point we can create all the jobs
 
@@ -1236,6 +1470,83 @@ def install_zims(cmd_info):
 
     return resp
 
+def copy_zims(cmd_info):
+
+    if 'cmd_args' in cmd_info:
+        source = cmd_info['cmd_args']['source']
+        dest = cmd_info['cmd_args']['dest']
+        zim_id = cmd_info['cmd_args']['zim_id']
+        file_ref = cmd_info['cmd_args']['file_ref']
+    else:
+        return cmd_malformed(cmd_info['cmd'])
+
+    if 'internal' not in [source, dest]:
+        return (cmd_error(msg="Invalid Source or Destination."))
+
+    if 'usb' not in source and 'usb' not in dest:
+        return (cmd_error(msg="Invalid Source or Destination."))
+
+    if source == 'internal':
+        source = ''
+        dest = '/media/usb' + dest[-1] # protect against injection
+    else:
+        source = '/media/usb' + source[-1]
+        dest = ''
+        # will add to zims_copying when job created
+
+    # rsync zim files; if copying to internal, copy to working and then move
+    if dest != '': # copy directly to usb
+        # create /library etc
+        zim_content_dest = dest + zim_content_dir
+        zim_index_dest = dest + zim_index_dir
+        if not os.path.isdir(zim_content_dest):
+            os.makedirs(zim_content_dest)
+        job_command = "scripts/copy_zim.sh " + source + zim_content_dir + file_ref + ".zim* " + zim_content_dest
+        #job_command = "/usr/bin/rsync -Pav --size-only " + source + zim_content_dir + file_ref + ".zim* " + zim_content_dest
+
+        zimidx = source + zim_index_dir + file_ref + ".zim.idx"
+        if os.path.isdir (zimidx): # only copy index if exists (could be embedded)
+            if not os.path.isdir(zim_index_dest):
+                os.makedirs(zim_index_dest)
+            job_id = request_one_job(cmd_info, job_command, 1, -1, "Y")
+            # copy index
+            #job_command = "/usr/bin/rsync -Pav --size-only " + zimidx + " " + zim_index_dest
+            job_command = "scripts/copy_zim.sh " + zimidx + " " + zim_index_dest
+            resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=2, depend_on_job_id=job_id, has_dependent="N")
+
+        else:
+            resp = request_job(cmd_info, job_command) # only one command for zim
+    else: # copy to working and move to internal
+        targetDir = zim_working_dir + file_ref + "/data"
+        if not os.path.exists(targetDir):
+            try:
+                os.makedirs(targetDir + "/content")
+            except OSError:
+                resp = cmd_error(msg='Error creating directory ' + targetDir)
+                return resp
+
+        job_command = "scripts/copy_zim.sh " + source + zim_content_dir + file_ref + ".zim* " + dest + targetDir + "/content"
+        job_id = request_one_job(cmd_info, job_command, 1, -1, "Y")
+        #print job_command
+
+        last_step = 2
+        zimidx = source + zim_index_dir + file_ref + ".zim.idx"
+        if os.path.isdir (zimidx): # only copy index if exists (could be embedded)
+            job_command = "/usr/bin/rsync -Pav --size-only " + zimidx + " " + dest + targetDir + "/index"
+            job_id = request_one_job(cmd_info, job_command, 2, -1, "Y")
+            last_step = 3
+            #print job_command
+        #job_command = "scripts/zim_install_move.sh " + zimFileRef + ".zim"
+        job_command = "scripts/zim_install_step3.sh " + file_ref
+        resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=last_step, depend_on_job_id=job_id, has_dependent="N")
+        #print job_command
+    return resp
+
+def make_kiwix_lib(cmd_info):
+    job_command = "/usr/bin/iiab-make-kiwix-lib"
+    resp = request_job(cmd_info=cmd_info, job_command=job_command)
+    return resp
+
 def install_oer2go_mod(cmd_info):
 
     global ansible_running_flag
@@ -1273,8 +1584,47 @@ def install_oer2go_mod(cmd_info):
     #print job_command
     resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=2, depend_on_job_id=job_id, has_dependent="N")
 
-    oer2go_wip[moddir] = oer2go_catalog[moddir] # track wip for front end
+    # oer2go_downloading added at job creation to track wip for front end
 
+    return resp
+
+def copy_oer2go_mod(cmd_info):
+    if 'cmd_args' in cmd_info:
+        source = cmd_info['cmd_args']['source']
+        dest = cmd_info['cmd_args']['dest']
+        file_ref = cmd_info['cmd_args']['file_ref']
+    else:
+        return cmd_malformed(cmd_info['cmd'])
+
+    if 'internal' not in [source, dest]:
+        return (cmd_error(msg="Invalid Source or Destination."))
+
+    if 'usb' not in source and 'usb' not in dest:
+        return (cmd_error(msg="Invalid Source or Destination."))
+
+    if source == 'internal':
+        source = ''
+        dest = '/media/usb' + dest[-1] # protect against injection
+    else:
+        source = '/media/usb' + source[-1]
+        dest = ''
+        # oer2go_copying set in job creation to track wip for front end
+
+    content_source = source + modules_dir
+    content_dest = dest + modules_dir
+
+    if dest != '': # copy directly to usb
+        # create /library etc
+        if not os.path.isdir(content_dest):
+            os.makedirs(content_dest)
+        job_command = "/usr/bin/rsync -rPt --size-only " + content_source + file_ref + " " + content_dest
+        resp = request_job(cmd_info, job_command)
+    else: # copy to working and mv
+        working_dest = dest + rachel_working_dir
+        job_command = "/usr/bin/rsync -rPt --size-only " + content_source + file_ref + " " + working_dest
+        job_id = request_one_job(cmd_info, job_command, 1, -1, "Y")
+        job_command = "scripts/oer2go_install_move.sh " + file_ref
+        resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=2, depend_on_job_id=job_id, has_dependent="N")
     return resp
 
 def get_oer2go_stat(cmd_info):
@@ -1283,7 +1633,9 @@ def get_oer2go_stat(cmd_info):
     refresh_oer2go_installed() # we will no longer use the module downloaded attribute in oer2go_catalog
 
     all_oer2go = {}
-    all_oer2go['WIP'] = oer2go_wip.keys()
+
+    all_oer2go['WIP'] = oer2go_wip
+
     all_oer2go['INSTALLED'] = oer2go_installed
 
     resp = json.dumps(all_oer2go)
@@ -1291,12 +1643,16 @@ def get_oer2go_stat(cmd_info):
 
 def refresh_oer2go_installed():
     global oer2go_installed
-    oer2go_installed = []
-    dirlist = glob(modules_dir + "/*/")
+    oer2go_installed = get_oer2go_installed_list() # could go further and get rid of oer2go_installed
+
+def get_oer2go_installed_list(device=""):
+    oer2go_installed_list = []
+    dirlist = glob(device + modules_dir + "/*/")
     for modpath in dirlist:
         moddir = modpath.split('/')[-2] # can include non-oer2go items so remove them
         if moddir in oer2go_catalog:
-            oer2go_installed.append(moddir)
+            oer2go_installed_list.append(moddir)
+    return oer2go_installed_list
 
 def install_rachel(cmd_info):
 
@@ -1496,14 +1852,10 @@ def request_one_job(cmd_info, job_command, cmd_step_no, depend_on_job_id, has_de
     if has_dependent == "Y":
         prereq_info ['status'] = job_info['status']
         prereq_jobs[job_id] = prereq_info
-    else:
-        if cmd_info['cmd'] == "INST-ZIMS":
-            id = cmd_info['cmd_args']['zim_id']
-            if id in kiwix_catalog:
-                zims_wip[id] = kiwix_catalog[id]
-            else:
-                log(syslog.LOG_ERR, "Error: Unknown kiwix zim - %s." % id)
-                #print "unknown kiwix zim - ", id
+
+    if cmd_step_no == 1:
+        add_wip(job_info)
+
     return job_id
 
 def cancel_job(cmd_info):
@@ -1525,11 +1877,12 @@ def cancel_job(cmd_info):
         return ('{"Error": "Job  ' + str(job_id) + ' Not Running or Scheduled."}')
 
 def get_last_jobs_stat(cmd_info):
+    # make changes to cut down on volumn of data
     db_lock.acquire() # will block if lock is already held
     try:
         conn = sqlite3.connect(cmdsrv_dbpath)
-        cur = conn.execute ("SELECT jobs.rowid, job_command, job_output, job_status, last_update_datetime, cmd_msg FROM jobs, commands where cmd_rowid = commands.rowid ORDER BY jobs.rowid DESC LIMIT 30")
-        last_jobs = cur.fetchall()
+        cur = conn.execute ("SELECT jobs.rowid, job_command, job_output, job_status, strftime('%m-%d %H:%M', jobs.create_datetime), strftime('%s', jobs.create_datetime), strftime('%s',last_update_datetime), strftime('%s','now', 'localtime'), cmd_msg FROM jobs, commands where cmd_rowid = commands.rowid ORDER BY jobs.rowid DESC LIMIT 30")
+        status_jobs = cur.fetchall()
         conn.close()
     except sqlite3.Error, e:
         tprint ("Error %s:" % e.args[0])
@@ -1541,38 +1894,43 @@ def get_last_jobs_stat(cmd_info):
 
     #print "job running"
     #print jobs_running
-    # get status output for incomplete ansible jobs
-    last_jobs_cc = []
-    for job in last_jobs:
+    # get status output for recent jobs
+    status_jobs_return = []
+    for job in status_jobs:
+        status_job = {}
         job_id = job[0]
+        status_job['job_id'] = job_id
+        status_job['job_command'] = job[1]
+        status_job['job_output'] = job[2]
+        status_job['job_status'] = job[3]
+        status_job['create_datetime'] = job[4]
+        create_datetime_sec = job[5]
+        last_update_datetime_sec = job[6]
+        cur_time_sec = job[7]
+        # elapsed time is from creation, not start
+        status_job['elapsed_sec'] = int(last_update_datetime_sec) - int(create_datetime_sec) # not valid for running jobs
+        status_job['cmd_msg'] = job[8]
+
         if job_id in jobs_running:
-            job_cc = []
-            job_cc.append(job[0])
-            job_cc.append(job[1])
-            job_output = job[2]
-            #if jobs_running[job_id]['cmd'] == "RUN-ANSIBLE" and jobs_running[job_id]['status'] == "STARTED":
             if jobs_running[job_id]['status'] == "STARTED" or jobs_running[job_id]['status'] == "RESTARTED":
+                status_job['elapsed_sec'] = int(cur_time_sec) - int(create_datetime_sec) # last_update_datetime not update while running
                 # load output from tmp file
                 output_file = jobs_running[job_id]['output_file']
-                file = open(output_file, 'r')
-                job_output = file.read()
-                #job_output = escape_html(job_output)
-                file.close()
+                #print output_file
+
+                command = "tail " + output_file
+                args = shlex.split(command)
+                job_output = subprocess.check_output(args)
+                status_job['job_output'] = job_output
+
                 #print "job output" + job_output
 
-            job_cc.append(job_output)
-            job_cc.append(job[3])
-            job_cc.append(job[4])
-            job_cc.append(job[5])
+        status_jobs_return.append(status_job)
 
-            last_jobs_cc.append(job_cc)
-        else:
-            last_jobs_cc.append(job)
-
-    resp = json.dumps(last_jobs_cc)
+    resp = json.dumps(status_jobs_return)
     return resp
 
-def get_jobs_running(cmd_info):
+def get_jobs_running(cmd_info): # Not used
     global jobs_running
     today = str(date.today())
     job_stat = {}
@@ -2032,11 +2390,10 @@ def get_incomplete_jobs():
             active_commands[cmd_rowid] = cmd_msg
             if job_info['cmd'] == "INST-ZIMS":
                 id = job_info['cmd_args']['zim_id']
-                if id in kiwix_catalog:
-                    zims_wip[id] = kiwix_catalog[id]
-                else:
+                if id not in kiwix_catalog:
                     log(syslog.LOG_ERR, "Error: Unknown kiwix zim - %s." % id)
                     #print "unknown kiwix zim - ", id
+                # add to wip in start_job
 
         else: # cancel duplicate
             jobs_to_cancel[job_id] = job_info
@@ -2076,9 +2433,12 @@ def app_config():
     global cmdsrv_no_workers
     global cmdsrv_job_poll_sleep_interval
     global cmdsrv_max_concurrent_jobs
+    global cmdsrv_lower_job_priority_flag
+    global cmdsrv_lower_job_priority_str
     global cmdsrv_pid_file
     global cmdsrv_ready_file
     global kiwix_catalog_file
+    global content_base
     global zim_downloads_dir
     global zim_working_dir
     global zim_dir
@@ -2117,9 +2477,12 @@ def app_config():
     cmdsrv_no_workers = conf['cmdsrv_no_workers']
     cmdsrv_job_poll_sleep_interval = conf['cmdsrv_job_poll_sleep_interval']
     cmdsrv_max_concurrent_jobs = conf['cmdsrv_max_concurrent_jobs']
+    cmdsrv_lower_job_priority_flag = conf['cmdsrv_lower_job_priority_flag']
+    cmdsrv_lower_job_priority_str = conf['cmdsrv_lower_job_priority_str']
     cmdsrv_pid_file = conf['cmdsrv_pid_file']
     cmdsrv_ready_file = conf['cmdsrv_ready_file']
     kiwix_catalog_file = conf['kiwix_catalog_file']
+    content_base = conf['content_base']
     zim_dir = conf['zim_dir']
     zim_content_dir = zim_dir + "content/"
     zim_index_dir = zim_dir + "index/"
@@ -2141,11 +2504,8 @@ def app_config():
 # These two were taken from the OLPC idmgr application
 
 def compute_vars():
-    global zim_content_dir
-    global zim_index_dir
-
-    zim_content_dir = zim_dir + "/content/"
-    zim_index_dir = zim_dir + "/index/"
+    # nothing to do at this point
+    return
 
 def set_ready_flag(on_off):
     if on_off == "ON":

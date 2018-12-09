@@ -56,28 +56,33 @@ def send_command(cmd, start_ms):
 
     try:
         context = zmq.Context()
-        print "Connecting to server..."
+        #print "Connecting to server..."
         socket = context.socket(zmq.DEALER)
         socket.connect ("ipc://%s" % ipc_sock)
-        # socket.setsockopt(zmq.SOCKOPT_LINGER, 0) this should be the default for close() and is not in python binding
-        poll = zmq.Poller()
-        poll.register(socket, zmq.POLLIN)
+        try:
+            # socket.setsockopt(zmq.SOCKOPT_LINGER, 0) this should be the default for close() and is not in python binding
+            poll = zmq.Poller()
+            poll.register(socket, zmq.POLLIN)
 
-        socket.send_string (send_msg)
-        socks = dict(poll.poll(REQUEST_TIMEOUT))
+            socket.send_string (send_msg)
+            socks = dict(poll.poll(REQUEST_TIMEOUT))
 
-        if socket in socks and socks[socket] == zmq.POLLIN:
-            reply_msg = socket.recv()
-            if '"Error":' not in reply_msg:
-                cur_ms = time.time()
-                elapsed_ms = cur_ms - start_ms
-                reply_msg = '{"Data": ' + reply_msg + ',"Resp_time": "' + str(elapsed_ms) + '"}'
-        else:
-            reply_msg = '{"Error": "No Response from CMDSRV in ' + str(REQUEST_TIMEOUT) + ' milliseconds"' + alert_param
+            if socket in socks and socks[socket] == zmq.POLLIN:
+                reply_msg = socket.recv()
+                if '"Error":' not in reply_msg:
+                    cur_ms = time.time()
+                    elapsed_ms = cur_ms - start_ms
+                    reply_msg = '{"Data": ' + reply_msg + ',"Resp_time": "' + str(elapsed_ms) + '"}'
+            else:
+                reply_msg = '{"Error": "No Response from CMDSRV in ' + str(REQUEST_TIMEOUT) + ' milliseconds"' + alert_param
 
-        socket.setsockopt(zmq.LINGER, 0)
-        socket.close()
-        poll.unregister(socket)
+            socket.setsockopt(zmq.LINGER, 0)
+        finally:
+            socket.close()
+            try:
+                poll.unregister(socket)
+            except Exception:
+                pass
 
     except Exception as e:
         reply_msg = '{"Error": "' + e.message + '"' + alert_param

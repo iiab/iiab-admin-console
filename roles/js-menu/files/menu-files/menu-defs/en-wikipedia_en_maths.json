@@ -1,0 +1,9 @@
+{
+    "intended_use" : "zim",
+    "lang" : "en",
+    "logo_url" : "220px-Wikipedia-logo-v2.svg.png",
+    "zim_name" : "wikipedia_en_maths",
+    "title" : "Wikipedia Math",
+    "description" : "A complete collection of 13,984 math-related articles from Wikipedia in an offline format.<p>Like Wikipedia all content is open access, meaning that it is free to download, reuse, share, and build upon.",
+    "extra_html" : ""
+}
