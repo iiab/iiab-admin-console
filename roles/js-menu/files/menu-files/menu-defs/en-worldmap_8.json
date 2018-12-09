@@ -1,0 +1,11 @@
+{
+"intended_use" : "html",
+"lang" : "en",
+"logo_url" : "osm.jpg",
+"menu_item_name" : "en-worldmap_8",
+"start_url" : "map.html",
+"moddir" : "en-worldmap_8",
+"title" : "OpenStreetMap",
+"description" : "Maps of the entire world from Internet-in-a-Box."
+}
+

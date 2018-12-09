@@ -1,0 +1,20 @@
+{
+ "rating": "3.0",
+ "intended_use":"kalite",
+ "lang" : "es",
+ "age_range": "children,young adult,adult",
+ "zip_ftp_url": null,
+ "module_id": "58",
+ "is_hidden": false,
+ "category": "educational",
+ "title": "Khan Academy en Español",
+ "prereq_id": null,
+ "moddir": "es-kalite",
+ "ksize": "18363684",
+ "logo_url": "es-kalite.png",
+ "description": "KA Lite incluye miles de videos y ejercicios de matemáticas y ciencia - un recurso de aprendizaje increíble traído a usted por la Academia Khan y la Fundación para el Aprendizaje de Igualdad.",
+ "zip_http_url": null,
+ "file_count": "52333",
+ "menu_item_name": "es-kalite",
+ "extra_html" : "es-kalite.html"
+}

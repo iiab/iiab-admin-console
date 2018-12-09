@@ -1,0 +1,11 @@
+{
+    "intended_use" : "html",
+    "TRY_intended_use" : "webroot",
+    "lang" : "en",
+    "logo_url" : "osm.jpg",
+    "moddir" : "en-osm-omt-all",
+    "TRY_moddir" : "maps/",
+    "title" : "OpenStreetMap",
+    "description" : "Zoomable maps of the entire world, including all known streets, buildings and natural geographic features.<p>Search for and map more than 125,000 cities/settlements, whose populations are 1000 or higher.",
+    "extra_html" : ""
+}

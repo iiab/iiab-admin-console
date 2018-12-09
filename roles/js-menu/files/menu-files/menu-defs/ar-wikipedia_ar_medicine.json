@@ -1,0 +1,12 @@
+{
+"intended_use":"zim",
+"lang" : "ar",
+"logo_url" : "ar-medwiki.png",
+"menu_item_name" : "ar-wikipedia_ar_medicine",
+"zim_name" : "wikipedia_ar_medicine",
+"title" : "وِيكيبيديا الطبية",
+"description" : "مَقالات عن الرعاية الصحية متوافرة بدون اتصال بالإنترنت في كل مكان وبشكل مجاني",
+"extra_html" : "",
+"apk_file": "io.iiab.kiwix.wikipedia.medicine.ar-17-08.apk",
+"apk_file_size": "300M"
+}

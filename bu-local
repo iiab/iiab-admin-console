@@ -1,0 +1,50 @@
+#!/usr/bin/python
+# copy files that have been changed in menu-files/menu-defs and menu-files/html to local
+import sys, shutil
+
+menu_dir = "/library/www/html/iiab-menu"
+
+def main ():
+    menu_defs = get_file_list (menu_dir + "/menu-defs.lst")
+    changed_menu_defs = get_file_list (menu_dir + "/changed-menu-defs.lst")
+
+    for file in changed_menu_defs:
+        if file not in menu_defs:
+            copy_file (menu_dir + "/menu-files/menu-defs/" + file, menu_dir + "/local/menu-defs/")
+            #print file
+        elif (menu_defs[file]['date'] != changed_menu_defs[file]['date']):
+            copy_file (menu_dir + "/menu-files/menu-defs/" + file, menu_dir + "/local/menu-defs/")
+
+    menu_html = get_file_list (menu_dir + "/html.lst")
+    changed_menu_html = get_file_list (menu_dir + "/changed-html.lst")
+
+    for file in changed_menu_html:
+        if file not in menu_html:
+            copy_file (menu_dir + "/menu-files/html/" + file, menu_dir + "/local/html/")
+            #print file
+        elif (menu_html[file]['date'] != changed_menu_html[file]['date']):
+            copy_file (menu_dir + "/menu-files/html/" + file, menu_dir + "/local/html/")
+
+def copy_file (src, dest_dir):
+    shutil.copy2(src, dest_dir)
+    print "copying " + src + " to " + dest_dir
+
+def get_file_list (fname):
+    dict = {}
+    f = open(fname, "r")
+    for line in f.readlines():
+        file = {}
+        arr = line.split()
+        file['name'] = arr[2].split('/')[-1]
+        file['size'] = arr[0]
+        file['date'] = arr[1]
+        #print file
+        dict[file['name']] = file
+    f.close()
+    return (dict)
+
+# Now start the application
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        menu_dir = sys.argv[1]
+    main()

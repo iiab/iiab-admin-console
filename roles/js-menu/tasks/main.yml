@@ -1,0 +1,49 @@
+# all packages and jquery/bootstrap assumed installed by iiab install
+
+- name: Create js-menu directory tree
+  file: path={{ item }}
+        mode=0755
+        owner=root
+        group=root
+        state=directory
+  with_items:
+    - "{{ js_menu_dir }}"
+    - "{{ js_menu_dir }}menu-files"
+    - "{{ js_menu_dir }}sample-menus"
+
+# need to merge locally edited menu-defs
+# continue to use cp-menu until we have forms-based menu-def editing
+#- name: Synchronize/Copy menu-files
+#  synchronize:
+#    src: files/menu-files
+#    dest: "{{ js_menu_dir }}/menu-files"
+
+- name: Synchronize/Copy menu-files
+  synchronize:
+    src: files/sample-menus
+    dest: "{{ js_menu_dir }}/sample-menus"
+
+- name: Install js-menu config file
+  template: src=config.json.j2
+            dest={{ js_menu_dir }}/config.json
+            owner=root
+            group=root
+            mode=0644
+
+- name: Install index.html in home
+  copy: src=index.html
+        dest="{{ doc_root }}/home/index.html"
+        owner=root
+        group=root
+        mode=0644
+
+- name: Install menu.json in home
+  copy: src=menu.json
+        dest="{{ doc_root }}/home/menu.json"
+        owner=root
+        group=root
+        mode=0644
+        force=no
+
+- name: Copy Menu Files and Create Feedback Database
+  shell: ./cp-menus

@@ -1,0 +1,10 @@
+{
+"intended_use":"html",
+"lang" : "en",
+"logo_url" : "book-dash-logo.png",
+"menu_item_name" : "en-bookdash",
+"moddir" : "en-bookdash",
+"title" : "Book Dash Books",
+"description": "African storybooks for children, available for anyone to freely print, translate and distribute. Book Dash believes that every child should own a hundred books by the age of five.",
+"extra_html":,
+}

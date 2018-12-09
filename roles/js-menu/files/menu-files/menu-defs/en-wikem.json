@@ -1,0 +1,11 @@
+{
+"intended_use" : "html",
+"lang" : "en",
+"logo_url" : "WikEM-Logo-m.png",
+"menu_item_name" : "en-wikem2",
+"moddir": "en-wikem",
+"zim_name" : "wikem_en",
+"title" : "The Global Emergency Medicine Wiki",
+"description" : "WikEM, The Global Emergency Medicine Wiki, is the world's largest emergency medicine open-access reference resource.",
+"extra_html" : ""
+}

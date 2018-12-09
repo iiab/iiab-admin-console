@@ -1,0 +1,47 @@
+#!/bin/bash
+
+WWWROOT=/var/www/html
+# maintain backwards compatibility
+if [ -f /etc/xsce/xsce.env ]; then
+  source /etc/xsce/xsce.env
+fi
+if [ -f /etc/iiab/iiab.env ]; then
+  source /etc/iiab/iiab.env
+fi
+
+MENUDIR=$WWWROOT/js-menu/
+
+mkdir -p $MENUDIR/local/menu-defs
+mkdir -p $MENUDIR/local/html
+mkdir -p $MENUDIR/local/unedited
+
+# copy changed files to local if this is not the first time
+if [ -f $MENUDIR/menu-defs.lst ]; then
+  # record timestamp and size of changed set of files
+  TZ=utc ls -l --time-style=full-iso $MENUDIR/menu-files/menu-defs/*.{json,html} |awk '{print $5" "$6":"$7" "$9}' >$MENUDIR/changed-menu-defs.lst
+  TZ=utc ls -l --time-style=full-iso $MENUDIR/menu-files/html/*.html |awk '{print $5" "$6":"$7" "$9}' >$MENUDIR/changed-html.lst
+  ./bu-local $MENUDIR
+fi
+
+rsync -av roles/js-menu/files/menu-files $MENUDIR
+
+# refresh kiwix zim index - should already be done
+# iiab-make-kiwix-lib
+
+echo 'files copied'
+
+# record timestamp and size of current set of files
+TZ=utc ls -l --time-style=full-iso $MENUDIR/menu-files/menu-defs/*.{json,html} |awk '{print $5" "$6":"$7" "$9}' >$MENUDIR/menu-defs.lst
+TZ=utc ls -l --time-style=full-iso $MENUDIR/menu-files/html/*.html |awk '{print $5" "$6":"$7" "$9}' >$MENUDIR/html.lst
+
+# Check for user and create if absent
+rc=`mysql --execute "SELECT Password FROM mysql.user where Host = 'localhost' and User = 'iiab_commenter';"`
+
+if [ "$rc" = "" ]; then
+  mysql --execute "CREATE USER iiab_commenter@localhost IDENTIFIED BY 'g0adm1n';"
+fi
+
+# Create database and table
+mysql < setup/comments-db.sql
+
+echo 'database created'

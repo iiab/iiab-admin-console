@@ -1,0 +1,9 @@
+{
+"intended_use" : "webroot",
+"lang" : "es",
+"logo_url" : "content.jpg",
+"menu_item_name" : "es-local_content",
+"moddir" : "local_content",
+"title" : "Nuestros Materiales",
+"description" : "Materiales recolectados por tus maestros para la escuela"
+}

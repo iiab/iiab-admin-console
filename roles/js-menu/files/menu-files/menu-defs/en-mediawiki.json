@@ -1,0 +1,8 @@
+{
+"intended_use" : "webroot",
+"lang" : "en",
+"logo_url" : "MediaWiki_logo_1.png",
+"moddir" : "mediawiki",
+"title" : "Community Wiki",
+"description" : "This is our own sort of Wikipedia with our personal articles and images."
+}

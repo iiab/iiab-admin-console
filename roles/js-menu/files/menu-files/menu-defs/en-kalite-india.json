@@ -1,0 +1,10 @@
+{
+ "intended_use" : "kalite",
+ "lang" : "en",
+ "logo_url" : "khan-logo-vertical-transparent.png",
+ "menu_item_name" : "en-kalite-india",
+ "title" : "Khan Academy Lite",
+ "start_url" : "learn/khan/math/",
+ "description" : "",
+ "extra_html" : "en-kalite-india.html"
+}
