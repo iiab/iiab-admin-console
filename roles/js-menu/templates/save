@@ -1,0 +1,5 @@
+#!/bin/bash -x
+# copy the working menu-files back into the repo
+REPO=/opt/iiab/iiab-admin-console/roles/js-menu/files/menu-files/
+
+rsync -av /library/www/html/js-menu/menu-files/* "$REPO"
