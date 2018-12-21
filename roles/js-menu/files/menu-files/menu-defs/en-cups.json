@@ -1,0 +1,9 @@
+{
+"intended_use" : "webroot",
+"lang" : "en",
+"logo_url" : "cups.png",
+"menu_item_name" : "en-cups",
+"moddir" : "cups",
+"title" : "CUPS - Common Unified Pringing System",
+"description" : "CUPS is is a freely available, portable printing layer which has become the new standard for printing in most Linux distributions."
+}
