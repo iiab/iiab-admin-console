@@ -137,6 +137,7 @@
             - scripts/get_kiwix_catalog
             - scripts/get_oer2go_catalog
             - scripts/constants.sh
+            - scripts/iiab_update_menus
 
 - name: Copy templated utilies
   template: src={{ item }}

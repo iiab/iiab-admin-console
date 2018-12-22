@@ -22,13 +22,11 @@ import shlex
 import uuid
 import re
 import argparse
+import update_menus as tools
 
 verbose = False
 jsonPath = "/etc/iiab/"
 
-if '/usr/bin' not in sys.path:
-   sys.path.append('/usr/bin')
-from iiab-update-menus import update_menu_json
 
 oer2go_duplicates = {'en': [5, 6, 17, 19, 20, 22, 23, 44, 50, 60, 65, 68, 86, 88, 93, 139],
   'es': [26, 49, 51, 53, 58, 59, 61, 63, 66, 69, 72, 75, 94],
@@ -232,6 +230,8 @@ def proc_module (module):
     menu_item['intended_use'] = 'html'
     moddir = module['moddir']
     menu_item['menu_item_name'] = moddir
+    size = module['ksize'] * 1000.0
+    menu_item['size'] = tools.human_readable(size)
 
     # get logo if there is one
     if 'logo_url' in module and module['logo_url'] != None:
@@ -274,7 +274,7 @@ def proc_module (module):
 
     os.remove(working_dir + "rachel-index.php")
 
-    update_menu_json(moddir)
+    tools.update_menu_json(moddir)
 
     return menu_item
 
