@@ -1,10 +1,10 @@
 {
-"intended_use":"kalite",
+"intended_use":"kolibri",
 "lang" : "en",
 "logo_url" : "kolibri.png",
 "menu_item_name" : "en-kolibri",
 "title" : "Kolibri -- Educational Materials From Many Sources",
-"start_url" : "kolibri",
+"start_url" : "/",
 "description":"Kolibri is an open-source educational platform specially designed to provide offline access to a wide range of quality, openly licensed educational contents in low-resource contexts like rural schools, refugee camps, orphanages, and also in non-formal school programs.",
 "extra_html" : ""
 }
