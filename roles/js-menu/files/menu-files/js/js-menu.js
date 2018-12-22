@@ -264,6 +264,8 @@ function procMenuItem(module) {
 		menuHtml += calcCupsLink(module);
    else if (module['intended_use'] == "calibre")
 		menuHtml += calcCalibreLink(module);
+   else if (module['intended_use'] == "calibreweb")
+		menuHtml += calcCalibreWebLink(module);
 	else if (module['intended_use'] == "osm")
 		menuHtml += calcOsmLink(module);
 	else if (module['intended_use'] == "info")
@@ -336,6 +338,13 @@ function calcKolibriLink(module){
 
 function calcCalibreLink(module){
 	var href = host + ':' + menuConfig.calibrePort;
+
+	var html = calcItemHtml(href,module);
+	return html
+}
+
+function calcCalibreWebLink(module){
+	var href = host + ':' + menuConfig.calibreWebPort;
 
 	var html = calcItemHtml(href,module);
 	return html
