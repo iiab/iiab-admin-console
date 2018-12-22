@@ -258,7 +258,11 @@ function procMenuItem(module) {
 	  menuHtml += calcWebrootLink(module);
 	else if (module['intended_use'] == "kalite")
 		menuHtml += calcKaliteLink(module);
-  else if (module['intended_use'] == "calibre")
+	else if (module['intended_use'] == "kolibri")
+		menuHtml += calcKolibriLink(module);
+	else if (module['intended_use'] == "cups")
+		menuHtml += calcCupsLink(module);
+   else if (module['intended_use'] == "calibre")
 		menuHtml += calcCalibreLink(module);
 	else if (module['intended_use'] == "osm")
 		menuHtml += calcOsmLink(module);
@@ -318,8 +322,27 @@ function calcKaliteLink(module){
 	return html
 }
 
+function calcKolibriLink(module){
+	var portRef = module.lang + '-kolibriPort';
+	var href = host + ':'
+	if (menuConfig.hasOwnProperty(portRef))
+		href += menuConfig[portRef];
+	else
+		href += menuConfig['kolibriPort'];
+
+	var html = calcItemHtml(href,module);
+	return html
+}
+
 function calcCalibreLink(module){
 	var href = host + ':' + menuConfig.calibrePort;
+
+	var html = calcItemHtml(href,module);
+	return html
+}
+
+function calcCupsLink(module){
+	var href = host + ':' + menuConfig.cupsPort;
 
 	var html = calcItemHtml(href,module);
 	return html
