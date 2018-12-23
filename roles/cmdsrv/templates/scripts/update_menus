@@ -48,9 +48,9 @@ iiab_menu_items={
      "wordpress":"en-wordpress"
 }
 def main():
-   put_iiab_enabled_into_menu_json()
    put_kiwix_enabled_into_menu_json()
    put_oer2go_enabled_into_menu_json()
+   put_iiab_enabled_into_menu_json()
 
 
 def put_iiab_enabled_into_menu_json():
@@ -90,7 +90,16 @@ def update_menu_json(new_item):
       menu_fp.write(json.dumps(data, indent=2))
 
 def put_kiwix_enabled_into_menu_json():
-   pass
+   zim_idx = zim_version_idx_dir + zim_version_idx_file
+   with open(zim_idx,"r") as zim_fp:
+      zim_versions_info = json.loads(zim_fp.read())
+      #print(str(zim_versions_info))
+      for item in zim_versions_info:
+         menu_item = zim_versions_info[item].get('menuItem','')
+         if menu_item != '':
+            update_menu_json(menu_item)
+         else:
+            print("MenuItem not found for %s"%item)
 
 def put_oer2go_enabled_into_menu_json():
    pass
