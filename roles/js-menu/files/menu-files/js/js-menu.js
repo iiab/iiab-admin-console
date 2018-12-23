@@ -47,8 +47,9 @@ var menuItems = [];
 var menuHtml = "";
 var menuDefs = {};
 var zimVersions = {};
-// var zimSubstParams = ["article_count", "media_count", "size", "tags"]; - future development
-var zimSubstParams = [];
+var zimSubstParams = ["article_count", "media_count", "size", "tags"]; //- future development
+var substValues = [];
+//var zimSubstParams = [];
 var zimSubstRegEx = {};
 var hrefRegEx;
 
@@ -122,7 +123,6 @@ $.when(getMenuJson, getZimVersions, getConfigJson, getLangCodes).always(procMenu
 
 // This is the main processing
 function jsMenuMain () {
-genRegEx(); // regular expressions for subtitution
   if (dynamicHtml){
   	getLocalStore();
     //$.when(scaffold, getZimVersions, getConfigJson).then(procMenu);
@@ -151,12 +151,24 @@ genRegEx(); // regular expressions for subtitution
   // });
 }
 
-function genRegEx(){
+function genRegEx(menu_item_name){
 	hrefRegEx = new RegExp('##HREF-BASE##', 'g');
-	for (var i = 0; i < zimSubstParams.length; i++) {
-		var param = zimSubstParams[i];
-		zimSubstRegEx[param] = new RegExp('##' + param.toLocaleUpperCase() + '##', 'g');
+   zimSubstRegEx = {};
+	for (var i = 0; i < zimVersions.length; i++) {
+      if (zimVersions[i]['menuItem'] != menu_item_name) break;
 	}
+   if (i < zimVersions.length){ 
+      var foundIndex = i;
+      //zimSubstParams = ["article_count", "media_count", "size", "tags"];
+      for (var i = 0; i < zimSubstParams.length; i++) {
+         var param = zimSubstParams[i];
+         if (i == 0) substValues[i] = zimVersions[foundIndex].articleCount;
+         if (i == 1) substValues[i] = zimVersions[foundIndex].mediaCount;
+         if (i == 2) substValues[i] = zimVersions[foundIndex].size;
+         if (i == 3) substValues[i] = zimVersions[foundIndex].tags;
+         zimSubstRegEx[param] = new RegExp('##' + param.toLocaleUpperCase() + '##', 'g');
+      }
+   }
 }
 function createScaffold(){
   var html = "";
@@ -248,6 +260,7 @@ function procMenuItem(module) {
 		$(menuItemDivId).hide();
 		return;
 	}
+   genRegEx(module['menu_item_name']; // regular expressions for subtitution
 	$(menuItemDivId).show();
 	consoleLog(module);
 	if (module['intended_use'] == "zim")
@@ -467,6 +480,9 @@ function getExtraHtml(module) {
 			consoleLog('in get extra done');
 			var add_html = data;
 			add_html = add_html.replace(hrefRegEx, module.href);
+	      for (var i = 0; i < zimSubstRegEx.length; i++) {
+	   		add_html = add_html.replace(zimSubstRegEx[i], substValues[i]);
+         }
 			menuItemHtmlfDivId = "#" + module.menu_id + '-htmlf';
 			consoleLog(menuItemHtmlfDivId);
 			$(".toggleExtraHtml").toggle(showExtraHtml);
