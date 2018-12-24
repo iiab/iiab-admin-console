@@ -49,4 +49,4 @@
   shell: ./cp-menus
 
 - name: Add any IIAB roles that are installed to home/menu.js
-  shell: "{{ cmdsrv_dir }}/update_menus"
+  shell: "{{ cmdsrv_dir }}/scripts/update_menus"
