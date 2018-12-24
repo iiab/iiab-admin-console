@@ -1981,7 +1981,7 @@ function sendCmdSrvCmd(command, callback, buttonId, errCallback, cmdArgs) {
 
   logServerCommands (cmdVerb, "sent");
 
-  if (buttonId === undefined)
+  if (buttonId === undefined || buttonId === '')
   buttonId = "";
   else
     make_button_disabled('#' + buttonId, true);
