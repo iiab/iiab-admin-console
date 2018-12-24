@@ -260,7 +260,7 @@ function procMenuItem(module) {
 		$(menuItemDivId).hide();
 		return;
 	}
-   genRegEx(module['menu_item_name']; // regular expressions for subtitution
+   genRegEx(module['menu_item_name']); // regular expressions for subtitution
 	$(menuItemDivId).show();
 	consoleLog(module);
 	if (module['intended_use'] == "zim")
