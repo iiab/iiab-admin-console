@@ -30,7 +30,9 @@ zim_version_idx_dir = doc_root + "/common/assets/"
 zim_version_idx_file = "zim_version_idx.json"
 menuDefs = doc_root + "/js-menu/menu-files/menu-defs/"
 menuJsonPath = doc_root + "/home/menu.json"
-
+default_logos = {
+   "wiktionary":"wiktionary.png",
+}
 iiab_menu_items={
      "calibre":"en-calibre",\
      "calibre_web": "en-calibre-web",\

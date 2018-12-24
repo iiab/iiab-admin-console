@@ -152,21 +152,33 @@ function jsMenuMain () {
 }
 
 function genRegEx(menu_item_name){
+   var foundKey = '';
 	hrefRegEx = new RegExp('##HREF-BASE##', 'g');
    zimSubstRegEx = {};
-	for (var i = 0; i < zimVersions.length; i++) {
-      if (zimVersions[i]['menuItem'] != menu_item_name) break;
+	for (var key in zimVersions) {
+      if (zimVersions[key].hasOwnProperty('menuItem')){
+         if (zimVersions[key].menuItem == menu_item_name){ foundKey = key;}
+         //alert("menuitem " + zimVersions[i].get('menuItem','') + " " + menu_item_name);
+      }
 	}
-   if (i < zimVersions.length){ 
-      var foundIndex = i;
+   if (foundKey != ''){ 
       //zimSubstParams = ["article_count", "media_count", "size", "tags"];
       for (var i = 0; i < zimSubstParams.length; i++) {
          var param = zimSubstParams[i];
-         if (i == 0) substValues[i] = zimVersions[foundIndex].articleCount;
-         if (i == 1) substValues[i] = zimVersions[foundIndex].mediaCount;
-         if (i == 2) substValues[i] = zimVersions[foundIndex].size;
-         if (i == 3) substValues[i] = zimVersions[foundIndex].tags;
-         zimSubstRegEx[param] = new RegExp('##' + param.toLocaleUpperCase() + '##', 'g');
+         substValues[i] = '';
+         if (zimVersions[foundKey].hasOwnProperty('articleCount')){
+            if (i == 0) substValues[i] = zimVersions[foundKey]['articleCount'];
+         }
+         if (zimVersions[foundKey].hasOwnProperty('mediaCount')){
+            if (i == 1) substValues[i] = zimVersions[foundKey]['mediaCount'];
+         }
+         if (zimVersions[foundKey].hasOwnProperty('size')){
+            if (i == 2) substValues[i] = zimVersions[foundKey]['size'];
+         }
+         if (zimVersions[foundKey].hasOwnProperty('tags')){
+            if (i == 3) substValues[i] = zimVersions[foundKey]['tags'];
+         }
+         zimSubstRegEx[param] = new RegExp('##' + param.toLocaleUpperCase() + '##', 'gi');
       }
    }
 }
