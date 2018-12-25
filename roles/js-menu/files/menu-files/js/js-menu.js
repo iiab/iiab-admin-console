@@ -164,6 +164,7 @@ function genRegEx(menu_item_name){
       //zimSubstParams = ["articlecount", "mediacount", "size", "tags"];
       substValues = {};
       for (info in zimSubstParams) {
+         SubstValues[info] == '-No Data-';
          if (zimVersions[foundKey].hasOwnProperty('articleCount') &&
             info == '0'){
             substValues[info] = zimVersions[foundKey]['articleCount'];
