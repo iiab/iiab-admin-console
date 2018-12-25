@@ -47,8 +47,8 @@ var menuItems = [];
 var menuHtml = "";
 var menuDefs = {};
 var zimVersions = {};
-var zimSubstParams = ["article_count", "media_count", "size", "tags"]; //- future development
-var substValues = [];
+var zimSubstParams = ["articlecount", "mediacount", "size", "tags"]; //- future development
+var substValues = {};
 //var zimSubstParams = [];
 var zimSubstRegEx = {};
 var hrefRegEx;
@@ -158,27 +158,29 @@ function genRegEx(menu_item_name){
 	for (var key in zimVersions) {
       if (zimVersions[key].hasOwnProperty('menuItem')){
          if (zimVersions[key].menuItem == menu_item_name){ foundKey = key;}
-         //alert("menuitem " + zimVersions[i].get('menuItem','') + " " + menu_item_name);
       }
 	}
    if (foundKey != ''){ 
-      //zimSubstParams = ["article_count", "media_count", "size", "tags"];
-      for (var i = 0; i < zimSubstParams.length; i++) {
-         var param = zimSubstParams[i];
-         substValues[i] = '';
-         if (zimVersions[foundKey].hasOwnProperty('articleCount')){
-            if (i == 0) substValues[i] = zimVersions[foundKey]['articleCount'];
+      //zimSubstParams = ["articlecount", "mediacount", "size", "tags"];
+      substValues = {};
+      for (info in zimSubstParams) {
+         if (zimVersions[foundKey].hasOwnProperty('articleCount') &&
+            info == '0'){
+            substValues[info] = zimVersions[foundKey]['articleCount'];
          }
-         if (zimVersions[foundKey].hasOwnProperty('mediaCount')){
-            if (i == 1) substValues[i] = zimVersions[foundKey]['mediaCount'];
+         if (zimVersions[foundKey].hasOwnProperty('mediaCount') &&
+            info == '1'){
+            substValues[info] = zimVersions[foundKey]['mediaCount'];
          }
-         if (zimVersions[foundKey].hasOwnProperty('size')){
-            if (i == 2) substValues[i] = zimVersions[foundKey]['size'];
+         if (zimVersions[foundKey].hasOwnProperty('size') &&
+            info == '2'){
+            substValues[info] = zimVersions[foundKey]['size'];
          }
-         if (zimVersions[foundKey].hasOwnProperty('tags')){
-            if (i == 3) substValues[i] = zimVersions[foundKey]['tags'];
+         if (zimVersions[foundKey].hasOwnProperty('tags') &&
+            info == '3'){
+            substValues[info] = zimVersions[foundKey]['tags'];
          }
-         zimSubstRegEx[param] = new RegExp('##' + param.toLocaleUpperCase() + '##', 'gi');
+         zimSubstRegEx[info] = new RegExp('##' + zimSubstParams[info].toLocaleUpperCase() + '##', 'gi');
       }
    }
 }
@@ -493,8 +495,8 @@ function getExtraHtml(module) {
 			consoleLog('in get extra done');
 			var add_html = data;
 			add_html = add_html.replace(hrefRegEx, module.href);
-	      for (var i = 0; i < zimSubstRegEx.length; i++) {
-	   		add_html = add_html.replace(zimSubstRegEx[i], substValues[i]);
+	      for (var key in zimSubstRegEx) {
+	   		add_html = add_html.replace(zimSubstRegEx[key], substValues[key]);
          }
 			menuItemHtmlfDivId = "#" + module.menu_id + '-htmlf';
 			consoleLog(menuItemHtmlfDivId);
