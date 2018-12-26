@@ -9,6 +9,8 @@ import json
 import subprocess
 import shlex
 
+from iiab_make_kiwix_lib import get_kiwix_catalog_item
+
 IIAB_PATH='/etc/iiab'
 if not IIAB_PATH in sys.path:
     sys.path.append(IIAB_PATH)
@@ -118,6 +120,69 @@ def human_readable(num):
         if num < 1000.0:
             return "%.0f%s"%(num,units[i])
         num /= 1000.0
+
+def create_menudef_stub(zim_version_idx):
+      # create a stub for this zim
+      item = get_kiwix_catalog_item(zimname)
+      lang = item['language'][:2]
+      filename = lang + '-' + zimname + '.json'
+      #print("creating %s"%filename)
+      outstr = ''
+      default = ''
+      default = get_default_logo(zimname)
+      with open(filename,'w') as menufile:
+         outstr += '{\n'
+         outstr += '"intended_use":"zim",\n'
+         outstr += '"lang" : "' + lang +'",\n'
+         if default != '':
+            outstr += '"logo_url" : "' + default + '",\n'
+         else:
+            outstr += '"logo_url" : "",\n'
+         menuitem = lang + '-' + zimname
+         outstr += '"menu_item_name" : "' + menuitem + '",\n'
+         outstr += '"title" : "' + item['title'] + '",\n'
+         outstr += '"zim_name" : "' + zimname + '",\n'
+         outstr += '"start_url" : "",\n'
+         outstr += '"description":"",\n'
+         outstr += '"extra_html" : ""\n'
+         outstr += '}\n'
+         menufile.write(outstr)
+      return menuitem
+
+def get_default_logo(logo_selector):
+   default_logos = {
+      "wiktionary":"en-wiktionary.png",
+      "wikivoyage":"en-wikivoyage.png",
+      "wikinews":"wikinews-logo.png",
+      "wiktionary":"en-wiktionary.png",
+      "wikipedia":"en-wikipedia.png"
+   }
+   #  Selectthe first part of the selector
+   short_selector = logo_selector[:logo_selector.find('_')-1]
+   # give preference to language if present
+   for logo in default_logos:
+      if logo.startswith(short_selector):
+         return default_logos[logo]
+   """
+   # Maybe language is not present -- check for en-<selector>
+   en_default = "en-" + logo_selector
+   for logo in default_logos:
+      if logo.startswith(en_default):
+         return default_logos[logo]
+   # try for a match without language prefix
+   nolang_selector = logo_selector[3:]
+   for logo in default_logos:
+      if logo.startswith(nolang_selector):
+         return default_logos[logo]
+   """
+   # check for a png or jpg with same selector
+   if os.path.isfile(menuImages + logo_selector + '.jpg'):
+      return logo_selector + '.jpg'
+   if os.path.isfile(menuImages + logo_selector + '.png'):
+      return logo_selector + '.png'
+
+   return ''
+
 
 # Now start the application
 if __name__ == "__main__":
