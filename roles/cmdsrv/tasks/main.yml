@@ -139,6 +139,12 @@
             - scripts/constants.sh
             - scripts/update_menus
 
+# The following allows update_menus to import a function from make_kiwix-lib
+- name: Create a link python can use to import iiab-make-kiwix-lib functions
+  file: src="/usr/bin/iiab-make-kiwix-lib.py"
+        dest="{{ cmdsrv_dir }}/scripts/iiab_make_kiwix_lib.py"
+        state=link
+
 - name: Copy templated utilies
   template: src={{ item }}
             dest="/usr/bin/"
