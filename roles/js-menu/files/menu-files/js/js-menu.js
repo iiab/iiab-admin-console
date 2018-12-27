@@ -165,13 +165,13 @@ function genRegEx(menu_item_name){
       substValues = {};
       for (info in zimSubstParams) {
          SubstValues[info] == '-No Data-';
-         if (zimVersions[foundKey].hasOwnProperty('articleCount') &&
+         if (zimVersions[foundKey].hasOwnProperty('article_count') &&
             info == '0'){
-            substValues[info] = zimVersions[foundKey]['articleCount'];
+            substValues[info] = zimVersions[foundKey]['article_count'];
          }
-         if (zimVersions[foundKey].hasOwnProperty('mediaCount') &&
+         if (zimVersions[foundKey].hasOwnProperty('media_count') &&
             info == '1'){
-            substValues[info] = zimVersions[foundKey]['mediaCount'];
+            substValues[info] = zimVersions[foundKey]['media_count'];
          }
          if (zimVersions[foundKey].hasOwnProperty('size') &&
             info == '2'){
@@ -313,9 +313,8 @@ function procMenuItem(module) {
 function calcZimLink(module){
 	// if kiwix_url is defined use it otherwise use port
 	var href = '';
-	if(typeof zimVersions[module.zim_name] != 'undefined' &&
-        typeof zimVersions[module.zim_name].zimFileName != 'undefined' ){
-	  href =  zimVersions[module.zim_name].zimFileName + '/';
+   if(typeof zimVersions[module.zim_name].zim_file_name != 'undefined' ){
+	  href =  zimVersions[module.zim_name].zim_file_name + '/';
   	  if ( menuConfig.hasOwnProperty('kiwixUrl'))
         href = menuConfig.kiwixUrl + href;
      else
@@ -446,7 +445,11 @@ function calcItemHtml(href,module){
 	html+='</div>'; // end content-item-title
 	// description - this will become multiple parts
 	if (showDescription) {
-  	html+='<p>' + module.description + '</p>';
+   var description = module.description;
+   for (var key in zimSubstRegEx) {
+      description = description.replace(zimSubstRegEx[key], substValues[key]);
+   }
+  	html+='<p>' + description + '</p>';
   	// apks for medwiki, etc. move to download menu def
   	if (module.hasOwnProperty("apk_file") && include_apk_links){
   		var sizeClause = '';
