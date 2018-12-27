@@ -282,13 +282,13 @@ function calcZimLink(module){
 	var href = '';
    if (typeof zimVersions[module.zim_name].zim_file_name != 'undefined' ){
 	   href =  zimVersions[module.zim_name].zim_file_name + '/';
-  	   if ( menuConfig.hasOwnProperty('kiwixUrl'))
-         href = menuConfig.kiwixUrl + href;
-      else
-         href = host + ':' + menuConfig.kiwixPort + '/' + href;
-    }
+  	if ( menuConfig.hasOwnProperty('kiwixUrl'))
+      href = menuConfig.kiwixUrl + href;
     else
-	    href = undefinedPageUrl + '?menu_item=' + module.menu_item_name + '&zim_name=' + module.zim_name; //not defined in zimVersions
+      href = host + ':' + menuConfig.kiwixPort + '/' + href;
+    }
+  else
+	  href = undefinedPageUrl + '?menu_item=' + module.menu_item_name + '&zim_name=' + module.zim_name; //not defined in zimVersions
 	var html = calcItemHtml(href,module);
 	return html
 }
