@@ -280,16 +280,15 @@ function procMenuItem(module) {
 function calcZimLink(module){
 	// if kiwix_url is defined use it otherwise use port
 	var href = '';
-	if(typeof zimVersions[module.zim_name] != 'undefined' &&
-        typeof zimVersions[module.zim_name].zimFileName != 'undefined' ){
-	  href =  zimVersions[module.zim_name].zimFileName + '/';
-  	if ( menuConfig.hasOwnProperty('kiwixUrl'))
-      href = menuConfig.kiwixUrl + href;
-    else
-      href = host + ':' + menuConfig.kiwixPort + '/' + href;
+   if typeof zimVersions[module.zim_name].zim_file_name != 'undefined' ){
+	   href =  zimVersions[module.zim_name].zim_file_name + '/';
+  	   if ( menuConfig.hasOwnProperty('kiwixUrl'))
+         href = menuConfig.kiwixUrl + href;
+      else
+         href = host + ':' + menuConfig.kiwixPort + '/' + href;
     }
-  else
-	  href = undefinedPageUrl + '?menu_item=' + module.menu_item_name + '&zim_name=' + module.zim_name; //not defined in zimVersions
+    else
+	    href = undefinedPageUrl + '?menu_item=' + module.menu_item_name + '&zim_name=' + module.zim_name; //not defined in zimVersions
 	var html = calcItemHtml(href,module);
 	return html
 }
