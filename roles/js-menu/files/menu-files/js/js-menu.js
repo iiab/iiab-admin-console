@@ -48,9 +48,7 @@ var menuHtml = "";
 var menuDefs = {};
 var zimVersions = {};
 var zimSubstParams = ["article_count", "media_count", "size", "tags"]; //- future development
-var substValues = {};
 //var zimSubstParams = [];
-var zimSubstRegEx = {};
 var hrefRegEx;
 
 var scaffold = $.Deferred();
@@ -154,7 +152,7 @@ function jsMenuMain () {
 function genRegEx(menu_item_name){
    var foundKey = '';
 	hrefRegEx = new RegExp('##HREF-BASE##', 'g');
-   zimSubstRegEx = {};
+   var zimSubstRegEx = {};
 	for (var key in zimVersions) {
       if (zimVersions[key].hasOwnProperty('menu_item')){
          if (zimVersions[key].menu_item == menu_item_name){ 
@@ -165,29 +163,31 @@ function genRegEx(menu_item_name){
 	}
    if (foundKey != ''){ 
       //zimSubstParams = ["article_count", "media_count", "size", "tags"];
-      substValues = {};
-      for (info in zimSubstParams) {
-         SubstValues[info] == '-No Data-';
+      var substValues = {};
+      for (index in zimSubstParams) {
+         substValues[index] == '-No Data-';
          if (zimVersions[foundKey].hasOwnProperty('article_count') &&
-            info == '0'){
-            substValues[info] = zimVersions[foundKey]['article_count'];
+            index == '0'){
+            substValues[index] = zimVersions[foundKey]['article_count'];
          }
          if (zimVersions[foundKey].hasOwnProperty('media_count') &&
-            info == '1'){
-            substValues[info] = zimVersions[foundKey]['media_count'];
+            index == '1'){
+            substValues[index] = zimVersions[foundKey]['media_count'];
          }
          if (zimVersions[foundKey].hasOwnProperty('size') &&
-            info == '2'){
-            substValues[info] = zimVersions[foundKey]['size'];
+            index == '2'){
+            substValues[index] = zimVersions[foundKey]['size'];
          }
          if (zimVersions[foundKey].hasOwnProperty('tags') &&
-            info == '3'){
-            substValues[info] = zimVersions[foundKey]['tags'];
+            index == '3'){
+            substValues[index] = zimVersions[foundKey]['tags'];
          }
-         zimSubstRegEx[info] = new RegExp('##' + zimSubstParams[info].toLocaleUpperCase() + '##', 'gi');
+         zimSubstRegEx[index] = new RegExp('##' + zimSubstParams[index].toLocaleUpperCase() + '##', 'gi');
       }
    }
+   return [zimSubstRegEx, substValues]
 }
+
 function createScaffold(){
   var html = "";
   for (var i = 0; i < menuItems.length; i++) {
@@ -257,6 +257,9 @@ function getMenuDef(menuItem) {
 		menuDefs[menuItem]['add_html'] = "";
 		menuDefs[menuItem]['menu_id'] = menuId;
 		module = menuDefs[menuItem];
+      zimSubstRegEx,substValues == genRegEx(menuItem']); // regular expressions for subtitution
+      module['zimSubstRegEx'] = zimSubstRegEx;
+      module['substValues'] = substValues;
 		procMenuItem(module);
 		checkMenuDone();
 	})
@@ -278,7 +281,6 @@ function procMenuItem(module) {
 		$(menuItemDivId).hide();
 		return;
 	}
-   genRegEx(module['menu_item_name']); // regular expressions for subtitution
 	$(menuItemDivId).show();
 	consoleLog(module);
 	if (module['intended_use'] == "zim")
@@ -450,7 +452,7 @@ function calcItemHtml(href,module){
 	if (showDescription) {
    var description = module.description;
    for (var key in zimSubstRegEx) {
-      description = description.replace(zimSubstRegEx[key], substValues[key]);
+      description = description.replace(module.zimSubstRegEx[key], module.substValues[key]);
    }
   	html+='<p>' + description + '</p>';
   	// apks for medwiki, etc. move to download menu def
@@ -503,7 +505,7 @@ function getExtraHtml(module) {
 			var add_html = data;
 			add_html = add_html.replace(hrefRegEx, module.href);
 	      for (var key in zimSubstRegEx) {
-	   		add_html = add_html.replace(zimSubstRegEx[key], substValues[key]);
+           add_html = add_html.replace(module.zimSubstRegEx[key], module.substValues[key]);
          }
 			menuItemHtmlfDivId = "#" + module.menu_id + '-htmlf';
 			consoleLog(menuItemHtmlfDivId);
