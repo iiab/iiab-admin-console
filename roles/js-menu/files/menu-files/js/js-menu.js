@@ -47,7 +47,7 @@ var menuItems = [];
 var menuHtml = "";
 var menuDefs = {};
 var zimVersions = {};
-var zimSubstParams = ["article_count", "media_count", "size", "tags"]; //- future development
+var zimSubstParams = ["article_count", "media_count", "size", "tags", "language"]; //- future development
 //var zimSubstParams = [];
 var hrefRegEx;
 
@@ -162,7 +162,7 @@ function genRegEx(menu_item_name){
       }
 	}
    if (foundKey != ''){ 
-      //zimSubstParams = ["article_count", "media_count", "size", "tags"];
+      //zimSubstParams = ["article_count", "media_count", "size", "tags", 'language'];
       var substValues = {};
       for (index in zimSubstParams) {
          substValues[index] == '-No Data-';
@@ -181,6 +181,10 @@ function genRegEx(menu_item_name){
          if (zimVersions[foundKey].hasOwnProperty('tags') &&
             index == '3'){
             substValues[index] = zimVersions[foundKey]['tags'];
+         }
+         if (zimVersions[foundKey].hasOwnProperty('language') &&
+            index == '4'){
+            substValues[index] = zimVersions[foundKey]['language'];
          }
          zimSubstRegEx[index] = new RegExp('##' + zimSubstParams[index].toLocaleUpperCase() + '##', 'gi');
       }
@@ -252,14 +256,16 @@ function getMenuDef(menuItem) {
 		dataType: 'json'
 	})
 	.done(function( data ) {
+	  var zimSubstRegEx;
+	  var substValues;
 		menuDefs[menuItem] = data;
 		menuDefs[menuItem]['menu_item_name'] = menuItem;
 		menuDefs[menuItem]['add_html'] = "";
 		menuDefs[menuItem]['menu_id'] = menuId;
 		module = menuDefs[menuItem];
-      zimSubstRegEx,substValues == genRegEx(menuItem']); // regular expressions for subtitution
-      module['zimSubstRegEx'] = zimSubstRegEx;
-      module['substValues'] = substValues;
+		returnedValues = genRegEx(menuItem); // regular expressions for subtitution
+		module['zimSubstRegEx'] = returnedValues[0];
+		module['substValues'] = returnedValues[1];
 		procMenuItem(module);
 		checkMenuDone();
 	})
@@ -451,7 +457,7 @@ function calcItemHtml(href,module){
 	// description - this will become multiple parts
 	if (showDescription) {
    var description = module.description;
-   for (var key in zimSubstRegEx) {
+   for (var key in module.zimSubstRegEx) {
       description = description.replace(module.zimSubstRegEx[key], module.substValues[key]);
    }
   	html+='<p>' + description + '</p>';
@@ -504,7 +510,7 @@ function getExtraHtml(module) {
 			consoleLog('in get extra done');
 			var add_html = data;
 			add_html = add_html.replace(hrefRegEx, module.href);
-	      for (var key in zimSubstRegEx) {
+	      for (var key in module.zimSubstRegEx) {
            add_html = add_html.replace(module.zimSubstRegEx[key], module.substValues[key]);
          }
 			menuItemHtmlfDivId = "#" + module.menu_id + '-htmlf';
