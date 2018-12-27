@@ -280,8 +280,8 @@ function procMenuItem(module) {
 function calcZimLink(module){
 	// if kiwix_url is defined use it otherwise use port
 	var href = '';
-   if (typeof zimVersions[module.zim_name].zim_file_name != 'undefined' ){
-	   href =  zimVersions[module.zim_name].zim_file_name + '/';
+   if (typeof zimVersions[module.zim_name].file_name != 'undefined' ){
+	   href =  zimVersions[module.zim_name].file_name + '/';
   	if ( menuConfig.hasOwnProperty('kiwixUrl'))
       href = menuConfig.kiwixUrl + href;
     else
