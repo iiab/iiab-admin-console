@@ -47,7 +47,7 @@ var menuItems = [];
 var menuHtml = "";
 var menuDefs = {};
 var zimVersions = {};
-var zimSubstParams = ["articlecount", "mediacount", "size", "tags"]; //- future development
+var zimSubstParams = ["article_count", "media_count", "size", "tags"]; //- future development
 var substValues = {};
 //var zimSubstParams = [];
 var zimSubstRegEx = {};
@@ -156,12 +156,15 @@ function genRegEx(menu_item_name){
 	hrefRegEx = new RegExp('##HREF-BASE##', 'g');
    zimSubstRegEx = {};
 	for (var key in zimVersions) {
-      if (zimVersions[key].hasOwnProperty('menuItem')){
-         if (zimVersions[key].menuItem == menu_item_name){ foundKey = key;}
+      if (zimVersions[key].hasOwnProperty('menu_item')){
+         if (zimVersions[key].menu_item == menu_item_name){ 
+            foundKey = key;
+            break;
+         }
       }
 	}
    if (foundKey != ''){ 
-      //zimSubstParams = ["articlecount", "mediacount", "size", "tags"];
+      //zimSubstParams = ["article_count", "media_count", "size", "tags"];
       substValues = {};
       for (info in zimSubstParams) {
          SubstValues[info] == '-No Data-';
