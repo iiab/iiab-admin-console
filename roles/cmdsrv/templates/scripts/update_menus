@@ -102,29 +102,29 @@ def update_menu_json(new_item):
 
 def put_kiwix_enabled_into_menu_json():
    zim_idx = zim_version_idx_dir + zim_version_idx_file
+   kiwix.read_zim_versions_idx()
    if os.path.isfile(zim_idx):
       with open(zim_idx,"r") as zim_fp:
          zim_versions_info = json.loads(zim_fp.read())
          #print(str(zim_versions_info))
          for item in zim_versions_info:
             # does a menuDef exist? if not create one
-            menu_item = zim_versions_info[item].get('menuItem','')
-            if menu_item != '':
-               if verify_menu_def(menu_item + '.json'):
+            print('Checking if %s zimfile has a menu'%item)
+            menu_item = zim_versions_info[item].get('menu_item','')
+            print("menu_item: %s"%zim_versions_info[item])
+            if menu_item != None and menu_item != '':
+               if os.path.isfile(menuDefs + menu_item + '.json'):
+                  print('verify existence of %s'%menuDefs + menu_item + '.json')
                   # make sure the home page references this item
                   update_menu_json(menu_item)
                   return
             #fall through to create a menuDef stub
             create_menu_def(item)
+   kiwix.get_zim_list()
+   kiwix.write_zim_versions_idx()
          
-def verify_menu_def(filename):
-   try:
-      with open(menuDefs + filename,'r') as menufile:
-         return True
-   except:
-      return False
-
 def create_menu_def(zimname):
+   print("creating %s"%zimname)
    item = kiwix.get_kiwix_catalog_item(zimname)
    if len(item.get('language','')) > 2:
      lang = item['language'][:2]
