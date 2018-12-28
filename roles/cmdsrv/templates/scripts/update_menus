@@ -56,9 +56,12 @@ iiab_menu_items={
      "wordpress":"en-wordpress"
 }
 def main():
+   print('Updating kiwix menus')
    put_kiwix_enabled_into_menu_json()
-   #put_oer2go_enabled_into_menu_json()
-   #put_iiab_enabled_into_menu_json()
+   print('Updating oer2go menus')
+   put_oer2go_enabled_into_menu_json()
+   print('Updating iiab installed services\' menus')
+   put_iiab_enabled_into_menu_json()
 
 
 def put_iiab_enabled_into_menu_json():
