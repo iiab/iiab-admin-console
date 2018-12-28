@@ -22,6 +22,9 @@ import shlex
 import uuid
 import re
 import argparse
+SCRIPT_DIR = '/opt/admin/cmdsrv/scripts'
+if not SCRIPT_DIR in sys.path:
+    sys.path.append(SCRIPT_DIR)
 import update_menus as tools
 
 verbose = False
@@ -51,18 +54,18 @@ iiab_cat_url = "http://med.iiab.me/catalog/iiab_catalog.json"
 oer2go_catalog_file = jsonPath + "oer2go_catalog.json"
 iiab_catalog_file = jsonPath + "iiab_catalog.json"
 # soft code these
-#iiab_root_dir = "/library/www/html/"
-#iiab_modules_dir = iiab_root_dir + "modules/"
-#iiab_menu_repo_dir = "/opt/iiab/iiab-admin-console/roles/js-menu/files/"
-iiab_root_dir = "{{ doc_root }}/"
-iiab_modules_dir = "{{ iiab_modules_dir }}"
+iiab_root_dir = "/library/www/html/"
+iiab_modules_dir = iiab_root_dir + "modules/"
+iiab_menu_repo_dir = "/opt/iiab/iiab-admin-console/roles/js-menu/files/"
+#iiab_root_dir = "{{ doc_root }}/"
+#iiab_modules_dir = "{{ iiab_modules_dir }}"
 
 iiab_menu_dir = iiab_root_dir + "js-menu/"
 iiab_menu_files = iiab_menu_dir + "menu-files/"
 iiab_menu_download_dir = iiab_menu_dir + "local/unedited/"
-doc_root_menu_defs = iiab_root_dir  + 'menu-files/menu-defs/'
+doc_root_menu_defs = iiab_menu_dir  + 'menu-files/menu-defs/'
 
-iiab_menu_repo_dir = "{{ iiab_base }}/iiab-admin-console/roles/js-menu/files/"
+#iiab_menu_repo_dir = "{{ iiab_base }}/iiab-admin-console/roles/js-menu/files/"
 working_dir = "/library/working/rachel/" + str(uuid.uuid4()) + "/"
 
 php_parser = re.compile('\<\?php echo .+? \?>')
@@ -231,10 +234,16 @@ def proc_module (module):
     menu_item['intended_use'] = 'html'
     moddir = module['moddir']
     menu_item['menu_item_name'] = moddir
-    size = module.get('ksize','0') * 1000.0
+    size = float(module.get('ksize','0')) * 1000.0
     size = tools.human_readable(size)
     menu_item['size'] = size
-    menu_item['description1'] = "Size: " + size + ', Files: ' + module.get('file_count','undefined') + ', Age: ' + module.get('age_range','undefined')
+    files = module.get('file_count','undefined') 
+    if files == None:
+       files = ''
+    age = module.get('age_range','undefined')
+    if age == None:
+       age = ''
+    menu_item['description1'] = "Size: " + size + ', Files: ' + files + ', Age: ' + age
 
     # get logo if there is one
     if 'logo_url' in module and module['logo_url'] != None:
