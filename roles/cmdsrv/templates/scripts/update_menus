@@ -102,19 +102,20 @@ def update_menu_json(new_item):
 
 def put_kiwix_enabled_into_menu_json():
    zim_idx = zim_version_idx_dir + zim_version_idx_file
-   with open(zim_idx,"r") as zim_fp:
-      zim_versions_info = json.loads(zim_fp.read())
-      #print(str(zim_versions_info))
-      for item in zim_versions_info:
-         # does a menuDef exist? if not create one      
-         menu_item = zim_versions_info[item].get('menuItem','')
-         if menu_item != '':
-            if verify_menu_def(menu_item + '.json'):
-               # make sure the home page references this item
-               update_menu_json(menu_item)
-               return
-         #fall through to create a menuDef stub
-         create_menu_def(item)
+   if os.path.isfile(zim_idx):
+      with open(zim_idx,"r") as zim_fp:
+         zim_versions_info = json.loads(zim_fp.read())
+         #print(str(zim_versions_info))
+         for item in zim_versions_info:
+            # does a menuDef exist? if not create one
+            menu_item = zim_versions_info[item].get('menuItem','')
+            if menu_item != '':
+               if verify_menu_def(menu_item + '.json'):
+                  # make sure the home page references this item
+                  update_menu_json(menu_item)
+                  return
+            #fall through to create a menuDef stub
+            create_menu_def(item)
          
 def verify_menu_def(filename):
    try:
