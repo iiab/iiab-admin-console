@@ -33,6 +33,7 @@ iiab_base_path = "/opt/iiab"
 doc_root = get_iiab_env('WWWROOT')
 zim_version_idx_dir = doc_root + "/common/assets/"
 zim_version_idx_file = "zim_version_idx.json"
+zim_path = "/library/zims"
 menuDefs = doc_root + "/js-menu/menu-files/menu-defs/"
 menuImages = doc_root + "/js-menu/menu-files/images/"
 menuJsonPath = doc_root + "/home/menu.json"
@@ -101,28 +102,31 @@ def update_menu_json(new_item):
       menu_fp.write(json.dumps(data, indent=2))
 
 def put_kiwix_enabled_into_menu_json():
+   # steps:
+   #   1. Make sure all downloaded zims are in zim_verion_idx
+   #   2. Look for a back link to perma_ref in menuDefs
+   #   3. If back link exist update, otherwise create new menuDef
+
+   # check for un-indexed zims in zims/content/,write to zim_versions_idx.json
+   kiwix.get_zim_list(zim_path)
+   # use that data
    zim_idx = zim_version_idx_dir + zim_version_idx_file
-   kiwix.read_zim_versions_idx()
    if os.path.isfile(zim_idx):
       with open(zim_idx,"r") as zim_fp:
          zim_versions_info = json.loads(zim_fp.read())
-         #print(str(zim_versions_info))
-         for item in zim_versions_info:
-            # does a menuDef exist? if not create one
-            print('Checking if %s zimfile has a menu'%item)
-            menu_item = zim_versions_info[item].get('menu_item','')
-            print("menu_item: %s"%zim_versions_info[item])
-            if menu_item != None and menu_item != '':
-               if os.path.isfile(menuDefs + menu_item + '.json'):
-                  print('verify existence of %s'%menuDefs + menu_item + '.json')
-                  # make sure the home page references this item
-                  update_menu_json(menu_item)
-                  return
-            #fall through to create a menuDef stub
-            create_menu_def(item)
-   kiwix.get_zim_list()
-   kiwix.write_zim_versions_idx()
-         
+         for perma_ref in zim_versions_info:
+            # check if menuDef exists for this perma_ref
+            menu_def = kiwix.get_kiwix_catalog_item(perma_ref)
+            if menu_def != '':
+                file_name =zim_versions_info.get('file_name','')
+                if file_name != None and file_name != '':
+                    update_href_in_menu_def(menu_def,)
+                menu_item = zim_versions_info[perma_ref]['menu_item']
+            else:
+                # create menuDef
+                menu_item = create_menu_def(perma_ref, zim_versions_info)
+            update_menu_json(menu_item)
+
 def create_menu_def(zimname):
    print("creating %s"%zimname)
    item = kiwix.get_kiwix_catalog_item(zimname)
@@ -133,7 +137,7 @@ def create_menu_def(zimname):
    filename = lang + '-' + zimname + '.json'
    # create a stub for this zim
    menuDef = {}
-   default_logo = get_default_logo(zimname)
+   default_logo = get_default_logo(zimname,lang)
    menuDef["intended_use"] = "zim"
    menuDef["language"] = lang
    menuDef["logo_url"] = default_logo
@@ -150,10 +154,17 @@ def create_menu_def(zimname):
       menufile.write(json.dumps(menuDef,indent=2))
    return menuitem
 
+def update_href_in_menu_def(perma_ref,file_name):
+    with open(menuDefs + menu_def + '.json','r') as md_file:
+        menu_def_dict = json.reads(md_file.read())
+        menu_def_dict['file_name'] = file_name
+    with open(menuDefs + menu_def + '.json','w') as md_file:
+        md_file.write(json.dumps(menu_def_dict))
+   
 def put_oer2go_enabled_into_menu_json():
    pass
 
-def get_default_logo(logo_selector):
+def get_default_logo(logo_selector,lang):
    default_logos = {
       "wiktionary":"en-wiktionary.png",
       "wikivoyage":"en-wikivoyage.png",
@@ -161,15 +172,15 @@ def get_default_logo(logo_selector):
       "wiktionary":"en-wiktionary.png",
       "wikipedia":"en-wikipedia.png"
    }
-   #  Selectthe first part of the selector
+   #  Select the first part of the selector
    short_selector = logo_selector[:logo_selector.find('_')-1]
    # give preference to language if present
    for logo in default_logos:
       if logo.startswith(short_selector):
          return default_logos[logo]
-   """
+   
    # Maybe language is not present -- check for en-<selector>
-   en_default = "en-" + logo_selector
+   lang_default = lang +"-" + logo_selector
    for logo in default_logos:
       if logo.startswith(en_default):
          return default_logos[logo]
@@ -178,13 +189,11 @@ def get_default_logo(logo_selector):
    for logo in default_logos:
       if logo.startswith(nolang_selector):
          return default_logos[logo]
-   """
    # check for a png or jpg with same selector
-   if os.path.isfile(menuImages + logo_selector + '.jpg'):
-      return logo_selector + '.jpg'
-   if os.path.isfile(menuImages + logo_selector + '.png'):
-      return logo_selector + '.png'
-
+   if os.path.isfile(menuImages + lang_default + '.jpg'):
+      return lang_default + '.jpg'
+   if os.path.isfile(menuImages + lang_default + '.png'):
+      return lang_default + '.png'
    return ''
 
 def human_readable(num):
