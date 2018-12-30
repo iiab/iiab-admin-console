@@ -116,49 +116,61 @@ def put_kiwix_enabled_into_menu_json():
       with open(zim_idx,"r") as zim_fp:
          zim_versions_info = json.loads(zim_fp.read())
          for perma_ref in zim_versions_info:
+            # create the canonical menu_item name
+            lang = zim_versions_info[perma_ref].get('language','en')
+            default_name = lang + '-' + perma_ref + '.json'
             # check if menuDef exists for this perma_ref
             menu_item = kiwix.find_menuitem_from_zimname(perma_ref)
             if menu_item == '':
                # no menuDef points to this perma_ref
-               menu_item = create_menu_def(perma_ref, zim_versions_info)
-            lang = zim_versions_info[perma_ref].get('language','en')
-            update_menu_json(lang + '-' + perma_ref)
-         for perma_ref in zim_versions_info:
-             # update menu_item in zim_versions_idx        
-             if zim_versions_info[perma_ref]['menu_item'] == '':
-                 lang = zim_versions_info[perma_ref].get('language','en')
-                 zim_versions_info[perma_ref]['menu_item'] = \
-                         lang + '-' + perma_ref
-   # write the updated menu_item links
-   with open(zim_idx,"w") as zim_fp:
-      zim_fp.write(json.dumps(zim_versions_info,indent=2))
+               menu_item = create_menu_def(perma_ref, default_name)
+            update_menu_json(menu_item)
+      for perma_ref in zim_versions_info:
+         # update menu_item in zim_versions_idx        
+         if zim_versions_info[perma_ref]['menu_item'] == '':
+             lang = zim_versions_info[perma_ref].get('language','en')
+             zim_versions_info[perma_ref]['menu_item'] = menu_item
+      # write the updated menu_item links
+      with open(zim_idx,"w") as zim_fp:
+         zim_fp.write(json.dumps(zim_versions_info,indent=2))
 
-def create_menu_def(zimname,zim_versions_info):
-   #print("creating %s"%zimname)
-   item = kiwix.get_kiwix_catalog_item(zimname)
+def create_menu_def(perma_ref,default_name,intented_use='zim'):
+   # check for collision
+   collision = False
+   if os.path.isfile(default_name):
+      with open(default_name,"r") as menu_fp:
+         try:
+            menu_dict = json.reads(menu_fp.read())    
+            if menu_dict['intended_use'] == intended_use:
+               collision = True
+         except:
+            pass
+   if collision:
+      default_name = default_name[:-5] + '-' + intended_use + '.json'
+   item = kiwix.get_kiwix_catalog_item(perma_ref)
    if len(item.get('language','')) > 2:
      lang = item['language'][:2]
    else: # default to english
      lang = 'en'
-   filename = lang + '-' + zimname + '.json'
+   filename = lang + '-' + perma_ref + '.json'
    # create a stub for this zim
    menuDef = {}
-   default_logo = get_default_logo(zimname,lang)
+   default_logo = get_default_logo(perma_ref,lang)
    menuDef["intended_use"] = "zim"
    menuDef["language"] = lang
    menuDef["logo_url"] = default_logo
-   menuitem = lang + '-' + zimname
+   menuitem = lang + '-' + perma_ref
    menuDef["menu_item_name"] = menuitem
    menuDef["title"] = item.get('title','')
-   menuDef["zim_name"] = zimname
+   menuDef["zim_name"] = perma_ref
    menuDef["start_url"] = ''
    menuDef["description"] = 'Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Tags; [##tags##], Language: ##language##'
    menuDef["extra_html"] = ""
    menuDef["automatically_generated"] = "true"
    print("creating %s"%menuDefs + filename)
-   with open(menuDefs + filename,'w') as menufile:
+   with open(menuDefs + default_name,'w') as menufile:
       menufile.write(json.dumps(menuDef,indent=2))
-   return menuitem
+   return default_name[:-5]
 
 def update_href_in_menu_def(menu_def,perma_ref):
     with open(menuDefs + menu_def + '.json','r') as md_file:
