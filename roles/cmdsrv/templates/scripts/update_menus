@@ -134,18 +134,18 @@ def put_kiwix_enabled_into_menu_json():
       with open(zim_idx,"w") as zim_fp:
          zim_fp.write(json.dumps(zim_versions_info,indent=2))
 
-def create_menu_def(perma_ref,default_name,intented_use='zim'):
+def create_menu_def(perma_ref,default_name,intended_use='zim'):
    # check for collision
    collision = False
-   if os.path.isfile(default_name):
-      with open(default_name,"r") as menu_fp:
+   if os.path.isfile(menuDefs + default_name):
+      with open(menuDefs + default_name,"r") as menu_fp:
          try:
-            menu_dict = json.reads(menu_fp.read())    
-            if menu_dict['intended_use'] == intended_use:
+            menu_dict = json.loads(menu_fp.read()
+            if menu_dict['intended_use'] != intended_use:
                collision = True
-         except:
-            pass
-   if collision:
+         except Exception as e:
+            print(str(e))
+   if collision == True:
       default_name = default_name[:-5] + '-' + intended_use + '.json'
    item = kiwix.get_kiwix_catalog_item(perma_ref)
    if len(item.get('language','')) > 2:
@@ -167,7 +167,7 @@ def create_menu_def(perma_ref,default_name,intented_use='zim'):
    menuDef["description"] = 'Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Tags; [##tags##], Language: ##language##'
    menuDef["extra_html"] = ""
    menuDef["automatically_generated"] = "true"
-   print("creating %s"%menuDefs + filename)
+   print("creating %s"%menuDefs + default_name)
    with open(menuDefs + default_name,'w') as menufile:
       menufile.write(json.dumps(menuDef,indent=2))
    return default_name[:-5]
