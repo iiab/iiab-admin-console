@@ -37,6 +37,7 @@ zim_path = "/library/zims"
 menuDefs = doc_root + "/js-menu/menu-files/menu-defs/"
 menuImages = doc_root + "/js-menu/menu-files/images/"
 menuJsonPath = doc_root + "/home/menu.json"
+rachelPath = doc_root + 'modules'
 default_logos = {
    "wiktionary":"wiktionary.png",
 }
@@ -180,7 +181,15 @@ def update_href_in_menu_def(menu_def,perma_ref):
         md_file.write(json.dumps(menu_def_dict))
    
 def put_oer2go_enabled_into_menu_json():
-   pass
+   flist = os.listdir(rachelPath)
+   flist.sort()
+   for filename in flist:
+      if not os.path.isfile(menuDefs + filename + '.json'):
+         create_rachel_stub(menuDefs + filename + '.json')
+
+def create_rachel_stub(filename):
+   if os.path.isfile(filename):
+      return
 
 def get_default_logo(logo_selector,lang):
    default_logos = {
