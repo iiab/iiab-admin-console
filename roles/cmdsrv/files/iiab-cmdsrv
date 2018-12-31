@@ -88,6 +88,8 @@ rachel_working_dir = None
 rachel_version = None
 modules_dir = None
 small_device_size = 250000
+js_menu_dir = None
+
 # Global Variables
 last_command_rowid = 0
 last_job_rowid = 0
@@ -697,6 +699,7 @@ def cmd_handler(cmd_msg):
         "INST-RACHEL": install_rachel,
         "DEL-DOWNLOADS": del_downloads,
         "DEL-MODULES": del_modules,
+        "GET-MENU-ITEM-DEF-LIST": get_menu_item_def_list,
         "REBOOT": reboot_server,
         "POWEROFF": poweroff_server,
         #"REMOTE-ADMIN-CTL": remote_admin_ctl, #true/false
@@ -1709,6 +1712,20 @@ def install_rachel(cmd_info):
     #resp = cmd_error(cmd='INST-ZIMS', msg='Just testing')
     return resp
 
+# Content Menu Commands
+
+def get_menu_item_def_list(cmd_info):
+    menu_item_defs = []
+    menu_item_list = glob.glob(js_menu_dir + 'menu-files/menu-defs/*.json')
+    for item in menu_item_list:
+        menu_item_def =  item.split('/')[-1].split('.')[0] # trim full path and .json
+        menu_item_defs.append(menu_item_def)
+
+    resp = json.dumps(menu_item_defs)
+    return (resp)
+
+# Control Commands
+
 def restart_kiwix(cmd_info):
     rc = subprocess.call(["/usr/bin/iiab-make-kiwix-lib"])
     #print rc
@@ -2494,6 +2511,7 @@ def app_config():
     rachel_downloads_dir = conf['rachel_downloads_dir']
     rachel_working_dir = conf['rachel_working_dir']
     modules_dir = conf['modules_dir']
+    js_menu_dir = conf['js_menu_dir']
     squid_service = conf['squid_service']
     squid_whitelist = "/etc/%s/sites.whitelist.txt" % squid_service
     ansible_playbook_program = conf['ansible_playbook_program']
