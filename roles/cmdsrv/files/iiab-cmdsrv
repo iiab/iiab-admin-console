@@ -1721,7 +1721,7 @@ def get_menu_item_def_list(cmd_info):
         menu_item_def =  item.split('/')[-1].split('.')[0] # trim full path and .json
         menu_item_defs.append(menu_item_def)
 
-    resp = json.dumps(menu_item_defs)
+    resp = json.dumps(sorted(menu_item_defs))
     return (resp)
 
 # Control Commands
