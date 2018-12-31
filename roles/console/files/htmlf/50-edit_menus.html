@@ -9,8 +9,8 @@
 		<div class="col-md-3 iiab-left-nav"> <!-- Start left column -->
 			<h2>Content Menu Tasks</h2>
 			<ul id="editMenusMenu" class="nav nav-pills nav-stacked"> <!-- Start XXX Sub Level Menu -->
-				<li class="active"><a href="#menusDefineMenu">Edit Content Menus</a></li>
-				<li><a href="#menusDefineItems" call-after="">Edit Menu Items</a></li>
+				<li class="active"><a href="#menusDefineMenu" call-after="getMenuItemDefList">Edit Content Menus</a></li>
+				<li><a href="#menusDefineItems" call-after="nop">Edit Menu Items</a></li>
 			</ul> <!-- End XXX Sub Level Menu -->
 			<h2>Actions</h2>
 			<div class="action-buttons">
@@ -42,8 +42,8 @@
 					<div class="row">
 						<div class="col-sm-12">
 							<ul id="menusDefineMenuTabs" class="nav nav-tabs">
-								<li class="nav-item active"><a href="#menusDefineMenuProperties" class="nav-link small" call-after="">Menu Properties</a></li>
-								<li class="nav-item"><a href="#menusDefineMenuItems" class="nav-link small" call-after="">Content Item List</a></li>
+								<li class="nav-item active"><a href="#menusDefineMenuProperties" class="nav-link small" call-after="nop">Menu Properties</a></li>
+								<li class="nav-item"><a href="#menusDefineMenuItems" class="nav-link small" call-after="nop">Content Item List</a></li>
 							</ul>
 						</div>
 					</div>
@@ -64,14 +64,7 @@
 									<div class="row">
 										<div class="col-sm-6">
 											<h3>Menu Items in Current Menu</h3>
-											<div id="menusDefineMenuItemList" >  </div>
-											<ul>
-          <li class="column" draggable="true"><header>A</header></li>
-          <li class="column" draggable="true"><header>B</header></li>
-          <li class="column" draggable="true"><header>C</header></li>
-          <li class="column" draggable="true"><header>D</header></li>
-          <li class="column" draggable="true"><header>E</header></li>
-        </ul>
+											<div id="menusDefineMenuCurrentItemList" >  </div>
 										</div>
 										<div class="col-sm-6">
 											<h3>Available Menu Item Definitions</h3>

@@ -3,7 +3,9 @@
 
 var jsMenuUrl = "/js-menu";
 var jsMenuImageUrl = "/js-menu/menu-files/images/";
-var jsMenuItemDefUrl = "/js-menu/menu-files/menu-defs/"
+var jsMenuItemDefUrl = "/js-menu/menu-files/menu-defs/";
+var currentJsMenuToEdit = {};
+var currentJsMenuToEditUrl = 'home';
 var menuItemDefList = [];
 var menuItemDefs = {};
 menuItemDefs['call_count'] = 0;
@@ -20,6 +22,37 @@ function procMenuItemDefList (data){
 	for (var i = 0; i < menuItemDefList.length; i++) {
 		getMenuItemDef(menuItemDefList[i], "all-items")
 	}
+}
+
+function getContentMenuToEdit(currentJsMenuToEditUrl){
+	  var jsMenuToEditUrl = '/' + currentJsMenuToEditUrl + '/';
+		var resp = $.ajax({
+		type: 'GET',
+		async: true,
+		url: jsMenuToEditUrl + 'menu.json',
+		dataType: 'json'
+	})
+	.done(function( data ) {
+		currentJsMenuToEdit = data;
+		procCurrentMenuItemDefList (currentJsMenuToEdit.menu_items_1, "current-items"); // hard coded name of list against future multi-tab menus
+	})
+	.fail(function (jqXHR, textStatus, errorThrown){
+		jsonErrhandler (jqXHR, textStatus, errorThrown); // probably a json error
+	});
+	return resp;
+}
+
+// assumes all menu item definitions have been loaded
+function procCurrentMenuItemDefList (list, prefix){
+	var html = createMenuItemScaffold(list, prefix);
+	$("#menusDefineMenuCurrentItemList").html(html);
+	for (var i = 0; i < list.length; i++) {
+		var menu_item_name = list[i];
+		var divId = prefix + '-' + menu_item_name;
+
+		if (menuItemDefs[menu_item_name] !== 'undefined')
+  		genMenuItem(divId, menuItemDefs[menu_item_name]);
+  }
 }
 
 function createMenuItemScaffold(list, prefix){
