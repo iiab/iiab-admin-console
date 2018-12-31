@@ -126,6 +126,7 @@ def put_kiwix_enabled_into_menu_json():
             if True:
                # no menuDef points to this perma_ref
                menu_item = create_menu_def(perma_ref, default_name)
+               if menu_item == '': continue
             update_menu_json(menu_item)
      
             # make the menu_item reflect any name changes due to collision
@@ -135,6 +136,8 @@ def put_kiwix_enabled_into_menu_json():
          zim_fp.write(json.dumps(zim_versions_info,indent=2))
 
 def create_menu_def(perma_ref,default_name,intended_use='zim'):
+   # do not generate a menuDef for the test zim
+   if perma_ref == 'tes': return ""
    # check for collision
    collision = False
    if os.path.isfile(menuDefs + default_name):
@@ -228,7 +231,7 @@ def check_default_logos(selector):
       "wikem":"WikEM-Logo-m.png"
    }
    for logo in default_logos:
-      print("logo: %s  selector: %s"%(logo,selector))
+      #print("logo: %s  selector: %s"%(logo,selector))
       if logo.startswith(selector):
          return default_logos[logo]
    return ''
