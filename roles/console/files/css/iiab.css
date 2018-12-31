@@ -156,3 +156,39 @@ border-radius: 8px 8px 0 0;
 #statusJobsRefreshTime {
 	padding-left:20px;
 }
+
+/* content Menus */
+
+.content-item {
+    font-size: 1em;
+    padding: 10px 0 10px 0;
+    border: 1px solid #aaa;
+    border-radius: 5px;
+    margin-bottom: 2px;
+    background-color: #fff;
+    align-items: flex-start;
+    display: flex;
+}
+
+.content-icon {
+	  padding: 0 10px 0 10px;
+	  height: 40px;
+	  width: 100px;
+}
+
+.content-cell {
+	  vertical-align:top;
+	  padding: 0 10px 0 10px;
+}
+.content-item img {
+    max-width: 90px;
+    max-height: 40px;
+    /*margin-right: 10px;
+    margin-bottom: 32px;*/
+    border-radius: 5px;
+}
+
+.content-item-title {
+  font-size: 1.4em;
+  font-weight: 600;
+}
