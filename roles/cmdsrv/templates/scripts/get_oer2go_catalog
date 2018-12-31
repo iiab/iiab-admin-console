@@ -25,7 +25,7 @@ import argparse
 SCRIPT_DIR = '/opt/admin/cmdsrv/scripts'
 if not SCRIPT_DIR in sys.path:
     sys.path.append(SCRIPT_DIR)
-import update_menus as tools
+import iiab_update_menus as tools
 
 verbose = False
 jsonPath = "/etc/iiab/"
@@ -82,10 +82,12 @@ def main ():
 
     # make sure we have menu iiab_menu_dir if args.menu true
     if args.menu:
+        '''
         if args.no_download:
             sys.stdout.write("GET-OER2GO-CAT ERROR - --no_download and --menu options are incompatible\n")
             sys.stdout.flush()
             sys.exit(99)
+        '''
         if not os.path.isdir(iiab_menu_dir):
             sys.stdout.write("GET-OER2GO-CAT ERROR - iiab-menu not installed and --menu option given\n")
             sys.stdout.flush()

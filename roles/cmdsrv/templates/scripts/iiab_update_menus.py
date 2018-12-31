@@ -141,7 +141,7 @@ def create_menu_def(perma_ref,default_name,intended_use='zim'):
    if os.path.isfile(menuDefs + default_name):
       with open(menuDefs + default_name,"r") as menu_fp:
          try:
-            menu_dict = json.loads(menu_fp.read()
+            menu_dict = json.loads(menu_fp.read())
             if menu_dict['intended_use'] != intended_use:
                collision = True
          except Exception as e:
@@ -181,15 +181,13 @@ def update_href_in_menu_def(menu_def,perma_ref):
         md_file.write(json.dumps(menu_def_dict))
    
 def put_oer2go_enabled_into_menu_json():
-   flist = os.listdir(rachelPath)
-   flist.sort()
-   for filename in flist:
-      if not os.path.isfile(menuDefs + filename + '.json'):
-         create_rachel_stub(menuDefs + filename + '.json')
-
-def create_rachel_stub(filename):
-   if os.path.isfile(filename):
-      return
+   cmd = SCRIPT_DIR + '/get_oer2go_catalog --no-download'
+   args = shlex.split(cmd)
+   try:
+      outp = subprocess.check_output(args,shell=True)
+   except subprocess.CalledProcessError as e:
+      print(str(e))
+      sys.exit(1)
 
 def get_default_logo(logo_selector,lang):
    default_logos = {

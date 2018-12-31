@@ -128,7 +128,7 @@
             - scripts/*
 
 - name: Copy templated scripts
-  template: src={{ item }}
+  template: src="{{ item }}"
             dest="{{ cmdsrv_dir }}/scripts"
             mode=0755
             owner=root
@@ -140,14 +140,14 @@
             - scripts/iiab_update_menus.py
 
 - name: Allow running iiab_update_menus from the command line
-  file: src={{ cmdsrv_dir }}/scipts/iiab_update_menus.py
-        dest="/usr/bin/iiab-update-menus
+  file: src="{{ cmdsrv_dir }}/scripts/iiab_update_menus.py"
+        dest="/usr/bin/iiab-update-menus"
         state=link
 
 # The following allows update_menus to import a function from make_kiwix-lib
 - name: Create a link python can use to import iiab-make-kiwix-lib functions
   file: src="/usr/bin/iiab-make-kiwix-lib.py"
-        dest="{{ cmdsrv_dir }}/scripts/iiab_make_kiwix_lib.py"
+        dest="{{ cmdsrv_dir }}/scripts/iiab_make_kiwix_lib"
         state=link
 
 - name: Copy templated utilies
