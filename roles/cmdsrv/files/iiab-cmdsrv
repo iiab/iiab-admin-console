@@ -1716,7 +1716,7 @@ def install_rachel(cmd_info):
 
 def get_menu_item_def_list(cmd_info):
     menu_item_defs = []
-    menu_item_list = glob.glob(js_menu_dir + 'menu-files/menu-defs/*.json')
+    menu_item_list = glob(js_menu_dir + 'menu-files/menu-defs/*.json')
     for item in menu_item_list:
         menu_item_def =  item.split('/')[-1].split('.')[0] # trim full path and .json
         menu_item_defs.append(menu_item_def)
@@ -2468,6 +2468,7 @@ def app_config():
     global rachel_working_dir
     global rachel_version
     global modules_dir
+    global js_menu_dir
     global ansible_playbook_program
     global ansible_program
     global apache_user
