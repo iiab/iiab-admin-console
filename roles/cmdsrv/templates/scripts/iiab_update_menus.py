@@ -188,6 +188,25 @@ def put_oer2go_enabled_into_menu_json():
       sys.exit(1)
 
 def get_default_logo(logo_selector,lang):
+   #  Select the first part of the selector
+   short_selector = logo_selector[:logo_selector.find('_')-1]
+   # give preference to language if present
+   if check_everything(short_selector) == '':
+      # try for a match without language prefix
+      nolang_selector = short_selector[3:]
+      if check_everything(nolang_selector) == '':
+          # Maybe logo is present in en-- check for en-<selector>
+          en_default = "en-" + nolang_selector
+          if check_everything(en_default) == '':
+             # add more checks here
+             return ''
+
+def check_everything(selector):
+   if check-default_logos(selector) == '':
+      if check_jpg_png(selector) == '':
+         return ''
+
+def check_default_logos(selector):
    default_logos = {
       "wiktionary":"en-wiktionary.png",
       "wikivoyage":"en-wikivoyage.png",
@@ -195,32 +214,21 @@ def get_default_logo(logo_selector,lang):
       "wiktionary":"en-wiktionary.png",
       "wikipedia":"en-wikipedia.png"
    }
-   #  Select the first part of the selector
-   short_selector = logo_selector[:logo_selector.find('_')-1]
-   # give preference to language if present
    for logo in default_logos:
-      if logo.startswith(short_selector):
+      if logo.startswith(selector):
          return default_logos[logo]
-   
-   # Maybe language is not present -- check for en-<selector>
-   lang_default = lang +"-" + logo_selector
-   for logo in default_logos:
-      if logo.startswith(lang_default):
-         return default_logos[logo]
-   # try for a match without language prefix
-   nolang_selector = logo_selector[3:]
-   for logo in default_logos:
-      if logo.startswith(nolang_selector):
-         return default_logos[logo]
+   return ''
+
+def check_jpg_png(selector):
    # check for a png or jpg with same selector
-   if os.path.isfile(menuImages + lang_default + '.jpg'):
-      return lang_default + '.jpg'
-   if os.path.isfile(menuImages + lang_default.lower() + '.jpg'):
-      return lang_default.lower() + '.jpg'
-   if os.path.isfile(menuImages + lang_default + '.png'):
-      return lang_default + '.png'
-   if os.path.isfile(menuImages + lang_default.lower() + '.png'):
-      return lang_default.lower()+ '.png'
+   if os.path.isfile(menuImages + selector + '.jpg'):
+      return selector + '.jpg'
+   if os.path.isfile(menuImages + selector.lower() + '.jpg'):
+      return selector.lower() + '.jpg'
+   if os.path.isfile(menuImages + selector + '.png'):
+      return selector + '.png'
+   if os.path.isfile(menuImages + selector.lower() + '.png'):
+      return selector.lower()+ '.png'
    return ''
 
 def human_readable(num):
