@@ -29,6 +29,7 @@
 						<li class="active"><a href="#ControlServer">Control</a></li>
 						<li><a href="#Configure">Configure</a></li>
 						<li><a href="#InstallContent">Install Content</a></li>
+						<li><a href="#ContentMenus">Content Menus</a></li>
 						<!--  <li><a href="#Future">Assemble Content</a></li> -->
 						<li><a href="#Util">Utilities</a></li>
 						<li><a href="#Help">Help</a></li>
@@ -82,6 +83,8 @@
 					<div class="tab-pane" id="Configure"></div>
 					<!-- InstallContent Pane -->
 					<div class="tab-pane" id="InstallContent"></div>
+					<!-- ContentMenus Pane -->
+					<div class="tab-pane" id="ContentMenus"></div>
 					<!-- Utilities Pane -->
 					<div class="tab-pane" id="Util"></div>
 
@@ -245,6 +248,10 @@
         $.get('htmlf/40-install_content.html', function(data) {
             $('#InstallContent').html(data);
             instContentButtonsEvents();
+        }),
+        $.get('htmlf/50-edit_menus.html', function(data) { // this should be conditional on js_menu_install: True
+            $('#ContentMenus').html(data);
+            //instContentButtonsEvents();
         }),
         $.get('htmlf/70-utilities.html', function(data) {
             $('#Util').html(data);

@@ -1,0 +1,101 @@
+<!-- Start EditMenus Top Level Pane -->
+<div class="row-fluid"> <!-- EditMenus Top Level Header -->
+	<div class="col-md-9 col-md-offset-3">
+		<h1>Manage Content Menus</h1>
+	</div>
+</div> <!-- row-fluid -->
+<div class="tabbable"> <!-- Start EditMenus Sublevel Menu Items and Options -->
+	<div class="row-fluid"> <!-- Start containing row -->
+		<div class="col-md-3 iiab-left-nav"> <!-- Start left column -->
+			<h2>Content Menu Tasks</h2>
+			<ul id="editMenusMenu" class="nav nav-pills nav-stacked"> <!-- Start XXX Sub Level Menu -->
+				<li class="active"><a href="#menusDefineMenu">Edit Content Menus</a></li>
+				<li><a href="#menusDefineItems" call-after="">Edit Menu Items</a></li>
+			</ul> <!-- End XXX Sub Level Menu -->
+			<h2>Actions</h2>
+			<div class="action-buttons">
+				<button id="" type="button" class="btn btn-lg btn-success">Do Somethingy</button>
+			</div>
+		</div> <!-- left column -->
+		<div class="col-md-9"> <!-- Start right column -->
+			<div id="EditMenusOptions" class="tab-content"> <!-- Start Container for Sub Menu Options Panes -->
+
+
+				<div class="tab-pane active" id="menusDefineMenu"> <!-- Start menusDefineMenu Submenu Option Pane -->
+					<h2>Edit Content Menus</h2>
+					<div class="row">
+						<div class="col-sm-8">
+						  <p>This menu option allows you to define home page menus.
+					    </p>
+					    <div class="row">
+					      <label class="col-md-2">Menu Folder</label>
+					      <div class="col-md-3"><input type="text" class="form-control" name="menu_dir" id="menu_dir" value="home"></div>
+					      <div class="col-md-6">
+					        <button id="LOAD-CONTENT-MENU" type="button" class="btn btn-primary">Load Menu</button>
+					        <button id="CREATE-CONTENT-MENU" type="button" class="btn btn-primary">Create New Menu</button>
+					        <button id="SAVE-CONTENT-MENU" type="button" class="btn btn-primary">Save Menu</button>
+					      </div>
+					    </div>
+					    <p></p>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-sm-12">
+							<ul id="menusDefineMenuTabs" class="nav nav-tabs">
+								<li class="nav-item active"><a href="#menusDefineMenuProperties" class="nav-link small" call-after="">Menu Properties</a></li>
+								<li class="nav-item"><a href="#menusDefineMenuItems" class="nav-link small" call-after="">Content Item List</a></li>
+							</ul>
+						</div>
+					</div>
+
+					<div class="row">
+						<div class="col-sm-12">
+							<div id="menusDefineMenuTabsPanes" class="tab-content">
+								<div id="menusDefineMenuProperties" class="tab-pane active">
+									<div class="row">
+										<div class="col-sm-12">
+											<h3>Properties of Current Menu</h3>
+											<div id="menusDefineMenuPropertiesFields" >  </div>
+										</div>
+									</div>
+
+								</div>
+								<div id="menusDefineMenuItems" class="tab-pane">
+									<div class="row">
+										<div class="col-sm-6">
+											<h3>Menu Items in Current Menu</h3>
+											<div id="menusDefineMenuItemList" >  </div>
+											<ul>
+          <li class="column" draggable="true"><header>A</header></li>
+          <li class="column" draggable="true"><header>B</header></li>
+          <li class="column" draggable="true"><header>C</header></li>
+          <li class="column" draggable="true"><header>D</header></li>
+          <li class="column" draggable="true"><header>E</header></li>
+        </ul>
+										</div>
+										<div class="col-sm-6">
+											<h3>Available Menu Item Definitions</h3>
+											<div id="menusDefineMenuAllItemList" >  </div>
+											<ul>
+          <li class="column" draggable="true"><header>1</header></li>
+          <li class="column" draggable="true"><header>2</header></li>
+          <li class="column" draggable="true"><header>3</header></li>
+          <li class="column" draggable="true"><header>4</header></li>
+          <li class="column" draggable="true"><header>5</header></li>
+          <li class="column" draggable="true"><header>6</header></li>
+          <li class="column" draggable="true"><header>7</header></li>
+        </ul>
+										</div>
+									</div>
+
+								</div>
+
+							</div>
+						</div>
+					</div>
+				</div> <!--  End menusDefineMenu Submenu Option Pane -->
+			</div> <!-- End Container for Sub Menu Options Panes -->
+		</div> <!-- right column -->
+	</div> <!-- End containing row -->
+</div> <!-- End XXX Sublevel Menu Items and Options -->
+</div> <!-- End EditMenus Top Level Pane -->
