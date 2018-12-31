@@ -126,11 +126,9 @@ def put_kiwix_enabled_into_menu_json():
                # no menuDef points to this perma_ref
                menu_item = create_menu_def(perma_ref, default_name)
             update_menu_json(menu_item)
-      for perma_ref in zim_versions_info:
-         # update menu_item in zim_versions_idx        
-         if zim_versions_info[perma_ref]['menu_item'] == '':
-             lang = zim_versions_info[perma_ref].get('language','en')
-             zim_versions_info[perma_ref]['menu_item'] = menu_item
+     
+            # make the menu_item reflect any name changes due to collision
+            zim_versions_info[perma_ref]['menu_item'] = menu_item
       # write the updated menu_item links
       with open(zim_idx,"w") as zim_fp:
          zim_fp.write(json.dumps(zim_versions_info,indent=2))
@@ -161,7 +159,7 @@ def create_menu_def(perma_ref,default_name,intended_use='zim'):
    menuDef["language"] = lang
    menuDef["logo_url"] = default_logo
    menuitem = lang + '-' + perma_ref
-   menuDef["menu_item_name"] = menuitem
+   menuDef["menu_item_name"] = default_name[:5]
    menuDef["title"] = item.get('title','')
    menuDef["zim_name"] = perma_ref
    menuDef["start_url"] = ''
