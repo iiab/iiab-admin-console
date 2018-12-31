@@ -122,7 +122,8 @@ def put_kiwix_enabled_into_menu_json():
             default_name = lang + '-' + perma_ref + '.json'
             # check if menuDef exists for this perma_ref
             menu_item = kiwix.find_menuitem_from_zimname(perma_ref)
-            if menu_item == '':
+            #if menu_item == '':
+            if True:
                # no menuDef points to this perma_ref
                menu_item = create_menu_def(perma_ref, default_name)
             update_menu_json(menu_item)
@@ -189,22 +190,33 @@ def put_oer2go_enabled_into_menu_json():
 
 def get_default_logo(logo_selector,lang):
    #  Select the first part of the selector
-   short_selector = logo_selector[:logo_selector.find('_')-1]
+   short_selector = logo_selector[:logo_selector.find('_')]
    # give preference to language if present
-   if check_everything(short_selector) == '':
+   rtn = check_everything(short_selector)
+   if rtn == '':
       # try for a match without language prefix
       nolang_selector = short_selector[3:]
-      if check_everything(nolang_selector) == '':
+      rtn = check_everything(nolang_selector)
+      if rtn == '':
           # Maybe logo is present in en-- check for en-<selector>
-          en_default = "en-" + nolang_selector
-          if check_everything(en_default) == '':
+          en_default = "en-" + short_selector
+          rtn = check_everything(en_default)
+          if rtn == '':
              # add more checks here
              return ''
+          else:
+             return rtn
+      else:
+         return rtn
+   else:
+       return rtn
 
 def check_everything(selector):
-   if check-default_logos(selector) == '':
-      if check_jpg_png(selector) == '':
-         return ''
+   rtn = check_default_logos(selector)
+   if rtn == '':
+      return check_jpg_png(selector)
+   else:
+      return rtn
 
 def check_default_logos(selector):
    default_logos = {
@@ -212,9 +224,11 @@ def check_default_logos(selector):
       "wikivoyage":"en-wikivoyage.png",
       "wikinews":"wikinews-logo.png",
       "wiktionary":"en-wiktionary.png",
-      "wikipedia":"en-wikipedia.png"
+      "wikipedia":"en-wikipedia.png",
+      "wikem":"WikEM-Logo-m.png"
    }
    for logo in default_logos:
+      print("logo: %s  selector: %s"%(logo,selector))
       if logo.startswith(selector):
          return default_logos[logo]
    return ''
