@@ -158,6 +158,9 @@ def main ():
                 msg = "Generating menu files"
                 if verbose:
                     print "%s %s %s" % (msg, id, moddir)
+            if module['has_live_menudef'] and module['module_downloaded']:
+                print('Updating /home/menu.json with %s'%moddir)
+                tools.update_menu_json(moddir)
         else:
             msg = "Skipping module not needed by Internet in a Box"
             if verbose:
@@ -295,8 +298,6 @@ def proc_module (module):
             json.dump(menu_item, fp, indent=2)
 
     os.remove(working_dir + "rachel-index.php")
-
-    tools.update_menu_json(moddir)
 
     return menu_item
 

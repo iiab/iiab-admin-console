@@ -163,7 +163,7 @@ def create_menu_def(perma_ref,default_name,intended_use='zim'):
    menuDef["language"] = lang
    menuDef["logo_url"] = default_logo
    menuitem = lang + '-' + perma_ref
-   menuDef["menu_item_name"] = default_name[:5]
+   menuDef["menu_item_name"] = default_name[:-5]
    menuDef["title"] = item.get('title','')
    menuDef["zim_name"] = perma_ref
    menuDef["start_url"] = ''
@@ -183,7 +183,7 @@ def update_href_in_menu_def(menu_def,perma_ref):
         md_file.write(json.dumps(menu_def_dict))
    
 def put_oer2go_enabled_into_menu_json():
-   cmd = SCRIPT_DIR + '/get_oer2go_catalog --no-download'
+   cmd = SCRIPT_DIR + '/get_oer2go_catalog --no-download -v'
    args = shlex.split(cmd)
    try:
       outp = subprocess.check_output(args,shell=True)
@@ -234,6 +234,8 @@ def check_default_logos(selector):
       #print("logo: %s  selector: %s"%(logo,selector))
       if logo.startswith(selector):
          return default_logos[logo]
+   if selector.find('stackexchange') > -1:
+      return "stackexchange.png"
    return ''
 
 def check_jpg_png(selector):
