@@ -5,7 +5,6 @@ var jsMenuUrl = "/js-menu";
 var jsMenuImageUrl = "/js-menu/menu-files/images/";
 var jsMenuItemDefUrl = "/js-menu/menu-files/menu-defs/";
 var currentJsMenuToEdit = {};
-var currentJsMenuToEditUrl = 'home';
 var menuItemDefList = [];
 var menuItemDefs = {};
 menuItemDefs['call_count'] = 0;

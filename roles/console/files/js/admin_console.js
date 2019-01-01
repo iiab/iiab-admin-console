@@ -330,6 +330,15 @@ function instContentButtonsEvents() {
 
 }
 
+  // Content Menu Buttons
+
+function contentMenuButtonsEvents() {
+  $("#LOAD-CONTENT-MENU").click(function(){
+  	var currentJsMenuToEditUrl = $("#content_menu_dir").val();
+    getContentMenuToEdit(currentJsMenuToEditUrl);
+  });
+}
+
   // Util Buttons
 
 function utilButtonsEvents() {

@@ -251,7 +251,7 @@
         }),
         $.get('htmlf/50-edit_menus.html', function(data) { // this should be conditional on js_menu_install: True
             $('#ContentMenus').html(data);
-            //instContentButtonsEvents();
+            contentMenuButtonsEvents();
         }),
         $.get('htmlf/70-utilities.html', function(data) {
             $('#Util').html(data);
