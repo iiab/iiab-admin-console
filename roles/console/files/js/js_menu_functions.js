@@ -9,6 +9,9 @@ var menuItemDefList = [];
 var menuItemDefs = {};
 menuItemDefs['call_count'] = 0;
 
+var menuItemDragSrcElement = null;
+var menuItemDragSrcParent = null;
+
 function getMenuItemDefList(){
 	return sendCmdSrvCmd("GET-MENU-ITEM-DEF-LIST", procMenuItemDefList);
 }
@@ -58,7 +61,7 @@ function createMenuItemScaffold(list, prefix){
   var html = "";
   for (var i = 0; i < list.length; i++) {
   	var menu_item_name = list[i];
-  	html += '<div id="' + prefix + '-' + menu_item_name + '" class="flex-row content-item" dir="auto">&emsp;Attempting to load ' + menu_item_name + ' </div>';
+  	html += '<div id="' + prefix + '-' + menu_item_name + '" class="flex-row content-item" dir="auto" draggable="true">&emsp;Attempting to load ' + menu_item_name + ' </div>';
   }
   return html;
 }
@@ -111,14 +114,132 @@ function genMenuItem(divId, module) {
 	menuHtml+='</div></div>';
 
 	$("#" + divId).html(menuHtml);
+	menuItemAddDnDHandlers($("#" + divId).get(0));
 }
 
 function checkMenuDone(){
 	menuItemDefs['call_count'] -= 1;
-	consoleLog (menuItemDefs['call_count']);
+	//consoleLog (menuItemDefs['call_count']);
 	if (menuItemDefs['call_count'] == 0){
 		//genLangSelector();
 		//activateButtons();
 		//alert ("menu done");
 	}
 }
+
+// drag and drop funtions
+
+function menuItemDragStart(e) {
+  // Target (this) element is the source node.
+  menuItemDragSrcElement = this;
+  menuItemDragSrcParent = this.parentNode.id;
+  console.log(this)
+  console.log(this.parentNode)
+
+  e.dataTransfer.effectAllowed = 'moveCopy';
+
+  e.dataTransfer.setData('text/html', this.outerHTML);
+
+  this.classList.add('dragElem');
+}
+
+function menuItemDragOver(e) {
+  if (e.preventDefault) {
+    e.preventDefault(); // Necessary. Allows us to drop.
+  }
+  this.classList.add('over');
+  console.log(this)
+  console.log(this.parentNode)
+
+  if (menuItemDragSrcParent == "menusDefineMenuCurrentItemList")
+    e.dataTransfer.effectAllowed = 'move';
+  else { // available items
+  if (this.parentNode.id == "menusDefineMenuCurrentItemList") // to menu
+    e.dataTransfer.effectAllowed = 'copy';
+  else // to itself
+    e.dataTransfer.effectAllowed = 'none';
+
+    //e.dataTransfer.dropEffect = 'move';  // See the section on the DataTransfer object.
+  }
+    return false;
+}
+
+function menuItemDragEnter(e) {
+  // this / e.target is the current hover target.
+}
+
+function menuItemDragLeave(e) {
+  this.classList.remove('over');  // this / e.target is previous target element.
+}
+
+function menuItemDrop(e) {
+  // this/e.target is current target element.
+  var dragDestPar = this.parentNode.id;
+  if (e.stopPropagation) {
+    e.stopPropagation(); // Stops some browsers from redirecting.
+  }
+
+  // If move within menu and new location is different
+  if (menuItemDragSrcParent == "menusDefineMenuCurrentItemList" && dragDestPar == "menusDefineMenuCurrentItemList" && menuItemDragSrcElement != this){
+    // Set the source column's HTML to the HTML of the column we dropped on.
+    //alert(this.outerHTML);
+    //menuItemDragSrcElement.innerHTML = this.innerHTML;
+    //this.innerHTML = e.dataTransfer.getData('text/html');
+    this.parentNode.removeChild(menuItemDragSrcElement);
+    var dropHTML = e.dataTransfer.getData('text/html');
+    this.insertAdjacentHTML('beforebegin',dropHTML);
+    var dropElem = this.previousSibling;
+    menuItemAddDnDHandlers(dropElem);
+  }
+  // if copy from items to menu
+  if (menuItemDragSrcParent == "menusDefineMenuAllItemList" && dragDestPar == "menusDefineMenuCurrentItemList" && menuItemDragSrcElement.innerText != this.innerText){
+    // Set the source column's HTML to the HTML of the column we dropped on.
+    //alert(this.outerHTML);
+    //menuItemDragSrcElement.innerHTML = this.innerHTML;
+    //this.innerHTML = e.dataTransfer.getData('text/html');
+    var dropHTML = e.dataTransfer.getData('text/html');
+    this.insertAdjacentHTML('beforebegin',dropHTML);
+    var dropElem = this.previousSibling;
+    //menuItemDragSrcElement.classList.remove('dragElem');
+    menuItemAddDnDHandlers(dropElem);
+  }
+  // if move from menu to items to delete
+  if (menuItemDragSrcParent == "menusDefineMenuCurrentItemList" && dragDestPar == "menusDefineMenuAllItemList"){
+    // Set the source column's HTML to the HTML of the column we dropped on.
+    //alert(this.outerHTML);
+    //menuItemDragSrcElement.innerHTML = this.innerHTML;
+    //this.innerHTML = e.dataTransfer.getData('text/html');
+    document.getElementById("menusDefineMenuCurrentItemList").removeChild(menuItemDragSrcElement);
+  }
+  this.classList.remove('over');
+  menuItemDragSrcElement.classList.remove('dragElem');
+
+  return false;
+}
+
+function menuItemDragEnd(e) {
+  // this/e.target is the source node.
+  this.classList.remove('over');
+
+  /*[].forEach.call(cols, function (col) {
+  col.classList.remove('over');
+  });*/
+}
+
+function menuItemAddDnDHandlers(elem) {
+	consoleLog(elem);
+  elem.addEventListener('dragstart', menuItemDragStart, false);
+  elem.addEventListener('dragenter', menuItemDragEnter, false)
+  elem.addEventListener('dragover', menuItemDragOver, false);
+  elem.addEventListener('dragleave', menuItemDragLeave, false);
+  elem.addEventListener('drop', menuItemDrop, false);
+  elem.addEventListener('dragend', menuItemDragEnd, false);
+
+}
+
+/*
+var menuCols = document.querySelectorAll('#menu .column');
+var itemCols = document.querySelectorAll('#items .column');
+[].forEach.call(menuCols, menuItemAddDnDHandlers);
+[].forEach.call(itemCols, menuItemAddDnDHandlers);
+*/

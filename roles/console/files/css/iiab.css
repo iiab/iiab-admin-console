@@ -168,6 +168,7 @@ border-radius: 8px 8px 0 0;
     background-color: #fff;
     align-items: flex-start;
     display: flex;
+    cursor: move;
 }
 
 .content-icon {
@@ -192,3 +193,17 @@ border-radius: 8px 8px 0 0;
   font-size: 1.4em;
   font-weight: 600;
 }
+
+.content-item.dragElem {
+  opacity: 0.4;
+}
+.content-item.over {
+  //border: 2px dashed #000;
+  border-top: 2px solid blue;
+}
+
+#menusDefineMenuAllItemList, #menusDefineMenuAllItemList {
+  overflow: auto;
+  max-height: 100vh;
+}
+
