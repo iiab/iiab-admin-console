@@ -3,6 +3,12 @@
 """
    Author: George Hunt <georgejhunt <at> gmail.com>
 """
+# reminders:
+# zim_name in menu-def is search item in common/assets/zim_versions_idx.json
+# file_name in zim_versions_idx referenced by zim_name is href:<target url>
+# To avoid collisions with rachel, or embedded '.', menu-def filename may differ
+# To find search items (size, articleCount, etc) menu_item_name in menu-def
+#      must match zim_versions_idx['menu_item']
 
 import os, sys, syslog
 import json
@@ -150,6 +156,9 @@ def create_menu_def(perma_ref,default_name,intended_use='zim'):
             print(str(e))
    if collision == True:
       default_name = default_name[:-5] + '-' + intended_use + '.json'
+   # the following fixes menudefs with embeddded '.' in file name
+   if default_name.find('.') > -1:
+       default_name = default_name[:-5].replace('.','_') + '.json'
    item = kiwix.get_kiwix_catalog_item(perma_ref)
    if len(item.get('language','')) > 2:
      lang = item['language'][:2]
