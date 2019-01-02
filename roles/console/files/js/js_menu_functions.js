@@ -61,7 +61,7 @@ function createMenuItemScaffold(list, prefix){
   var html = "";
   for (var i = 0; i < list.length; i++) {
   	var menu_item_name = list[i];
-  	html += '<div id="' + prefix + '-' + menu_item_name + '" class="flex-row content-item" dir="auto" draggable="true">&emsp;Attempting to load ' + menu_item_name + ' </div>';
+  	html += '<div id="' + prefix + '-' + menu_item_name + '" class="flex-row content-item" dir="auto" draggable="true" menu_item_name="' + menu_item_name + '">&emsp;Attempting to load ' + menu_item_name + ' </div>';
   }
   return html;
 }
@@ -200,6 +200,7 @@ function menuItemDrop(e) {
     var dropHTML = e.dataTransfer.getData('text/html');
     this.insertAdjacentHTML('beforebegin',dropHTML);
     var dropElem = this.previousSibling;
+    dropElem.id = 'current-items-' + dropElem.getAttribute('menu_item_name');
     //menuItemDragSrcElement.classList.remove('dragElem');
     menuItemAddDnDHandlers(dropElem);
   }
