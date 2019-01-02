@@ -11,6 +11,7 @@ menuItemDefs['call_count'] = 0;
 
 var menuItemDragSrcElement = null;
 var menuItemDragSrcParent = null;
+var menuItemDragDuplicate = null;
 
 function getMenuItemDefList(){
 	return sendCmdSrvCmd("GET-MENU-ITEM-DEF-LIST", procMenuItemDefList);
@@ -133,13 +134,26 @@ function menuItemDragStart(e) {
   // Target (this) element is the source node.
   menuItemDragSrcElement = this;
   menuItemDragSrcParent = this.parentNode.id;
-  console.log(this)
-  console.log(this.parentNode)
+  var menu_item_name = this.getAttribute('menu_item_name');
+  var targetDivId = gEBI("current-items-" + menu_item_name);
+
+  //console.log("START")
+  //console.log(this)
+  //console.log(this.parentNode)
+  //console.log(targetDivId)
 
   e.dataTransfer.effectAllowed = 'moveCopy';
 
   e.dataTransfer.setData('text/html', this.outerHTML);
-
+  e.dataTransfer.setData('menu_item_name', menu_item_name);
+  if (targetDivId == null) {
+    menuItemDragDuplicate = false;
+    //e.dataTransfer.setData('is_duplicate', false); doesn't work
+  }
+  else {
+    //e.dataTransfer.setData('is_duplicate', true);
+    menuItemDragDuplicate = true;
+  }
   this.classList.add('dragElem');
 }
 
@@ -147,21 +161,27 @@ function menuItemDragOver(e) {
   if (e.preventDefault) {
     e.preventDefault(); // Necessary. Allows us to drop.
   }
-  this.classList.add('over');
-  console.log(this)
-  console.log(this.parentNode)
+  //this.classList.add('over');
+  //console.log(this)
+  //console.log(this.parentNode)
 
-  if (menuItemDragSrcParent == "menusDefineMenuCurrentItemList")
+  if (menuItemDragSrcParent == "menusDefineMenuCurrentItemList"){ // from current menu list
     e.dataTransfer.effectAllowed = 'move';
-  else { // available items
-  if (this.parentNode.id == "menusDefineMenuCurrentItemList") // to menu
-    e.dataTransfer.effectAllowed = 'copy';
-  else // to itself
-    e.dataTransfer.effectAllowed = 'none';
+    this.classList.add('over');
+  }
+  else { // from available items
+    if (this.parentNode.id == "menusDefineMenuCurrentItemList"){ // to menu
+      e.dataTransfer.effectAllowed = 'copy';
+      this.classList.add('over');
+    }
+    else { // to itself
+      e.dataTransfer.effectAllowed = 'none';
+      this.classList.add('no-drop');
+    }
 
     //e.dataTransfer.dropEffect = 'move';  // See the section on the DataTransfer object.
   }
-    return false;
+  //return false;
 }
 
 function menuItemDragEnter(e) {
@@ -175,10 +195,15 @@ function menuItemDragLeave(e) {
 function menuItemDrop(e) {
   // this/e.target is current target element.
   var dragDestPar = this.parentNode.id;
+  this.classList.remove('over');
+  menuItemDragSrcElement.classList.remove('dragElem');
+
+
   if (e.stopPropagation) {
     e.stopPropagation(); // Stops some browsers from redirecting.
   }
-
+  //console.log("DROP")
+  //consoleLog("is duplicate",e.dataTransfer.getData('is_duplicate'));
   // If move within menu and new location is different
   if (menuItemDragSrcParent == "menusDefineMenuCurrentItemList" && dragDestPar == "menusDefineMenuCurrentItemList" && menuItemDragSrcElement != this){
     // Set the source column's HTML to the HTML of the column we dropped on.
@@ -192,17 +217,14 @@ function menuItemDrop(e) {
     menuItemAddDnDHandlers(dropElem);
   }
   // if copy from items to menu
-  if (menuItemDragSrcParent == "menusDefineMenuAllItemList" && dragDestPar == "menusDefineMenuCurrentItemList" && menuItemDragSrcElement.innerText != this.innerText){
-    // Set the source column's HTML to the HTML of the column we dropped on.
-    //alert(this.outerHTML);
-    //menuItemDragSrcElement.innerHTML = this.innerHTML;
-    //this.innerHTML = e.dataTransfer.getData('text/html');
-    var dropHTML = e.dataTransfer.getData('text/html');
-    this.insertAdjacentHTML('beforebegin',dropHTML);
-    var dropElem = this.previousSibling;
-    dropElem.id = 'current-items-' + dropElem.getAttribute('menu_item_name');
-    //menuItemDragSrcElement.classList.remove('dragElem');
-    menuItemAddDnDHandlers(dropElem);
+  if (menuItemDragSrcParent == "menusDefineMenuAllItemList" && dragDestPar == "menusDefineMenuCurrentItemList") {
+  	if (!menuItemDragDuplicate) {
+      var dropHTML = e.dataTransfer.getData('text/html');
+      this.insertAdjacentHTML('beforebegin',dropHTML);
+      var dropElem = this.previousSibling;
+      dropElem.id = 'current-items-' + dropElem.getAttribute('menu_item_name');
+      menuItemAddDnDHandlers(dropElem);
+    }
   }
   // if move from menu to items to delete
   if (menuItemDragSrcParent == "menusDefineMenuCurrentItemList" && dragDestPar == "menusDefineMenuAllItemList"){
@@ -210,12 +232,12 @@ function menuItemDrop(e) {
     //alert(this.outerHTML);
     //menuItemDragSrcElement.innerHTML = this.innerHTML;
     //this.innerHTML = e.dataTransfer.getData('text/html');
-    document.getElementById("menusDefineMenuCurrentItemList").removeChild(menuItemDragSrcElement);
+    gEBI("menusDefineMenuCurrentItemList").removeChild(menuItemDragSrcElement);
   }
-  this.classList.remove('over');
-  menuItemDragSrcElement.classList.remove('dragElem');
+  //this.classList.remove('over');
+  //menuItemDragSrcElement.classList.remove('dragElem');
 
-  return false;
+  //return false;
 }
 
 function menuItemDragEnd(e) {
@@ -244,3 +266,7 @@ var itemCols = document.querySelectorAll('#items .column');
 [].forEach.call(menuCols, menuItemAddDnDHandlers);
 [].forEach.call(itemCols, menuItemAddDnDHandlers);
 */
+function gEBI(elementId){
+	var element = document.getElementById(elementId);
+	return element;
+}
