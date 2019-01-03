@@ -200,7 +200,8 @@ def get_status (item):
 
     moddir = item['moddir']
     # check if menu def exists
-    if os.path.exists(iiab_menu_repo_dir +  'menu-files/menu-defs/' + moddir + '.json'):
+    #if os.path.exists(iiab_menu_repo_dir +  'menu-files/menu-defs/' + moddir + '.json'):
+    if os.path.exists(doc_root_menu_defs + moddir + '.json'):
         msg = "Found menudef for"
         item['has_live_menudef'] = True
     elif os.path.exists(iiab_menu_repo_dir +  'incompatible/wip/' + moddir + '.json'):
@@ -268,24 +269,27 @@ def proc_module (module):
     #print "Downloading rachel-index.php"
     cmdstr = "rsync -Pavz " + menu_item['rsync_url'] + "/rachel-index.php " + working_dir
     args = shlex.split(cmdstr)
-    outp = subprocess.check_output(args)
+    try:
+       outp = subprocess.check_output(args)
 
-    # look for ul list as submenu and create extra html file if exists
-    with open(working_dir + "rachel-index.php", 'r') as fp:
-        php = fp.read()
+       # look for ul list as submenu and create extra html file if exists
+       with open(working_dir + "rachel-index.php", 'r') as fp:
+           php = fp.read()
 
-    # print php
-    ulpos = php.find('<ul')
-    divpos = php.find('</div>',ulpos)
-    if ulpos != -1:
-        htmlfile = moddir + '.html'
-        php_frag = php[ulpos:divpos]
-        #print php_frag
-        html = re.sub(php_parser,"##HREF-BASE##", php_frag)
-        with open(iiab_menu_download_dir + htmlfile, 'w') as fp:
-            fp.write(html)
-        menu_item['extra_html'] = htmlfile
-
+       # print php
+       ulpos = php.find('<ul')
+       divpos = php.find('</div>',ulpos)
+       if ulpos != -1:
+           htmlfile = moddir + '.html'
+           php_frag = php[ulpos:divpos]
+           #print php_frag
+           html = re.sub(php_parser,"##HREF-BASE##", php_frag)
+           with open(iiab_menu_download_dir + htmlfile, 'w') as fp:
+               fp.write(html)
+           menu_item['extra_html'] = htmlfile
+       os.remove(working_dir + "rachel-index.php")
+    except:
+       pass
     with open(iiab_menu_download_dir + moddir + '.json', 'w') as fp:
         json.dump(menu_item, fp, indent=2)
 
@@ -295,9 +299,9 @@ def proc_module (module):
        menu_item["automatically_generated"] = "true"
        print("writing to %s"%doc_root_menu_defs + moddir + '.json')
        with open(doc_root_menu_defs + moddir + '.json', 'w') as fp:
-            json.dump(menu_item, fp, indent=2)
+          json.dump(menu_item, fp, indent=2)
+       menu_item['has_live_menudef'] = True  
 
-    os.remove(working_dir + "rachel-index.php")
 
     return menu_item
 
