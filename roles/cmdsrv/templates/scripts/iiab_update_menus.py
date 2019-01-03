@@ -192,7 +192,7 @@ def update_href_in_menu_def(menu_def,perma_ref):
         md_file.write(json.dumps(menu_def_dict))
    
 def put_oer2go_enabled_into_menu_json():
-   cmd = SCRIPT_DIR + '/get_oer2go_catalog --no-download -v'
+   cmd = SCRIPT_DIR + '/get_oer2go_catalog --no_download -v'
    args = shlex.split(cmd)
    try:
       outp = subprocess.check_output(args,shell=True)
