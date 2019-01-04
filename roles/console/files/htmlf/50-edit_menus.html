@@ -1,86 +1,143 @@
 <!-- Start EditMenus Top Level Pane -->
 <div class="row-fluid"> <!-- EditMenus Top Level Header -->
-	<div class="col-md-9 col-md-offset-3">
-		<h1>Manage Content Menus</h1>
-	</div>
+  <div class="col-md-9 col-md-offset-3">
+    <h1>Manage Content Menus</h1>
+  </div>
 </div> <!-- row-fluid -->
 <div class="tabbable"> <!-- Start EditMenus Sublevel Menu Items and Options -->
-	<div class="row-fluid"> <!-- Start containing row -->
-		<div class="col-md-3 iiab-left-nav"> <!-- Start left column -->
-			<h2>Content Menu Tasks</h2>
-			<ul id="editMenusMenu" class="nav nav-pills nav-stacked"> <!-- Start XXX Sub Level Menu -->
-				<li class="active"><a href="#menusDefineMenu" call-after="getMenuItemDefList">Edit Content Menus</a></li>
-				<li><a href="#menusDefineItems" call-after="nop">Edit Menu Items</a></li>
-			</ul> <!-- End XXX Sub Level Menu -->
-			<h2>Actions</h2>
-			<div class="action-buttons">
-				<button id="" type="button" class="btn btn-lg btn-success">Do Somethingy</button>
-			</div>
-		</div> <!-- left column -->
-		<div class="col-md-9"> <!-- Start right column -->
-			<div id="EditMenusOptions" class="tab-content"> <!-- Start Container for Sub Menu Options Panes -->
+  <div class="row-fluid"> <!-- Start containing row -->
+    <div class="col-md-3 iiab-left-nav"> <!-- Start left column -->
+      <h2>Content Menu Tasks</h2>
+      <ul id="editMenusMenu" class="nav nav-pills nav-stacked"> <!-- Start XXX Sub Level Menu -->
+        <li class="active"><a href="#menusDefineMenu" call-after="getMenuItemDefList">Edit Content Menus</a></li>
+        <li><a href="#menusDefineItems" call-after="nop">Edit Menu Items</a></li>
+      </ul> <!-- End XXX Sub Level Menu -->
+      <h2>Actions</h2>
+      <div class="action-buttons">
+        <button id="" type="button" class="btn btn-lg btn-success">Do Somethingy</button>
+      </div>
+    </div> <!-- left column -->
+    <div class="col-md-9"> <!-- Start right column -->
+      <div id="EditMenusOptions" class="tab-content"> <!-- Start Container for Sub Menu Options Panes -->
 
 
-				<div class="tab-pane active" id="menusDefineMenu"> <!-- Start menusDefineMenu Submenu Option Pane -->
-					<h2>Edit Content Menus</h2>
-					<div class="row">
-						<div class="col-sm-8">
-						  <p>This menu option allows you to define home page menus.
-					    </p>
-					    <div class="row">
-					      <label class="col-md-2">Menu Folder</label>
-					      <div class="col-md-2"><input type="text" class="form-control" name="content_menu_dir" id="content_menu_dir" value="home"></div>
-					      <div class="col-md-8">
-					        <button id="LOAD-CONTENT-MENU" type="button" class="btn btn-primary">Load Menu</button>
-					        <button id="CREATE-CONTENT-MENU" type="button" class="btn btn-primary">Create New Menu</button>
-					        <button id="SAVE-CONTENT-MENU" type="button" class="btn btn-primary">Save Menu</button>
-					        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#selectLangCodes">Select Languages</button>
-					      </div>
-					    </div>
-					    <p></p>
-						</div>
-					</div>
-					<div class="row">
-						<div class="col-sm-12">
-							<ul id="menusDefineMenuTabs" class="nav nav-tabs">
-								<li class="nav-item active"><a href="#menusDefineMenuProperties" class="nav-link small" call-after="nop">Menu Properties</a></li>
-								<li class="nav-item"><a href="#menusDefineMenuItems" class="nav-link small" call-after="nop">Content Item List</a></li>
-							</ul>
-						</div>
-					</div>
+        <div class="tab-pane active" id="menusDefineMenu"> <!-- Start menusDefineMenu Submenu Option Pane -->
+          <h2>Edit Content Menus</h2>
+          <div class="row">
+            <div class="col-sm-8">
+              <p>This menu option allows you to define home page menus.
+              </p>
+              <div class="row">
+                <label class="col-md-2">Menu Folder</label>
+                <div class="col-md-2"><input type="text" class="form-control" name="content_menu_dir" id="content_menu_dir" value="home"></div>
+                <div class="col-md-8">
+                  <button id="LOAD-CONTENT-MENU" type="button" class="btn btn-primary">Load Menu</button>
+                  <button id="CREATE-CONTENT-MENU" type="button" class="btn btn-primary">Create New Menu</button>
+                  <button id="SAVE-CONTENT-MENU" type="button" class="btn btn-primary">Save Menu</button>
+                  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#selectLangCodes">Select Languages</button>
+                </div>
+              </div>
+              <p></p>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-sm-12">
+              <ul id="menusDefineMenuTabs" class="nav nav-tabs">
+                <li class="nav-item active"><a href="#menusDefineMenuProperties" class="nav-link small" call-after="nop">Menu Properties</a></li>
+                <li class="nav-item"><a href="#menusDefineMenuItems" class="nav-link small" call-after="nop">Content Item List</a></li>
+              </ul>
+            </div>
+          </div>
 
-					<div class="row">
-						<div class="col-sm-12">
-							<div id="menusDefineMenuTabsPanes" class="tab-content">
-								<div id="menusDefineMenuProperties" class="tab-pane active">
-									<div class="row">
-										<div class="col-sm-12">
-											<h3>Properties of Current Menu</h3>
-											<div id="menusDefineMenuPropertiesFields" >  </div>
-										</div>
-									</div>
+          <div class="row">
+            <div class="col-sm-12">
+              <div id="menusDefineMenuTabsPanes" class="tab-content">
+                <div id="menusDefineMenuProperties" class="tab-pane active">
+                  <div class="row">
+                    <div class="col-sm-12">
+                      <h3>Properties of Current Menu</h3>
+                      <div id="menusDefineMenuPropertiesFields" >
+                        <div class="row">
+                          <div class="col-md-4">
+                            <div class="form-group">
+                              <label for="mobile_header_font">Select Mobile Header Font</label>
+                              <select class="form-control" id="mobile_header_font">
+                                <option style="font-size: 2em; font-family: 'Open Sans';" value="Open Sans">Open Sans</option>
+                                <option style="font-size: 2em; font-family: 'Finger Paint';" value="Finger Paint">Finger Paint</option>
+                                <option style="font-size: 2em; font-family: 'Bubblegum Sans';" value="Bubblegum Sans">Bubblegum Sans</option>
+                                <option style="font-size: 2em; font-family: 'Freckle Face';" value="Freckle Face">Freckle Face</option>
+                              </select>
 
-								</div>
-								<div id="menusDefineMenuItems" class="tab-pane">
-									<div class="row">
-										<div class="col-sm-6">
-											<h3>Menu Items in Current Menu</h3>
-											<div id="menusDefineMenuCurrentItemList">  </div>
-										</div>
-										<div class="col-sm-6">
-											<h3>Available Menu Item Definitions</h3>
-											<div id="menusDefineMenuAllItemList" >  </div>
-										</div>
-									</div>
-
-								</div>
-
-							</div>
-						</div>
-					</div>
-				</div> <!--  End menusDefineMenu Submenu Option Pane -->
-			</div> <!-- End Container for Sub Menu Options Panes -->
-		</div> <!-- right column -->
-	</div> <!-- End containing row -->
+                              <div class="checkbox">
+                                <label>
+                                  <input type="checkbox" name="mobile_incl_description" id="mobile_incl_description">Check to Show Description for Mobile Users.
+                                </label>
+                              </div>
+                              <div class="checkbox">
+                                <label>
+                                  <input type="checkbox" name="mobile_incl_extra_html" id="mobile_incl_extra_html">Check to Show Sub-menu for Mobile Users.
+                                </label>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="col-md-4">
+                            <div class="form-group">
+                              <label for="desktop_header_font">Select Desktop Header Font</label>
+                              <select class="form-control" id="desktop_header_font">
+                                <option style="font-size: 2em; font-family: 'Open Sans';" value="Open Sans">Open Sans</option>
+                                <option style="font-size: 2em; font-family: 'Finger Paint';" value="Finger Paint">Finger Paint</option>
+                                <option style="font-size: 2em; font-family: 'Bubblegum Sans';" value="Bubblegum Sans">Bubblegum Sans</option>
+                                <option style="font-size: 2em; font-family: 'Freckle Face';" value="Freckle Face">Freckle Face</option>
+                              </select>
+                            </div>
+                            <div class="checkbox">
+                              <label>
+                                <input type="checkbox" name="desktop_incl_description" id="desktop_incl_description">Check to Show Description for Desktop Users.
+                              </label>
+                            </div>
+                            <div class="checkbox">
+                              <label>
+                                <input type="checkbox" name="desktop_incl_extra_html" id="desktop_incl_extra_html">Check to Show Sub-menu for Desktop Users.
+                              </label>
+                            </div>
+                          </div>
+                        </div> <!--  End row -->
+                        <div class="row">
+                          <div class="col-md-4">
+                            <div class="form-group">
+                              <div class="checkbox"><label>
+                                <input type="checkbox" name="allow_kiwix_search" id="allow_kiwix_search">Check to Allow Kiwix Cross Zim Search.
+                              </label></div>
+                              <div class="checkbox"><label>
+                                <input type="checkbox" name="allow_poweroff" id="allow_poweroff">Check to Allow Power Off Link.
+                              </label></div>
+                              <label for="poweroff_prompt">Prompt on Power Off Link</label>
+                              <input type="text" name="poweroff_prompt" class="form-control" id="poweroff_prompt" placeholder="Power Off">
+                            </div>
+                          </div>
+                        </div> <!--  End row -->
+                      </div> <!-- End menusDefineMenuPropertiesFields -->
+                    </div>
+                  </div> <!-- End row  -->
+                </div> <!-- End menusDefineMenuProperties -->
+                <div id="menusDefineMenuItems" class="tab-pane">
+                  <div class="row">
+                    <div class="col-sm-6">
+                      <h3>Menu Items in Current Menu</h3>
+                      <div id="menusDefineMenuCurrentItemList">  </div>
+                    </div>
+                    <div class="col-sm-6">
+                      <h3>Available Menu Item Definitions</h3>
+                      <div id="menusDefineMenuAllItemList" >  </div>
+                    </div>
+                  </div>
+                </div>
+              </div> <!-- End menusDefineMenuTabsPanes -->
+            </div>
+          </div>
+        </div> <!--  End menusDefineMenu Submenu Option Pane -->
+      </div> <!-- End Container for Sub Menu Options Panes -->
+    </div> <!-- right column -->
+  </div> <!-- End containing row -->
 </div> <!-- End XXX Sublevel Menu Items and Options -->
 </div> <!-- End EditMenus Top Level Pane -->
