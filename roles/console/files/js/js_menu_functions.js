@@ -37,12 +37,87 @@ function getContentMenuToEdit(currentJsMenuToEditUrl){
 	})
 	.done(function( data ) {
 		currentJsMenuToEdit = data;
+		setContentMenuToEditFormValues();
 		procCurrentMenuItemDefList (currentJsMenuToEdit.menu_items_1, "current-items"); // hard coded name of list against future multi-tab menus
 	})
 	.fail(function (jqXHR, textStatus, errorThrown){
-		jsonErrhandler (jqXHR, textStatus, errorThrown); // probably a json error
+		if (errorThrown == 'Not Found'){
+		  currentJsMenuToEdit = {};
+		  procCurrentMenuItemDefList ([], "current-items");
+		  alert ('Content Menu not Found.');
+		}
+		else
+		  jsonErrhandler (jqXHR, textStatus, errorThrown); // probably a json error
 	});
 	return resp;
+}
+
+function saveContentMenuDef() {
+    var command = "SAVE-MENU-DEF";
+    var cmd_args = {};
+    var menu_url = gEBI('content_menu_url').value;
+    if (menu_url.includes('.') || menu_url.includes('/')){
+    	alert ("Menu Folder must not include '.' or '/'");
+    	return false;
+    }
+    getContentMenuToEditFormValues ();
+    cmd_args['menu_url'] = menu_url;
+    cmd_args['menu_def'] = currentJsMenuToEdit;
+    cmd = command + " " + JSON.stringify(cmd_args);
+    sendCmdSrvCmd(cmd, genericCmdHandler);
+    alert ("Saving Content Menu Definition.");
+    return true;
+  }
+
+function setContentMenuToEditFormValues (){
+  setContentMenuToEditFormValue('mobile_header_font');
+  setContentMenuToEditFormChecked('mobile_incl_description');
+  setContentMenuToEditFormChecked('mobile_incl_extra_html');
+  setContentMenuToEditFormValue('desktop_header_font');
+  setContentMenuToEditFormChecked('desktop_incl_description');
+  setContentMenuToEditFormChecked('desktop_incl_extra_html');
+  setContentMenuToEditFormChecked('allow_kiwix_search');
+  setContentMenuToEditFormChecked('allow_poweroff');
+  setContentMenuToEditFormValue('poweroff_prompt');
+}
+
+function setContentMenuToEditFormValue (fieldName) {
+  gEBI(fieldName).value = currentJsMenuToEdit[fieldName];
+}
+
+function setContentMenuToEditFormChecked (fieldName) {
+  gEBI(fieldName).checked = currentJsMenuToEdit[fieldName];
+}
+
+function getContentMenuToEditFormValues (){
+  getContentMenuToEditFormValue('mobile_header_font');
+  getContentMenuToEditFormChecked('mobile_incl_description');
+  getContentMenuToEditFormChecked('mobile_incl_extra_html');
+  getContentMenuToEditFormValue('desktop_header_font');
+  getContentMenuToEditFormChecked('desktop_incl_description');
+  getContentMenuToEditFormChecked('desktop_incl_extra_html');
+  getContentMenuToEditFormChecked('allow_kiwix_search');
+  getContentMenuToEditFormChecked('allow_poweroff');
+  getContentMenuToEditFormValue('poweroff_prompt');
+
+  getContentMenuToEditItemList ();
+}
+
+function getContentMenuToEditFormValue (fieldName) {
+  currentJsMenuToEdit[fieldName] = gEBI(fieldName).value;
+}
+
+function getContentMenuToEditFormChecked (fieldName) {
+  currentJsMenuToEdit[fieldName] = gEBI(fieldName).checked;
+}
+
+function getContentMenuToEditItemList () {
+	var menuItemList = [];
+  $("#menusDefineMenuCurrentItemList .content-item").each(function() {
+  	consoleLog($(this).attr('menu_item_name'));
+  	menuItemList.push($(this).attr('menu_item_name'));
+  });
+  currentJsMenuToEdit.menu_items_1 = menuItemList;
 }
 
 // assumes all menu item definitions have been loaded
@@ -250,7 +325,6 @@ function menuItemDragEnd(e) {
 }
 
 function menuItemAddDnDHandlers(elem) {
-	consoleLog(elem);
   elem.addEventListener('dragstart', menuItemDragStart, false);
   elem.addEventListener('dragenter', menuItemDragEnter, false)
   elem.addEventListener('dragover', menuItemDragOver, false);
@@ -260,12 +334,6 @@ function menuItemAddDnDHandlers(elem) {
 
 }
 
-/*
-var menuCols = document.querySelectorAll('#menu .column');
-var itemCols = document.querySelectorAll('#items .column');
-[].forEach.call(menuCols, menuItemAddDnDHandlers);
-[].forEach.call(itemCols, menuItemAddDnDHandlers);
-*/
 function gEBI(elementId){
 	var element = document.getElementById(elementId);
 	return element;

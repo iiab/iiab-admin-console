@@ -334,8 +334,13 @@ function instContentButtonsEvents() {
 
 function contentMenuButtonsEvents() {
   $("#LOAD-CONTENT-MENU").click(function(){
-  	var currentJsMenuToEditUrl = $("#content_menu_dir").val();
+    var currentJsMenuToEditUrl = $("#content_menu_url").val();
     getContentMenuToEdit(currentJsMenuToEditUrl);
+  	var currentJsMenuToEditUrl = $("#content_menu_url").val();
+    getContentMenuToEdit(currentJsMenuToEditUrl);
+  });
+  $("#SAVE-CONTENT-MENU").click(function(){
+    saveContentMenuDef();
   });
 }
 

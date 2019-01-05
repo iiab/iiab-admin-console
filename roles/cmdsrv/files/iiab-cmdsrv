@@ -71,9 +71,10 @@ cmdsrv_lower_job_priority_str= None
 # Derived Variables
 cmdsrv_dbpath = None
 
-# Constants - ToDo add to cmdsrv_config_file
+# Constants
 # for kiwix zims
 kiwix_catalog_file = None
+doc_root = None
 content_base = None
 zim_downloads_dir = None
 zim_download_prefix = None
@@ -700,6 +701,8 @@ def cmd_handler(cmd_msg):
         "DEL-DOWNLOADS": del_downloads,
         "DEL-MODULES": del_modules,
         "GET-MENU-ITEM-DEF-LIST": get_menu_item_def_list,
+        "SAVE-MENU-DEF": save_menu_def,
+        "SAVE-MENU-ITEM-DEF": save_menu_item_def,
         "REBOOT": reboot_server,
         "POWEROFF": poweroff_server,
         #"REMOTE-ADMIN-CTL": remote_admin_ctl, #true/false
@@ -740,8 +743,8 @@ def cmd_handler(cmd_msg):
     cmd_info['cmd_args'] = cmd_args
     #print (cmd_info)
 
-    # commands that run scripts should check for malicious characters in cmd_args and return error if found
-    # bad_command = validate_command(cmd_args)
+    # commands that run scripts should check for malicious characters in cmd_arg_str and return error if found
+    # bad_command = validate_command(cmd_arg_str)
 
     # if not in daemon mode don't trap errors
     if daemon_mode == False:
@@ -1724,6 +1727,33 @@ def get_menu_item_def_list(cmd_info):
     resp = json.dumps(sorted(menu_item_defs))
     return (resp)
 
+def save_menu_def(cmd_info):
+    menu_url = cmd_info['cmd_args']['menu_url']
+    menu_def = cmd_info['cmd_args']['menu_def']
+
+    resp = validate_command(menu_url) # check for special characters in directory string
+    if resp != None:
+        return resp
+    if '..' in menu_url:
+        return cmd_malformed(cmd_info['cmd'])
+
+    menu_path = doc_root + '/' + menu_url + '/menu.json';
+
+    try:
+        with open(menu_path, 'w') as outfile:
+            json.dump(menu_def, outfile)
+    except OSError as e:
+        resp = cmd_error(cmd_info['cmd'], msg='Error writing to Menu Definition File.')
+        return (resp)
+
+    resp = cmd_success(cmd_info['cmd'])
+    return (resp)
+    #else:
+    #    return ('{"Error": "' + outp + '."}')
+
+def save_menu_item_def(cmd_info):
+    print 'nothing'
+
 # Control Commands
 
 def restart_kiwix(cmd_info):
@@ -1973,8 +2003,8 @@ def json_array(name, str):
         json_resp = cmd_error()
     return (json_resp)
 
-def validate_command(cmd):
-    match = re.search('[;,|<>()=&\r\n]', cmd, flags=0)
+def validate_command(cmd_arg_str):
+    match = re.search('[;,|<>()=&\r\n]', cmd_arg_str, flags=0)
     if match != None:
         log(syslog.LOG_ERR, "Error: Malformed Command")
         return ('{"Error": "Malformed Command."}')
@@ -2455,6 +2485,7 @@ def app_config():
     global cmdsrv_pid_file
     global cmdsrv_ready_file
     global kiwix_catalog_file
+    global doc_root
     global content_base
     global zim_downloads_dir
     global zim_working_dir
@@ -2500,6 +2531,7 @@ def app_config():
     cmdsrv_pid_file = conf['cmdsrv_pid_file']
     cmdsrv_ready_file = conf['cmdsrv_ready_file']
     kiwix_catalog_file = conf['kiwix_catalog_file']
+    doc_root = conf['doc_root']
     content_base = conf['content_base']
     zim_dir = conf['zim_dir']
     zim_content_dir = zim_dir + "content/"
