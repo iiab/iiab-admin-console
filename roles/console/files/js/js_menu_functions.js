@@ -221,16 +221,21 @@ function checkMenuDone(){
 // drag and drop funtions
 
 function menuItemDragStart(e) {
+  //$(".tooltip").tooltip("hide"); // close any tooltips
   // Target (this) element is the source node.
   menuItemDragSrcElement = this;
   menuItemDragSrcParent = this.parentNode.id;
   var menu_item_name = this.getAttribute('menu_item_name');
   var targetDivId = gEBI("current-items-" + menu_item_name);
 
+
   //console.log("START")
   //console.log(this)
+  //consoleLog($('.tooltip' , this));
   //console.log(this.parentNode)
   //console.log(targetDivId)
+
+  $('.tooltip' , this).remove(); // get rid of extraneous tooltips
 
   e.dataTransfer.effectAllowed = 'moveCopy';
 
@@ -285,6 +290,7 @@ function menuItemDragLeave(e) {
 function menuItemDrop(e) {
   // this/e.target is current target element.
   var dragDestPar = this.parentNode.id;
+  //$(".tooltip").tooltip("hide"); // close any tooltips
   this.classList.remove('over');
   menuItemDragSrcElement.classList.remove('dragElem');
 
@@ -305,6 +311,7 @@ function menuItemDrop(e) {
     this.insertAdjacentHTML('beforebegin',dropHTML);
     var dropElem = this.previousSibling;
     menuItemAddDnDHandlers(dropElem);
+    activateTooltip();
   }
   // if copy from items to menu
   if (menuItemDragSrcParent == "menusDefineMenuAllItemList" && dragDestPar == "menusDefineMenuCurrentItemList") {
@@ -314,6 +321,7 @@ function menuItemDrop(e) {
       var dropElem = this.previousSibling;
       dropElem.id = 'current-items-' + dropElem.getAttribute('menu_item_name');
       menuItemAddDnDHandlers(dropElem);
+      activateTooltip();
     }
   }
   // if move from menu to items to delete
