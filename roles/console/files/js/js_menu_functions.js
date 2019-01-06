@@ -129,8 +129,9 @@ function procCurrentMenuItemDefList (list, prefix){
 		var divId = prefix + '-' + menu_item_name;
 
 		if (menuItemDefs[menu_item_name] !== 'undefined')
-  		genMenuItem(divId, menuItemDefs[menu_item_name]);
+  		genMenuItem(divId, menu_item_name);
   }
+  activateTooltip();
 }
 
 function createMenuItemScaffold(list, prefix){
@@ -154,7 +155,7 @@ function getMenuItemDef(menuItem, prefix) {
 	})
 	.done(function( data ) {
 		menuItemDefs[menuItem] = data;
-		genMenuItem(divId, menuItemDefs[menuItem]);
+		genMenuItem(divId, menuItem);
 		checkMenuDone();
 	})
 	.fail(function (jqXHR, textStatus, errorThrown){
@@ -166,20 +167,23 @@ function getMenuItemDef(menuItem, prefix) {
 	return resp;
 }
 
-function genMenuItem(divId, module) {
+function genMenuItem(divId, menuItemName) {
   var menuHtml = "";
 	var langClass = "";
 	var menuItemDivId = "#" + divId;
-	var langLookup = langCodesXRef[module.lang]
+	var module = menuItemDefs[menuItemName];
+
+	var langLookup = langCodesXRef[module.lang];
 
   if (selectedLangs.length > 0 && selectedLangs.indexOf(langLookup) == -1) { // not a selected language
 		$(menuItemDivId).hide();
 		return;
 	}
 
-	menuHtml+='<div class="content-icon">';
-	menuHtml+='<img src="' + jsMenuImageUrl + module.logo_url + '"></div>';
-
+  var menuItemToolTip = genMenuItemTooltip(menuItemName, module);
+	menuHtml+='<div class="content-icon"' + menuItemToolTip + '>';
+	menuHtml+='<img src="' + jsMenuImageUrl + module.logo_url + '">';
+	menuHtml+='</div>';
 	// item right side
 	menuHtml+='<div class="flex-col">';
 	menuHtml+='<div class="content-cell">';
@@ -193,6 +197,16 @@ function genMenuItem(divId, module) {
 	menuItemAddDnDHandlers($("#" + divId).get(0));
 }
 
+function genMenuItemTooltip(menuItemName, module) {
+  var menuItemToolTip = ' data-toggle="tooltip" data-placement="top" data-html="true" ';
+  menuItemToolTip += 'title="<h3>' + module.title + '</h3>' + module.description + '<BR>';
+  menuItemToolTip += 'Intended Use: ' + module.intended_use + '<BR>';
+  menuItemToolTip += 'Language Code: ' + module.lang + '<BR>';
+  menuItemToolTip += 'Menu Item Code: ' + menuItemName + '"';
+
+  return menuItemToolTip;
+}
+
 function checkMenuDone(){
 	menuItemDefs['call_count'] -= 1;
 	//consoleLog (menuItemDefs['call_count']);
@@ -200,6 +214,7 @@ function checkMenuDone(){
 		//genLangSelector();
 		//activateButtons();
 		//alert ("menu done");
+		activateTooltip();
 	}
 }
 
