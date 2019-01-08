@@ -22,6 +22,8 @@ import shlex
 import uuid
 import re
 import argparse
+import fnmatch
+
 SCRIPT_DIR = '/opt/admin/cmdsrv/scripts'
 if not SCRIPT_DIR in sys.path:
     sys.path.append(SCRIPT_DIR)
@@ -191,6 +193,7 @@ def main ():
 # need to track which version of content was downloaded - new version attribute added 6/9/2017
 
 def get_status (item):
+    msg = ''
     id = item['module_id']
     item['module_downloaded'] = False
     item['has_live_menudef'] = False
@@ -210,9 +213,6 @@ def get_status (item):
     elif os.path.exists(iiab_menu_repo_dir +  'incompatible/rachel-duplicates/' + moddir + '.json'):
         msg = "Redundant menudef for"
         item['has_redundant_menudef'] = True
-    else:
-        msg = "Missing menudef for"
-        get_new_menudef = True
 
     if verbose:
         print "%s %s %s" % (msg, id, moddir)
@@ -221,6 +221,8 @@ def get_status (item):
     if os.path.exists(iiab_modules_dir + moddir):
         msg = "Found download"
         item['module_downloaded'] = True
+        msg = "Missing menudef for"
+        get_new_menudef = True
     else:
         msg = "No download for"
 
@@ -252,7 +254,8 @@ def proc_module (module):
     menu_item['description1'] = "Size: " + size + ', Files: ' + files + ', Age: ' + age
 
     # get logo if there is one
-    if 'logo_url' in module and module['logo_url'] != None:
+    #if 'logo_url' in module and module['logo_url'] != None:
+    if False:
         logo_download_url = module['logo_url']
         logo = module['logo_url']
         logo_ext = logo.split('/')[-1].split('.')[-1]
@@ -263,7 +266,18 @@ def proc_module (module):
             args = shlex.split(cmdstr)
             outp = subprocess.check_output(args)
     else:
-        menu_item['logo_url'] = None
+        # look for logo in root of module
+        module['logo_url'] = None
+        os.chdir(iiab_modules_dir + moddir)
+        for filename in os.listdir('.'):
+            if fnmatch.fnmatch(filename, '*.png')  or\
+               fnmatch.fnmatch(filename, '*.gif')  or\
+               fnmatch.fnmatch(filename, '*.jpg')  or\
+               fnmatch.fnmatch(filename, '*.jpeg'):
+                if not os.path.isfile(iiab_menu_files + "images/" + moddir + filename): 
+                    shutil.copyfile(iiab_modules_dir + moddir + '/' + filename,\
+                                    iiab_menu_files + "images/" + moddir +'_'+ filename)
+                module['logo_url'] = moddir + '_' + filename
 
     # get rachel index for parsing for 'extra-html'
     #print "Downloading rachel-index.php"

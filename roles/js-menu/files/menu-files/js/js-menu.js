@@ -47,10 +47,12 @@ var menuItems = [];
 var menuHtml = "";
 var menuDefs = {};
 var zimVersions = {};
-var zimSubstParams = ["article_count", "media_count", "size", "tags", "language"]; //- future development
-//var zimSubstParams = [];
+var zimSubstParams = ["article_count", "media_count", "size", "tags",
+                     "language","zim_date"];
 var hrefRegEx;
+var substRegEx = {};
 
+var menuDivId = "content";
 var scaffold = $.Deferred();
 var ajaxCallCount = 0;
 var i;
@@ -120,7 +122,9 @@ var getLangCodes = $.getJSON(consoleJsonDir + 'lang_codes.json')
 $.when(getMenuJson, getZimVersions, getConfigJson, getLangCodes).always(procMenu);
 
 // This is the main processing
-function jsMenuMain () {
+function jsMenuMain (menuDiv = "content") {
+	menuDivId = menuDiv;
+  genRegEx(); // regular expressions for subtitution
   if (dynamicHtml){
   	getLocalStore();
     //$.when(scaffold, getZimVersions, getConfigJson).then(procMenu);
@@ -149,49 +153,13 @@ function jsMenuMain () {
   // });
 }
 
-function genRegEx(menu_item_name){
-   var foundKey = '';
+function genRegEx(){
 	hrefRegEx = new RegExp('##HREF-BASE##', 'g');
-   var zimSubstRegEx = {};
-	for (var key in zimVersions) {
-      if (zimVersions[key].hasOwnProperty('menu_item')){
-         if (zimVersions[key].menu_item == menu_item_name){ 
-            foundKey = key;
-            break;
-         }
-      }
+	for (var i = 0; i < zimSubstParams.length; i++) {
+		var param = zimSubstParams[i];
+		substRegEx[param] = new RegExp('##' + param.toLocaleUpperCase() + '##', 'gi');
 	}
-   if (foundKey != ''){ 
-      //zimSubstParams = ["article_count", "media_count", "size", "tags", 'language'];
-      var substValues = {};
-      for (index in zimSubstParams) {
-         substValues[index] == '-No Data-';
-         if (zimVersions[foundKey].hasOwnProperty('article_count') &&
-            index == '0'){
-            substValues[index] = zimVersions[foundKey]['article_count'];
-         }
-         if (zimVersions[foundKey].hasOwnProperty('media_count') &&
-            index == '1'){
-            substValues[index] = zimVersions[foundKey]['media_count'];
-         }
-         if (zimVersions[foundKey].hasOwnProperty('size') &&
-            index == '2'){
-            substValues[index] = zimVersions[foundKey]['size'];
-         }
-         if (zimVersions[foundKey].hasOwnProperty('tags') &&
-            index == '3'){
-            substValues[index] = zimVersions[foundKey]['tags'];
-         }
-         if (zimVersions[foundKey].hasOwnProperty('language') &&
-            index == '4'){
-            substValues[index] = zimVersions[foundKey]['language'];
-         }
-         zimSubstRegEx[index] = new RegExp('##' + zimSubstParams[index].toLocaleUpperCase() + '##', 'gi');
-      }
-   }
-   return [zimSubstRegEx, substValues]
 }
-
 function createScaffold(){
   var html = "";
   for (var i = 0; i < menuItems.length; i++) {
@@ -202,7 +170,7 @@ function createScaffold(){
 
   	html += '<div id="' + menuItemDivId + '" class="flex-row content-item" dir="auto">&emsp;Attempting to load ' + menu_item_name + ' </div>';
   }
-  $("#content").html(html);
+  $("#" + menuDivId).html(html);
   $(".toggleExtraHtml").toggle(showExtraHtml);
 
 }
@@ -256,16 +224,19 @@ function getMenuDef(menuItem) {
 		dataType: 'json'
 	})
 	.done(function( data ) {
-	  var zimSubstRegEx;
-	  var substValues;
 		menuDefs[menuItem] = data;
 		menuDefs[menuItem]['menu_item_name'] = menuItem;
 		menuDefs[menuItem]['add_html'] = "";
 		menuDefs[menuItem]['menu_id'] = menuId;
 		module = menuDefs[menuItem];
-		returnedValues = genRegEx(menuItem); // regular expressions for subtitution
-		module['zimSubstRegEx'] = returnedValues[0];
-		module['substValues'] = returnedValues[1];
+         //alert(string(substRegEx));
+      if (menuDefs[menuItem].hasOwnProperty('zim_name')){
+         zimName = menuDefs[menuItem]['zim_name'];
+	      for (var i = 0; i < zimSubstParams.length; i++) {
+            field = zimSubstParams[i];
+            menuDefs[menuItem][field] = zimVersions[zimName][field];
+         }
+      }
 		procMenuItem(module);
 		checkMenuDone();
 	})
@@ -456,10 +427,7 @@ function calcItemHtml(href,module){
 	html+='</div>'; // end content-item-title
 	// description - this will become multiple parts
 	if (showDescription) {
-   var description = module.description;
-   for (var key in module.zimSubstRegEx) {
-      description = description.replace(module.zimSubstRegEx[key], module.substValues[key]);
-   }
+   var description = substitute(module.description,module);
   	html+='<p>' + description + '</p>';
   	// apks for medwiki, etc. move to download menu def
   	if (module.hasOwnProperty("apk_file") && include_apk_links){
@@ -477,6 +445,14 @@ function calcItemHtml(href,module){
 	html+='</div></div></div>';
 
 	return html
+}
+
+function substitute(instr,module){
+   for (var i = 0; i < zimSubstParams.length; i++) {
+      field = zimSubstParams[i];
+      instr = instr.replace(substRegEx[field], module[field]);
+   }
+   return instr;
 }
 
 function detectMob() {
@@ -510,9 +486,7 @@ function getExtraHtml(module) {
 			consoleLog('in get extra done');
 			var add_html = data;
 			add_html = add_html.replace(hrefRegEx, module.href);
-	      for (var key in module.zimSubstRegEx) {
-           add_html = add_html.replace(module.zimSubstRegEx[key], module.substValues[key]);
-         }
+         add_html = substitute(add_html,module);
 			menuItemHtmlfDivId = "#" + module.menu_id + '-htmlf';
 			consoleLog(menuItemHtmlfDivId);
 			$(".toggleExtraHtml").toggle(showExtraHtml);

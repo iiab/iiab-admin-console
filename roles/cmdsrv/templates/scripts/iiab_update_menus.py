@@ -115,6 +115,7 @@ def put_kiwix_enabled_into_menu_json():
    #   3. If back link exist update, otherwise create new menuDef
 
    # check for un-indexed zims in zims/content/,write to zim_versions_idx.json
+   kiwix.init()
    kiwix.get_zim_list(zim_path)
    kiwix.write_zim_versions_idx()
    # use that data
@@ -237,6 +238,7 @@ def check_default_logos(selector):
       "wikinews":"wikinews-logo.png",
       "wiktionary":"en-wiktionary.png",
       "wikipedia":"en-wikipedia.png",
+      "phet_en":"phet-logo-48x48.phg",
       "wikem":"WikEM-Logo-m.png"
    }
    for logo in default_logos:
