@@ -3,7 +3,7 @@
 # Get new oer2go (rachel) catalog
 # for now we will assume that old modules are still in the current catalog
 # exclude known modules that we get by another means, such as zims
-# for modules with no menu defs create that and an extra html file under iiab-menu/local/unedited/
+# for modules with no menu defs create that and an extra html file under js-menu/local/unedited/
 # there is an optional switch to suppress menu processing
 
 import xml.etree.ElementTree as ET
@@ -22,9 +22,16 @@ import shlex
 import uuid
 import re
 import argparse
+import fnmatch
+
+SCRIPT_DIR = '/opt/admin/cmdsrv/scripts'
+if not SCRIPT_DIR in sys.path:
+    sys.path.append(SCRIPT_DIR)
+import iiab_update_menus as tools
 
 verbose = False
 jsonPath = "/etc/iiab/"
+
 
 oer2go_duplicates = {'en': [5, 6, 17, 19, 20, 22, 23, 44, 50, 60, 65, 68, 86, 88, 93, 139],
   'es': [26, 49, 51, 53, 58, 59, 61, 63, 66, 69, 72, 75, 94],
@@ -51,15 +58,16 @@ iiab_catalog_file = jsonPath + "iiab_catalog.json"
 # soft code these
 #iiab_root_dir = "/library/www/html/"
 #iiab_modules_dir = iiab_root_dir + "modules/"
-#iiab_menu_repo_dir = "/opt/iiab/iiab-menu/"
+iiab_menu_repo_dir = "/opt/iiab/iiab-admin-console/roles/js-menu/files/"
 iiab_root_dir = "{{ doc_root }}/"
 iiab_modules_dir = "{{ iiab_modules_dir }}"
 
-iiab_menu_dir = iiab_root_dir + "iiab-menu/"
+iiab_menu_dir = iiab_root_dir + "js-menu/"
 iiab_menu_files = iiab_menu_dir + "menu-files/"
 iiab_menu_download_dir = iiab_menu_dir + "local/unedited/"
+doc_root_menu_defs = iiab_menu_dir  + 'menu-files/menu-defs/'
 
-iiab_menu_repo_dir = "{{ iiab_base }}/iiab-menu/"
+#iiab_menu_repo_dir = "{{ iiab_base }}/iiab-admin-console/roles/js-menu/files/"
 working_dir = "/library/working/rachel/" + str(uuid.uuid4()) + "/"
 
 php_parser = re.compile('\<\?php echo .+? \?>')
@@ -76,10 +84,12 @@ def main ():
 
     # make sure we have menu iiab_menu_dir if args.menu true
     if args.menu:
+        '''
         if args.no_download:
             sys.stdout.write("GET-OER2GO-CAT ERROR - --no_download and --menu options are incompatible\n")
             sys.stdout.flush()
             sys.exit(99)
+        '''
         if not os.path.isdir(iiab_menu_dir):
             sys.stdout.write("GET-OER2GO-CAT ERROR - iiab-menu not installed and --menu option given\n")
             sys.stdout.flush()
@@ -150,6 +160,9 @@ def main ():
                 msg = "Generating menu files"
                 if verbose:
                     print "%s %s %s" % (msg, id, moddir)
+            if module['has_live_menudef'] and module['module_downloaded']:
+                print('Updating /home/menu.json with %s'%moddir)
+                tools.update_menu_json(moddir)
         else:
             msg = "Skipping module not needed by Internet in a Box"
             if verbose:
@@ -180,6 +193,7 @@ def main ():
 # need to track which version of content was downloaded - new version attribute added 6/9/2017
 
 def get_status (item):
+    msg = ''
     id = item['module_id']
     item['module_downloaded'] = False
     item['has_live_menudef'] = False
@@ -198,9 +212,6 @@ def get_status (item):
     elif os.path.exists(iiab_menu_repo_dir +  'incompatible/rachel-duplicates/' + moddir + '.json'):
         msg = "Redundant menudef for"
         item['has_redundant_menudef'] = True
-    else:
-        msg = "Missing menudef for"
-        get_new_menudef = True
 
     if verbose:
         print "%s %s %s" % (msg, id, moddir)
@@ -209,6 +220,8 @@ def get_status (item):
     if os.path.exists(iiab_modules_dir + moddir):
         msg = "Found download"
         item['module_downloaded'] = True
+        msg = "Missing menudef for"
+        get_new_menudef = True
     else:
         msg = "No download for"
 
@@ -228,6 +241,16 @@ def proc_module (module):
     menu_item['intended_use'] = 'html'
     moddir = module['moddir']
     menu_item['menu_item_name'] = moddir
+    size = float(module.get('ksize','0')) * 1000.0
+    size = tools.human_readable(size)
+    menu_item['size'] = size
+    files = module.get('file_count','undefined')
+    if files == None:
+       files = ''
+    age = module.get('age_range','undefined')
+    if age == None:
+       age = ''
+    menu_item['description1'] = "Size: " + size + ', Files: ' + files + ', Age: ' + age
 
     # get logo if there is one
     if 'logo_url' in module and module['logo_url'] != None:
@@ -241,34 +264,57 @@ def proc_module (module):
             args = shlex.split(cmdstr)
             outp = subprocess.check_output(args)
     else:
-        menu_item['logo_url'] = None
+        # look for logo in root of module
+        module['logo_url'] = None
+        os.chdir(iiab_modules_dir + moddir)
+        for filename in os.listdir('.'):
+            if fnmatch.fnmatch(filename, '*.png')  or\
+               fnmatch.fnmatch(filename, '*.gif')  or\
+               fnmatch.fnmatch(filename, '*.jpg')  or\
+               fnmatch.fnmatch(filename, '*.jpeg'):
+                if not os.path.isfile(iiab_menu_files + "images/" + moddir + filename):
+                    shutil.copyfile(iiab_modules_dir + moddir + '/' + filename,\
+                                    iiab_menu_files + "images/" + moddir +'_'+ filename)
+                module['logo_url'] = moddir + '_' + filename
 
     # get rachel index for parsing for 'extra-html'
     #print "Downloading rachel-index.php"
     cmdstr = "rsync -Pavz " + menu_item['rsync_url'] + "/rachel-index.php " + working_dir
     args = shlex.split(cmdstr)
-    outp = subprocess.check_output(args)
+    try:
+       outp = subprocess.check_output(args)
 
-    # look for ul list as submenu and create extra html file if exists
-    with open(working_dir + "rachel-index.php", 'r') as fp:
-        php = fp.read()
+       # look for ul list as submenu and create extra html file if exists
+       with open(working_dir + "rachel-index.php", 'r') as fp:
+           php = fp.read()
 
-    # print php
-    ulpos = php.find('<ul')
-    divpos = php.find('</div>',ulpos)
-    if ulpos != -1:
-        htmlfile = moddir + '.html'
-        php_frag = php[ulpos:divpos]
-        #print php_frag
-        html = re.sub(php_parser,"##HREF-BASE##", php_frag)
-        with open(iiab_menu_download_dir + htmlfile, 'w') as fp:
-            fp.write(html)
-        menu_item['extra_html'] = htmlfile
-
+       # print php
+       ulpos = php.find('<ul')
+       divpos = php.find('</div>',ulpos)
+       if ulpos != -1:
+           htmlfile = moddir + '.html'
+           php_frag = php[ulpos:divpos]
+           #print php_frag
+           html = re.sub(php_parser,"##HREF-BASE##", php_frag)
+           with open(iiab_menu_download_dir + htmlfile, 'w') as fp:
+               fp.write(html)
+           menu_item['extra_html'] = htmlfile
+       os.remove(working_dir + "rachel-index.php")
+    except:
+       pass
     with open(iiab_menu_download_dir + moddir + '.json', 'w') as fp:
         json.dump(menu_item, fp, indent=2)
-
     os.remove(working_dir + "rachel-index.php")
+
+    if not os.path.exists(doc_root_menu_defs + moddir + '.json'):
+       # as per discussion, put menu-def (minus html) into menu-defs
+       menu_item['extra_html'] = ''
+       menu_item["automatically_generated"] = "true"
+       print("writing to %s"%doc_root_menu_defs + moddir + '.json')
+       with open(doc_root_menu_defs + moddir + '.json', 'w') as fp:
+          json.dump(menu_item, fp, indent=2)
+       menu_item['has_live_menudef'] = True
+
 
     return menu_item
 
