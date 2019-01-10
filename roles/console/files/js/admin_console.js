@@ -962,13 +962,17 @@ function selectedLangsDefaults() {
   }
 }
 
-function procSelectedLangs() {
-	var contentContext = $("#installContentOptions .tab-pane.active").attr("id"); // get active option (between zim and oer for now)
+function procSelectedLangs() { // redraw various lists using newly selected language codes
+	var topMenu = $("#iiab-top-nav .nav-tabs .active a")[0].hash; // get active top level menu selected
+	var contentContext = $(topMenu + " .tab-pane.active").attr("id"); // get active menu option for that menu
+
 	//consoleLog ("in procSelectedLangs " + contentContext);
-	if (contentContext == "instConZims")
+	if (contentContext == "instConZims") // download zims
 	  procZimGroups();
-	else if (contentContext == "instConOer2go")
+	else if (contentContext == "instConOer2go") // download oer2go modules
 		renderOer2goCatalog();
+	else if (contentContext == "menusDefineMenu") // edit current menu
+		redrawAllMenuItemList();
 }
 
 function readableSize(kbytes) {

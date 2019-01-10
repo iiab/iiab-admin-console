@@ -1,6 +1,6 @@
 @charset "UTF-8";
 
-.iiab-top-nav {
+#iiab-top-nav {
   background: #E5CF87;
 }
 .iiab-left-nav {
@@ -206,8 +206,8 @@ border-radius: 8px 8px 0 0;
   cursor: no-drop;
 }
 
-#menusDefineMenuAllItemList, #menusDefineMenuAllItemList {
+#menusDefineMenuCurrentItemList, #menusDefineMenuAllItemList {
   overflow: auto;
-  max-height: 100vh;
+  max-height: 640px; /* 10 items */
 }
 

@@ -7,7 +7,7 @@ var jsMenuItemDefUrl = "/js-menu/menu-files/menu-defs/";
 var currentJsMenuToEdit = {};
 var menuItemDefList = [];
 var menuItemDefs = {};
-menuItemDefs['call_count'] = 0;
+menuItemDefs['call_count'] = -1;
 
 var menuItemDragSrcElement = null;
 var menuItemDragSrcParent = null;
@@ -27,7 +27,7 @@ function procMenuItemDefList (data){
 	}
 }
 
-function getContentMenuToEdit(currentJsMenuToEditUrl){
+function getContentMenuToEdit(currentJsMenuToEditUrl){ // passed by button click from form
 	  var jsMenuToEditUrl = '/' + currentJsMenuToEditUrl + '/';
 		var resp = $.ajax({
 		type: 'GET',
@@ -38,7 +38,7 @@ function getContentMenuToEdit(currentJsMenuToEditUrl){
 	.done(function( data ) {
 		currentJsMenuToEdit = data;
 		setContentMenuToEditFormValues();
-		procCurrentMenuItemDefList (currentJsMenuToEdit.menu_items_1, "current-items"); // hard coded name of list against future multi-tab menus
+		delayedProcCurrentMenuItemDefList (5000, currentJsMenuToEdit.menu_items_1, "current-items"); // hard coded name of list against future multi-tab menus
 	})
 	.fail(function (jqXHR, textStatus, errorThrown){
 		if (errorThrown == 'Not Found'){
@@ -120,10 +120,46 @@ function getContentMenuToEditItemList () {
   currentJsMenuToEdit.menu_items_1 = menuItemList;
 }
 
+function delayedProcCurrentMenuItemDefList (timeout, list, prefix){
+	if (menuItemDefs.call_count == 0)
+	  procCurrentMenuItemDefList (list, prefix);
+	else {
+		timeout -= 100;
+		if (timeout > 0)
+		  window.setTimeout(function(){ delayedProcCurrentMenuItemDefList (timeout, list, prefix)});
+		else
+			alert ("Unable to Load Menu. Waiting for All Menu Item Definitions to Load. Please try again.");
+	}
+}
+
 // assumes all menu item definitions have been loaded
 function procCurrentMenuItemDefList (list, prefix){
+	procCurrentMenuUpdateSelectedLangs(list); // list assumed to be current menu
 	var html = createMenuItemScaffold(list, prefix);
 	$("#menusDefineMenuCurrentItemList").html(html);
+  drawMenuItemDefList (list, prefix);
+}
+
+function procCurrentMenuUpdateSelectedLangs (list) { // automatically select any language in menu
+	if (menuItemDefs.call_count == 0) {
+		for (var i = 0; i < list.length; i++) {
+		var menu_item_name = list[i];
+		var lang = langCodesXRef[menuItemDefs[menu_item_name].lang];
+
+    if (selectedLangs.indexOf(lang) == -1) // automatically select any language for which oer2go item is installed
+      selectedLangs.push(lang);
+    }
+  }
+}
+
+function redrawAllMenuItemList() {
+  // createMenuItemScaffold(menuItemDefList, "all-items"); - not needed as done for all items initially
+  drawMenuItemDefList(menuItemDefList, "all-items");
+
+
+}
+
+function drawMenuItemDefList (list, prefix){
 	for (var i = 0; i < list.length; i++) {
 		var menu_item_name = list[i];
 		var divId = prefix + '-' + menu_item_name;
@@ -179,7 +215,7 @@ function genMenuItem(divId, menuItemName) {
 		$(menuItemDivId).hide();
 		return;
 	}
-
+  // could check if already drawn and just show
   var menuItemToolTip = genMenuItemTooltip(menuItemName, module);
 	menuHtml+='<div class="content-icon"' + menuItemToolTip + '>';
 	menuHtml+='<img src="' + jsMenuImageUrl + module.logo_url + '">';
@@ -195,6 +231,7 @@ function genMenuItem(divId, menuItemName) {
 
 	$("#" + divId).html(menuHtml);
 	menuItemAddDnDHandlers($("#" + divId).get(0));
+	$("#" + divId).show();
 }
 
 function genMenuItemTooltip(menuItemName, module) {
