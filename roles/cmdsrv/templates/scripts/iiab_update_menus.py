@@ -176,7 +176,7 @@ def create_menu_def(perma_ref,default_name,intended_use='zim'):
    menuDef["title"] = item.get('title','')
    menuDef["zim_name"] = perma_ref
    menuDef["start_url"] = ''
-   menuDef["description"] = 'Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Tags; [##tags##], Language: ##language##'
+   menuDef["description"] = 'Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Tags; [##tags##], Language: ##language##, Date: ##zim_date##'
    menuDef["extra_html"] = ""
    menuDef["automatically_generated"] = "true"
    print("creating %s"%menuDefs + default_name)
