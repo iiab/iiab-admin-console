@@ -10,6 +10,7 @@
 		<link href="/common/css/bootstrap.min.css" rel="stylesheet">
 		<!-- <link href="css/iiab.css" rel="stylesheet"> -->
 		<link href="css/iiab.css" rel="stylesheet">
+		<link rel="stylesheet" href="/common/css/font-faces.css"/>
 
 		<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
 		<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -24,11 +25,12 @@
 				<center><h1>Admin Console</h1></center>
 			</div>
 			<div class="tabbable boxed parentTabs"> <!-- Start Top Level tabbable boxed parentTabs -->
-				<div class="iiab-top-nav"> <!-- Top Level Nav-->
+				<div id="iiab-top-nav"> <!-- Top Level Nav-->
 					<ul class="nav nav-tabs">
 						<li class="active"><a href="#ControlServer">Control</a></li>
 						<li><a href="#Configure">Configure</a></li>
 						<li><a href="#InstallContent">Install Content</a></li>
+						<li><a href="#ContentMenus" call-after="getMenuItemDefList">Content Menus</a></li>
 						<!--  <li><a href="#Future">Assemble Content</a></li> -->
 						<li><a href="#Util">Utilities</a></li>
 						<li><a href="#Help">Help</a></li>
@@ -82,6 +84,8 @@
 					<div class="tab-pane" id="Configure"></div>
 					<!-- InstallContent Pane -->
 					<div class="tab-pane" id="InstallContent"></div>
+					<!-- ContentMenus Pane -->
+					<div class="tab-pane" id="ContentMenus"></div>
 					<!-- Utilities Pane -->
 					<div class="tab-pane" id="Util"></div>
 
@@ -228,6 +232,7 @@
 		<script src="/common/js/Markdown.Sanitizer.js"></script>
 		<script src="js/zim_functions.js"></script>
 		<script src="js/oer2go_functions.js"></script>
+		<script src="js/js_menu_functions.js"></script>
 		<script src="js/admin_console.js"></script>
     <script>
     	controlButtonsEvents(); // make first page active before others in case want to reboot or shutdown
@@ -244,6 +249,10 @@
         $.get('htmlf/40-install_content.html', function(data) {
             $('#InstallContent').html(data);
             instContentButtonsEvents();
+        }),
+        $.get('htmlf/50-edit_menus.html', function(data) { // this should be conditional on js_menu_install: True
+            $('#ContentMenus').html(data);
+            contentMenuButtonsEvents();
         }),
         $.get('htmlf/70-utilities.html', function(data) {
             $('#Util').html(data);
