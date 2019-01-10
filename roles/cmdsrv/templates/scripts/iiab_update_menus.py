@@ -129,8 +129,7 @@ def put_kiwix_enabled_into_menu_json():
             default_name = lang + '-' + perma_ref + '.json'
             # check if menuDef exists for this perma_ref
             menu_item = kiwix.find_menuitem_from_zimname(perma_ref)
-            #if menu_item == '':
-            if True:
+            if menu_item == '':
                # no menuDef points to this perma_ref
                menu_item = create_menu_def(perma_ref, default_name)
                if menu_item == '': continue
