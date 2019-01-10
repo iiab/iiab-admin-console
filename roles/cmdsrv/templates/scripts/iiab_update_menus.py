@@ -129,7 +129,8 @@ def put_kiwix_enabled_into_menu_json():
             default_name = lang + '-' + perma_ref + '.json'
             # check if menuDef exists for this perma_ref
             menu_item = kiwix.find_menuitem_from_zimname(perma_ref)
-            if menu_item == '':
+            #if menu_item == '':
+            if True:
                # no menuDef points to this perma_ref
                menu_item = create_menu_def(perma_ref, default_name)
                if menu_item == '': continue
@@ -176,7 +177,7 @@ def create_menu_def(perma_ref,default_name,intended_use='zim'):
    menuDef["title"] = item.get('title','')
    menuDef["zim_name"] = perma_ref
    menuDef["start_url"] = ''
-   menuDef["description"] = 'Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Tags; [##tags##], Language: ##language##'
+   menuDef["description"] = 'Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Tags; [##tags##], Language: ##language##, Date: ##zim_date##'
    menuDef["extra_html"] = ""
    menuDef["automatically_generated"] = "true"
    print("creating %s"%menuDefs + default_name)
