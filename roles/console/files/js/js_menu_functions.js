@@ -7,7 +7,7 @@ var jsMenuItemDefUrl = "/js-menu/menu-files/menu-defs/";
 var currentJsMenuToEdit = {};
 var menuItemDefList = [];
 var menuItemDefs = {};
-menuItemDefs['call_count'] = -1;
+menuItemDefs['call_count'] = -1; // mark as not downloaded
 
 var menuItemDragSrcElement = null;
 var menuItemDragSrcParent = null;
@@ -22,6 +22,7 @@ function procMenuItemDefList (data){
 	menuItemDefList = data;
 	html = createMenuItemScaffold(menuItemDefList, "all-items");
 	$("#menusDefineMenuAllItemList").html(html);
+	menuItemDefs['call_count'] = 0; // ready to download
 	for (var i = 0; i < menuItemDefList.length; i++) {
 		getMenuItemDef(menuItemDefList[i], "all-items")
 	}
