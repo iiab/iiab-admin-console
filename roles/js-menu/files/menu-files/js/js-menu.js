@@ -233,7 +233,10 @@ function getMenuDef(menuItem) {
          zimName = menuDefs[menuItem]['zim_name'];
 	      for (var i = 0; i < zimSubstParams.length; i++) {
             field = zimSubstParams[i];
-            menuDefs[menuItem][field] = zimVersions[zimName][field];
+            if (zimVersions.hasOwnProperty(zimName) &&
+               zimVersions[zimName].hasOwnProperty(field)){
+               menuDefs[menuItem][field] = zimVersions[zimName][field];
+            }
          }
       }
 		procMenuItem(module);
@@ -294,7 +297,8 @@ function procMenuItem(module) {
 function calcZimLink(module){
 	// if kiwix_url is defined use it otherwise use port
 	var href = '';
-   if(typeof zimVersions[module.zim_name].file_name != 'undefined' ){
+   if( zimVersions.hasOwnProperty(module.menu_item_name) &&
+      typeof zimVersions[module.zim_name].file_name != 'undefined' ){
 	  href =  zimVersions[module.zim_name].file_name + '/';
   	  if ( menuConfig.hasOwnProperty('kiwixUrl'))
         href = menuConfig.kiwixUrl + href;
