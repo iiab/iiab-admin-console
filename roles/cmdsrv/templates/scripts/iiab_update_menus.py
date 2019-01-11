@@ -66,8 +66,8 @@ iiab_menu_items={
 def main():
    print('Updating kiwix menus')
    put_kiwix_enabled_into_menu_json()
-   print('Updating oer2go menus')
-   put_oer2go_enabled_into_menu_json()
+   #print('Updating oer2go menus')
+   #put_oer2go_enabled_into_menu_json()
    print('Updating iiab installed services\' menus')
    put_iiab_enabled_into_menu_json()
 
