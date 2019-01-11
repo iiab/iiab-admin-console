@@ -66,8 +66,6 @@ iiab_menu_items={
 def main():
    print('Updating kiwix menus')
    put_kiwix_enabled_into_menu_json()
-   #print('Updating oer2go menus')
-   #put_oer2go_enabled_into_menu_json()
    print('Updating iiab installed services\' menus')
    put_iiab_enabled_into_menu_json()
 
@@ -191,15 +189,6 @@ def update_href_in_menu_def(menu_def,perma_ref):
     with open(menuDefs + menu_def + '.json','w') as md_file:
         md_file.write(json.dumps(menu_def_dict))
    
-def put_oer2go_enabled_into_menu_json():
-   cmd = SCRIPT_DIR + '/get_oer2go_catalog --no_download -v'
-   args = shlex.split(cmd)
-   try:
-      outp = subprocess.check_output(args,shell=True)
-   except subprocess.CalledProcessError as e:
-      print(str(e))
-      sys.exit(1)
-
 def get_default_logo(logo_selector,lang):
    #  Select the first part of the selector
    short_selector = logo_selector[:logo_selector.find('_')]
