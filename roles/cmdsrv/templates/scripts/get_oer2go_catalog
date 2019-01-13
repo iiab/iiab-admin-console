@@ -250,7 +250,10 @@ def proc_module (module):
     age = module.get('age_range','undefined')
     if age == None:
        age = ''
-    menu_item['description1'] = "Size: " + size + ', Files: ' + files + ', Age: ' + age
+    menu_item['description'] module.get('description','')
+    if menu_item['description'] != '':
+       menu_item['descriotion'] = '\n'
+    menu_item['description'] += "Size: " + size + ', Files: ' + files + ', Age: ' + age
 
     # get logo if there is one
     if 'logo_url' in module and module['logo_url'] != None:
