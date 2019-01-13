@@ -62,14 +62,16 @@
 
 #	pip install pyzmq  - didn't use the installed zmq rpm and the target zmq 4, not 3, for which there is no rpm.
 
-- name: Download zeromq and python binding
-  pip: name=pyzmq
-       extra_args="--download {{ pip_packages_dir }}"
+- name: Download pyzmq (zeromq and python binding)
+  command: "pip download --dest {{ pip_packages_dir }} pyzmq"
+  # "pip install --download <dir> SomePkg" (below) is DEPRECATED after pip 9.x
+  #pip: name=pyzmq
+  #     extra_args="--download {{ pip_packages_dir }}"
   when: not use_cache and not no_network
   tags:
     - download2
 
-- name: Install zeromq and python binding
+- name: Install pyzmq (zeromq and python binding)
   pip: name=pyzmq
        extra_args="--no-index --find-links=file://{{ pip_packages_dir }}"
 
@@ -79,8 +81,10 @@
     - download2
 
 - name: Download speedtest-cli
-  pip: name=speedtest-cli
-       extra_args="--download {{ pip_packages_dir }}"
+  command: "pip download --dest {{ pip_packages_dir }} speedtest-cli"
+  # "pip install --download <dir> SomePkg" (below) is DEPRECATED after pip 9.x
+  #pip: name=speedtest-cli
+  #     extra_args="--download {{ pip_packages_dir }}"
   when: not use_cache and not no_network
   tags:
     - download2
