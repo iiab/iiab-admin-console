@@ -52,6 +52,7 @@ var zimSubstParams = [];
 var zimSubstRegEx = {};
 var hrefRegEx;
 
+var menuDivId = "content";
 var scaffold = $.Deferred();
 var ajaxCallCount = 0;
 var i;
@@ -121,25 +122,25 @@ var getLangCodes = $.getJSON(consoleJsonDir + 'lang_codes.json')
 $.when(getMenuJson, getZimVersions, getConfigJson, getLangCodes).always(procMenu);
 
 // This is the main processing
-function jsMenuMain () {
-genRegEx(); // regular expressions for subtitution
+function jsMenuMain (menuDiv = "content") {
+	menuDivId = menuDiv;
+  genRegEx(); // regular expressions for subtitution
   if (dynamicHtml){
   	getLocalStore();
-    //$.when(scaffold, getZimVersions, getConfigJson).then(procMenu);
     $.when(getMenuJson, getZimVersions, getConfigJson).always(procMenu); // ignore errors like kiwix not installed
-    // create scaffolding for menu items
-    var html = "";
-    for (i = 0; i < menuItems.length; i++) {
-    	var menu_item_name = menuItems[i];
-    	menuDefs[menu_item_name] = {}
-    	menuItemDivId = i.toString() + "-" + menu_item_name;
-    	menuDefs[menu_item_name]['menu_id'] = menuItemDivId;
+    // create scaffolding for menu items - duplicates getMenuJson
+    //var html = "";
+    //for (i = 0; i < menuItems.length; i++) {
+    //	var menu_item_name = menuItems[i];
+    //	menuDefs[menu_item_name] = {}
+    //	menuItemDivId = i.toString() + "-" + menu_item_name;
+    //	menuDefs[menu_item_name]['menu_id'] = menuItemDivId;
 
-    	html += '<div id="' + menuItemDivId + '" class="content-item" dir="auto">&emsp;Attempting to load ' + menu_item_name + ' </div>';
-    }
-    $("#content").html(html);
-    $(".toggleExtraHtml").toggle(showFullDisplay);
-    scaffold.resolve();
+    //	html += '<div id="' + menuItemDivId + '" class="content-item" dir="auto">&emsp;Attempting to load ' + menu_item_name + ' </div>';
+    //}
+    //$("#content").html(html);
+    //$(".toggleExtraHtml").toggle(showFullDisplay);
+    //scaffold.resolve();
   }
   else {
     $.when(getConfigJson).then(procStatic);
@@ -168,7 +169,7 @@ function createScaffold(){
 
   	html += '<div id="' + menuItemDivId + '" class="flex-row content-item" dir="auto">&emsp;Attempting to load ' + menu_item_name + ' </div>';
   }
-  $("#content").html(html);
+  $("#" + menuDivId).html(html);
   $(".toggleExtraHtml").toggle(showExtraHtml);
 
 }
