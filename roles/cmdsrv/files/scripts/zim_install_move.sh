@@ -12,4 +12,7 @@ mv $SRC $DESTDIR
 echo "Re-indexing Kiwix Library"
 /usr/bin/iiab-make-kiwix-lib
 
+echo "Updating home page menues"
+/usr/bin/iiab-update-menus
+
 exit 0
