@@ -250,9 +250,9 @@ def proc_module (module):
     age = module.get('age_range','undefined')
     if age == None:
        age = ''
-    menu_item['description'] module.get('description','')
+    menu_item['description'] = module.get('description','')
     if menu_item['description'] != '':
-       menu_item['descriotion'] += '\n'
+       menu_item['description'] += '\n'
     menu_item['description'] += "Size: " + size + ', Files: ' + files + ', Age: ' + age
 
     # get logo if there is one
@@ -307,7 +307,6 @@ def proc_module (module):
        pass
     with open(iiab_menu_download_dir + moddir + '.json', 'w') as fp:
         json.dump(menu_item, fp, indent=2)
-    os.remove(working_dir + "rachel-index.php")
 
     if not os.path.exists(doc_root_menu_defs + moddir + '.json'):
        # as per discussion, put menu-def (minus html) into menu-defs
