@@ -79,6 +79,7 @@ def put_iiab_enabled_into_menu_json():
       print(str(e))
       sys.exit(1)
    for iiab_option in outp.split('\n'):
+      if iiab_option == 'kiwix': continue
       if iiab_option in iiab_menu_items:
          update_menu_json(iiab_menu_items[iiab_option])
          
@@ -122,6 +123,9 @@ def put_kiwix_enabled_into_menu_json():
       with open(zim_idx,"r") as zim_fp:
          zim_versions_info = json.loads(zim_fp.read())
          for perma_ref in zim_versions_info:
+            # if other zims exist, do not add test zim
+            if len(zim_versions_info) > 1 and perma_ref == 'tes':
+               continue
             # create the canonical menu_item name
             lang = zim_versions_info[perma_ref].get('language','en')
             default_name = lang + '-' + perma_ref + '.json'
