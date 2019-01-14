@@ -1,6 +1,6 @@
 @charset "UTF-8";
 
-.iiab-top-nav {
+#iiab-top-nav {
   background: #E5CF87;
 }
 .iiab-left-nav {
@@ -156,3 +156,58 @@ border-radius: 8px 8px 0 0;
 #statusJobsRefreshTime {
 	padding-left:20px;
 }
+
+/* content Menus */
+
+.content-item {
+    font-size: 1em;
+    padding: 10px 0 10px 0;
+    border: 1px solid #aaa;
+    border-radius: 5px;
+    margin-bottom: 2px;
+    background-color: #fff;
+    align-items: flex-start;
+    display: flex;
+    cursor: move;
+}
+
+.content-icon {
+	  padding: 0 10px 0 10px;
+	  height: 40px;
+	  width: 100px;
+}
+
+.content-cell {
+	  vertical-align:top;
+	  padding: 0 10px 0 10px;
+}
+.content-item img {
+    max-width: 90px;
+    max-height: 40px;
+    /*margin-right: 10px;
+    margin-bottom: 32px;*/
+    border-radius: 5px;
+}
+
+.content-item-title {
+  font-size: 1.4em;
+  font-weight: 600;
+}
+
+.content-item.dragElem {
+  opacity: 0.4;
+}
+.content-item.over {
+  //border: 2px dashed #000;
+  border-top: 2px solid blue;
+}
+
+.content-item.no-drop {
+  cursor: no-drop;
+}
+
+#menusDefineMenuCurrentItemList, #menusDefineMenuAllItemList {
+  overflow: auto;
+  max-height: 640px; /* 10 items */
+}
+

@@ -40,6 +40,12 @@ Install Content
 * Download Khan Academy Videos
 * Manage Content
 
+Content Menus
+-------------
+
+* Edit Content Menus
+* Edit Menu Items - Future
+
 Utilities
 ---------
 
