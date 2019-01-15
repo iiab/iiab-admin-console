@@ -300,15 +300,18 @@ function menuItemDragOver(e) {
 
   if (menuItemDragSrcParent == "menusDefineMenuCurrentItemList"){ // from current menu list
     e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.dropEffect = 'move';
     this.classList.add('over');
   }
   else { // from available items
     if (this.parentNode.id == "menusDefineMenuCurrentItemList"){ // to menu
       e.dataTransfer.effectAllowed = 'copy';
+      e.dataTransfer.dropEffect = 'copy';
       this.classList.add('over');
     }
     else { // to itself
       e.dataTransfer.effectAllowed = 'none';
+      e.dataTransfer.dropEffect = 'none';
       this.classList.add('no-drop');
     }
 
