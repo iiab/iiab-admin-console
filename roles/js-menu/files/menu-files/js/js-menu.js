@@ -274,6 +274,8 @@ function procMenuItem(module) {
 		menuHtml += calcKolibriLink(module);
 	else if (module['intended_use'] == "cups")
 		menuHtml += calcCupsLink(module);
+	else if (module['intended_use'] == "nodered")
+		menuHtml += calcNoderedLink(module);
    else if (module['intended_use'] == "calibre")
 		menuHtml += calcCalibreLink(module);
    else if (module['intended_use'] == "calibreweb")
@@ -365,6 +367,13 @@ function calcCalibreWebLink(module){
 
 function calcCupsLink(module){
 	var href = host + ':' + menuConfig.cupsPort;
+
+	var html = calcItemHtml(href,module);
+	return html
+}
+
+function calcNoderedLink(module){
+	var href = host + ':' + menuConfig.noderedPort;
 
 	var html = calcItemHtml(href,module);
 	return html

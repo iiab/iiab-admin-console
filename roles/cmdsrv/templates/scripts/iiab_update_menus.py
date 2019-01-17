@@ -59,6 +59,7 @@ iiab_menu_items={
      "mediawiki":"en-mediawiki",\
      "moodle":"en-moodle",\
      "nextcloud":"en-nextcloud",\
+     "nodered":"en-nodered",\
      "sugarizer":"en-sugarizer",\
      #"teamviewer":"en-teamviewer",\
      "wordpress":"en-wordpress"
