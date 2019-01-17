@@ -1,7 +1,7 @@
 {
 "intended_use" : "nodered",
 "lang" : "en",
-"logo_url" : "nodered.png",
+"logo_url" : "node-red-icon-2.svg",
 "menu_item_name" : "en-nodered",
 "moddir" : "/",
 "title" : "Node-RED and Node-RED Dashboard",
