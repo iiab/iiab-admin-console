@@ -3,7 +3,7 @@
 "lang" : "en",
 "logo_url" : "credits.png",
 "menu_item_name" : "en-credits",
-"moddir" : "iiab-menu/menu-files/html/credits.html",
+"moddir" : "common/html/credits.html",
 "title" : "Credits",
 "description" : "Thanks to all those who contributed and curated content used by Internet in a Box."
 }
