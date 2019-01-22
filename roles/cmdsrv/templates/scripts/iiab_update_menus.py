@@ -83,14 +83,13 @@ def put_iiab_enabled_into_menu_json():
       if iiab_option == 'kiwix': continue
       if iiab_option in iiab_menu_items:
          update_menu_json(iiab_menu_items[iiab_option])
-         
+
 def update_menu_json(new_item):
    with open(menuJsonPath,"r") as menu_fp:
       reads = menu_fp.read()
       #print("menu.json:%s"%reads)
       data = json.loads(reads)
-      if data.get('autoupdate_menu','') == 'false' or\
-         data.get('autoupdate_menu','') == 'False':
+      if not data.get('autoupdate_menu', False): # only update if allowed
          return
 
       for item in data['menu_items_1']:
@@ -137,7 +136,7 @@ def put_kiwix_enabled_into_menu_json():
                menu_item = create_menu_def(perma_ref, default_name)
                if menu_item == '': continue
             update_menu_json(menu_item)
-     
+
             # make the menu_item reflect any name changes due to collision
             zim_versions_info[perma_ref]['menu_item'] = menu_item
       # write the updated menu_item links
@@ -193,7 +192,7 @@ def update_href_in_menu_def(menu_def,perma_ref):
         menu_def_dict['file_name'] = file_name
     with open(menuDefs + menu_def + '.json','w') as md_file:
         md_file.write(json.dumps(menu_def_dict))
-   
+
 def get_default_logo(logo_selector,lang):
    #  Select the first part of the selector
    short_selector = logo_selector[:logo_selector.find('_')]

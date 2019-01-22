@@ -11,6 +11,7 @@
   "allow_kiwix_search" : true,
   "allow_poweroff" : true,
   "poweroff_prompt" : "Power Off",
+  "autoupdate_menu": false,
   "multi_tab" : false,
   "tab_names" : ["Main"],
   "menu_items_1" :
