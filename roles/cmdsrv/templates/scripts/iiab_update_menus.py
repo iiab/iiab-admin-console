@@ -89,7 +89,8 @@ def update_menu_json(new_item):
       reads = menu_fp.read()
       #print("menu.json:%s"%reads)
       data = json.loads(reads)
-      if not data.get('autoupdate_menu', False): # only update if allowed
+      autoupdate_menu = data.get('autoupdate_menu', False)
+      if not autoupdate_menu: # only update if allowed
          return
 
       for item in data['menu_items_1']:
