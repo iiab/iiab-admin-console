@@ -42,6 +42,8 @@ The following may be set separately for the **Mobile Layout** or the **Desktop L
 
 The following apply to both layouts:
 
+**Check to Have the Menu Automatically Updated** - Services installed as well as zims and oer2go modules can be automatically added to the menu. **Be Careful** as some manual changes may be reverted by this option.
+
 **Check to Allow Kiwix Cross Zim Search** - The Kiwix server supports search across all zims and just a particular zim. If you check this field an icon will be included on the menu to access search across all installed zims. **Please Note** that this search becomes slower the more zims you have installed.
 
 **Check to Allow Power Off Link** - If this is checked a link to power off the server will be included at the bottom of the home page. You must also have enable this when you installed Internet-in-a-Box.
