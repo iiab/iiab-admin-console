@@ -83,14 +83,14 @@ def put_iiab_enabled_into_menu_json():
       if iiab_option == 'kiwix': continue
       if iiab_option in iiab_menu_items:
          update_menu_json(iiab_menu_items[iiab_option])
-         
+
 def update_menu_json(new_item):
    with open(menuJsonPath,"r") as menu_fp:
       reads = menu_fp.read()
       #print("menu.json:%s"%reads)
       data = json.loads(reads)
-      if data.get('autoupdate_menu','') == 'false' or\
-         data.get('autoupdate_menu','') == 'False':
+      autoupdate_menu = data.get('autoupdate_menu', False)
+      if not autoupdate_menu: # only update if allowed
          return
 
       for item in data['menu_items_1']:
@@ -137,7 +137,7 @@ def put_kiwix_enabled_into_menu_json():
                menu_item = create_menu_def(perma_ref, default_name)
                if menu_item == '': continue
             update_menu_json(menu_item)
-     
+
             # make the menu_item reflect any name changes due to collision
             zim_versions_info[perma_ref]['menu_item'] = menu_item
       # write the updated menu_item links
@@ -179,12 +179,14 @@ def create_menu_def(perma_ref,default_name,intended_use='zim'):
    menuDef["title"] = item.get('title','')
    menuDef["zim_name"] = perma_ref
    menuDef["start_url"] = ''
-   menuDef["description"] = 'Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Tags; [##tags##], Language: ##language##, Date: ##zim_date##'
+   menuDef["description"] = '<p>' + item.get('description','') + '</p>'
+   menuDef["description"] += '<p>Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Tags; [##tags##], Language: ##language##, Date: ##zim_date##</p>'
    menuDef["extra_html"] = ""
    menuDef["automatically_generated"] = "true"
-   print("creating %s"%menuDefs + default_name)
-   with open(menuDefs + default_name,'w') as menufile:
-      menufile.write(json.dumps(menuDef,indent=2))
+   if not os.path.isfile(menuDefs + default_name): # logic to here can still overwrite existing menu def
+       print("creating %s"%menuDefs + default_name)
+       with open(menuDefs + default_name,'w') as menufile:
+          menufile.write(json.dumps(menuDef,indent=2))
    return default_name[:-5]
 
 def update_href_in_menu_def(menu_def,perma_ref):
@@ -193,7 +195,7 @@ def update_href_in_menu_def(menu_def,perma_ref):
         menu_def_dict['file_name'] = file_name
     with open(menuDefs + menu_def + '.json','w') as md_file:
         md_file.write(json.dumps(menu_def_dict))
-   
+
 def get_default_logo(logo_selector,lang):
    #  Select the first part of the selector
    short_selector = logo_selector[:logo_selector.find('_')]

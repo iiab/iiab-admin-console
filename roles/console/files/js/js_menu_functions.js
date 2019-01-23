@@ -62,6 +62,10 @@ function saveContentMenuDef() {
     	return false;
     }
     getContentMenuToEditFormValues ();
+    if (!Array.isArray(currentJsMenuToEdit.menu_items_1) || !currentJsMenuToEdit.menu_items_1.length){
+    	alert ("List of Menu Items is empty. Load before Saving.");
+    	return false;
+    }
     cmd_args['menu_url'] = menu_url;
     cmd_args['menu_def'] = currentJsMenuToEdit;
     cmd = command + " " + JSON.stringify(cmd_args);
@@ -77,6 +81,7 @@ function setContentMenuToEditFormValues (){
   setContentMenuToEditFormValue('desktop_header_font');
   setContentMenuToEditFormChecked('desktop_incl_description');
   setContentMenuToEditFormChecked('desktop_incl_extra_html');
+  setContentMenuToEditFormChecked('autoupdate_menu');
   setContentMenuToEditFormChecked('allow_kiwix_search');
   setContentMenuToEditFormChecked('allow_poweroff');
   setContentMenuToEditFormValue('poweroff_prompt');
@@ -97,6 +102,7 @@ function getContentMenuToEditFormValues (){
   getContentMenuToEditFormValue('desktop_header_font');
   getContentMenuToEditFormChecked('desktop_incl_description');
   getContentMenuToEditFormChecked('desktop_incl_extra_html');
+  getContentMenuToEditFormChecked('autoupdate_menu');
   getContentMenuToEditFormChecked('allow_kiwix_search');
   getContentMenuToEditFormChecked('allow_poweroff');
   getContentMenuToEditFormValue('poweroff_prompt');

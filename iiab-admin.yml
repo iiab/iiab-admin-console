@@ -27,6 +27,7 @@
     cmdsrv_lower_job_priority_str: "/usr/bin/nice -n19 /usr/bin/ionice -c2 -n7 "
     # because this is not globally in local vars we won't see iiab's role defaults
     kiwix_url: /kiwix/
+    nodered_port: 1234
 
   vars_files:
   - "{{ iiab_repo }}/vars/default_vars.yml"
