@@ -182,9 +182,10 @@ def create_menu_def(perma_ref,default_name,intended_use='zim'):
    menuDef["description"] = 'Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Tags; [##tags##], Language: ##language##, Date: ##zim_date##'
    menuDef["extra_html"] = ""
    menuDef["automatically_generated"] = "true"
-   #print("creating %s"%menuDefs + default_name)
-   #with open(menuDefs + default_name,'w') as menufile:
-   #   menufile.write(json.dumps(menuDef,indent=2))
+   if not os.path.isfile(menuDefs + default_name): # logic to here can still overwrite existing menu def
+       print("creating %s"%menuDefs + default_name)
+       with open(menuDefs + default_name,'w') as menufile:
+          menufile.write(json.dumps(menuDef,indent=2))
    return default_name[:-5]
 
 def update_href_in_menu_def(menu_def,perma_ref):
