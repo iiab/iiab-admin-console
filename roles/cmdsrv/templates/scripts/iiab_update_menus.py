@@ -179,7 +179,8 @@ def create_menu_def(perma_ref,default_name,intended_use='zim'):
    menuDef["title"] = item.get('title','')
    menuDef["zim_name"] = perma_ref
    menuDef["start_url"] = ''
-   menuDef["description"] = 'Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Tags; [##tags##], Language: ##language##, Date: ##zim_date##'
+   menuDef["description"] = '<p>' + item.get('description','') + '</p>'
+   menuDef["description"] += '<p>Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Tags; [##tags##], Language: ##language##, Date: ##zim_date##</p>'
    menuDef["extra_html"] = ""
    menuDef["automatically_generated"] = "true"
    if not os.path.isfile(menuDefs + default_name): # logic to here can still overwrite existing menu def
