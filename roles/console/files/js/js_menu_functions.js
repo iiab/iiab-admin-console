@@ -62,7 +62,7 @@ function saveContentMenuDef() {
     	return false;
     }
     getContentMenuToEditFormValues ();
-    if (currentJsMenuToEdit.menu_items_1.length == 0){
+    if (!Array.isArray(currentJsMenuToEdit.menu_items_1) || !currentJsMenuToEdit.menu_items_1.length){
     	alert ("List of Menu Items is empty. Load before Saving.");
     	return false;
     }
