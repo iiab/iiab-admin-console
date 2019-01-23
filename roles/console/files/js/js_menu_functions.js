@@ -62,6 +62,10 @@ function saveContentMenuDef() {
     	return false;
     }
     getContentMenuToEditFormValues ();
+    if (currentJsMenuToEdit.menu_items_1.length ==0){
+    	alert ("List of Menu Items is empty. Load before Saving.");
+    	return false;
+    }
     cmd_args['menu_url'] = menu_url;
     cmd_args['menu_def'] = currentJsMenuToEdit;
     cmd = command + " " + JSON.stringify(cmd_args);
@@ -120,10 +124,6 @@ function getContentMenuToEditItemList () {
   	consoleLog($(this).attr('menu_item_name'));
   	menuItemList.push($(this).attr('menu_item_name'));
   });
-  if (menuItemList.length == 0 ) // hack not to write empty list
-    alert ("List of menu items is empty. Keeping original list.");
-  else
-    currentJsMenuToEdit.menu_items_1 = menuItemList;
 }
 
 function delayedProcCurrentMenuItemDefList (timeout, list, prefix){
