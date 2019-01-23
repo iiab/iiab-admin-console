@@ -120,7 +120,10 @@ function getContentMenuToEditItemList () {
   	consoleLog($(this).attr('menu_item_name'));
   	menuItemList.push($(this).attr('menu_item_name'));
   });
-  currentJsMenuToEdit.menu_items_1 = menuItemList;
+  if (menuItemList.length == 0 ) // hack not to write empty list
+    alert ("List of menu items is empty. Keeping original list.");
+  else
+    currentJsMenuToEdit.menu_items_1 = menuItemList;
 }
 
 function delayedProcCurrentMenuItemDefList (timeout, list, prefix){
