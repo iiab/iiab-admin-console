@@ -62,7 +62,7 @@ function saveContentMenuDef() {
     	return false;
     }
     getContentMenuToEditFormValues ();
-    if (currentJsMenuToEdit.menu_items_1.length ==0){
+    if (currentJsMenuToEdit.menu_items_1.length == 0){
     	alert ("List of Menu Items is empty. Load before Saving.");
     	return false;
     }
@@ -124,6 +124,7 @@ function getContentMenuToEditItemList () {
   	consoleLog($(this).attr('menu_item_name'));
   	menuItemList.push($(this).attr('menu_item_name'));
   });
+  currentJsMenuToEdit.menu_items_1 = menuItemList;
 }
 
 function delayedProcCurrentMenuItemDefList (timeout, list, prefix){
