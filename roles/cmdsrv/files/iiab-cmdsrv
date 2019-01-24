@@ -1741,7 +1741,7 @@ def save_menu_def(cmd_info):
 
     try:
         with open(menu_path, 'w') as outfile:
-            json.dump(menu_def, outfile)
+            outfile.write(json.dumps(menu_def, indent=2))
     except OSError as e:
         resp = cmd_error(cmd_info['cmd'], msg='Error writing to Menu Definition File.')
         return (resp)
