@@ -38,6 +38,9 @@ function getContentMenuToEdit(currentJsMenuToEditUrl){ // passed by button click
 	})
 	.done(function( data ) {
 		currentJsMenuToEdit = data;
+		// don't allow blank list of menu item defs
+		if (!Array.isArray(currentJsMenuToEdit.menu_items_1) || !currentJsMenuToEdit.menu_items_1.length)
+		  currentJsMenuToEdit.menu_items_1 = ['en-credits'];
 		setContentMenuToEditFormValues();
 		delayedProcCurrentMenuItemDefList (5000, currentJsMenuToEdit.menu_items_1, "current-items"); // hard coded name of list against future multi-tab menus
 	})
