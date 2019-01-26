@@ -81,18 +81,23 @@ function setContentMenuToEditFormValues (){
   setContentMenuToEditFormValue('desktop_header_font');
   setContentMenuToEditFormChecked('desktop_incl_description');
   setContentMenuToEditFormChecked('desktop_incl_extra_html');
+  setContentMenuToEditFormValue('menu_lang', 'js_menu_lang');
   setContentMenuToEditFormChecked('autoupdate_menu');
   setContentMenuToEditFormChecked('allow_kiwix_search');
   setContentMenuToEditFormChecked('allow_poweroff');
   setContentMenuToEditFormValue('poweroff_prompt');
 }
 
-function setContentMenuToEditFormValue (fieldName) {
-  gEBI(fieldName).value = currentJsMenuToEdit[fieldName];
+function setContentMenuToEditFormValue (fieldName, screenName='') {
+  if (screenName == '')
+	  screenName = fieldName;
+  gEBI(screenName).value = currentJsMenuToEdit[fieldName];
 }
 
-function setContentMenuToEditFormChecked (fieldName) {
-  gEBI(fieldName).checked = currentJsMenuToEdit[fieldName];
+function setContentMenuToEditFormChecked (fieldName, screenName='') {
+	if (screenName == '')
+	  screenName = fieldName;
+  gEBI(fieldName).checked = currentJsMenuToEdit[screenName];
 }
 
 function getContentMenuToEditFormValues (){
@@ -102,6 +107,7 @@ function getContentMenuToEditFormValues (){
   getContentMenuToEditFormValue('desktop_header_font');
   getContentMenuToEditFormChecked('desktop_incl_description');
   getContentMenuToEditFormChecked('desktop_incl_extra_html');
+  getContentMenuToEditFormValue('menu_lang', 'js_menu_lang');
   getContentMenuToEditFormChecked('autoupdate_menu');
   getContentMenuToEditFormChecked('allow_kiwix_search');
   getContentMenuToEditFormChecked('allow_poweroff');
@@ -110,12 +116,16 @@ function getContentMenuToEditFormValues (){
   getContentMenuToEditItemList ();
 }
 
-function getContentMenuToEditFormValue (fieldName) {
-  currentJsMenuToEdit[fieldName] = gEBI(fieldName).value;
+function getContentMenuToEditFormValue (fieldName, screenName='') {
+	if (screenName == '')
+	  screenName = fieldName;
+  currentJsMenuToEdit[fieldName] = gEBI(screenName).value;
 }
 
-function getContentMenuToEditFormChecked (fieldName) {
-  currentJsMenuToEdit[fieldName] = gEBI(fieldName).checked;
+function getContentMenuToEditFormChecked (fieldName, screenName='') {
+	if (screenName == '')
+	  screenName = fieldName;
+  currentJsMenuToEdit[fieldName] = gEBI(screenName).checked;
 }
 
 function getContentMenuToEditItemList () {
