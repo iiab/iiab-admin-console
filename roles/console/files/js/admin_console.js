@@ -913,6 +913,9 @@ function procContentLangs() {
   var html = '';
   var topHtml = '';
   var bottomHtml = '';
+  var langPickerTopHtml = "";
+  var langPickerBottomHtml = "";
+  var selectName = "";
 
   selectedLangsDefaults(); // make sure the langs of any downloaded content is selected
 
@@ -932,6 +935,25 @@ function procContentLangs() {
 
   $( "#ContentLanguages" ).html(topHtml);
   $( "#ContentLanguages2" ).html(bottomHtml);
+
+  if ($("#js_menu_lang").html() == ""){ // calc and insert language pickers
+    for (i in langNames){
+    	selectName = langNames[i].locname + ' [' + langCodes[langNames[i].code].iso2 + ']';
+    	if (langNames[i].locname != langNames[i].engname)
+    		selectName += ' (' + langNames[i].engname + ')';
+
+      html = '<option value="' + langCodes[langNames[i].code].iso2 + '">' + selectName + '</option>';
+
+      if (topNames.indexOf(langNames[i].code) >= 0) {
+        langPickerTopHtml += html;
+      }
+      else {
+        langPickerBottomHtml += html;
+      }
+    }
+    $( "#js_menu_lang" ).html(langPickerTopHtml+langPickerBottomHtml);
+
+  }
 }
 
 function selectedLangsDefaults() {
