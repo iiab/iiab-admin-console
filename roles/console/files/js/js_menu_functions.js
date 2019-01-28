@@ -134,7 +134,7 @@ function getContentMenuToEditFormChecked (fieldName, screenName='') {
 function getContentMenuToEditItemList () {
 	var menuItemList = [];
   $("#menusDefineMenuCurrentItemList .content-item").each(function() {
-  	consoleLog($(this).attr('menu_item_name'));
+  	//consoleLog($(this).attr('menu_item_name'));
   	menuItemList.push($(this).attr('menu_item_name'));
   });
   currentJsMenuToEdit.menu_items_1 = menuItemList;
@@ -345,6 +345,7 @@ function menuItemDragEnter(e) {
 
 function menuItemDragLeave(e) {
   this.classList.remove('over');  // this / e.target is previous target element.
+  this.classList.remove('no-drop');
 }
 
 function menuItemDrop(e) {
@@ -359,6 +360,7 @@ function menuItemDrop(e) {
     e.stopPropagation(); // Stops some browsers from redirecting.
   }
   //console.log("DROP")
+  //console.log(dragDestPar)
   //consoleLog("is duplicate",e.dataTransfer.getData('is_duplicate'));
   // If move within menu and new location is different
   if (menuItemDragSrcParent == "menusDefineMenuCurrentItemList" && dragDestPar == "menusDefineMenuCurrentItemList" && menuItemDragSrcElement != this){
@@ -400,7 +402,11 @@ function menuItemDrop(e) {
 
 function menuItemDragEnd(e) {
   // this/e.target is the source node.
+  //console.log("END")
+  //console.log(this.id)
   this.classList.remove('over');
+  this.classList.remove('dragElem');
+  this.classList.remove('no-drop');
 
   /*[].forEach.call(cols, function (col) {
   col.classList.remove('over');
