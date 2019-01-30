@@ -154,8 +154,8 @@ def main ():
             break
 
         if id not in dup_list:
-            module, get_new_menudef = get_status (module)
-            if get_new_menudef and args.menu:
+            module, gen_new_menudef = get_status (module)
+            if gen_new_menudef and args.menu:
                 module = proc_module(module)
                 msg = "Generating menu files"
                 if verbose:
@@ -199,36 +199,43 @@ def get_status (item):
     item['has_live_menudef'] = False
     item['has_wip_menudef'] = False
     item['has_redundant_menudef'] = False
-    get_new_menudef = False
 
     moddir = item['moddir']
-    # check if menu def exists
-    if os.path.exists(iiab_menu_repo_dir +  'menu-files/menu-defs/' + moddir + '.json'):
-        msg = "Found menudef for"
-        item['has_live_menudef'] = True
-    elif os.path.exists(iiab_menu_repo_dir +  'incompatible/wip/' + moddir + '.json'):
-        msg = "WIP menudef for"
-        item['has_wip_menudef'] = True
-    elif os.path.exists(iiab_menu_repo_dir +  'incompatible/rachel-duplicates/' + moddir + '.json'):
-        msg = "Redundant menudef for"
-        item['has_redundant_menudef'] = True
-
-    if verbose:
-        print "%s %s %s" % (msg, id, moddir)
 
     # check if module downloaded
     if os.path.exists(iiab_modules_dir + moddir):
-        msg = "Found download"
         item['module_downloaded'] = True
-        msg = "Missing menudef for"
-        get_new_menudef = True
+        msg = "Found download. Checking menudef for"
+        gen_new_menudef = True
     else:
         msg = "No download for"
+        gen_new_menudef = False
 
     if verbose:
         print "%s %s %s" % (msg, id, moddir)
 
-    return(item, get_new_menudef)
+    # check if menu def exists
+    if os.path.exists(doc_root_menu_defs + moddir + '.json'):
+        msg = "Found menudef for"
+        item['has_live_menudef'] = True
+        gen_new_menudef = False
+    else:
+        msg = "No menudef for"
+
+    # we don't need this complexity; should be a utility in iiab-factory
+    #elif os.path.exists(iiab_menu_repo_dir +  'incompatible/wip/' + moddir + '.json'):
+    #    msg = "WIP menudef for"
+    #    item['has_wip_menudef'] = True
+    #    gen_new_menudef = False
+    #elif os.path.exists(iiab_menu_repo_dir +  'incompatible/rachel-duplicates/' + moddir + '.json'):
+    #    msg = "Redundant menudef for"
+    #    item['has_redundant_menudef'] = True
+    #    gen_new_menudef = False
+
+    if verbose:
+        print "%s %s %s" % (msg, id, moddir)
+
+    return(item, gen_new_menudef)
 
 def proc_module (module):
     # create menu item files:
