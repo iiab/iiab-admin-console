@@ -156,7 +156,7 @@ def main ():
         if id not in dup_list:
             module, gen_new_menudef = get_status (module)
             if gen_new_menudef and args.menu:
-                module = proc_module(module)
+                proc_module(module) # process menu item
                 msg = "Generating menu files"
                 if verbose:
                     print "%s %s %s" % (msg, id, moddir)
