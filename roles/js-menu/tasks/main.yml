@@ -1,6 +1,6 @@
 # all packages and jquery/bootstrap assumed installed by iiab install
 
-- name: Create js-menu directory tree
+- name: Create js-menu directory tree and dummy module
   file: path={{ item }}
         mode=0755
         owner=root
@@ -10,6 +10,15 @@
     - "{{ js_menu_dir }}"
     - "{{ js_menu_dir }}menu-files"
     - "{{ js_menu_dir }}sample-menus"
+    - "{{ doc_root }}/modules/en-test_mod"
+
+- name: Copy a dummy module for oob menu
+  copy: src=en-test_mod/index.html
+        dest="{{ doc_root }}/modules/en-test_mod"
+        owner=root
+        group=root
+        mode=0644
+        force=no
 
 # need to merge locally edited menu-defs
 # continue to use cp-menu until we have forms-based menu-def editing
