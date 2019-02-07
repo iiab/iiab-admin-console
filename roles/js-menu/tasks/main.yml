@@ -48,5 +48,13 @@
 - name: Copy Menu Files and Create Feedback Database
   shell: ./cp-menus
 
+- name: Copy a dummy module for oob menu
+  copy: src=/en-test_mod
+        dest="{{ doc_root }}/modules"
+        owner=root
+        group=root
+        mode=0644
+        force=no
+
 - name: Add any IIAB roles that are installed to home/menu.js
   shell: "{{ cmdsrv_dir }}/scripts/iiab_update_menus.py"
