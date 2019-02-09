@@ -1,0 +1,11 @@
+{
+  "intended_use":"html",
+  "lang" : "en",
+  "logo_url" : "200px-Icon-round-Question_mark.svg.png",
+  "module_id" : "99999",
+  "moddir" : "en-test_mod",
+  "category" : null,
+  "title" : "Test OER2Go/Rachel Module",
+ "description":"Can be used to verify that the Web Server is working.",
+  "extra_html":""
+}
