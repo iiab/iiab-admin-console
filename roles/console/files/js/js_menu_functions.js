@@ -164,7 +164,12 @@ function procCurrentMenuUpdateSelectedLangs (list) { // automatically select any
 	if (menuItemDefs.call_count == 0) {
 		for (var i = 0; i < list.length; i++) {
 		var menu_item_name = list[i];
-		var lang = langCodesXRef[menuItemDefs[menu_item_name].lang];
+		try {
+		  var lang = langCodesXRef[menuItemDefs[menu_item_name].lang];
+		}
+		catch {
+			lang = 'eng';
+		}
 
     if (selectedLangs.indexOf(lang) == -1) // automatically select any language for which oer2go item is installed
       selectedLangs.push(lang);
@@ -184,7 +189,7 @@ function drawMenuItemDefList (list, prefix){
 		var menu_item_name = list[i];
 		var divId = prefix + '-' + menu_item_name;
 
-		if (menuItemDefs[menu_item_name] !== 'undefined')
+		if (menuItemDefs.hasOwnProperty(menu_item_name))
   		genMenuItem(divId, menu_item_name);
   }
   activateTooltip();
@@ -271,6 +276,8 @@ function checkMenuDone(){
 		//genLangSelector();
 		//activateButtons();
 		//alert ("menu done");
+		if (currentJsMenuToEdit.hasOwnProperty('menu_items_1'))
+		  drawMenuItemDefList(currentJsMenuToEdit.menu_items_1, "current-items"); // refresh current menu
 		activateTooltip();
 	}
 }
