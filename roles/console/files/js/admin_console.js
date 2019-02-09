@@ -342,6 +342,9 @@ function contentMenuButtonsEvents() {
   $("#SAVE-CONTENT-MENU").click(function(){
     saveContentMenuDef();
   });
+  $("#REFRESH-MENU-LISTS").click(function(){
+    getMenuItemDefList();
+  });
 }
 
   // Util Buttons
