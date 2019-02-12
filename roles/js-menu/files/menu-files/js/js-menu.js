@@ -340,12 +340,17 @@ function calcKaliteLink(module){
 }
 
 function calcKolibriLink(module){
-	var portRef = module.lang + '-kolibriPort';
-	var href = host + ':'
-	if (menuConfig.hasOwnProperty(portRef))
-		href += menuConfig[portRef];
-	else
-		href += menuConfig['kolibriPort'];
+	// if kolibri_url is defined use it otherwise use port (which currently doesn't work)
+	var href = '';
+  if ( menuConfig.hasOwnProperty('kolibriUrl'))
+    href = menuConfig.kolibriUrl + href;
+  else {
+  	var portRef = module.lang + '-kolibriPort';
+  	if (menuConfig.hasOwnProperty(portRef))
+		  href = host + ':' + menuConfig[portRef] + '/' + href;
+	  else
+      href = host + ':' + menuConfig.kolibriPort + '/' + href;
+  }
 
 	var html = calcItemHtml(href,module);
 	return html
