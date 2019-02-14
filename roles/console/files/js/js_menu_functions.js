@@ -8,10 +8,19 @@ var currentJsMenuToEdit = {};
 var menuItemDefList = [];
 var menuItemDefs = {};
 menuItemDefs['call_count'] = -1; // mark as not downloaded
-
+var homeMenuLoaded = false;
 var menuItemDragSrcElement = null;
 var menuItemDragSrcParent = null;
 var menuItemDragDuplicate = null;
+
+function getMenuItemDefLists(){
+	var resp = getMenuItemDefList();
+	if (!homeMenuLoaded) {
+		getContentMenuToEdit('home'); // load home menu on first run
+		homeMenuLoaded = true;
+	}
+	return resp;
+}
 
 function getMenuItemDefList(){
 	return sendCmdSrvCmd("GET-MENU-ITEM-DEF-LIST", procMenuItemDefList);
@@ -175,13 +184,6 @@ function procCurrentMenuUpdateSelectedLangs (list) { // automatically select any
       selectedLangs.push(lang);
     }
   }
-}
-
-function redrawAllMenuItemList() {
-  // createMenuItemScaffold(menuItemDefList, "all-items"); - not needed as done for all items initially
-  drawMenuItemDefList(menuItemDefList, "all-items");
-
-
 }
 
 function drawMenuItemDefList (list, prefix){
@@ -421,6 +423,9 @@ function menuItemDragEnd(e) {
 }
 
 function menuItemAddDnDHandlers(elem) {
+	if (typeof(elem) === 'undefined') // we can get here before the element is fully drawn
+	  return;
+
   elem.addEventListener('dragstart', menuItemDragStart, false);
   elem.addEventListener('dragenter', menuItemDragEnter, false)
   elem.addEventListener('dragover', menuItemDragOver, false);
