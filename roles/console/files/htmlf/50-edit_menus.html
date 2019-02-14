@@ -105,7 +105,7 @@
                         <div class="row">
                           <div class="col-md-4">
                             <div class="form-group">
-                               <label for="menu_lang">Select Default Language</label>
+                              <label for="menu_lang">Select Default Language</label>
                               <select class="form-control" id="js_menu_lang"></select>
                               <div class="checkbox"><label>
                                 <input type="checkbox" name="autoupdate_menu" id="autoupdate_menu">Check to Have the Menu Automatically Updated.
@@ -145,13 +145,50 @@
           <h2>Edit Content Menus Items</h2>
           <div class="row">
             <div class="col-sm-8">
-              <p>COMING SOON.
-              </p>
+              <p>This menu option allows you to define individual items on home page menus.</p>
+              <div class="col-sm-12">
+                <ul id="menusEditMenuItemTabs" class="nav nav-tabs">
+                  <li class="nav-item active"><a href="#menusEditMenuItemSelect" class="nav-link small" call-after="nop">Select Menu Item</a></li>
+                  <li class="nav-item"><a href="#menusEditMenuItemEdit" class="nav-link small" call-after="nop">Edit Menu Item</a></li>
+                  <li class="nav-item"><a href="#menusEditMenuItemPreview" class="nav-link small" call-after="nop">Preview Menu Item</a></li>
+                </ul>
+              </div>
+              <div class="row">
+                <div class="col-sm-12">
+                  <div id="menusDefineMenuTabsPanes" class="tab-content">
+                    <div id="menusEditMenuItemSelect" class="tab-pane active"> <!-- Start menusEditMenuItemSelect -->
+                      <div class="row">
+                        <div class="col-sm-12">
+                          <h3>Select a Menu Item</h3>
+                          <div id="menusEditMenuItemSelectList" >
+                            current menu list here
+                          </div>
+                        </div>
+                      </div>
+                    </div> <!-- End menusEditMenuItemSelect -->
+                    <div id="menusEditMenuItemEdit" class="tab-pane"> <!-- Start menusEditMenuItemEdit -->
+                      <div class="row">
+                        <div class="col-sm-6">
+                          <h3>Edit Menu Item</h3>
+                          <div id="menusEditMenuItemSelectedForm"> put the selected menu item here </div>
+                        </div>
+                      </div>
+                    </div> <!-- End menusEditMenuItemEdit -->
+                    <div id="menusEditMenuItemPreview" class="tab-pane"> <!-- Start menusEditMenuItemPreview -->
+                      <div class="row">
+                        <div class="col-sm-6">
+                          <h3>Preview Menu Item</h3>
+                          <div id="menusEditMenuItemSelectedPreview">preview the selected menu item here  </div>
+                        </div>
+                      </div>
+                    </div> <!-- End menusEditMenuItemPreview -->
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        </div> <!--  End menusEditContentMenuItems Submenu Option Pane -->
-      </div> <!-- End Container for Sub Menu Options Panes -->
-    </div> <!-- right column -->
-  </div> <!-- End containing row -->
-</div> <!-- End XXX Sublevel Menu Items and Options -->
+          </div> <!--  End menusEditContentMenuItems Submenu Option Pane -->
+        </div> <!-- End Container for Sub Menu Options Panes -->
+      </div> <!-- right column -->
+    </div> <!-- End containing row -->
+  </div> <!-- End XXX Sublevel Menu Items and Options -->
 </div> <!-- End EditMenus Top Level Pane -->
