@@ -149,6 +149,12 @@ function getContentMenuToEditItemList () {
   currentJsMenuToEdit.menu_items_1 = menuItemList;
 }
 
+function currentMenuItemsAddButtons () {
+  $("#menusDefineMenuCurrentItemList .content-item").each(function() {
+  	$(this).prepend('<div>X</div>')
+  });
+}
+
 function delayedProcCurrentMenuItemDefList (timeout, list, prefix){
 	if (menuItemDefs.call_count == 0)
 	  procCurrentMenuItemDefList (list, prefix);
