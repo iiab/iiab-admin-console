@@ -7,7 +7,7 @@ var jsMenuItemDefUrl = "/js-menu/menu-files/menu-defs/";
 var currentJsMenuToEdit = {};
 var menuItemDefList = [];
 var menuItemDefs = {};
-menuItemDefs['call_count'] = -1; // mark as not downloaded
+menuItemDefs['call_count'] = null; // mark as not downloaded
 var homeMenuLoaded = false;
 var menuItemDragSrcElement = null;
 var menuItemDragSrcParent = null;
@@ -149,6 +149,10 @@ function getContentMenuToEditItemList () {
   currentJsMenuToEdit.menu_items_1 = menuItemList;
 }
 
+function drawMenuItemSelectList () {
+
+}
+
 function currentMenuItemsAddButtons () {
   $("#menusDefineMenuCurrentItemList .content-item").each(function() {
   	$(this).prepend('<div>X</div>')
@@ -248,7 +252,16 @@ function genMenuItem(divId, menuItemName) {
 		$(menuItemDivId).hide();
 		return;
 	}
-  // could check if already drawn and just show
+	var menuHtml = genMenuItemHtml(menuItemName);
+
+	$("#" + divId).html(menuHtml);
+	menuItemAddDnDHandlers($("#" + divId).get(0));
+	$("#" + divId).show();
+}
+
+function genMenuItemHtml(menuItemName) {
+  var menuHtml = "";
+  var module = menuItemDefs[menuItemName];
   var menuItemToolTip = genMenuItemTooltip(menuItemName, module);
 	menuHtml+='<div class="content-icon"' + menuItemToolTip + '>';
 	menuHtml+='<img src="' + jsMenuImageUrl + module.logo_url + '">';
@@ -261,10 +274,7 @@ function genMenuItem(divId, menuItemName) {
 	menuHtml+=module.title;
 	menuHtml+='</div>'; // end content-item-title
 	menuHtml+='</div></div>';
-
-	$("#" + divId).html(menuHtml);
-	menuItemAddDnDHandlers($("#" + divId).get(0));
-	$("#" + divId).show();
+  return menuHtml;
 }
 
 function genMenuItemTooltip(menuItemName, module) {
