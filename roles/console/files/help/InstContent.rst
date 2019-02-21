@@ -44,12 +44,12 @@ When each of the ZIM files has been downloaded and installed the Kiwix server wi
 
 Make sure that the **Kiwix** service is enabled under **Configure** - **Services Enabled**.
 
-Get OER2GO(RACHEL) Modules
+Get OER2Go(RACHEL) Modules
 --------------------------
 
 ### Overview
 
-Many people have heard of RACHEL as a source of Educational Content. The RACHEL repository is also known as OER2GO and contains modules accessible with a web server such as:
+Many people have heard of RACHEL as a source of Educational Content. The RACHEL repository is also known as OER2Go and contains modules accessible with a web server such as:
 
 * CK-12
 * English Storybooks
@@ -61,7 +61,7 @@ Many people have heard of RACHEL as a source of Educational Content. The RACHEL 
 
 When you installed the Admin Console the latest version of the OER2Go catalog was downloaded. When you click this menu option the system will check to see if it is still less than a month old and will recommend downloading again if it is not.
 
-To get the latest version Click on the button labelled **Refresh OER2GO Catalog**.
+To get the latest version Click on the button labelled **Refresh OER2Go Catalog**.
 
 ### How it works
 
@@ -95,9 +95,9 @@ The previous menu options helped you get content from sources on the internet. T
 
 You can use the copy function to back up content or to install content from the sdcard of another IIAB installation.
 
-Over time you may find that ZIM or OER2GO/RACHEL modules are no longer needed or in need of upgrade. So you may want to delete some of the ones that are install
+Over time you may find that ZIM files or OER2Go/RACHEL modules are no longer needed or in need of upgrade. So you may want to delete some of the ones that are installed.
 
-In addition, when you install ZIM files or OER2GO/RACHEL modules you are downloading large files from the internet.  These are not removed in case there is a problem and the installed needs to be rerun.
+In addition, when you install ZIM files or OER2Go/RACHEL modules you are downloading large files from the internet.  These are not removed in case there is a problem and the installed needs to be rerun.
 
 After you are sure that everything has been installed successfully you can remove some or all of these files to free up space on the disk.
 
@@ -122,7 +122,7 @@ Unless you just want to remove internally installed content, you will want a USB
 
 There are one or two panels below, the left one for internal content and a right one if you have a USB inserted.
 
-Both have a list and ZIMS and a list of OER2GO modules with tags showing what is installed, what is in the processing copying, and what is already on the other device.
+Both have a list and ZIM files and a list of OER2Go modules with tags showing what is installed, what is in the processing copying, and what is already on the other device.
 
 To Copy or Remove internal content click on the left panel. To use the USB, click on the right.
 
@@ -139,8 +139,8 @@ Actions
 
 **Refresh Display** recalculates what is installed and what is in the process of being installed and tags content accordingly.
 
-**Reindex Kiwix Content** in order to display a zim Kiwix needs it to be in the library.xml catalog. Normally this should happen automatically. Click this to force a redindex.
+**Reindex Kiwix Content** in order to display a ZIM file Kiwix needs it to be in the library.xml catalog. Normally this should happen automatically. Click this to force a redindex.
 
-**Refresh Kiwix Catalog** gets the latest catalog of zims from Kiwix. You are warned it the catalog is more than 30 days old.
+**Refresh Kiwix Catalog** gets the latest catalog of ZIM files from Kiwix. You are warned it the catalog is more than 30 days old.
 
-**Refresh OER2GO Catalog** gets the latest catalog of zims from OER2GO.  You are warned it the catalog is more than 30 days old.
+**Refresh OER2Go Catalog** gets the latest catalog of content modules from OER2Go.  You are warned it the catalog is more than 30 days old.
