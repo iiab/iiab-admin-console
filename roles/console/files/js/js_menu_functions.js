@@ -17,7 +17,7 @@ function getMenuItemDefLists(){
 	var resp = getMenuItemDefList();
 	if (!homeMenuLoaded) {
 		getContentMenuToEdit('home'); // load home menu on first run
-		homeMenuLoaded = true;
+		//homeMenuLoaded = true;
 	}
 	return resp;
 }
@@ -51,7 +51,13 @@ function getContentMenuToEdit(currentJsMenuToEditUrl){ // passed by button click
 		if (!Array.isArray(currentJsMenuToEdit.menu_items_1) || !currentJsMenuToEdit.menu_items_1.length)
 		  currentJsMenuToEdit.menu_items_1 = ['en-credits'];
 		setContentMenuToEditFormValues();
-		delayedProcCurrentMenuItemDefList (5000, currentJsMenuToEdit.menu_items_1, "current-items"); // hard coded name of list against future multi-tab menus
+    if (homeMenuLoaded)
+      delayedProcCurrentMenuItemDefList (5000, currentJsMenuToEdit.menu_items_1, "current-items"); // hard coded name$
+    else { // the first time we let the all menu item list completion draw the current menu
+      var html = createMenuItemScaffold(currentJsMenuToEdit.menu_items_1, "current-items");
+	    $("#menusDefineMenuCurrentItemList").html(html);
+      homeMenuLoaded = true;
+    }
 	})
 	.fail(function (jqXHR, textStatus, errorThrown){
 		if (errorThrown == 'Not Found'){
@@ -184,6 +190,11 @@ function procCurrentMenuUpdateSelectedLangs (list) { // automatically select any
       selectedLangs.push(lang);
     }
   }
+}
+
+function redrawAllMenuItemList() {
+  // createMenuItemScaffold(menuItemDefList, "all-items"); - not needed as done for all items initially
+  drawMenuItemDefList(menuItemDefList, "all-items");
 }
 
 function drawMenuItemDefList (list, prefix){
