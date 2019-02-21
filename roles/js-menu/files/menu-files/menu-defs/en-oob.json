@@ -3,6 +3,6 @@
 "lang" : "en",
 "logo_url" : "credits.png",
 "moddir" : "",
-"title" : "Sample Menu",
-"description" : "The menu items below are not active on a newly installed Internet in a Box.<p> To download content go to the <a href='/admin'>Admin Console</a> and take the link 'Install Content'."
+"title" : "Add content to this page + use drag-and-drop to re-order it",
+"description" : "Please read '<a href='http://wiki.laptop.org/go/IIAB/FAQ#How_do_I_customize_my_Internet-in-a-Box_home_page.3F'>How do I customize my Internet-in-a-Box home page?</a>' (<a href='/info/FAQ.html#How_do_I_customize_my_Internet-in-a-Box_home_page.3F'>offline version</a>) and watch our <a href='https://www.youtube.com/channel/UC0cBGCxr_WPBPa3IqPVEe3g'</a>latest HOW-TO videos</a>.<p>Then go to the <a href='/admin'>Admin Console</a> (see <a href='/info/FAQ.html#What_are_the_default_passwords.3F'>default passwords</a>) and click on the <b>Install Content</b> and <b>Content Menus</b> tabs."
 }
