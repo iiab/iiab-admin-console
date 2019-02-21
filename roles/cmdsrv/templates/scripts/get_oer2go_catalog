@@ -328,7 +328,7 @@ def proc_module (module):
     return menu_item
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Get Rachel/OER2GO catalog. Create menu defs if not found.")
+    parser = argparse.ArgumentParser(description="Get Rachel/OER2Go catalog. Create menu defs if not found.")
     parser.add_argument("--no_download", help="Don't download catalog just check which modules are installed", action="store_true")
     parser.add_argument("--menu", help="When downloading generate files for IIAB menu and put them in iiab-menu/local/unedited", action="store_true")
     parser.add_argument("-v", "--verbose", help="Print messages.", action="store_true")
