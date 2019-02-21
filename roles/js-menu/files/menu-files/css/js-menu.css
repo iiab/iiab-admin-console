@@ -13,6 +13,7 @@ body {
   font-family: 'Open Sans', sans-serif;
   max-width: 1180px;
   margin: auto;
+  text-align: start;
 }
 
 .wrapper {

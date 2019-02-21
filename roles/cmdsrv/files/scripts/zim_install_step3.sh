@@ -64,4 +64,7 @@ rm -Rf $WORKINGDIR
 echo "Re-indexing Kiwix Library"
 /usr/bin/iiab-make-kiwix-lib
 
+echo "Updating home page menus"
+/usr/bin/iiab-update-menus
+
 exit 0

@@ -47,10 +47,10 @@ var menuItems = [];
 var menuHtml = "";
 var menuDefs = {};
 var zimVersions = {};
-// var zimSubstParams = ["article_count", "media_count", "size", "tags"]; - future development
-var zimSubstParams = [];
-var zimSubstRegEx = {};
+var zimSubstParams = ["article_count", "media_count", "size", "tags",
+                     "language","zim_date"];
 var hrefRegEx;
+var substRegEx = {};
 
 var menuDivId = "content";
 var scaffold = $.Deferred();
@@ -156,7 +156,7 @@ function genRegEx(){
 	hrefRegEx = new RegExp('##HREF-BASE##', 'g');
 	for (var i = 0; i < zimSubstParams.length; i++) {
 		var param = zimSubstParams[i];
-		zimSubstRegEx[param] = new RegExp('##' + param.toLocaleUpperCase() + '##', 'g');
+		substRegEx[param] = new RegExp('##' + param.toLocaleUpperCase() + '##', 'gi');
 	}
 }
 function createScaffold(){
@@ -228,6 +228,17 @@ function getMenuDef(menuItem) {
 		menuDefs[menuItem]['add_html'] = "";
 		menuDefs[menuItem]['menu_id'] = menuId;
 		module = menuDefs[menuItem];
+         //alert(string(substRegEx));
+      if (menuDefs[menuItem].hasOwnProperty('zim_name')){
+         zimName = menuDefs[menuItem]['zim_name'];
+	      for (var i = 0; i < zimSubstParams.length; i++) {
+            field = zimSubstParams[i];
+            if (zimVersions.hasOwnProperty(zimName) &&
+               zimVersions[zimName].hasOwnProperty(field)){
+               menuDefs[menuItem][field] = zimVersions[zimName][field];
+            }
+         }
+      }
 		procMenuItem(module);
 		checkMenuDone();
 	})
@@ -259,8 +270,16 @@ function procMenuItem(module) {
 	  menuHtml += calcWebrootLink(module);
 	else if (module['intended_use'] == "kalite")
 		menuHtml += calcKaliteLink(module);
-  else if (module['intended_use'] == "calibre")
+	else if (module['intended_use'] == "kolibri")
+		menuHtml += calcKolibriLink(module);
+	else if (module['intended_use'] == "cups")
+		menuHtml += calcCupsLink(module);
+	else if (module['intended_use'] == "nodered")
+		menuHtml += calcNoderedLink(module);
+   else if (module['intended_use'] == "calibre")
 		menuHtml += calcCalibreLink(module);
+   else if (module['intended_use'] == "calibreweb")
+		menuHtml += calcCalibreWebLink(module);
 	else if (module['intended_use'] == "osm")
 		menuHtml += calcOsmLink(module);
 	else if (module['intended_use'] == "info")
@@ -280,11 +299,12 @@ function procMenuItem(module) {
 function calcZimLink(module){
 	// if kiwix_url is defined use it otherwise use port
 	var href = '';
-	if(typeof zimVersions[module.zim_name] != 'undefined'){
-	  href =  zimVersions[module.zim_name] + '/';
-  	if ( menuConfig.hasOwnProperty('kiwixUrl'))
-      href = menuConfig.kiwixUrl + href;
-    else
+   if( zimVersions.hasOwnProperty(module.zim_name) &&
+      typeof zimVersions[module.zim_name].file_name != 'undefined' ){
+	  href =  zimVersions[module.zim_name].file_name + '/';
+  	  if ( menuConfig.hasOwnProperty('kiwixUrl'))
+        href = menuConfig.kiwixUrl + href;
+     else
       href = host + ':' + menuConfig.kiwixPort + '/' + href;
     }
   else
@@ -319,8 +339,46 @@ function calcKaliteLink(module){
 	return html
 }
 
+function calcKolibriLink(module){
+	// if kolibri_url is defined use it otherwise use port (which currently doesn't work)
+	var href = '';
+  if ( menuConfig.hasOwnProperty('kolibriUrl'))
+    href = menuConfig.kolibriUrl + href;
+  else {
+  	var portRef = module.lang + '-kolibriPort';
+  	if (menuConfig.hasOwnProperty(portRef))
+		  href = host + ':' + menuConfig[portRef] + '/' + href;
+	  else
+      href = host + ':' + menuConfig.kolibriPort + '/' + href;
+  }
+
+	var html = calcItemHtml(href,module);
+	return html
+}
+
 function calcCalibreLink(module){
 	var href = host + ':' + menuConfig.calibrePort;
+
+	var html = calcItemHtml(href,module);
+	return html
+}
+
+function calcCalibreWebLink(module){
+	var href = host + ':' + menuConfig.calibreWebPort;
+
+	var html = calcItemHtml(href,module);
+	return html
+}
+
+function calcCupsLink(module){
+	var href = host + ':' + menuConfig.cupsPort;
+
+	var html = calcItemHtml(href,module);
+	return html
+}
+
+function calcNoderedLink(module){
+	var href = host + ':' + menuConfig.noderedPort;
 
 	var html = calcItemHtml(href,module);
 	return html
@@ -386,7 +444,8 @@ function calcItemHtml(href,module){
 	html+='</div>'; // end content-item-title
 	// description - this will become multiple parts
 	if (showDescription) {
-  	html+='<p>' + module.description + '</p>';
+   var description = substitute(module.description,module);
+  	html+='<p>' + description + '</p>';
   	// apks for medwiki, etc. move to download menu def
   	if (module.hasOwnProperty("apk_file") && include_apk_links){
   		var sizeClause = '';
@@ -403,6 +462,14 @@ function calcItemHtml(href,module){
 	html+='</div></div></div>';
 
 	return html
+}
+
+function substitute(instr,module){
+   for (var i = 0; i < zimSubstParams.length; i++) {
+      field = zimSubstParams[i];
+      instr = instr.replace(substRegEx[field], module[field]);
+   }
+   return instr;
 }
 
 function detectMob() {
@@ -436,6 +503,7 @@ function getExtraHtml(module) {
 			consoleLog('in get extra done');
 			var add_html = data;
 			add_html = add_html.replace(hrefRegEx, module.href);
+         add_html = substitute(add_html,module);
 			menuItemHtmlfDivId = "#" + module.menu_id + '-htmlf';
 			consoleLog(menuItemHtmlfDivId);
 			$(".toggleExtraHtml").toggle(showExtraHtml);

@@ -330,6 +330,23 @@ function instContentButtonsEvents() {
 
 }
 
+  // Content Menu Buttons
+
+function contentMenuButtonsEvents() {
+  $("#LOAD-CONTENT-MENU").click(function(){
+    var currentJsMenuToEditUrl = $("#content_menu_url").val();
+    getContentMenuToEdit(currentJsMenuToEditUrl);
+  	var currentJsMenuToEditUrl = $("#content_menu_url").val();
+    getContentMenuToEdit(currentJsMenuToEditUrl);
+  });
+  $("#SAVE-CONTENT-MENU").click(function(){
+    saveContentMenuDef();
+  });
+  $("#REFRESH-MENU-LISTS").click(function(){
+    getMenuItemDefList();
+  });
+}
+
   // Util Buttons
 
 function utilButtonsEvents() {
@@ -899,6 +916,9 @@ function procContentLangs() {
   var html = '';
   var topHtml = '';
   var bottomHtml = '';
+  var langPickerTopHtml = "";
+  var langPickerBottomHtml = "";
+  var selectName = "";
 
   selectedLangsDefaults(); // make sure the langs of any downloaded content is selected
 
@@ -918,6 +938,25 @@ function procContentLangs() {
 
   $( "#ContentLanguages" ).html(topHtml);
   $( "#ContentLanguages2" ).html(bottomHtml);
+
+  if ($("#js_menu_lang").html() == ""){ // calc and insert language pickers
+    for (i in langNames){
+    	selectName = langNames[i].locname + ' [' + langCodes[langNames[i].code].iso2 + ']';
+    	if (langNames[i].locname != langNames[i].engname)
+    		selectName += ' (' + langNames[i].engname + ')';
+
+      html = '<option value="' + langCodes[langNames[i].code].iso2 + '">' + selectName + '</option>';
+
+      if (topNames.indexOf(langNames[i].code) >= 0) {
+        langPickerTopHtml += html;
+      }
+      else {
+        langPickerBottomHtml += html;
+      }
+    }
+    $( "#js_menu_lang" ).html(langPickerTopHtml+langPickerBottomHtml);
+
+  }
 }
 
 function selectedLangsDefaults() {
@@ -948,13 +987,17 @@ function selectedLangsDefaults() {
   }
 }
 
-function procSelectedLangs() {
-	var contentContext = $("#installContentOptions .tab-pane.active").attr("id"); // get active option (between zim and oer for now)
+function procSelectedLangs() { // redraw various lists using newly selected language codes
+	var topMenu = $("#iiab-top-nav .nav-tabs .active a")[0].hash; // get active top level menu selected
+	var contentContext = $(topMenu + " .tab-pane.active").attr("id"); // get active menu option for that menu
+
 	//consoleLog ("in procSelectedLangs " + contentContext);
-	if (contentContext == "instConZims")
+	if (contentContext == "instConZims") // download zims
 	  procZimGroups();
-	else if (contentContext == "instConOer2go")
+	else if (contentContext == "instConOer2go") // download oer2go modules
 		renderOer2goCatalog();
+	else if (contentContext == "menusDefineMenu") // edit current menu
+		redrawAllMenuItemList();
 }
 
 function readableSize(kbytes) {

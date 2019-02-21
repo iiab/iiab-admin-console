@@ -1,0 +1,11 @@
+{"category": "educational,reference",
+"lang": "fr",
+"title": "Project Gutenberg Library en français (epub, html, pdf)",
+"description": "Le projet Gutenberg offre plus de 58 000 livres gratuits. Choisissez parmi les livres électroniques epub et Kindle gratuits, téléchargez-les ou lisez-les en ligne. Vous trouverez ici la plus grande littérature du monde, avec un focus sur des œuvres plus anciennes pour lesquelles le copyright américain a expiré.",
+"intended_use": "zim",
+"zim_name" : "gutenberg_fr_all",
+"age_range": "children,young adult,adult",
+"rating": "2.0",
+"prereq_id": null,
+"logo_url": "Project_Gutenberg_logo.png"
+}
