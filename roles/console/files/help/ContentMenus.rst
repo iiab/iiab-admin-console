@@ -3,7 +3,7 @@ IIAB Admin Console - Content Menus
 
 The options on this menu allow you to create and edit menus for the user to navigate Internet-in-a-Box Content. In most cases this will be the home page of the server.
 
-The links on the home page menu will be automatically added for services selected when Internet-in-a-Box Content is installed. Links will also be added when content is added from Kiwix or from OER2Go.
+The links on the home page menu will be automatically added for services selected when Internet-in-a-Box is installed. Links will also be added when content is added from Kiwix or from OER2Go.
 
 Edit Content Menus
 ------------------
