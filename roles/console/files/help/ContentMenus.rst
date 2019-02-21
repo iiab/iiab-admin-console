@@ -3,7 +3,7 @@ IIAB Admin Console - Content Menus
 
 The options on this menu allow you to create and edit menus for the user to navigate Internet-in-a-Box Content. In most cases this will be the home page of the server.
 
-The links on the home page menu will be automatically added for services selected when Internet-in-a-Box Content is installed. Links will also be added when content is added from Kiwix or from OER2GO.
+The links on the home page menu will be automatically added for services selected when Internet-in-a-Box Content is installed. Links will also be added when content is added from Kiwix or from OER2Go.
 
 Edit Content Menus
 ------------------
@@ -44,7 +44,7 @@ The following apply to both layouts:
 
 **Default Language** - This will be used to select a menu item definition when there are definitions in more than one language.
 
-**Check to Have the Menu Automatically Updated** - Services installed as well as zims and oer2go modules can be automatically added to the menu. **Be Careful** as some manual changes may be reverted by this option.
+**Check to Have the Menu Automatically Updated** - Services installed as well as ZIM files and OER2Go modules can be automatically added to the menu. **Be Careful** as some manual changes may be reverted by this option.
 
 **Check to Allow Kiwix Cross Zim Search** - The Kiwix server supports search across all zims and just a particular zim. If you check this field an icon will be included on the menu to access search across all installed zims. **Please Note** that this search becomes slower the more zims you have installed.
 
