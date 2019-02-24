@@ -122,8 +122,8 @@ var getLangCodes = $.getJSON(consoleJsonDir + 'lang_codes.json')
 $.when(getMenuJson, getZimVersions, getConfigJson, getLangCodes).always(procMenu);
 
 // This is the main processing
-function jsMenuMain (menuDiv = "content") {
-	menuDivId = menuDiv;
+function jsMenuMain (menuDiv) {
+	menuDivId = menuDiv || "content";
   genRegEx(); // regular expressions for subtitution
   if (dynamicHtml){
   	getLocalStore();
