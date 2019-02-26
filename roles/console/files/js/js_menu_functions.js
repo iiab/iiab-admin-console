@@ -52,7 +52,7 @@ function getContentMenuToEdit(currentJsMenuToEditUrl){ // passed by button click
 		  currentJsMenuToEdit.menu_items_1 = ['en-credits'];
 		setContentMenuToEditFormValues();
     if (homeMenuLoaded)
-      delayedProcCurrentMenuItemDefList (5000, currentJsMenuToEdit.menu_items_1, "current-items"); // hard coded name$
+      delayedProcCurrentMenuItemDefList (5000, currentJsMenuToEdit.menu_items_1, "current-items"); // hard coded name
     else { // the first time we let the all menu item list completion draw the current menu
       var html = createMenuItemScaffold(currentJsMenuToEdit.menu_items_1, "current-items");
 	    $("#menusDefineMenuCurrentItemList").html(html);
@@ -155,7 +155,23 @@ function getContentMenuToEditItemList () {
   currentJsMenuToEdit.menu_items_1 = menuItemList;
 }
 
-function drawMenuItemSelectList () {
+function drawMenuItemSelectList () { // for selecting menu item to edit definition
+  var prefix = "select-items";
+  var list = currentJsMenuToEdit.menu_items_1; // hard coded name
+
+  var html = createMenuItemScaffold(list, prefix, draggable = false);
+	$("#menusEditMenuItemSelectList").html(html);
+
+	for (var i = 0; i < list.length; i++) {
+    var menuItemName = list[i];
+    html = '<button id="xxx" type="button" style="margin-left: 5px;" class="btn btn-primary">Edit</button>';
+    html += '<button id="xxx" type="button" style="margin-left: 5px;" class="btn btn-primary">Copy</button>';
+    //html = '<div>EDIT</div><div>COPY</div><div>' + menuItemName + '</div>';
+    html += '<span style="width: 10em; margin-left: 10px; padding-top: 6px;">' + menuItemName + '</span>';
+		html += genMenuItemHtml(menuItemName);
+
+		$("#" + prefix + '-' + menuItemName).html(html);
+	}
 
 }
 
@@ -218,11 +234,14 @@ function drawMenuItemDefList (list, prefix){
   activateTooltip();
 }
 
-function createMenuItemScaffold(list, prefix){
+function createMenuItemScaffold(list, prefix, draggable = true){
   var html = "";
   for (var i = 0; i < list.length; i++) {
   	var menu_item_name = list[i];
-  	html += '<div id="' + prefix + '-' + menu_item_name + '" class="flex-row content-item" dir="auto" draggable="true" menu_item_name="' + menu_item_name + '">&emsp;Attempting to load ' + menu_item_name + ' </div>';
+  	html += '<div id="' + prefix + '-' + menu_item_name + '" dir="auto" class="flex-row content-item';
+  	if (draggable)
+  	  html += ' draggable-content-item" draggable="true'
+  	html += '" menu_item_name="' + menu_item_name + '">&emsp;Attempting to load ' + menu_item_name + ' </div>';
   }
   return html;
 }

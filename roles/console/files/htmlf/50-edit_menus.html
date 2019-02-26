@@ -10,7 +10,7 @@
       <h2>Content Menu Tasks</h2>
       <ul id="editMenusMenu" class="nav nav-pills nav-stacked"> <!-- Start XXX Sub Level Menu -->
         <li class="active"><a href="#menusDefineMenu" call-after="getMenuItemDefList">Edit Content Menus</a></li>
-        <li><a href="#menusEditContentMenuItems" call-after="nop">Edit Menu Items</a></li>
+        <li><a href="#menusEditContentMenuItems" call-after="drawMenuItemSelectList">Edit Menu Items</a></li>
       </ul> <!-- End XXX Sub Level Menu -->
       <h2>Actions</h2>
       <div class="action-buttons">
@@ -150,7 +150,7 @@
                 <ul id="menusEditMenuItemTabs" class="nav nav-tabs">
                   <li class="nav-item active"><a href="#menusEditMenuItemSelect" class="nav-link small" call-after="nop">Select Menu Item</a></li>
                   <li class="nav-item"><a href="#menusEditMenuItemEdit" class="nav-link small" call-after="nop">Edit Menu Item</a></li>
-                  <li class="nav-item"><a href="#menusEditMenuItemPreview" class="nav-link small" call-after="nop">Preview Menu Item</a></li>
+                  <!-- <li class="nav-item"><a href="#menusEditMenuItemPreview" class="nav-link small" call-after="nop">Preview Menu Item</a></li> -->
                 </ul>
               </div>
               <div class="row">
@@ -174,7 +174,7 @@
                         </div>
                       </div>
                     </div> <!-- End menusEditMenuItemEdit -->
-                    <div id="menusEditMenuItemPreview" class="tab-pane"> <!-- Start menusEditMenuItemPreview -->
+                    <!-- <div id="menusEditMenuItemPreview" class="tab-pane"> < !-- Start menusEditMenuItemPreview -- >
                       <div class="row">
                         <div class="col-sm-6">
                           <h3>Preview Menu Item</h3>
