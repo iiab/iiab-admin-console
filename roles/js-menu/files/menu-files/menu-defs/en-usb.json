@@ -5,6 +5,6 @@
   "menu_item_name" : "en-usb",
   "moddir" : "usb",
   "title" : "Insert a USB Stick/Drive to Publish Files Here",
-  "description" : "Teachers and Librarians: your class handouts (PDF content, photos, public notices etc) will instantly <a href=/usb>Appear Right Here</a> after you insert a USB stick/drive into the Internet-in-a-Box.",
+  "description" : "Teachers and Librarians: your class handouts (PDF files, photos, public notices etc) will instantly <a href=/usb>Appear Right Here</a> after you insert a USB stick/drive into the Internet-in-a-Box.",
   "extra_html" : "en-usb.html"
 }
