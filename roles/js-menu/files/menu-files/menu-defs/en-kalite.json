@@ -1,10 +1,10 @@
 {
-"intended_use":"kalite",
-"lang" : "en",
-"logo_url" : "khan-logo-vertical-transparent.png",
-"menu_item_name" : "en-kalite",
-"title" : "Khan Academy Lite",
-"start_url" : "learn/khan/math/",
-"description":"Offline version of Khan Academy.<BR><BR>Khan Academy is a non-profit educational organization created in 2006 by educator Salman Khan with the aim of providing a free, world-class education for anyone, anywhere.",
-"extra_html" : "en-kalite.html"
+  "intended_use" : "kalite",
+  "lang" : "en",
+  "logo_url" : "khan-logo-vertical-transparent.png",
+  "menu_item_name" : "en-kalite",
+  "title" : "Khan Academy Lite",
+  "start_url" : "learn/khan/math/",
+  "description" : "KA Lite is the offline version of Khan Academy that includes thousands of learning videos and quizzes.  It is very popular in high schools and includes some university classes too.",
+  "extra_html" : "en-kalite.html"
 }
