@@ -1,9 +1,10 @@
 {
-"intended_use" : "webroot",
-"lang" : "en",
-"logo_url" : "mail.png",
-"menu_item_name" : "en-lokole",
-"moddir" : "lokole",
-"title" : "Lokole - Email for the Developing World",
-"description" : "Offline email and/or nightly batch transmission (and receipt) of a local community's emails over a 3G/4G mobile modem.  This enables reading and writing literacy in low-income communities, by keeping mobile data connection charges very low, taking advantage of nighttime/bulk rates."
+  "intended_use" : "webroot",
+  "lang" : "en",
+  "logo_url" : "mail.png",
+  "menu_item_name" : "en-lokole",
+  "moddir" : "lokole",
+  "title" : "Lokole - Email for the Developing World",
+  "description" : "Offline email and/or nightly batch transmission (and receipt) of a local community's emails over a 3G/4G mobile modem.",
+  "extra_html" : "en-lokole.html"
 }
