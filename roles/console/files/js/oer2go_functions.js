@@ -2,16 +2,16 @@
 // copyright 2018 Tim Moody
 
 // to do
-// remove phet, OER2GO from whitelist
+// remove PhET, OER2Go from whitelist
 
 // $("#installContentOptions .tab-pane.active").attr("id"); to get active option (between zim and oer
 // requires id on <div id="installContentOptions" class="tab-content"> <!-- Start Container for Sub Menu Options Panes -->
 // Install Content functions are at around 750
 
-function getOer2goCatalog(){ // Downloads OER2GO catalog from RACHEL
+function getOer2goCatalog(){ // Downloads OER2Go catalog from RACHEL
   //make_button_disabled("#OER2GO-CAT-REFRESH", true);
   // remove any selections as catalog may have changed
-  // selectedOer2goItems = []; // we already assume that items never disappear from oer2go catalog
+  // selectedOer2goItems = []; // we already assume that items never disappear from OER2Go catalog
 
   var command = "GET-OER2GO-CAT";
   sendCmdSrvCmd(command, procOer2goCatalog, "OER2GO-CAT-REFRESH");
@@ -25,7 +25,7 @@ function procOer2goCatalog() {
       displaySpaceAvail();
     })
     .always(function() {
-      alert ("OER2GO Catalog has been downloaded.");
+      alert ("OER2Go Catalog has been downloaded.");
       //make_button_disabled("#OER2GO-CAT-REFRESH", false);
     })
 }
@@ -34,7 +34,7 @@ function oer2goMenuOption (){
 	getOer2goStat();
 	today = new Date(); // in case is stale
   if (today - oer2goCatalogDate > 30 * dayInMs){
-		alert ("OER2GO Catalog is Older than 30 days.\n\nPlease click Refresh OER2GO Catalog in the menu.");
+		alert ("OER2Go Catalog is Older than 30 days.\n\nPlease click Refresh OER2Go Catalog in the menu.");
 	}
 }
 
@@ -72,7 +72,7 @@ function procOer2goStat(data) {
 
 function renderOer2goCatalog() {
   //var langSelectedCodes = []; // working lookup of 2 char codes
-  var selectedLangsOer2goMods = {};  // working lists of oer2go mods for each selected lang
+  var selectedLangsOer2goMods = {};  // working lists of OER2Go mods for each selected lang
 
   //consoleLog("starting selectedLangs.forEach");
 
@@ -126,7 +126,7 @@ function renderExternalOer2goModules() { // used by manage content - external (u
   }
 }
 
-function renderOer2goItems(lang, mods) { //used by oer2go download
+function renderOer2goItems(lang, mods) { //used by OER2Go download
 	var html = "";
 	// lang header
 	html += "<h2>" + langCodes[lang]['locname'] + ' (' + langCodes[lang]['engname'] + ")</h2>";
