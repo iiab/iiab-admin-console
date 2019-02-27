@@ -168,19 +168,86 @@
                     </div> <!-- End menusEditMenuItemSelect -->
                     <div id="menusEditMenuItemEdit" class="tab-pane"> <!-- Start menusEditMenuItemEdit -->
                       <div class="row">
-                        <div class="col-sm-6">
-                          <h3>Edit Menu Item</h3>
-                          <div id="menusEditMenuItemSelectedForm"> put the selected menu item here </div>
+                        <div class="col-sm-12">
+                          <h3>Only to Add a New Menu Item Definition</h3>
+                          <div class="row">
+                            <div class="col-md-4">
+                              <div class="form-group">
+                                <label for="menu_item_name">Menu Item Code</label>
+                                <input type="text" name="menu_item_name" class="form-control" id="menu_item_name">
+                              </div>
+                            </div>
+                            <div class="col-md-4">
+                              <div class="form-group">
+                                <label for="menu_item_name_suffix">Menu Item Version (usually not needed)</label>
+                                <input type="text" name="menu_item_name_suffix" class="form-control" id="menu_item_name_suffix">
+                              </div>
+                            </div>
+                          </div> <!--  End row -->
+                          <div class="row">
+                            <div class="col-md-8">
+                              <div class="form-group">
+                                <label for="menu_item_type">Select Menu Item Type</label>
+                                <select class="form-control" id="menu_item_type">
+                                  <option value="html">App in Modules Directory</option>
+                                  <option value="webroot">App in Web Root</option>
+                                  <option value="zim">Zim File Served by Kiwix</option>
+                                  <option value="kalite">Khan Academy Lite Link</option>
+                                  <option value="kolibri">Kolibri Link</option>
+                                  <option value="cups">CUPS</option>
+                                  <option value="nodered">Nodered</option>
+                                  <option value="calibre">Calibre</option>
+                                  <option value="calibreweb">Calibre Web</option>
+                                  <!-- <option value="osm">Original OpenStreetMap</option>-->
+                                  <option value="info">Information Only Menu Item with No Link</option>
+                                  <option value="download">Link to Downloadable Content</option>
+                                </select>
+                              </div>
+                              <div class="form-group">
+                                <label for="menu_item_lang">Select Menu Item Language</label>
+                                <select class="form-control" id="menu_item_lang"></select>
+                              </div>
+                              <div class="form-group">
+                                <button id="CREATE-MENU-ITEM-DEF" type="button" class="btn btn-primary">Create a New Menu Item Definition</button>
+                              </div>
+                            </div>
+
+                          </div> <!--  End row -->
+                          <div class="row">
+                            <div class="col-md-8">
+                              <hr style="border-top-width:1px; border-top-color:#ddd">
+                              <h3>Change New or Existing Menu Item Definition</h3>
+                              <div class="form-group">
+                                <label for="menu_item_title">Title</label>
+                                <input type="text" name="menu_item_title" class="form-control" id="menu_item_title"/>
+                              </div>
+                              <div class="form-group">
+                                <label for="menu_item_description">Description</label>
+                                <textarea class="form-control" rows="5" id="menu_item_description"></textarea>
+                              </div>
+                              <div class="form-group">
+                                <label for="menu_item_icon_name">Name of Icon File (must be in /library/www/html/js-menu/menu-files/images/) </label>
+                                <input type="text" name="menu_item_icon_name" class="form-control" id="menu_item_icon_name">
+                              </div>
+                              <div class="form-group">
+                                <label for="menu_item_start_url">Start URL - Only change this if the the blank default doesn't work.</label>
+                                <input type="text" name="menu_item_start_url" class="form-control" id="menu_item_start_url">
+                              </div>
+                              <div class="form-group">
+                                <button id="UPDATE-MENU-ITEM-DEF" type="button" class="btn btn-primary">Update Menu Item Definition</button>
+                              </div>
+                            </div>
+                          </div> <!--  End row -->
                         </div>
                       </div>
                     </div> <!-- End menusEditMenuItemEdit -->
                     <!-- <div id="menusEditMenuItemPreview" class="tab-pane"> < !-- Start menusEditMenuItemPreview -- >
-                      <div class="row">
-                        <div class="col-sm-6">
-                          <h3>Preview Menu Item</h3>
-                          <div id="menusEditMenuItemSelectedPreview">preview the selected menu item here  </div>
-                        </div>
-                      </div>
+                    <div class="row">
+                    <div class="col-sm-6">
+                    <h3>Preview Menu Item</h3>
+                    <div id="menusEditMenuItemSelectedPreview">preview the selected menu item here  </div>
+                    </div>
+                    </div>
                     </div> <!-- End menusEditMenuItemPreview -->
                   </div>
                 </div>
