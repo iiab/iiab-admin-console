@@ -4,7 +4,7 @@
   "logo_url" : "mail.png",
   "menu_item_name" : "en-lokole",
   "moddir" : "lokole",
-  "title" : "Lokole - Email for the Developing World",
-  "description" : "Offline email and/or nightly batch transmission (and receipt) of a local community's emails over a 3G/4G mobile modem.",
+  "title" : "Lokole Email<!--for All--><!--for the Developing World-->",
+  "description" : "Offline email that can transmit (and receive) a local community's emails every night, if configured with a 3G/4G mobile modem.",
   "extra_html" : "en-lokole.html"
 }
