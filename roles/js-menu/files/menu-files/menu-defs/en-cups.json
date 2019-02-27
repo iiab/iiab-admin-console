@@ -4,6 +4,6 @@
 "logo_url" : "cups.png",
 "menu_item_name" : "en-cups",
 "moddir" : "/",
-"title" : "CUPS - Common Unified Pringing System",
-"description" : "CUPS is is a freely available, portable printing layer which has become the new standard for printing in most Linux distributions."
+"title" : "CUPS - Common Unix Printing System",
+"description" : "CUPS is the standards-based, open source printing system for Linux and macOS."
 }
