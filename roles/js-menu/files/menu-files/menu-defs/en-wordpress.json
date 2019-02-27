@@ -1,9 +1,10 @@
 {
-"intended_use" : "webroot",
-"lang" : "en",
-"logo_url" : "wordpress-logo.png",
-"menu_item_name" : "en-wordpress",
-"moddir" : "wordpress",
-"title" : "WordPress",
-"description" : "Write a personal article (or magazine blog post) to share with your community!  WordPress is most associated with blogging (personal journaling) but supports other types of web content including more traditional mailing lists and forums, media galleries, and diverse plugins.<!--and online stores.-->"
+  "intended_use" : "webroot",
+  "lang" : "en",
+  "logo_url" : "wordpress-logo.png",
+  "menu_item_name" : "en-wordpress",
+  "moddir" : "wordpress",
+  "title" : "WordPress",
+  "description" : "Write a personal article (or magazine blog post) to share with your community!",
+  "extra_html" : "en-wordpress.html"
 }
