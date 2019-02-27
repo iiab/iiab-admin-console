@@ -49,7 +49,7 @@ default_logos = {
 }
 iiab_menu_items={
      "calibre":"en-calibre",\
-     "calibre_web": "en-calibre-web",\
+     "calibre_web": "en-calibreweb",\
      "cups":"en-cups",\
      "elgg":"en-elgg",\
      "kalite":"en-kalite",\
