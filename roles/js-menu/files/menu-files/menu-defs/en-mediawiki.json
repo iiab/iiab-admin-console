@@ -1,8 +1,8 @@
 {
-"intended_use" : "webroot",
-"lang" : "en",
-"logo_url" : "MediaWiki_logo_1.png",
-"moddir" : "mediawiki",
-"title" : "MediaWiki",
-"description" : "MediaWiki (the software used by Wikipedia) allows students to edit local community web pages and personal articles, with images also great international language support."
+  "intended_use" : "webroot",
+  "lang" : "en",
+  "logo_url" : "MediaWiki_logo_1.png",
+  "moddir" : "mediawiki",
+  "title" : "MediaWiki",
+  "description" : "MediaWiki (the software used by Wikipedia) allows students to edit local community web pages and personal articles, with images also great international language support."
 }
