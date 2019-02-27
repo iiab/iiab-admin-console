@@ -4,5 +4,5 @@
   "logo_url" : "node-red-icon-2.svg",
   "moddir" : "nodered",
   "title" : "Node-RED",
-  "description" : "Node-RED is a flow-based development tool for visual programming developed originally by IBM for wiring together hardware devices, APIs and online services as part of the Internet of Things (IoT)."
+  "description" : "Node-RED enables electronics projects with a flow-based development tool for visual programming, developed originally by IBM for wiring together hardware devices, APIs and online services as part of the Internet of Things (IoT)."
 }
