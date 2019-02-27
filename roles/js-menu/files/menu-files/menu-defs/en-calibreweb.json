@@ -6,5 +6,5 @@
   "title" : "Calibre-Web",
   "start_url" : "",
   "description" : "Electronic Books for your local community.",
-  "en-calibreweb.html"
+  "extra_html" : "en-calibreweb.html"
 }
