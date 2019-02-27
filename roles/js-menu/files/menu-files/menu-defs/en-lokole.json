@@ -5,6 +5,6 @@
   "menu_item_name" : "en-lokole",
   "moddir" : "lokole",
   "title" : "Lokole Email<!--for All--><!--for the Developing World-->",
-  "description" : "Offline email that can transmit (and receive) a local community's emails every night, if configured with a 3G/4G mobile modem.",
+  "description" : "Offline email that can transmit (and receive) a local community's emails every night, if configured with a 3G/4G mobile broadband USB modem.",
   "extra_html" : "en-lokole.html"
 }
