@@ -5,6 +5,6 @@
   "menu_item_name" : "en-wordpress",
   "moddir" : "wordpress",
   "title" : "WordPress",
-  "description" : "Write a personal article (or magazine blog post) to share with your community!",
+  "description" : "Write a personal article (or post photographs) to share with your community!",
   "extra_html" : "en-wordpress.html"
 }
