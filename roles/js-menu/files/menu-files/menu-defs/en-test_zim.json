@@ -4,7 +4,7 @@
 "logo_url" : "KiwixLogoVertical2.svg.png",
 "menu_item_name" : "en-test_zim",
 "zim_name" : "tes",
-"title" : "Test Zim File",
+"title" : "Test ZIM File",
 "description":"Can be used to verify that the Kiwix server is working.",
 "extra_html":""
 }
