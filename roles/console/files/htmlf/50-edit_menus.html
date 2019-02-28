@@ -167,14 +167,14 @@
                       </div>
                     </div> <!-- End menusEditMenuItemSelect -->
                     <div id="menusEditMenuItemEdit" class="tab-pane"> <!-- Start menusEditMenuItemEdit -->
-                      <div class="row">
+                      <div class="row" id="menusEditMenuItemEditNew"> <!--  All fields should be readonly unless this is a new item -->
                         <div class="col-sm-12">
                           <h3>Only to Add a New Menu Item Definition</h3>
-                          <div class="row">
+                          <div class="row"> <!--  Code/Suffix -->
                             <div class="col-md-4">
                               <div class="form-group">
                                 <label for="menu_item_name">Menu Item Code</label>
-                                <input type="text" name="menu_item_name" class="form-control" id="menu_item_name">
+                                <input type="text" name="menu_item_name" class="form-control" id="menu_item_name" disabled>
                               </div>
                             </div>
                             <div class="col-md-4">
@@ -183,8 +183,8 @@
                                 <input type="text" name="menu_item_name_suffix" class="form-control" id="menu_item_name_suffix">
                               </div>
                             </div>
-                          </div> <!--  End row -->
-                          <div class="row">
+                          </div> <!--  End Code/Suffix -->
+                          <div class="row"> <!--  Other New Def Fields -->
                             <div class="col-md-8">
                               <div class="form-group">
                                 <label for="menu_item_type">Select Menu Item Type</label>
@@ -208,54 +208,62 @@
                                 <select class="form-control" id="menu_item_lang"></select>
                               </div>
                               <div class="form-group">
+                                <label for="menu_item_content_target" id="menu_item_content_prompt">Content this Menu Item Shows</label>
+                                <input type="text" name="menu_item_content_target" class="form-control" id="menu_item_content_target">
+                              </div>
+                              <div class="form-group">
                                 <button id="CREATE-MENU-ITEM-DEF" type="button" class="btn btn-primary">Create a New Menu Item Definition</button>
                               </div>
                             </div>
 
-                          </div> <!--  End row -->
-                          <div class="row">
-                            <div class="col-md-8">
-                              <hr style="border-top-width:1px; border-top-color:#ddd">
-                              <h3>Change New or Existing Menu Item Definition</h3>
-                              <div class="form-group">
-                                <label for="menu_item_title">Title</label>
-                                <input type="text" name="menu_item_title" class="form-control" id="menu_item_title"/>
-                              </div>
-                              <div class="form-group">
-                                <label for="menu_item_description">Description</label>
-                                <textarea class="form-control" rows="5" id="menu_item_description"></textarea>
-                              </div>
-                              <div class="form-group">
-                                <label for="menu_item_icon_name">Name of Icon File (must be in /library/www/html/js-menu/menu-files/images/) </label>
-                                <input type="text" name="menu_item_icon_name" class="form-control" id="menu_item_icon_name">
-                              </div>
-                              <div class="form-group">
-                                <label for="menu_item_start_url">Start URL - Only change this if the the blank default doesn't work.</label>
-                                <input type="text" name="menu_item_start_url" class="form-control" id="menu_item_start_url">
-                              </div>
-                              <div class="form-group">
-                                <button id="UPDATE-MENU-ITEM-DEF" type="button" class="btn btn-primary">Update Menu Item Definition</button>
-                              </div>
-                            </div>
-                          </div> <!--  End row -->
+                          </div> <!--  End Other New Def Fields -->
+                          <hr style="border-top-width:1px; border-top-color:#ddd">
+                        </div> <!--  End row -->
+                      </div> <!--  End New Def Fields -->
+
+
+                      <div class="row"> <!--  Start Existing Def Fields -->
+                        <div class="col-md-8">
+                          <h3>Change New or Existing Menu Item Definition</h3>
+                          <div class="form-group">
+                            <label for="menu_item_title">Title</label>
+                            <input type="text" name="menu_item_title" class="form-control" id="menu_item_title"/>
+                          </div>
+                          <div class="form-group">
+                            <label for="menu_item_description">Description</label>
+                            <textarea class="form-control" rows="5" id="menu_item_description"></textarea>
+                          </div>
+                          <div class="form-group">
+                            <label for="menu_item_icon_name">Name of Icon File (must be in /library/www/html/js-menu/menu-files/images/) </label>
+                            <input type="text" name="menu_item_icon_name" class="form-control" id="menu_item_icon_name">
+                          </div>
+                          <div class="form-group">
+                            <label for="menu_item_start_url">Start URL - Only change this if the the blank default doesn't work.</label>
+                            <input type="text" name="menu_item_start_url" class="form-control" id="menu_item_start_url">
+                          </div>
+                          <div class="form-group">
+                            <button id="UPDATE-MENU-ITEM-DEF" type="button" class="btn btn-primary">Update Menu Item Definition</button>
+                          </div>
                         </div>
-                      </div>
-                    </div> <!-- End menusEditMenuItemEdit -->
-                    <!-- <div id="menusEditMenuItemPreview" class="tab-pane"> < !-- Start menusEditMenuItemPreview -- >
-                    <div class="row">
-                    <div class="col-sm-6">
-                    <h3>Preview Menu Item</h3>
-                    <div id="menusEditMenuItemSelectedPreview">preview the selected menu item here  </div>
+                      </div> <!--  End Existing Def Fields -->
                     </div>
-                    </div>
-                    </div> <!-- End menusEditMenuItemPreview -->
                   </div>
+                </div> <!-- End menusEditMenuItemEdit -->
+                <!-- <div id="menusEditMenuItemPreview" class="tab-pane"> < !-- Start menusEditMenuItemPreview -- >
+                <div class="row">
+                <div class="col-sm-6">
+                <h3>Preview Menu Item</h3>
+                <div id="menusEditMenuItemSelectedPreview">preview the selected menu item here  </div>
                 </div>
+                </div>
+                </div> <!-- End menusEditMenuItemPreview -->
               </div>
             </div>
-          </div> <!--  End menusEditContentMenuItems Submenu Option Pane -->
-        </div> <!-- End Container for Sub Menu Options Panes -->
-      </div> <!-- right column -->
-    </div> <!-- End containing row -->
-  </div> <!-- End XXX Sublevel Menu Items and Options -->
+          </div>
+        </div>
+      </div> <!--  End menusEditContentMenuItems Submenu Option Pane -->
+    </div> <!-- End Container for Sub Menu Options Panes -->
+  </div> <!-- right column -->
+</div> <!-- End containing row -->
+</div> <!-- End XXX Sublevel Menu Items and Options -->
 </div> <!-- End EditMenus Top Level Pane -->

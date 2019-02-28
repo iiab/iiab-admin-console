@@ -939,7 +939,7 @@ function procContentLangs() {
   $( "#ContentLanguages" ).html(topHtml);
   $( "#ContentLanguages2" ).html(bottomHtml);
 
-  if ($("#js_menu_lang").html() == ""){ // calc and insert language pickers
+  if ($("#js_menu_lang").html() == ""){ // calc and insert language pickers if not previously done
     for (i in langNames){
     	selectName = langNames[i].locname + ' [' + langCodes[langNames[i].code].iso2 + ']';
     	if (langNames[i].locname != langNames[i].engname)
@@ -955,6 +955,7 @@ function procContentLangs() {
       }
     }
     $( "#js_menu_lang" ).html(langPickerTopHtml+langPickerBottomHtml);
+    $( "#menu_item_lang" ).html(langPickerTopHtml+langPickerBottomHtml);
 
   }
 }
