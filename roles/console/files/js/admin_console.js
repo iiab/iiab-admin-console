@@ -26,6 +26,7 @@ var externalZimCatalog = {}; // catalog of zims on an external device
 var oer2goCatalog = {}; // catalog of rachel/oer2go modules, read from file downloaded from rachel
 var oer2goCatalogDate = new Date; // date of download, stored in json file
 var oer2goCatalogFilter = ["html"] // only manage these types as OER2GO; catalog can contain zims and kalite that we do elsewhere
+var mapCatalog = {}; // map regions specified by bounding boxes, downloadable
 var rachelStat = {}; // installed, enabled and whether content is installed and which is enabled
 
 var zimsInstalled = []; // list of zims already installed
@@ -38,6 +39,7 @@ var oer2goDownloading = []; // list of Oer2go items being downloaded
 var oer2goCopying = []; // list of Oer2go items being copied
 var oer2goExternal = []; // list of Oer2go items on external device
 var downloadedFiles = {};
+var mapDownloading = []; // list of Map items being downloaded
 var externalDeviceContents = {}; // zims and other content on external devices, only one active at a time
 
 var langNames = []; // iso code, local name and English name for languages for which we have zims sorted by English name for language
@@ -251,6 +253,25 @@ function instContentButtonsEvents() {
     getOer2goStat();
     alert ("Selected OER2Go Items scheduled to be installed.\n\nPlease view Utilities->Display Job Status to see the results.");
     make_button_disabled("#INST-MODS", false);
+  });
+
+  $("#INST-MAP").click(function(){
+    var mod_id;
+    make_button_disabled("#INST-MAP", true);
+    selectedOer2goItems = []; // items no longer selected as are being installed
+    $('#map_select input').each( function(){
+      if (this.type == "checkbox")
+        if (this.checked){
+          map_id = this.name;
+          if (mapInstalled.indexOf(map_id) >= 0 || map_id in mapWip)
+            consoleLog("Skipping installed Module " + map_id);
+          else
+            instMapItem(map_id);
+        }
+    });
+    //getOer2goStat();
+    alert ("Selected Map Region scheduled to be installed.\n\nPlease view Utilities->Display Job Status to see the results.");
+    make_button_disabled("#INST-MAP", false);
   });
 
   $("#launchKaliteButton").click(function(){
