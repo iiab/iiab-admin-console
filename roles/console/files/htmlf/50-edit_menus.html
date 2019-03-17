@@ -179,7 +179,7 @@
                             </div>
                             <div class="col-md-4">
                               <div class="form-group">
-                                <label for="menu_item_name_suffix">Menu Item Version (usually not needed)</label>
+                                <label for="menu_item_name_suffix">Optional Code Suffix</label>
                                 <input type="text" name="menu_item_name_suffix" class="form-control" id="menu_item_name_suffix">
                               </div>
                             </div>
@@ -230,16 +230,28 @@
                             <input type="text" name="menu_item_title" class="form-control" id="menu_item_title"/>
                           </div>
                           <div class="form-group">
+                            <label for="menu_item_icon_name">Name of Icon File - must be in /library/www/html/js-menu/menu-files/images </label>
+                            <input type="text" name="menu_item_icon_name" class="form-control" id="menu_item_icon_name">
+                          </div>
+                          <div class="form-group">
+                            <label for="menu_item_start_url">Optional Start URL - Only change this if the the blank default doesn't work.</label>
+                            <input type="text" name="menu_item_start_url" class="form-control" id="menu_item_start_url">
+                          </div>
+                          <div class="form-group">
                             <label for="menu_item_description">Description</label>
                             <textarea class="form-control" rows="5" id="menu_item_description"></textarea>
                           </div>
                           <div class="form-group">
-                            <label for="menu_item_icon_name">Name of Icon File (must be in /library/www/html/js-menu/menu-files/images/) </label>
-                            <input type="text" name="menu_item_icon_name" class="form-control" id="menu_item_icon_name">
+                            <label for="menu_item_extra_description">Optional Extra Description</label>
+                            <textarea class="form-control" rows="5" id="menu_item_description"></textarea>
                           </div>
                           <div class="form-group">
-                            <label for="menu_item_start_url">Start URL - Only change this if the the blank default doesn't work.</label>
-                            <input type="text" name="menu_item_start_url" class="form-control" id="menu_item_start_url">
+                            <label for="menu_item_extra_html">Optional Name of Html File for a Sub Menu</label>
+                            <input type="text" name="menu_item_extra_html" class="form-control" id="menu_item_extra_html">
+                          </div>
+                          <div class="form-group">
+                            <label for="menu_item_footnote">Optional Footnote - Things like size or number of items go here.</label>
+                            <input type="text" name="menu_item_footnote" class="form-control" id="menu_item_footnote">
                           </div>
                           <div class="form-group">
                             <button id="UPDATE-MENU-ITEM-DEF" type="button" class="btn btn-primary">Update Menu Item Definition</button>
