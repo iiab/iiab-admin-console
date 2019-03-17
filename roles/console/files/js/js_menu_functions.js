@@ -208,7 +208,7 @@ function procCurrentMenuUpdateSelectedLangs (list) { // automatically select any
 		try {
 		  var lang = langCodesXRef[menuItemDefs[menu_item_name].lang];
 		}
-		catch {
+		catch (e){
 			lang = 'eng';
 		}
 

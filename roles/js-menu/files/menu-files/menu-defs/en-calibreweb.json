@@ -1,9 +1,12 @@
 {
-"intended_use":"calibre",
-"lang" : "en",
-"logo_url" : "calibreweb.png",
-"menu_item_name" : "en-calibreweb",
-"title" : "Calibre Web",
-"start_url" : "",
-"description":"Calibre Offline eBook Services."
+  "intended_use" : "webroot",
+  "COMMENTED_OUT_intended_use" : "calibre",
+  "lang" : "en",
+  "logo_url" : "calibreweb.png",
+  "menu_item_name" : "en-calibreweb",
+  "moddir" : "books",
+  "title" : "Calibre-Web",
+  "COMMENTED_OUT_start_url" : "",
+  "description" : "Electronic Books for your local community.",
+  "extra_html" : "en-calibreweb.html"
 }

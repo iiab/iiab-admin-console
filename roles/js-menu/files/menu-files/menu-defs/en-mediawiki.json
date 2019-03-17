@@ -1,8 +1,8 @@
 {
-"intended_use" : "webroot",
-"lang" : "en",
-"logo_url" : "MediaWiki_logo_1.png",
-"moddir" : "mediawiki",
-"title" : "Community Wiki",
-"description" : "This is our own sort of Wikipedia with our personal articles and images."
+  "intended_use" : "webroot",
+  "lang" : "en",
+  "logo_url" : "MediaWiki_logo_1.png",
+  "moddir" : "mediawiki",
+  "title" : "MediaWiki",
+  "description" : "MediaWiki (the software used by Wikipedia) allows students to create community web pages together, with attached images, and it includes excellent international language support."
 }
