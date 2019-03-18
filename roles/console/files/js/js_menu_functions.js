@@ -180,15 +180,23 @@ function drawMenuItemSelectList () { // for selecting menu item to edit definiti
 
 	for (var i = 0; i < list.length; i++) {
     var menuItemName = list[i];
-    html = '<button id="xxx" type="button" style="margin-left: 5px;" class="btn btn-primary">Edit</button>';
-    html += '<button id="xxx" type="button" style="margin-left: 5px;" class="btn btn-primary">Copy</button>';
+    html = '<button type="button" style="margin-left: 5px;" class="btn btn-primary btnEdit" menu_item_name="' + menuItemName + '">Edit</button>';
+    html += '<button type="button" style="margin-left: 5px;" class="btn btn-primary btnCopy" menu_item_name="' + menuItemName + '">Copy</button>';
     //html = '<div>EDIT</div><div>COPY</div><div>' + menuItemName + '</div>';
     html += '<span style="width: 10em; margin-left: 10px; padding-top: 6px;">' + menuItemName + '</span>';
 		html += genMenuItemHtml(menuItemName);
 
 		$("#" + prefix + '-' + menuItemName).html(html);
 	}
+  $('#menusEditMenuItemSelectList').on('click', '.btnEdit' ,function (event) {
+    handleEditMenuItemClick($(this).attr('menu_item_name'), 'edit');
+    //consoleLog($(this));
+  });
 
+  $('#menusEditMenuItemSelectList').on('click', '.btnCopy' ,function (event) {
+    handleEditMenuItemClick($(this).attr('menu_item_name'), 'copy');
+    //consoleLog($(this));
+  });
 }
 
 function delayedProcCurrentMenuItemDefList (timeout, list, prefix){
@@ -493,17 +501,15 @@ function menuItemAddDnDHandlers(elem) {
 
 // Functions to Edit a Menu Item Definition
 
-function lockMenuItemHeader(lockFlag) {
-  $("#menusEditMenuItemEditNew input").each(function() {
-  	if ($(this).name != 'menu_item_name')
-  	  if (lockFlag)
-  	    $(this).attr('disabled', 'disabled');
-  	  else
-  	  	$(this).disable;
-  });
+function handleEditMenuItemClick (menuItem, action){
+  setEditMenuItemTopFormValues (menuItem);
+  setEditMenuItemBottomFormValues (menuItem);
+  if (action == 'edit')
+    lockMenuItemHeader(true);
+
+  $('#menusEditMenuItemTabs a[href="#menusEditMenuItemEdit"]').tab('show');
 }
 
-// menusEditMenuItemEditNew
 function setEditMenuItemTopFormValues (menuItem, menuDef){
 	if (typeof(menuDef) === 'undefined')
 	  var menuDef = menuItemDefs[menuItem];
@@ -552,6 +558,26 @@ function setFormChecked (fieldName, fieldValue, screenName='') {
 	if (screenName == '')
 	  screenName = fieldName;
   gEBI(fieldName).checked = fieldValue;
+}
+
+function lockMenuItemHeader(lockFlag) {
+  $("#menusEditMenuItemEditNew input").each(function() {
+  	console.log(this)
+  	if ($(this).name != 'menu_item_name')
+  	  if (lockFlag) // lock it
+  	    $(this).attr('disabled', 'disabled');
+  	  else // unlock it
+  	  	$(this).disable;
+  });
+  // Doesn't catch the two selects
+  if (lockFlag){ // lock it
+    $("#menu_item_type").attr('disabled', 'disabled');
+    $("#menu_item_lang").attr('disabled', 'disabled');
+  }
+  else {// unlock it
+    $("#menu_item_type").disable;
+    $("#menu_item_lang").disable;
+  }
 }
 
 function gEBI(elementId){
