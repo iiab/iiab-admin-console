@@ -510,6 +510,7 @@ function handleEditMenuItemClick (menuItem, action){
   $('#menusEditMenuItemTabs a[href="#menusEditMenuItemEdit"]').tab('show');
 }
 
+
 function setEditMenuItemTopFormValues (menuItem, menuDef){
 	if (typeof(menuDef) === 'undefined')
 	  var menuDef = menuItemDefs[menuItem];
@@ -521,7 +522,12 @@ function setEditMenuItemTopFormValues (menuItem, menuDef){
   setEditMenuItemFormValue (menuDef, 'lang', screenName='menu_item_lang');
 
   // Target field name Differs by item type
-  setFormValue ('menu_item_content_target', menuDef[jsMenuTypeTargets[menuDef['intended_use']]]);
+  var targetFieldName = jsMenuTypeTargets[menuDef['intended_use']];
+  var targetFieldNameValue = ""; // default
+  console.log(targetFieldName)
+  if (menuDef.hasOwnProperty(targetFieldName))
+    targetFieldNameValue = menuDef[targetFieldName];
+  setFormValue ('menu_item_content_target', targetFieldNameValue);
 }
 
 function setEditMenuItemBottomFormValues (menuItem, menuDef){
@@ -548,6 +554,55 @@ function setEditMenuItemFormValue (menuDef, fieldName, screenName='') {
   setFormValue (fieldName, fieldValue, screenName)
 }
 
+function getEditMenuItemFormValues (){
+	var menuDef = {};
+
+	var menuItem = getFormValue ('menu_item_name');
+	var suffix = getFormValue ('menu_item_name_suffix');
+	var content_target = getFormValue ('menu_item_content_target');
+
+  menuDef['intended_use'] = getFormValue ('intended_use', screenName='menu_item_type');
+  menuDef['lang'] = getFormValue ('lang', screenName='lang');
+
+  menuDef['title'] = getFormValue ('title', screenName='menu_item_title');
+  menuDef['logo_url'] = getFormValue ('logo_url', screenName='menu_item_icon_name');
+  menuDef['start_url'] = getFormValue ('start_url', screenName='menu_item_start_url');
+  menuDef['description'] = getFormValue ('description', screenName='menu_item_description');
+  menuDef['extra_description'] = getFormValue ('extra_description', screenName='menu_item_extra_description');
+  menuDef['extra_html'] = getFormValue ('extra_html', screenName='menu_item_extra_html');
+  menuDef['footnote'] = getFormValue ('footnote', screenName='menu_item_footnote');
+}
+
+function valtEditMenuItemFormValues (screenName){
+	var fieldValue = getFormValue (screenName);
+
+	switch (screenName) {
+    case 'menu_item_icon_name':
+      console.log('Oranges are $0.59 a pound.');
+      break;
+    case 'menu_item_extra_html':
+
+    default:
+      console.log('Sorry, we are out of ' + expr + '.');
+  }
+	var menuDef = {};
+
+	var menuItem = getFormValue ('menu_item_name');
+	var suffix = getFormValue ('menu_item_name_suffix');
+	var content_target = getFormValue ('menu_item_content_target');
+
+  menuDef['intended_use'] = getFormValue ('intended_use', screenName='menu_item_type');
+  menuDef['lang'] = getFormValue ('lang', screenName='lang');
+
+  menuDef['title'] = getFormValue ('title', screenName='menu_item_title');
+  menuDef['logo_url'] = getFormValue ('logo_url', screenName='menu_item_icon_name');
+  menuDef['start_url'] = getFormValue ('start_url', screenName='menu_item_start_url');
+  menuDef['description'] = getFormValue ('description', screenName='menu_item_description');
+  menuDef['extra_description'] = getFormValue ('extra_description', screenName='menu_item_extra_description');
+  menuDef['extra_html'] = getFormValue ('extra_html', screenName='menu_item_extra_html');
+  menuDef['footnote'] = getFormValue ('footnote', screenName='menu_item_footnote');
+}
+
 function setFormValue (fieldName, fieldValue, screenName='') {
   if (screenName == '')
 	  screenName = fieldName;
@@ -558,6 +613,18 @@ function setFormChecked (fieldName, fieldValue, screenName='') {
 	if (screenName == '')
 	  screenName = fieldName;
   gEBI(fieldName).checked = fieldValue;
+}
+
+function getFormValue (fieldName, screenName='') {
+	if (screenName == '')
+	  screenName = fieldName;
+  return gEBI(screenName).value;
+}
+
+function getFormChecked (fieldName, screenName='') {
+	if (screenName == '')
+	  screenName = fieldName;
+  return gEBI(screenName).checked;
 }
 
 function lockMenuItemHeader(lockFlag) {
