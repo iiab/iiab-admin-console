@@ -12,6 +12,22 @@ var homeMenuLoaded = false;
 var menuItemDragSrcElement = null;
 var menuItemDragSrcParent = null;
 var menuItemDragDuplicate = null;
+var jsMenuTypeTargets =
+  {
+    "zim" : "zim_name",
+    "html" : "moddir",
+    "webroot" : "moddir",
+    "kalite"  : "",
+    "kolibri"  : "",
+    "cups"  : "",
+    "nodered"  : "",
+    "calibre"  : "",
+    "calibreweb"  : "",
+    "osm"  : "",
+    "info"  : "",
+    "download"  : "download_folder"
+  };
+
 
 function getMenuItemDefLists(){
 	var resp = getMenuItemDefList();
@@ -173,12 +189,6 @@ function drawMenuItemSelectList () { // for selecting menu item to edit definiti
 		$("#" + prefix + '-' + menuItemName).html(html);
 	}
 
-}
-
-function currentMenuItemsAddButtons () {
-  $("#menusDefineMenuCurrentItemList .content-item").each(function() {
-  	$(this).prepend('<div>X</div>')
-  });
 }
 
 function delayedProcCurrentMenuItemDefList (timeout, list, prefix){
@@ -479,6 +489,69 @@ function menuItemAddDnDHandlers(elem) {
   elem.addEventListener('drop', menuItemDrop, false);
   elem.addEventListener('dragend', menuItemDragEnd, false);
 
+}
+
+// Functions to Edit a Menu Item Definition
+
+function lockMenuItemHeader(lockFlag) {
+  $("#menusEditMenuItemEditNew input").each(function() {
+  	if ($(this).name != 'menu_item_name')
+  	  if (lockFlag)
+  	    $(this).attr('disabled', 'disabled');
+  	  else
+  	  	$(this).disable;
+  });
+}
+
+// menusEditMenuItemEditNew
+function setEditMenuItemTopFormValues (menuItem, menuDef){
+	if (typeof(menuDef) === 'undefined')
+	  var menuDef = menuItemDefs[menuItem];
+
+  setFormValue ('menu_item_name', menuItem);
+  setFormValue ('menu_item_name_suffix', "");
+
+  setEditMenuItemFormValue (menuDef, 'intended_use', screenName='menu_item_type');
+  setEditMenuItemFormValue (menuDef, 'lang', screenName='menu_item_lang');
+
+  // Target field name Differs by item type
+  setFormValue ('menu_item_content_target', menuDef[jsMenuTypeTargets[menuDef['intended_use']]]);
+}
+
+function setEditMenuItemBottomFormValues (menuItem, menuDef){
+	if (typeof(menuDef) === 'undefined')
+	  var menuDef = menuItemDefs[menuItem];
+
+  setEditMenuItemFormValue (menuDef, 'title', screenName='menu_item_title');
+  setEditMenuItemFormValue (menuDef, 'logo_url', screenName='menu_item_icon_name');
+  setEditMenuItemFormValue (menuDef, 'start_url', screenName='menu_item_start_url');
+  setEditMenuItemFormValue (menuDef, 'description', screenName='menu_item_description');
+  setEditMenuItemFormValue (menuDef, 'extra_description', screenName='menu_item_extra_description');
+  setEditMenuItemFormValue (menuDef, 'extra_html', screenName='menu_item_extra_html');
+  setEditMenuItemFormValue (menuDef, 'footnote', screenName='menu_item_footnote');
+}
+
+function setEditMenuItemFormValue (menuDef, fieldName, screenName='') {
+  var fieldValue = "";
+  console.log(fieldName)
+  console.log(menuDef)
+  if (screenName == '')
+	  screenName = fieldName;
+	if (menuDef.hasOwnProperty(fieldName))
+	  fieldValue = menuDef[fieldName];
+  setFormValue (fieldName, fieldValue, screenName)
+}
+
+function setFormValue (fieldName, fieldValue, screenName='') {
+  if (screenName == '')
+	  screenName = fieldName;
+  gEBI(screenName).value = fieldValue;
+}
+
+function setFormChecked (fieldName, fieldValue, screenName='') {
+	if (screenName == '')
+	  screenName = fieldName;
+  gEBI(fieldName).checked = fieldValue;
 }
 
 function gEBI(elementId){
