@@ -68,9 +68,9 @@ console.log(html);
 }
 
 function instMapItem(name) {
-  var command = "INST-MAP";
+  var command = "INST-OSM-VECT-SET";
   var cmd_args = {};
-  cmd_args['name'] = name;
+  cmd_args['osm_vect_id'] = name;
   cmd = command + " " + JSON.stringify(cmd_args);
   sendCmdSrvCmd(cmd, genericCmdHandler);
   mapDownloading.push(name);
