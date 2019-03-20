@@ -1752,7 +1752,20 @@ def save_menu_def(cmd_info):
     #    return ('{"Error": "' + outp + '."}')
 
 def save_menu_item_def(cmd_info):
-    print 'nothing'
+    target_file = js_menu_dir + 'menu-files/menu-defs/' + cmd_info['cmd_args']['menu_item_name'] + '.json'
+    menu_item_def = cmd_info['cmd_args']['menu_item_def']
+    menu_item_def['change_ref'] = cmd_info['cmd_args']['mode']
+    menu_item_def['change_date'] = str(date.today())
+
+    try:
+        with open(target_file, 'w') as outfile:
+            outfile.write(json.dumps(menu_item_def, indent=2))
+    except OSError as e:
+        resp = cmd_error(cmd_info['cmd'], msg='Error writing to Menu Item Definition File.')
+        return (resp)
+
+    resp = cmd_success(cmd_info['cmd'])
+    return (resp)
 
 # Control Commands
 

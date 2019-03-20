@@ -345,6 +345,12 @@ function contentMenuButtonsEvents() {
   $("#REFRESH-MENU-LISTS").click(function(){
     getMenuItemDefList();
   });
+  $("#CREATE-MENU-ITEM-DEF").click(function(){
+    createContentMenuItemDef();
+  });
+  $("#UPDATE-MENU-ITEM-DEF").click(function(){
+    updateContentMenuItemDef();
+  });
 }
 
   // Util Buttons
