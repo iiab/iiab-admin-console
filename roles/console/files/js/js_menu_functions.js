@@ -113,10 +113,14 @@ function saveContentMenuDef() {
 function setContentMenuToEditFormValues (){
   setContentMenuToEditFormValue('mobile_header_font');
   setContentMenuToEditFormChecked('mobile_incl_description');
+  setContentMenuToEditFormChecked('mobile_incl_extra_description');
   setContentMenuToEditFormChecked('mobile_incl_extra_html');
+  setContentMenuToEditFormChecked('mobile_incl_footnote');
   setContentMenuToEditFormValue('desktop_header_font');
   setContentMenuToEditFormChecked('desktop_incl_description');
+  setContentMenuToEditFormChecked('desktop_incl_extra_description');
   setContentMenuToEditFormChecked('desktop_incl_extra_html');
+  setContentMenuToEditFormChecked('desktop_incl_footnote');
   setContentMenuToEditFormValue('menu_lang', 'js_menu_lang');
   setContentMenuToEditFormChecked('autoupdate_menu');
   setContentMenuToEditFormChecked('allow_kiwix_search');
@@ -139,10 +143,14 @@ function setContentMenuToEditFormChecked (fieldName, screenName='') {
 function getContentMenuToEditFormValues (){
   getContentMenuToEditFormValue('mobile_header_font');
   getContentMenuToEditFormChecked('mobile_incl_description');
+  getContentMenuToEditFormChecked('mobile_incl_extra_description');
   getContentMenuToEditFormChecked('mobile_incl_extra_html');
+  getContentMenuToEditFormChecked('mobile_incl_footnote');
   getContentMenuToEditFormValue('desktop_header_font');
   getContentMenuToEditFormChecked('desktop_incl_description');
+  getContentMenuToEditFormChecked('desktop_incl_extra_description');
   getContentMenuToEditFormChecked('desktop_incl_extra_html');
+  getContentMenuToEditFormChecked('desktop_incl_footnote');
   getContentMenuToEditFormValue('menu_lang', 'js_menu_lang');
   getContentMenuToEditFormChecked('autoupdate_menu');
   getContentMenuToEditFormChecked('allow_kiwix_search');

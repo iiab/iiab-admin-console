@@ -41,7 +41,9 @@ var showFullDisplay = true; // leave for now in case we want to toggle
 // var mobilePortraitSize = baseFontSize + "px";
 // var mobileLscapeSize = baseFontSize / 2  + "px";
 var showDescription = false;
+var showExtraDescription = false;
 var showExtraHtml = false;
+var showFootnote = false;
 var menuParams = {};
 var menuItems = [];
 var menuHtml = "";
@@ -196,18 +198,28 @@ function procMenu() {
 
 function calcItemVerbosity () {
 	showDescription = false;
+	showExtraDescription = false;
   showExtraHtml = false;
+  showFootnote = false;
 	if (isMobile){
 		if (menuParams.mobile_incl_description)
 		  showDescription = true
+		if (menuParams.mobile_incl_extra_description)
+		  showExtraDescription = true
 		if (menuParams.mobile_incl_extra_html)
 		  showExtraHtml = true
+		if (menuParams.mobile_incl_footnote)
+		  showFootnote = true
   }
 	else {
 		if (menuParams.desktop_incl_description)
 	    showDescription = true
+		if (menuParams.desktop_incl_extra_description)
+		  showExtraDescription = true
 	  if (menuParams.desktop_incl_extra_html)
 	    showExtraHtml = true
+	  if (menuParams.desktop_incl_footnote)
+		  showFootnote = true
 	}
 }
 
@@ -416,7 +428,7 @@ function calcItemHtml(href,module){
 
 	// a little kluge but ignore start_url if is dummy link to undefinedPageUrl
   if (href != undefinedPageUrl){
-  	if (module.hasOwnProperty("start_url")){
+  	if (module.hasOwnProperty("start_url") && module.start_url != ""){
   	  if (startPage[startPage.length - 1] == '/')
   	    startPage = startPage.substr(0,startPage.length - 1); // strip final /
   	  if (module['start_url'][0] != '/')
@@ -444,8 +456,7 @@ function calcItemHtml(href,module){
 	html+='</div>'; // end content-item-title
 	// description - this will become multiple parts
 	if (showDescription) {
-   var description = substitute(module.description,module);
-  	html+='<p>' + description + '</p>';
+    html += getTextField(module, 'description');
   	// apks for medwiki, etc. move to download menu def
   	if (module.hasOwnProperty("apk_file") && include_apk_links){
   		var sizeClause = '';
@@ -456,12 +467,24 @@ function calcItemHtml(href,module){
   	  else
   	  	html+='<p>Click here to download <a href="' + apkBaseUrl + module.apk_file + '">' + module.apk_file + '</a></p>';
     }
-}
+  }
+  if (showExtraDescription)
+    html += getTextField (module, 'extra_description');
 	consoleLog('href = ' + href);
 	html += '<div id="' + module.menu_id + '-htmlf" class="content-extra toggleExtraHtml"></div>'; // scaffold for extra html
+	if (showFootnote)
+    html += getTextField (module, 'footnote');
 	html+='</div></div></div>';
 
-	return html
+	return html;
+}
+
+function getTextField (module, fieldName) {
+	var html = "";
+	if (module.hasOwnProperty(fieldName) && module[fieldName] != "") {
+		html = '<p>' + substitute(module[fieldName], module) + '</p>';
+	}
+	return html;
 }
 
 function substitute(instr,module){

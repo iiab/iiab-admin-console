@@ -1754,7 +1754,7 @@ def save_menu_def(cmd_info):
 def save_menu_item_def(cmd_info):
     target_file = js_menu_dir + 'menu-files/menu-defs/' + cmd_info['cmd_args']['menu_item_name'] + '.json'
     menu_item_def = cmd_info['cmd_args']['menu_item_def']
-    menu_item_def['change_ref'] = cmd_info['cmd_args']['mode']
+    menu_item_def['change_ref'] = 'admin_console - ' + cmd_info['cmd_args']['mode']
     menu_item_def['change_date'] = str(date.today())
 
     try:
