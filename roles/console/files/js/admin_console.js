@@ -2034,40 +2034,47 @@ function sendCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArgs) {
   if (buttonId != '')
     make_button_disabled('#' + buttonId, true);
 
-    var resp = $.ajax({
-      type: 'POST',
-      url: iiabCmdService,
-      data: {
-        command: enCommand
-      },
-      dataType: 'json',
-      buttonId: buttonId
-    })
-    //.done(callback)
-    .done(function(dataResp, textStatus, jqXHR) {
-    	//consoleLog (dataResp);
-    	//consoleLog (callback);
-    	//var dataResp = data;
-    	if ("Error" in dataResp){
-    	  cmdSrvError(cmdVerb, dataResp);
-    	  if (typeof errCallback != 'undefined'){
-    	    consoleLog(errCallback);
-    	    errCallback(data, cmdArgs);
-    	  }
-    	}
-    	else {
-    		var data = dataResp.Data;
-    	  callback(data);
-    	  logServerCommands (cmdVerb, "succeeded", "", dataResp.Resp_time);
-    	}
-    })
-    .fail(jsonErrhandler)
-    .always(function() {
-    	if (this.buttonId != "")
-        make_button_disabled('#' + this.buttonId, false);
-    });
+  var resp = $.ajax({
+    type: 'POST',
+    url: iiabCmdService,
+    data: {
+      command: enCommand
+    },
+    dataType: 'json',
+    buttonId: buttonId
+  })
+  //.done(callback)
+  .done(function(dataResp, textStatus, jqXHR) {
+  	//consoleLog (dataResp);
+  	//consoleLog (callback);
+  	//var dataResp = data;
+  	if ("Error" in dataResp){
+  	  cmdSrvError(cmdVerb, dataResp);
+  	  if (typeof errCallback != 'undefined'){
+  	    consoleLog(errCallback);
+  	    errCallback(data, cmdArgs);
+  	  }
+  	}
+  	else {
+  		var data = dataResp.Data;
+  	  callback(data, command);
+  	  logServerCommands (cmdVerb, "succeeded", "", dataResp.Resp_time);
+  	}
+  })
+  .fail(jsonErrhandler)
+  .always(function() {
+  	if (this.buttonId != "")
+      make_button_disabled('#' + this.buttonId, false);
+  });
 
-    return resp;
+  return resp;
+}
+
+function genSendCmdSrvCmdCallback(command, cmdArgs, callbackName){
+	var callbackFunc = function() {
+    window[callbackName](command, cmdArgs);
+  };
+  return callbackFunc;
 }
 
 // Report errors that came from cmdsrv or cmd-service

@@ -521,13 +521,20 @@ function updateContentMenuItemDef () {
 
 function saveContentMenuItemDef() {
     var command = "SAVE-MENU-ITEM-DEF";
-    var cmd_args = getEditMenuItemFormValues();
+    var cmdArgs = getEditMenuItemFormValues();
+    //var callbackFunction = genContentMenuItemDefCallback(command, cmdArgs);
+    var callbackFunction = genSendCmdSrvCmdCallback(command, cmdArgs, 'updateSavedContentMenuItemDef');
 
-    cmd = command + " " + JSON.stringify(cmd_args);
-    sendCmdSrvCmd(cmd, genericCmdHandler);
+    cmd = command + " " + JSON.stringify(cmdArgs);
+    sendCmdSrvCmd(cmd, callbackFunction);
     alert ("Saving Content Menu Item Definition.");
     return true;
   }
+
+function updateSavedContentMenuItemDef(command, cmdArgs) {
+  console.log('in updateSavedContentMenuItemDef');
+  console.log(cmdArgs);
+}
 
 function handleEditMenuItemClick (menuItem, action){
   setEditMenuItemTopFormValues (menuItem);
@@ -559,8 +566,6 @@ function setEditMenuItemTopFormValues (menuItem, menuDef){
   	 if (menuDef.hasOwnProperty(targetFieldName))
       targetFieldNameValue = menuDef[targetFieldName];
   }
-
-
   console.log(targetFieldName)
 
   setFormValue ('menu_item_content_target', targetFieldNameValue);
