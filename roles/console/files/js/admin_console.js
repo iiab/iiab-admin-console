@@ -346,10 +346,10 @@ function contentMenuButtonsEvents() {
     getMenuItemDefList();
   });
   $("#CREATE-MENU-ITEM-DEF").click(function(){
-    createContentMenuItemDef();
+    saveContentMenuItemDef();
   });
   $("#UPDATE-MENU-ITEM-DEF").click(function(){
-    updateContentMenuItemDef();
+    saveContentMenuItemDef();
   });
 }
 

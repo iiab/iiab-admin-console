@@ -8,6 +8,7 @@ var currentJsMenuToEdit = {};
 var menuItemDefList = [];
 var menuItemDefs = {};
 menuItemDefs['call_count'] = null; // mark as not downloaded
+var menuItemDefPrefixes = {"all" : "all-items", "current" : "current-items", "select" : "select-items"};
 var homeMenuLoaded = false;
 var menuItemDragSrcElement = null;
 var menuItemDragSrcParent = null;
@@ -28,7 +29,6 @@ var jsMenuTypeTargets =
     //"info"  : "",
     "download"  : "download_folder"
   };
-
 // var targetTypes = ['zim', 'html', 'webroot', 'download']
 
 function getMenuItemDefLists(){
@@ -47,11 +47,11 @@ function getMenuItemDefList(){
 function procMenuItemDefList (data){
 	var html = "";
 	menuItemDefList = data;
-	html = createMenuItemScaffold(menuItemDefList, "all-items");
+	html = createMenuItemScaffold(menuItemDefList, menuItemDefPrefixes.all);
 	$("#menusDefineMenuAllItemList").html(html);
 	menuItemDefs['call_count'] = 0; // ready to download
 	for (var i = 0; i < menuItemDefList.length; i++) {
-		getMenuItemDef(menuItemDefList[i], "all-items")
+		getMenuItemDef(menuItemDefList[i], menuItemDefPrefixes.all)
 	}
 }
 
@@ -70,9 +70,9 @@ function getContentMenuToEdit(currentJsMenuToEditUrl){ // passed by button click
 		  currentJsMenuToEdit.menu_items_1 = ['en-credits'];
 		setContentMenuToEditFormValues();
     if (homeMenuLoaded)
-      delayedProcCurrentMenuItemDefList (5000, currentJsMenuToEdit.menu_items_1, "current-items"); // hard coded name
+      delayedProcCurrentMenuItemDefList (5000, currentJsMenuToEdit.menu_items_1, menuItemDefPrefixes.current); // hard coded name
     else { // the first time we let the all menu item list completion draw the current menu
-      var html = createMenuItemScaffold(currentJsMenuToEdit.menu_items_1, "current-items");
+      var html = createMenuItemScaffold(currentJsMenuToEdit.menu_items_1, menuItemDefPrefixes.current);
 	    $("#menusDefineMenuCurrentItemList").html(html);
       homeMenuLoaded = true;
     }
@@ -80,7 +80,7 @@ function getContentMenuToEdit(currentJsMenuToEditUrl){ // passed by button click
 	.fail(function (jqXHR, textStatus, errorThrown){
 		if (errorThrown == 'Not Found'){
 		  currentJsMenuToEdit = {};
-		  procCurrentMenuItemDefList ([], "current-items");
+		  procCurrentMenuItemDefList ([], menuItemDefPrefixes.current);
 		  alert ('Content Menu not Found.');
 		}
 		else
@@ -182,21 +182,14 @@ function getContentMenuToEditItemList () {
 }
 
 function drawMenuItemSelectList () { // for selecting menu item to edit definition
-  var prefix = "select-items";
+  var prefix = menuItemDefPrefixes.select;
   var list = currentJsMenuToEdit.menu_items_1; // hard coded name
 
   var html = createMenuItemScaffold(list, prefix, draggable = false);
 	$("#menusEditMenuItemSelectList").html(html);
 
 	for (var i = 0; i < list.length; i++) {
-    var menuItemName = list[i];
-    html = '<button type="button" style="margin-left: 5px;" class="btn btn-primary btnEdit" menu_item_name="' + menuItemName + '">Edit</button>';
-    html += '<button type="button" style="margin-left: 5px;" class="btn btn-primary btnCopy" menu_item_name="' + menuItemName + '">Copy</button>';
-    //html = '<div>EDIT</div><div>COPY</div><div>' + menuItemName + '</div>';
-    html += '<span style="width: 10em; margin-left: 10px; padding-top: 6px;">' + menuItemName + '</span>';
-		html += genMenuItemHtml(menuItemName);
-
-		$("#" + prefix + '-' + menuItemName).html(html);
+    drawMenuItemSelectListItem (list[i], prefix);
 	}
   $('#menusEditMenuItemSelectList').on('click', '.btnEdit' ,function (event) {
     handleEditMenuItemClick($(this).attr('menu_item_name'), 'edit');
@@ -207,6 +200,15 @@ function drawMenuItemSelectList () { // for selecting menu item to edit definiti
     handleEditMenuItemClick($(this).attr('menu_item_name'), 'copy');
     //consoleLog($(this));
   });
+}
+
+function drawMenuItemSelectListItem (menuItemName, prefix) {
+	var html = '<button type="button" style="margin-left: 5px;" class="btn btn-primary btnEdit" menu_item_name="' + menuItemName + '">Edit</button>';
+  //html += '<button type="button" style="margin-left: 5px;" class="btn btn-primary btnCopy" menu_item_name="' + menuItemName + '">Copy</button>';
+
+  html += '<span style="width: 10em; margin-left: 10px; padding-top: 6px;">' + menuItemName + '</span>';
+  html += genMenuItemHtml(menuItemName);
+  $("#" + prefix + '-' + menuItemName).html(html);
 }
 
 function delayedProcCurrentMenuItemDefList (timeout, list, prefix){
@@ -247,19 +249,21 @@ function procCurrentMenuUpdateSelectedLangs (list) { // automatically select any
 }
 
 function redrawAllMenuItemList() {
-  // createMenuItemScaffold(menuItemDefList, "all-items"); - not needed as done for all items initially
-  drawMenuItemDefList(menuItemDefList, "all-items");
+  // createMenuItemScaffold(menuItemDefList, menuItemDefPrefixes.all); - not needed as done for all items initially
+  drawMenuItemDefList(menuItemDefList, menuItemDefPrefixes.all);
 }
 
 function drawMenuItemDefList (list, prefix){
 	for (var i = 0; i < list.length; i++) {
-		var menu_item_name = list[i];
-		var divId = prefix + '-' + menu_item_name;
-
-		if (menuItemDefs.hasOwnProperty(menu_item_name))
-  		genMenuItem(divId, menu_item_name);
+		drawMenuItemDef(list[i], prefix)
   }
   activateTooltip();
+}
+
+function drawMenuItemDef (menuItemName, prefix){
+	var divId = prefix + '-' + menuItemName;
+		if (menuItemDefs.hasOwnProperty(menuItemName))
+  		genMenuItem(divId, menuItemName);
 }
 
 function createMenuItemScaffold(list, prefix, draggable = true){
@@ -353,7 +357,7 @@ function checkMenuDone(){
 		//activateButtons();
 		//alert ("menu done");
 		if (currentJsMenuToEdit.hasOwnProperty('menu_items_1'))
-		  drawMenuItemDefList(currentJsMenuToEdit.menu_items_1, "current-items"); // refresh current menu
+		  drawMenuItemDefList(currentJsMenuToEdit.menu_items_1, menuItemDefPrefixes.current); // refresh current menu
 		activateTooltip();
 	}
 }
@@ -511,19 +515,11 @@ function menuItemAddDnDHandlers(elem) {
 
 // Functions to Edit a Menu Item Definition
 
-function createContentMenuItemDef (){
-	saveContentMenuItemDef();
-}
-
-function updateContentMenuItemDef () {
-	saveContentMenuItemDef();
-}
-
 function saveContentMenuItemDef() {
     var command = "SAVE-MENU-ITEM-DEF";
     var cmdArgs = getEditMenuItemFormValues();
     //var callbackFunction = genContentMenuItemDefCallback(command, cmdArgs);
-    var callbackFunction = genSendCmdSrvCmdCallback(command, cmdArgs, 'updateSavedContentMenuItemDef');
+    var callbackFunction = genSendCmdSrvCmdCallback(command, cmdArgs, 'updateContentMenuItemDef');
 
     cmd = command + " " + JSON.stringify(cmdArgs);
     sendCmdSrvCmd(cmd, callbackFunction);
@@ -531,9 +527,19 @@ function saveContentMenuItemDef() {
     return true;
   }
 
-function updateSavedContentMenuItemDef(command, cmdArgs) {
-  console.log('in updateSavedContentMenuItemDef');
+function createContentMenuItemDef (command, cmdArgs){
+	//
+}
+
+function updateContentMenuItemDef (command, cmdArgs) {
+  console.log('in updateContentMenuItemDef');
   console.log(cmdArgs);
+  var menuItemName = cmdArgs['menu_item_name'];
+  var menuDef = cmdArgs['menu_item_def'];
+  menuItemDefs[menuItemName] = menuDef;
+  drawMenuItemDef (menuItemName, menuItemDefPrefixes.all);
+  drawMenuItemDef (menuItemName, menuItemDefPrefixes.current);
+  drawMenuItemSelectListItem (menuItemName, menuItemDefPrefixes.select);
 }
 
 function handleEditMenuItemClick (menuItem, action){
