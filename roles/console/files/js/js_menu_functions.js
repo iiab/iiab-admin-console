@@ -622,7 +622,6 @@ function getEditMenuItemFormValues (){
 
   // calc menu item def name
 
-
   //if edit mode use existing
   //else if lang prefix = lang and suffix != '' ? except name + suffix
   //else if use in zim, html, webroot, download =  lang - target - suffix
