@@ -4,10 +4,14 @@
   "force_mobile_layout" : false,
   "mobile_header_font" : "Open Sans",
   "mobile_incl_description" : false,
+  "mobile_incl_extra_description": false,
   "mobile_incl_extra_html" : false,
+  "mobile_incl_footnote": false,
   "desktop_header_font" : "Finger Paint",
   "desktop_incl_description" : true,
+  "desktop_incl_extra_description": true,
   "desktop_incl_extra_html" : true,
+  "desktop_incl_footnote": true,
   "allow_kiwix_search" : true,
   "allow_poweroff" : true,
   "poweroff_prompt" : "Power Off",
@@ -17,6 +21,7 @@
   "menu_items_1" :
     [
       "en-oob",
+      "en-sample",
       "en-test_zim",
       "en-test_mod",
       "en-usb",
