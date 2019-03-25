@@ -38,7 +38,11 @@ The following may be set separately for the **Mobile Layout** or the **Desktop L
 
 **Show Description** - By unchecking this field you can cause the description not to be shown in the menu links.
 
+**Show Extra Description** - By unchecking this field you can cause the extra description not to be shown in the menu links.
+
 **Show Sub-menu** - By unchecking this field you can cause the full sub-menu not to be shown in the menu links.
+
+**Show Footnote** - By unchecking this field you can cause the footnote not to be shown in the menu links.
 
 The following apply to both layouts:
 
@@ -64,13 +68,20 @@ On the **left** are the links in the menu you are editing and on the **right** a
 
 ### Don't Forget
 
-Don't forget to save your changes by clicking **Save Menu**.
+Don't forget to save your changes by clicking **Save Menu**. The **menu item list is not part of the menu until you save**.
 
-Edit Menu Items - Future
-------------------------
+Edit Menu Items
+---------------
 
-Not yet implemented.
+You can edit the Title and other parts of the Menu Items that are on the current menu. Here are the fields and their use:
 
+* Title - Put a short, one line name for the item here. Ideally it would be unique and way shorter than this text.
+* Name of Icon File - This is an image file in /library/www/html/js-menu/menu-files/images. At present we don't validate it.
+* Description - Put a fuller description of the item here, but not more than one paragraph.
+* Start URL (Optional) - Only change this if the the blank default doesn't work.
+* Extra_description - If there is more description, put it here.
+* Sub Menu Html File (Optional) - This is an html file in /library/www/html/js-menu/menu-files/menu-defs. At present we don't validate it.
+* Footnote - You can put catalog type information here like number of pdfs or size. Also you can use the ##SIZE## and other substitution fields for zims.
 
 Actions
 -------
