@@ -14,6 +14,7 @@ import os, sys, syslog
 import json
 import subprocess
 import shlex
+from datetime import date
 
 SCRIPT_DIR = '/opt/admin/cmdsrv/scripts'
 if not SCRIPT_DIR in sys.path:
