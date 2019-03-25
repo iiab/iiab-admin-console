@@ -203,11 +203,18 @@ function drawMenuItemSelectList () { // for selecting menu item to edit definiti
 }
 
 function drawMenuItemSelectListItem (menuItemName, prefix) {
-	var html = '<button type="button" style="margin-left: 5px;" class="btn btn-primary btnEdit" menu_item_name="' + menuItemName + '">Edit</button>';
-  //html += '<button type="button" style="margin-left: 5px;" class="btn btn-primary btnCopy" menu_item_name="' + menuItemName + '">Copy</button>';
+	var html = "";
+	var buttonHtml = '<button type="button" style="margin-left: 5px;" class="btn btn-primary btnEdit" menu_item_name="' + menuItemName + '">Edit</button>';
+  //buttonHtml += '<button type="button" style="margin-left: 5px;" class="btn btn-primary btnCopy" menu_item_name="' + menuItemName + '">Copy</button>';
+  var itemHtml = genMenuItemHtml(menuItemName);
+  if (itemHtml != ""){
+  	html = buttonHtml;
+  	html += '<span style="width: 10em; margin-left: 10px; padding-top: 6px;">' + menuItemName + '</span>';
+  	html += itemHtml
+  }
+  else
+    html += '<span style="margin-left: 10px;">' + menuItemName + ' Menu Item Definition was not found.</span>';
 
-  html += '<span style="width: 10em; margin-left: 10px; padding-top: 6px;">' + menuItemName + '</span>';
-  html += genMenuItemHtml(menuItemName);
   $("#" + prefix + '-' + menuItemName).html(html);
 }
 
@@ -315,6 +322,8 @@ function genMenuItem(divId, menuItemName) {
 		return;
 	}
 	var menuHtml = genMenuItemHtml(menuItemName);
+	if (menuHtml == "") // skip problem definitions, probably not found
+	  return;
 
 	$("#" + divId).html(menuHtml);
 	menuItemAddDnDHandlers($("#" + divId).get(0));
@@ -324,6 +333,8 @@ function genMenuItem(divId, menuItemName) {
 function genMenuItemHtml(menuItemName) {
   var menuHtml = "";
   var module = menuItemDefs[menuItemName];
+  if (typeof(module) === "undefined") // skip not found
+	  return "";;
   var menuItemToolTip = genMenuItemTooltip(menuItemName, module);
 	menuHtml+='<div class="content-icon"' + menuItemToolTip + '>';
 	menuHtml+='<img src="' + jsMenuImageUrl + module.logo_url + '">';
