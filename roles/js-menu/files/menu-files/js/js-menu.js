@@ -282,6 +282,8 @@ function procMenuItem(module) {
 		menuHtml += calcCalibreWebLink(module);
 	else if (module['intended_use'] == "osm")
 		menuHtml += calcOsmLink(module);
+	else if (module['intended_use'] == "map")
+		menuHtml += calcMapLink(module);
 	else if (module['intended_use'] == "info")
 		menuHtml += calcInfoLink(module);
 	else if (module['intended_use'] == "download")
@@ -386,6 +388,13 @@ function calcNoderedLink(module){
 
 function calcOsmLink(module){
 	var href = '/iiab/static/map.html';
+
+	var html = calcItemHtml(href,module);
+	return html
+}
+
+function calcMapLink(module){
+	var href = '/osm-vector/';
 
 	var html = calcItemHtml(href,module);
 	return html
