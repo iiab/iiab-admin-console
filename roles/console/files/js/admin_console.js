@@ -40,6 +40,8 @@ var oer2goCopying = []; // list of Oer2go items being copied
 var oer2goExternal = []; // list of Oer2go items on external device
 var downloadedFiles = {};
 var mapDownloading = []; // list of Map items being downloaded
+var mapWip = {}; // list of copying, downloading, exporting
+var mapInstalled = {}; // list of maps already installed
 var externalDeviceContents = {}; // zims and other content on external devices, only one active at a time
 
 var langNames = []; // iso code, local name and English name for languages for which we have zims sorted by English name for language
@@ -49,6 +51,7 @@ var langGroups = {"en":"eng","fr":"fra"}; // language codes to treat as a single
 var selectedLangs = []; // languages selected by gui for display of content
 var selectedZims = [];
 var selectedOer2goItems = [];
+var selectedMapItems = [];
 var manContSelections = {};
 var selectedUsb = null;
 
@@ -256,9 +259,9 @@ function instContentButtonsEvents() {
   });
 
   $("#INST-MAP").click(function(){
-    var mod_id;
+    var map_id;
     make_button_disabled("#INST-MAP", true);
-    selectedOer2goItems = []; // items no longer selected as are being installed
+    selectedMapItems = []; // items no longer selected as are being installed
     $('#map_select input').each( function(){
       if (this.type == "checkbox")
         if (this.checked){
@@ -1679,6 +1682,7 @@ function displaySpaceAvail(){
 
   $( "#zimDiskSpace" ).html(html);
   $( "#oer2goDiskSpace" ).html(html);
+  $( "#mapDiskSpace" ).html(html);
 
   // calc internalContentSelected
 
@@ -1728,6 +1732,8 @@ function calcAllocatedSpace(){
 	totalSpace += sumZimWip();
 	totalSpace += sumAllocationList(selectedOer2goItems, 'oer2go');
 	totalSpace += sumOer2goWip();
+	totalSpace += sumAllocationList(selectedMapItems, 'map');
+	totalSpace += sumMapWip();
 	return totalSpace;
 }
 
@@ -1743,6 +1749,8 @@ function sumAllocationList(list, type){
       }
     else if (type == "oer2go")
       totalSpace += parseInt(oer2goCatalog[id].ksize);
+    else if (type == "map")
+      totalSpace += parseInt(mapCatalog[id].size);
   }
   // sysStorage.oer2go_selected_size = totalSpace;
   return totalSpace;
@@ -1765,6 +1773,15 @@ function sumOer2goWip(){
 
   for (var moddir in oer2goWip){
   	totalSpace += parseInt(oer2goCatalog[moddir].ksize);
+  }
+  return totalSpace;
+}
+
+function sumMapWip(){
+  var totalSpace = 0;
+
+  for (var moddir in mapWip){
+  	totalSpace += parseInt(mapCatalog[moddir].size);
   }
   return totalSpace;
 }

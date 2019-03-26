@@ -4,26 +4,60 @@ var regionGeojson = {};
 var regionDict = {};
 var regionList = [];
 var consoleJsonDir = '/common/assets/';
+var iiabDir = '/etc/iiab/';
 var onChangeFunc = "setSize";
 
-var jquery = require("./assets/jquery.min");
-window.$ = window.jQuery = jquery;
+// following 2 lines an experiment to see if test page and console can be common
+//var jquery = require("./assets/jquery.min");
+//window.$ = window.jQuery = jquery;
 
-function readBoundingBox(checkbox){
+function readMapCatalog(){
+	//consoleLog ("in readMapCatalog");
+  var resp = $.ajax({
+    type: 'GET',
+    url: iiabDir + 'regions.json',
+    dataType: 'json'
+  })
+  .done(function( data ) {
+  	mapCatalog = data['regions'];
+    //consoleLog(mapInstalled + '');
+  })
+  .fail(jsonErrhandler);
+
+  return resp;
+}
+
+function readMapIdx(){
+	//consoleLog ("in readMapIdx");
+  var resp = $.ajax({
+    type: 'GET',
+    url: consoleJsonDir + 'osm-vector-idx.json',
+    dataType: 'json'
+  })
+  .done(function( data ) {
+  	mapInstalled = data['regions'];
+    //consoleLog(mapInstalled + '');
+  })
+  .fail(jsonErrhandler);
+
+  return resp;
+}
+
+function readMapCatalog(checkbox){
    checkbox = checkbox || true;
-	console.log ("in readBoundingBox");
+	console.log ("in readMapCalalog");
   var resp = $.ajax({
     type: 'GET',
     url: consoleJsonDir + 'regions.json',
     dataType: 'json'
   })
   .done(function( data ) {
-  	 regionGeojson = data;
-    regionDict = regionGeojson['regions'];
-    for(var key in regionDict){
-      console.log(key + '  ' + regionDict[key]['title']);
-      regionDict[key]['name'] = key;
-      regionList.push(regionDict[key]);
+  	 regionJson = data;
+    mapCatalog = regionJson['regions'];
+    for(var key in mapCatalog){
+      console.log(key + '  ' + mapCatalog[key]['title']);
+      mapCatalog[key]['name'] = key;
+      regionList.push(mapCatalog[key]);
     }
     renderRegionList(checkbox);
   })
@@ -53,7 +87,6 @@ function renderRegionList(checkbox) { // generic
   $( "#regionlist" ).html(html);
 }
 
-readBoundingBox();
 
 function genRegionItem(region,checkbox) {
   var html = "";
@@ -65,14 +98,14 @@ console.log(html);
   html += ' <label>';
   if ( checkbox ) {
       html += '<input type="checkbox" name="region"';
-      html += ' onChange="totalSpace(this)">';
+      html += ' onChange="updateMapSpace(this)">';
   }
       html += itemId;
   if ( checkbox ) { html +=  '</input>';};
   html += '</label>'; // end input
   html += ' Size: ' + readableSize(ksize);
   html += '</div>';
-console.log(html);
+  console.log(html);
 
   return html;
 }
@@ -84,7 +117,9 @@ function instMapItem(name) {
   cmd = command + " " + JSON.stringify(cmd_args);
   sendCmdSrvCmd(cmd, genericCmdHandler);
   mapDownloading.push(name);
-  //renderOer2goCatalog();
+  if ( mapWip.indexOf(name) != -1 )
+     mapWip.push(mapCatalog[name]);
+  console.log('mapWip: ' + mapWip);
   return true;
 }
 
@@ -112,12 +147,36 @@ function readableSize(kbytes) {
   return (bytes / Math.pow(1024, e)).toFixed(2) + " " + s[e];
 }
 
+function updateMapSpace(cb){
+  var mod_id = cb.name
+  updateMapSpaceUtil(mod_id, cb.checked);
+}
+
+function updateOer2goDiskSpaceUtil(mod_id, checked){
+  var mod = oer2goCatalog[mod_id]
+  var size =  parseInt(mod.ksize);
+
+  var modIdx = selectedOer2goItems.indexOf(mod_id);
+
+  if (checked){
+    if (oer2goInstalled.indexOf(mod_id) == -1){ // only update if not already installed mods
+      sysStorage.oer2go_selected_size += size;
+      selectedOer2goItems.push(mod_id);
+    }
+  }
+  else {
+    if (modIdx != -1){
+      sysStorage.oer2go_selected_size -= size;
+      selectedOer2goItems.splice(mod_id, 1);
+    }
+  }
+
 function totalSpace(){
   var sum = 0;
   $( ".extract" ).each(function(ind,elem){
     var data = JSON.parse($(this).attr('data-region'));
     var region = data.name;
-    var size = parseInt(regionDict[region]['size']);
+    var size = parseInt(mapCatalog[region]['size']);
     var chk = $( this ).find(':checkbox').prop("checked") == true;
     if (chk && typeof size !== 'undefined')
         sum += size;
@@ -125,6 +184,12 @@ function totalSpace(){
    var ksize = sum / 1000;
   $( "#osmDiskSpace" ).html(readableSize(ksize));
 }
-function refreshBoxLayer(){
+
+$( '#instOsmRegion').on('click', function(evnt){
+   readMapCatalog();
    map.render();
+});
+
+function renderMap(){
+   window.map.render();
 }
