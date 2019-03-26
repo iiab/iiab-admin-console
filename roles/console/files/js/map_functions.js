@@ -6,7 +6,11 @@ var regionList = [];
 var consoleJsonDir = '/common/assets/';
 var onChangeFunc = "setSize";
 
-function readBoundingBox(){
+var jquery = require("./assets/jquery.min");
+window.$ = window.jQuery = jquery;
+
+function readBoundingBox(checkbox){
+   checkbox = checkbox || true;
 	console.log ("in readBoundingBox");
   var resp = $.ajax({
     type: 'GET',
@@ -21,12 +25,12 @@ function readBoundingBox(){
       regionDict[key]['name'] = key;
       regionList.push(regionDict[key]);
     }
-    renderRegionList();
+    renderRegionList(checkbox);
   })
   .fail(jsonErrhandler);
 }
 
-function renderRegionList() { // generic
+function renderRegionList(checkbox) { // generic
 	var html = "";
    // order the regionList by seq number
    var regions = regionList;
@@ -42,7 +46,7 @@ function renderRegionList() { // generic
    html += '<form>';
 	regions.forEach((region, index) => { // now render the html
       console.log(region.title + " " +region.seq);
-      html += genRegionItem(region);
+      html += genRegionItem(region,checkbox);
   });
   html += '</form>';
   console.log(html);
@@ -51,15 +55,21 @@ function renderRegionList() { // generic
 
 readBoundingBox();
 
-function genRegionItem(region) {
+function genRegionItem(region,checkbox) {
   var html = "";
   console.log("in genRegionItem: " + region.name);
   var itemId = region.title;
   var ksize = region.size / 1000;
 console.log(html);
   html += '<div  class="extract" data-region={"name":"' + region.name + '"}>';
-  html += ' <label><input type="checkbox" name="region"';
-  html += ' onChange="totalSpace(this)">' + itemId + '</input></label>'; // end input
+  html += ' <label>';
+  if ( checkbox ) {
+      html += '<input type="checkbox" name="region"';
+      html += ' onChange="totalSpace(this)">';
+  }
+      html += itemId;
+  if ( checkbox ) { html +=  '</input>';};
+  html += '</label>'; // end input
   html += ' Size: ' + readableSize(ksize);
   html += '</div>';
 console.log(html);
@@ -93,6 +103,15 @@ function jsonErrhandler (jqXHR, textStatus, errorThrown)
   return false;
 }
 
+function readableSize(kbytes) {
+  if (kbytes == 0)
+  return "0";
+  var bytes = 1024 * kbytes;
+  var s = ['bytes', 'kB', 'MB', 'GB', 'TB', 'PB'];
+  var e = Math.floor(Math.log(bytes) / Math.log(1024));
+  return (bytes / Math.pow(1024, e)).toFixed(2) + " " + s[e];
+}
+
 function totalSpace(){
   var sum = 0;
   $( ".extract" ).each(function(ind,elem){
@@ -105,4 +124,7 @@ function totalSpace(){
     });
    var ksize = sum / 1000;
   $( "#osmDiskSpace" ).html(readableSize(ksize));
+}
+function refreshBoxLayer(){
+   map.render();
 }
