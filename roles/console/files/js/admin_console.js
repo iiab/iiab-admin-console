@@ -345,6 +345,12 @@ function contentMenuButtonsEvents() {
   $("#REFRESH-MENU-LISTS").click(function(){
     getMenuItemDefList();
   });
+  $("#CREATE-MENU-ITEM-DEF").click(function(){
+    saveContentMenuItemDef();
+  });
+  $("#UPDATE-MENU-ITEM-DEF").click(function(){
+    saveContentMenuItemDef();
+  });
 }
 
   // Util Buttons
@@ -939,7 +945,7 @@ function procContentLangs() {
   $( "#ContentLanguages" ).html(topHtml);
   $( "#ContentLanguages2" ).html(bottomHtml);
 
-  if ($("#js_menu_lang").html() == ""){ // calc and insert language pickers
+  if ($("#js_menu_lang").html() == ""){ // calc and insert language pickers if not previously done
     for (i in langNames){
     	selectName = langNames[i].locname + ' [' + langCodes[langNames[i].code].iso2 + ']';
     	if (langNames[i].locname != langNames[i].engname)
@@ -955,6 +961,7 @@ function procContentLangs() {
       }
     }
     $( "#js_menu_lang" ).html(langPickerTopHtml+langPickerBottomHtml);
+    $( "#menu_item_lang" ).html(langPickerTopHtml+langPickerBottomHtml);
 
   }
 }
@@ -2027,40 +2034,47 @@ function sendCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArgs) {
   if (buttonId != '')
     make_button_disabled('#' + buttonId, true);
 
-    var resp = $.ajax({
-      type: 'POST',
-      url: iiabCmdService,
-      data: {
-        command: enCommand
-      },
-      dataType: 'json',
-      buttonId: buttonId
-    })
-    //.done(callback)
-    .done(function(dataResp, textStatus, jqXHR) {
-    	//consoleLog (dataResp);
-    	//consoleLog (callback);
-    	//var dataResp = data;
-    	if ("Error" in dataResp){
-    	  cmdSrvError(cmdVerb, dataResp);
-    	  if (typeof errCallback != 'undefined'){
-    	    consoleLog(errCallback);
-    	    errCallback(data, cmdArgs);
-    	  }
-    	}
-    	else {
-    		var data = dataResp.Data;
-    	  callback(data);
-    	  logServerCommands (cmdVerb, "succeeded", "", dataResp.Resp_time);
-    	}
-    })
-    .fail(jsonErrhandler)
-    .always(function() {
-    	if (this.buttonId != "")
-        make_button_disabled('#' + this.buttonId, false);
-    });
+  var resp = $.ajax({
+    type: 'POST',
+    url: iiabCmdService,
+    data: {
+      command: enCommand
+    },
+    dataType: 'json',
+    buttonId: buttonId
+  })
+  //.done(callback)
+  .done(function(dataResp, textStatus, jqXHR) {
+  	//consoleLog (dataResp);
+  	//consoleLog (callback);
+  	//var dataResp = data;
+  	if ("Error" in dataResp){
+  	  cmdSrvError(cmdVerb, dataResp);
+  	  if (typeof errCallback != 'undefined'){
+  	    consoleLog(errCallback);
+  	    errCallback(data, cmdArgs);
+  	  }
+  	}
+  	else {
+  		var data = dataResp.Data;
+  	  callback(data, command);
+  	  logServerCommands (cmdVerb, "succeeded", "", dataResp.Resp_time);
+  	}
+  })
+  .fail(jsonErrhandler)
+  .always(function() {
+  	if (this.buttonId != "")
+      make_button_disabled('#' + this.buttonId, false);
+  });
 
-    return resp;
+  return resp;
+}
+
+function genSendCmdSrvCmdCallback(command, cmdArgs, callbackName){
+	var callbackFunc = function() {
+    window[callbackName](command, cmdArgs);
+  };
+  return callbackFunc;
 }
 
 // Report errors that came from cmdsrv or cmd-service
