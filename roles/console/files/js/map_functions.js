@@ -11,22 +11,12 @@ var onChangeFunc = "setSize";
 //var jquery = require("./assets/jquery.min");
 //window.$ = window.jQuery = jquery;
 
-function readMapCatalog(){
-	//consoleLog ("in readMapCatalog");
-  var resp = $.ajax({
-    type: 'GET',
-    url: iiabDir + 'regions.json',
-    dataType: 'json'
-  })
-  .done(function( data ) {
-  	mapCatalog = data['regions'];
-    //consoleLog(mapInstalled + '');
-  })
-  .fail(jsonErrhandler);
-
-  return resp;
+function getMapStat(){
+  // called during the init
+  readMapCatalog( true ); // we want checkboxes
+  readMapIdx();
 }
-
+  
 function readMapIdx(){
 	//consoleLog ("in readMapIdx");
   var resp = $.ajax({
@@ -36,6 +26,12 @@ function readMapIdx(){
   })
   .done(function( data ) {
   	mapInstalled = data['regions'];
+   regionList = [];
+   for (region in data['regions']) {
+    if (data['regions'].hasOwnProperty(region)) {
+        regionList.push(region);
+    }
+}
     //consoleLog(mapInstalled + '');
   })
   .fail(jsonErrhandler);
@@ -46,6 +42,7 @@ function readMapIdx(){
 function readMapCatalog(checkbox){
    checkbox = checkbox || true;
 	console.log ("in readMapCalalog");
+   regionList = [];
   var resp = $.ajax({
     type: 'GET',
     url: consoleJsonDir + 'regions.json',
@@ -97,7 +94,7 @@ console.log(html);
   html += '<div  class="extract" data-region={"name":"' + region.name + '"}>';
   html += ' <label>';
   if ( checkbox ) {
-      html += '<input type="checkbox" name="region"';
+      html += '<input type="checkbox" name="' + region.name + '"';
       html += ' onChange="updateMapSpace(this)">';
   }
       html += itemId;
@@ -148,30 +145,32 @@ function readableSize(kbytes) {
 }
 
 function updateMapSpace(cb){
-  var mod_id = cb.name
-  updateMapSpaceUtil(mod_id, cb.checked);
+  var region = cb.name;
+  updateMapSpaceUtil(region, cb.checked);
 }
 
-function updateOer2goDiskSpaceUtil(mod_id, checked){
-  var mod = oer2goCatalog[mod_id]
-  var size =  parseInt(mod.ksize);
+function updateMapSpaceUtil(region, checked){
+  var mod = mapCatalog[region]
+  var size =  parseInt(mod.size);
 
-  var modIdx = selectedOer2goItems.indexOf(mod_id);
+  var modIdx = selectedMapItems.indexOf(region);
 
   if (checked){
-    if (oer2goInstalled.indexOf(mod_id) == -1){ // only update if not already installed mods
-      sysStorage.oer2go_selected_size += size;
-      selectedOer2goItems.push(mod_id);
+    if (regionList.indexOf(region) == -1){ // only update if not already installed mods
+      sysStorage.map_selected_size += size;
+      selectedMapItems.push(region);
     }
   }
   else {
     if (modIdx != -1){
-      sysStorage.oer2go_selected_size -= size;
-      selectedOer2goItems.splice(mod_id, 1);
+      sysStorage.map_selected_size -= size;
+      selectedMapItems.splice(region, 1);
     }
   }
+}
 
 function totalSpace(){
+  // obsolete but perhaps useful in debugging since it worked
   var sum = 0;
   $( ".extract" ).each(function(ind,elem){
     var data = JSON.parse($(this).attr('data-region'));
@@ -191,5 +190,7 @@ $( '#instOsmRegion').on('click', function(evnt){
 });
 
 function renderMap(){
-   window.map.render();
+//   window.map.render();
+var dummy = 0;
 }
+
