@@ -1750,7 +1750,8 @@ function sumAllocationList(list, type){
     else if (type == "oer2go")
       totalSpace += parseInt(oer2goCatalog[id].ksize);
     else if (type == "map")
-      totalSpace += parseInt(mapCatalog[id].size);
+      totalSpace += parseInt(mapCatalog[id].size / 1000);
+    
   }
   // sysStorage.oer2go_selected_size = totalSpace;
   return totalSpace;
@@ -2229,7 +2230,7 @@ function init ()
     $.when(sendCmdSrvCmd("GET-VARS", getInstallVars), sendCmdSrvCmd("GET-ANS", getAnsibleFacts),sendCmdSrvCmd("GET-CONF", getConfigVars),sendCmdSrvCmd("GET-IIAB-INI", procXsceIni)).done(initConfigVars),
     $.when(getLangCodes(),readKiwixCatalog(),sendCmdSrvCmd("GET-ZIM-STAT", procZimStatInit)).done(procZimCatalog),
     getOer2goStat(),
-    getMapStat(),
+    //getMapStat(),
     getSpaceAvail(),
     getExternalDevInfo())
     .done(initDone)

@@ -13,6 +13,7 @@ var onChangeFunc = "setSize";
 
 function getMapStat(){
   // called during the init
+  console.log('in getMapStat');
   readMapCatalog( true ); // we want checkboxes
   readMapIdx();
 }
@@ -52,13 +53,13 @@ function readMapCatalog(checkbox){
   	 regionJson = data;
     mapCatalog = regionJson['regions'];
     for(var key in mapCatalog){
-      console.log(key + '  ' + mapCatalog[key]['title']);
+      //console.log(key + '  ' + mapCatalog[key]['title']);
       mapCatalog[key]['name'] = key;
       regionList.push(mapCatalog[key]);
     }
-    renderRegionList(checkbox);
   })
   .fail(jsonErrhandler);
+  return resp;
 }
 
 function renderRegionList(checkbox) { // generic
@@ -72,15 +73,15 @@ function renderRegionList(checkbox) { // generic
     if (a.seq < b.seq) return -1;
     else return 1;
     });
-  console.log(regions);
+  //console.log(regions);
 	// render each region
    html += '<form>';
 	regions.forEach((region, index) => { // now render the html
-      console.log(region.title + " " +region.seq);
+      //console.log(region.title + " " +region.seq);
       html += genRegionItem(region,checkbox);
   });
   html += '</form>';
-  console.log(html);
+  //console.log(html);
   $( "#regionlist" ).html(html);
 }
 
@@ -90,7 +91,7 @@ function genRegionItem(region,checkbox) {
   console.log("in genRegionItem: " + region.name);
   var itemId = region.title;
   var ksize = region.size / 1000;
-console.log(html);
+//console.log(html);
   html += '<div  class="extract" data-region={"name":"' + region.name + '"}>';
   html += ' <label>';
   if ( checkbox ) {
@@ -102,7 +103,7 @@ console.log(html);
   html += '</label>'; // end input
   html += ' Size: ' + readableSize(ksize);
   html += '</div>';
-  console.log(html);
+  //console.log(html);
 
   return html;
 }
@@ -145,6 +146,7 @@ function readableSize(kbytes) {
 }
 
 function updateMapSpace(cb){
+  console.log("in updateMapSpace" + cb);
   var region = cb.name;
   updateMapSpaceUtil(region, cb.checked);
 }
@@ -164,11 +166,14 @@ function updateMapSpaceUtil(region, checked){
   else {
     if (modIdx != -1){
       sysStorage.map_selected_size -= size;
-      selectedMapItems.splice(region, 1);
+      selectedMapItems.splice(modIdx, 1);
     }
   }
+  
+  displaySpaceAvail();
 }
 
+/*
 function totalSpace(){
   // obsolete but perhaps useful in debugging since it worked
   var sum = 0;
@@ -188,9 +193,12 @@ $( '#instOsmRegion').on('click', function(evnt){
    readMapCatalog();
    map.render();
 });
-
+*/
 function renderMap(){
 //   window.map.render();
 var dummy = 0;
+   sysStorage.map_selected_size = 0;
+   $.when(readMapCatalog(true)).then(renderRegionList);
+   console.log('in renderMap');
 }
 
