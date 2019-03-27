@@ -2230,7 +2230,7 @@ function init ()
     $.when(sendCmdSrvCmd("GET-VARS", getInstallVars), sendCmdSrvCmd("GET-ANS", getAnsibleFacts),sendCmdSrvCmd("GET-CONF", getConfigVars),sendCmdSrvCmd("GET-IIAB-INI", procXsceIni)).done(initConfigVars),
     $.when(getLangCodes(),readKiwixCatalog(),sendCmdSrvCmd("GET-ZIM-STAT", procZimStatInit)).done(procZimCatalog),
     getOer2goStat(),
-    //getMapStat(),
+    initMap(),
     getSpaceAvail(),
     getExternalDevInfo())
     .done(initDone)

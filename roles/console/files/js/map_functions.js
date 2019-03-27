@@ -95,8 +95,12 @@ function genRegionItem(region,checkbox) {
   html += '<div  class="extract" data-region={"name":"' + region.name + '"}>';
   html += ' <label>';
   if ( checkbox ) {
+      if (region.name in selectedMapItems)
+         checked = 'checked';
+      else
+         checked = '';
       html += '<input type="checkbox" name="' + region.name + '"';
-      html += ' onChange="updateMapSpace(this)">';
+      html += ' onChange="updateMapSpace(this)" ' + checked + '>';
   }
       html += itemId;
   if ( checkbox ) { html +=  '</input>';};
@@ -196,6 +200,8 @@ $( '#instOsmRegion').on('click', function(evnt){
 */
 function renderMap(){
 //   window.map.render();
+}
+function initMap(){
 var dummy = 0;
    sysStorage.map_selected_size = 0;
    $.when(readMapCatalog(true)).then(renderRegionList);
