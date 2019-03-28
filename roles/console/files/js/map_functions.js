@@ -199,7 +199,9 @@ $( '#instOsmRegion').on('click', function(evnt){
 });
 */
 function renderMap(){
-//   window.map.render();
+   console.log('map.target is ' + window.map.target);
+   window.map.setTarget($("#map-container")[0]);
+   window.map.render();
 }
 function initMap(){
 var dummy = 0;

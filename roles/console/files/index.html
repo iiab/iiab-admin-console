@@ -236,6 +236,9 @@
 		<script src="js/map_functions.js"></script>
 		<script src="js/js_menu_functions.js"></script>
 		<script src="js/admin_console.js"></script>
+      <!-- Declare a target for map. Will be redirected when real target exists -->
+      <div id="temp_map" style='display="none"'></div>
+		<script src="js/map.js"></script>
     <script>
     	controlButtonsEvents(); // make first page active before others in case want to reboot or shutdown
     	make_button_disabled("#REBOOT", false);
