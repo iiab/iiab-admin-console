@@ -736,7 +736,7 @@ function chooseMenuItemIcon() {
     success: function(data) {
       $(data).find("a").attr("href", function (i, val) {
         if( val.match(/\.(jpe?g|png|gif)$/) ) {
-            $("#GET-MENU-ICONS").append(
+            $(".menu-icons-modal-body").append(
                 `<img src=${imgDir + val} class="content-menu-icon" >`
             )
           }

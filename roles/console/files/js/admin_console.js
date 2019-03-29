@@ -353,10 +353,7 @@ function contentMenuButtonsEvents() {
     saveContentMenuItemDef();
   });
   $("#GET-MENU-ICONS").click(function(){
-    console.log("this3eefefe", this)
-    if (this.aria-expanted) {
-      chooseMenuItemIcon();
-    }
+    chooseMenuItemIcon();
   })
 }
 
