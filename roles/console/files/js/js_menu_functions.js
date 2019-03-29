@@ -533,7 +533,7 @@ function saveContentMenuItemDef() {
     var callbackFunction = genSendCmdSrvCmdCallback(command, cmdArgs, 'updateContentMenuItemDef');
 
     cmd = command + " " + JSON.stringify(cmdArgs);
-    sendCmdSrvCmd(cmd, callbackFunction);
+    sendCmdSrvCmd(cmd, callbackFunction, "hello");
     alert ("Saving Content Menu Item Definition.");
     return true;
   }
@@ -726,4 +726,22 @@ function lockMenuItemHeader(lockFlag) {
 function gEBI(elementId){
 	var element = document.getElementById(elementId);
 	return element;
+}
+
+function chooseMenuItemIcon() {
+  var imgDir = '/js-menu/menu-files/images/';
+  $("#GET-MENU-ICONS").click(
+    $.ajax({
+    url: imgDir,
+    success: function(data) {
+      $(data).find("a").attr("href", function (i, val) {
+        if( val.match(/\.(jpe?g|png|gif)$/) ) {
+            $("#GET-MENU-ICONS").append(
+                `<img src=${imgDir + val} class="content-menu-icon" >`
+            )
+          }
+        })
+      }
+    })
+  )
 }

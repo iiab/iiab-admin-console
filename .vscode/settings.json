@@ -1,0 +1,9 @@
+{
+  "sshfs.configs": [
+    {
+      "name": "iiab_206",
+      "password": "raspberry",
+      "username": "pi"
+    }
+  ]
+}
