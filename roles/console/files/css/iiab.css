@@ -209,7 +209,7 @@ border-radius: 8px 8px 0 0;
   cursor: no-drop;
 }
 
-#menusDefineMenuCurrentItemList, #menusDefineMenuAllItemList {
+#menusDefineMenuCurrentItemList, #menusDefineMenuAllItemList, #menuIconsModal {
   overflow: auto;
   max-height: 640px; /* 10 items */
 }
@@ -230,5 +230,3 @@ border-radius: 8px 8px 0 0;
   top: 30%;
   transform: translateY(-50%);
 }
-
-
