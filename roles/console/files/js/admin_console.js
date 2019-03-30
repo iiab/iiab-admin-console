@@ -96,7 +96,7 @@ function navButtonsEvents() {
   $("ul.nav a").click(function (e) {
     e.preventDefault();
     $(this).tab('show');
-    console.log("this=====================================", $(this));
+    console.log($(this));
     if ($(this).is('[call-after]')) {
       //if ($this).attr('call-after') !== undefined) {
       console.log($(this).attr('call-after'));
@@ -349,7 +349,6 @@ function contentMenuButtonsEvents() {
     saveContentMenuItemDef();
   });
   $("#UPDATE-MENU-ITEM-DEF").click(function(){
-    console.log("hello there")
     saveContentMenuItemDef();
   });
   $("#GET-MENU-ICONS").one("click", function(){

@@ -533,7 +533,7 @@ function saveContentMenuItemDef() {
     var callbackFunction = genSendCmdSrvCmdCallback(command, cmdArgs, 'updateContentMenuItemDef');
 
     cmd = command + " " + JSON.stringify(cmdArgs);
-    sendCmdSrvCmd(cmd, callbackFunction, "hello");
+    sendCmdSrvCmd(cmd, callbackFunction);
     alert ("Saving Content Menu Item Definition.");
     return true;
   }
