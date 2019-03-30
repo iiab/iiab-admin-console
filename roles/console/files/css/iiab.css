@@ -220,8 +220,15 @@ border-radius: 8px 8px 0 0;
 }
 
 .content-menu-icon:hover {
-    -moz-transform: scale(1.5);
-    -webkit-transform: scale(1.5);
-    transform: scale(1.5);
+  -moz-transform: scale(1.5);
+  -webkit-transform: scale(1.5);
+  transform: scale(1.5);
 }
+
+#menuIconsModal {
+  position: relative;
+  top: 30%;
+  transform: translateY(-50%);
+}
+
 
