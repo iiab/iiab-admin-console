@@ -352,7 +352,7 @@ function contentMenuButtonsEvents() {
     console.log("hello there")
     saveContentMenuItemDef();
   });
-  $("#GET-MENU-ICONS").click(function(){
+  $("#GET-MENU-ICONS").one("click", function(){
     chooseMenuItemIcon();
   })
 }

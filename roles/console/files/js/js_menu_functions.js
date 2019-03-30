@@ -729,19 +729,24 @@ function gEBI(elementId){
 }
 
 function chooseMenuItemIcon() {
+  event.preventDefault()
   var imgDir = '/js-menu/menu-files/images/';
-  $("#GET-MENU-ICONS").click(
     $.ajax({
     url: imgDir,
     success: function(data) {
       $(data).find("a").attr("href", function (i, val) {
         if( val.match(/\.(jpe?g|png|gif)$/) ) {
-            $(".menu-icons-modal-body").append(
-                `<img src=${imgDir + val} class="content-menu-icon" >`
-            )
-          }
-        })
-      }
-    })
-  )
+          $(".menu-icons-modal-body").append(
+            `<img onclick="getIconName(this.src)" src=${imgDir + val} class="content-menu-icon" >`
+          )
+        }
+      })
+    }
+  })
+}
+
+function getIconName(e) {
+  var newIcon = /[^/]*$/.exec(e)[0]
+  $("#menu_item_icon_name").val(newIcon),
+  $('#menuIconsModal').modal('hide')
 }
