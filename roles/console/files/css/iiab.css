@@ -226,7 +226,7 @@ border-radius: 8px 8px 0 0;
 }
 
 #menuIconsModal {
-  position: relative;
-  top: 30%;
+  position: fixed;
+  top: 50%;
   transform: translateY(-50%);
 }

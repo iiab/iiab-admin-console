@@ -723,21 +723,15 @@ function lockMenuItemHeader(lockFlag) {
   }
 }
 
-function gEBI(elementId){
-	var element = document.getElementById(elementId);
-	return element;
-}
-
-function chooseMenuItemIcon() {
+function selectMenuItemIcon() {
   event.preventDefault()
-  var imgDir = '/js-menu/menu-files/images/';
     $.ajax({
-    url: imgDir,
+    url: jsMenuImageUrl,
     success: function(data) {
       $(data).find("a").attr("href", function (i, val) {
         if( val.match(/\.(jpe?g|png|gif)$/) ) {
           $(".menu-icons-modal-body").append(
-            `<img onclick="getIconName(this.src)" src=${imgDir + val} class="content-menu-icon" >`
+            `<img onclick="setMenuItemIconName(this.src)" src=${jsMenuImageUrl + val} class="content-menu-icon" >`
           )
         }
       })
@@ -745,8 +739,13 @@ function chooseMenuItemIcon() {
   })
 }
 
-function getIconName(e) {
+function setMenuItemIconName(e) {
   var newIcon = /[^/]*$/.exec(e)[0]
   $("#menu_item_icon_name").val(newIcon),
   $('#menuIconsModal').modal('hide')
+}
+
+function gEBI(elementId){
+	var element = document.getElementById(elementId);
+	return element;
 }
