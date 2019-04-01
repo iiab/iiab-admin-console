@@ -26,7 +26,7 @@ var externalZimCatalog = {}; // catalog of zims on an external device
 var oer2goCatalog = {}; // catalog of rachel/oer2go modules, read from file downloaded from rachel
 var oer2goCatalogDate = new Date; // date of download, stored in json file
 var oer2goCatalogFilter = ["html"] // only manage these types as OER2GO; catalog can contain zims and kalite that we do elsewhere
-var mapCatalog = {}; // map regions specified by bounding boxes, downloadable
+var osmCatalog = {}; // osm regions specified by bounding boxes, downloadable
 var rachelStat = {}; // installed, enabled and whether content is installed and which is enabled
 
 var zimsInstalled = []; // list of zims already installed
@@ -39,9 +39,9 @@ var oer2goDownloading = []; // list of Oer2go items being downloaded
 var oer2goCopying = []; // list of Oer2go items being copied
 var oer2goExternal = []; // list of Oer2go items on external device
 var downloadedFiles = {};
-var mapDownloading = []; // list of Map items being downloaded
-var mapWip = {}; // list of copying, downloading, exporting
-var mapInstalled = {}; // list of maps already installed
+var osmDownloading = []; // list of Map items being downloaded
+var osmWip = {}; // list of copying, downloading, exporting
+var osmInstalled = {}; // list of osm regions already installed
 var externalDeviceContents = {}; // zims and other content on external devices, only one active at a time
 
 var langNames = []; // iso code, local name and English name for languages for which we have zims sorted by English name for language
@@ -259,17 +259,17 @@ function instContentButtonsEvents() {
   });
 
   $("#INST-MAP").click(function(){
-    var map_id;
+    var osm_id;
     make_button_disabled("#INST-MAP", true);
     selectedMapItems = []; // items no longer selected as are being installed
-    $('#map_select input').each( function(){
+    $('#osm_select input').each( function(){
       if (this.type == "checkbox")
         if (this.checked){
-          map_id = this.name;
-          if (mapInstalled.indexOf(map_id) >= 0 || map_id in mapWip)
-            consoleLog("Skipping installed Module " + map_id);
+          osm_id = this.name;
+          if (osmInstalled.indexOf(osm_id) >= 0 || osm_id in osmWip)
+            consoleLog("Skipping installed Module " + osm_id);
           else
-            instMapItem(map_id);
+            instMapItem(osm_id);
         }
     });
     //getOer2goStat();
@@ -1682,7 +1682,7 @@ function displaySpaceAvail(){
 
   $( "#zimDiskSpace" ).html(html);
   $( "#oer2goDiskSpace" ).html(html);
-  $( "#mapDiskSpace" ).html(html);
+  $( "#osmDiskSpace" ).html(html);
 
   // calc internalContentSelected
 
@@ -1732,7 +1732,7 @@ function calcAllocatedSpace(){
 	totalSpace += sumZimWip();
 	totalSpace += sumAllocationList(selectedOer2goItems, 'oer2go');
 	totalSpace += sumOer2goWip();
-	totalSpace += sumAllocationList(selectedMapItems, 'map');
+	totalSpace += sumAllocationList(selectedMapItems, 'osm');
 	totalSpace += sumMapWip();
 	return totalSpace;
 }
@@ -1749,8 +1749,8 @@ function sumAllocationList(list, type){
       }
     else if (type == "oer2go")
       totalSpace += parseInt(oer2goCatalog[id].ksize);
-    else if (type == "map")
-      totalSpace += parseInt(mapCatalog[id].size / 1000);
+    else if (type == "osm")
+      totalSpace += parseInt(osmCatalog[id].size / 1000);
     
   }
   // sysStorage.oer2go_selected_size = totalSpace;
@@ -1781,8 +1781,8 @@ function sumOer2goWip(){
 function sumMapWip(){
   var totalSpace = 0;
 
-  for (var moddir in mapWip){
-  	totalSpace += parseInt(mapCatalog[moddir].size);
+  for (var moddir in osmWip){
+  	totalSpace += parseInt(osmCatalog[moddir].size);
   }
   return totalSpace;
 }

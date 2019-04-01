@@ -1,4 +1,4 @@
-// map_functions.js
+// osm_functions.js
 // copyright 2019 George Hunt
 var regionGeojson = {};
 var regionDict = {};
@@ -26,14 +26,14 @@ function readMapIdx(){
     dataType: 'json'
   })
   .done(function( data ) {
-  	mapInstalled = data['regions'];
+  	osmInstalled = data['regions'];
    regionList = [];
    for (region in data['regions']) {
     if (data['regions'].hasOwnProperty(region)) {
         regionList.push(region);
     }
 }
-    //consoleLog(mapInstalled + '');
+    //consoleLog(osmInstalled + '');
   })
   .fail(jsonErrhandler);
 
@@ -51,11 +51,11 @@ function readMapCatalog(checkbox){
   })
   .done(function( data ) {
   	 regionJson = data;
-    mapCatalog = regionJson['regions'];
-    for(var key in mapCatalog){
-      //console.log(key + '  ' + mapCatalog[key]['title']);
-      mapCatalog[key]['name'] = key;
-      regionList.push(mapCatalog[key]);
+    osmCatalog = regionJson['regions'];
+    for(var key in osmCatalog){
+      //console.log(key + '  ' + osmCatalog[key]['title']);
+      osmCatalog[key]['name'] = key;
+      regionList.push(osmCatalog[key]);
     }
   })
   .fail(jsonErrhandler);
@@ -118,10 +118,10 @@ function instMapItem(name) {
   cmd_args['osm_vect_id'] = name;
   cmd = command + " " + JSON.stringify(cmd_args);
   sendCmdSrvCmd(cmd, genericCmdHandler);
-  mapDownloading.push(name);
-  if ( mapWip.indexOf(name) != -1 )
-     mapWip.push(mapCatalog[name]);
-  console.log('mapWip: ' + mapWip);
+  osmDownloading.push(name);
+  if ( osmWip.indexOf(name) != -1 )
+     osmWip.push(osmCatalog[name]);
+  console.log('osmWip: ' + osmWip);
   return true;
 }
 
@@ -156,20 +156,20 @@ function updateMapSpace(cb){
 }
 
 function updateMapSpaceUtil(region, checked){
-  var mod = mapCatalog[region]
+  var mod = osmCatalog[region]
   var size =  parseInt(mod.size);
 
   var modIdx = selectedMapItems.indexOf(region);
 
   if (checked){
     if (regionList.indexOf(region) == -1){ // only update if not already installed mods
-      sysStorage.map_selected_size += size;
+      sysStorage.osm_selected_size += size;
       selectedMapItems.push(region);
     }
   }
   else {
     if (modIdx != -1){
-      sysStorage.map_selected_size -= size;
+      sysStorage.osm_selected_size -= size;
       selectedMapItems.splice(modIdx, 1);
     }
   }
@@ -184,7 +184,7 @@ function totalSpace(){
   $( ".extract" ).each(function(ind,elem){
     var data = JSON.parse($(this).attr('data-region'));
     var region = data.name;
-    var size = parseInt(mapCatalog[region]['size']);
+    var size = parseInt(osmCatalog[region]['size']);
     var chk = $( this ).find(':checkbox').prop("checked") == true;
     if (chk && typeof size !== 'undefined')
         sum += size;
@@ -195,17 +195,17 @@ function totalSpace(){
 
 $( '#instOsmRegion').on('click', function(evnt){
    readMapCatalog();
-   map.render();
+   osm.render();
 });
 */
 function renderMap(){
-   console.log('map.target is ' + window.map.target);
-   window.map.setTarget($("#map-container")[0]);
-   window.map.render();
+   console.log('osm.target is ' + window.osm.target);
+   window.osm.setTarget($("#osm-container")[0]);
+   window.osm.render();
 }
 function initMap(){
 var dummy = 0;
-   sysStorage.map_selected_size = 0;
+   sysStorage.osm_selected_size = 0;
    $.when(readMapCatalog(true)).then(renderRegionList);
    console.log('in renderMap');
 }

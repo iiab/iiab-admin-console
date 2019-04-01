@@ -14,6 +14,6 @@ phplib_dir : '{{ ansible_local["local_facts"]["phplib_dir"] }}'
 oer2go_cat_url : http://dev.worldpossible.org/cgi/json_api_v1.pl
 rachel_mods_url : rsync://dev.worldpossible.org/rachelmods/
 oer2go_mods_url : "{{ rachel_mods_url }}"
-iiab_maps_url : http://download.iiab.io/content/OSM/vector-tiles
+iiab_osm_url : http://download.iiab.io/content/OSM/vector-tiles
 iiab_modules_dir : "{{ doc_root }}/modules/"
 js_menu_dir : "{{ doc_root }}/js-menu/"
