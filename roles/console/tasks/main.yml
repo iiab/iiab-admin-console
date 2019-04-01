@@ -71,7 +71,7 @@
 - name: Fetch the bounding box description for osm
   get_url:
      url: "{{ iiab_osm_url }}/regions.json"
-     dest: "{{ iiab_config_dir }}/regions.json"
+     dest: "{{ doc_root }}/common/assets/regions.json"
 
 - name: Install the script to update osm from osm catalog
   template:

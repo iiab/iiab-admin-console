@@ -1,10 +1,11 @@
 // osm_functions.js
 // copyright 2019 George Hunt
+
 var regionGeojson = {};
-var regionDict = {};
 var regionList = [];
-var consoleJsonDir = '/common/assets/';
-var iiabContrDir = '/etc/iiab/';
+var regionInstalled = [];
+var commonAssetsDir = '/common/assets/';
+var iiab_config_dir = '/etc/iiab/';
 var onChangeFunc = "setSize";
 
 // following 2 lines an experiment to see if test page and console can be common
@@ -27,10 +28,10 @@ function readMapIdx(){
   })
   .done(function( data ) {
   	osmInstalled = data['regions'];
-   regionList = [];
+   regionInstalled = [];
    for (region in data['regions']) {
     if (data['regions'].hasOwnProperty(region)) {
-        regionList.push(region);
+        regionInstalled.push(region);
     }
 }
     //consoleLog(osmInstalled + '');
@@ -46,7 +47,7 @@ function readMapCatalog(checkbox){
    regionList = [];
   var resp = $.ajax({
     type: 'GET',
-    url: iiabContrDir + 'regions.json',
+    url: commonAssetsDir + 'regions.json',
     dataType: 'json'
   })
   .done(function( data ) {
@@ -55,7 +56,7 @@ function readMapCatalog(checkbox){
     for(var key in osmCatalog){
       //console.log(key + '  ' + osmCatalog[key]['title']);
       osmCatalog[key]['name'] = key;
-      regionList.push(osmCatalog[key]);
+      regionList.push(key);
     }
   })
   .fail(jsonErrhandler);
@@ -162,7 +163,7 @@ function updateMapSpaceUtil(region, checked){
   var modIdx = selectedMapItems.indexOf(region);
 
   if (checked){
-    if (regionList.indexOf(region) == -1){ // only update if not already installed mods
+    if (regionInstalled.indexOf(region) == -1){ // only update if not already installed mods
       sysStorage.osm_selected_size += size;
       selectedMapItems.push(region);
     }
