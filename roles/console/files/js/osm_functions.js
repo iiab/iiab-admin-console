@@ -4,7 +4,7 @@ var regionGeojson = {};
 var regionDict = {};
 var regionList = [];
 var consoleJsonDir = '/common/assets/';
-var iiabDir = '/etc/iiab/';
+var iiabContrDir = '/etc/iiab/';
 var onChangeFunc = "setSize";
 
 // following 2 lines an experiment to see if test page and console can be common
@@ -46,7 +46,7 @@ function readMapCatalog(checkbox){
    regionList = [];
   var resp = $.ajax({
     type: 'GET',
-    url: consoleJsonDir + 'regions.json',
+    url: iiabContrDir + 'regions.json',
     dataType: 'json'
   })
   .done(function( data ) {

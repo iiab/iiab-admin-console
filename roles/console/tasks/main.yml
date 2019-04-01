@@ -4,6 +4,7 @@
   with_items:
     - libapache2-mod-authnz-external
     - pwauth
+    - python-geojson
   when: is_debuntu
   tags:
     - download
@@ -82,7 +83,7 @@
   shell: /usr/bin/iiab-update-osm
  
 - name: Copy the Countries geojson to assets
-  file: 
+  copy: 
     src: osm/countries.json
     dest: "{{ doc_root }}/common/assets/"
 
