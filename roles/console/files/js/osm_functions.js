@@ -199,15 +199,14 @@ $( '#instOsmRegion').on('click', function(evnt){
    osm.render();
 });
 */
-function renderMap(){
-   console.log('osm.target is ' + window.osm.target);
-   window.osm.setTarget($("#osm-container")[0]);
-   window.osm.render();
+function renderOsm(){
+   console.log('in renderOsm');
+   window.map.setTarget($("#osm-container")[0]);
+   window.map.render();
 }
-function initMap(){
+function initOsm(){
 var dummy = 0;
    sysStorage.osm_selected_size = 0;
-   $.when(readMapCatalog(true)).then(renderRegionList);
-   console.log('in renderMap');
+   $.when(readOsmCatalog(true)).then(renderRegionList);
 }
 
