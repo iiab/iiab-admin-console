@@ -96,7 +96,7 @@ function genRegionItem(region,checkbox) {
   html += '<div  class="extract" data-region={"name":"' + region.name + '"}>';
   html += ' <label>';
   if ( checkbox ) {
-      if (region.name in selectedOsmItems)
+      if (selectedOsmItems.indexOf(region.name) != -1)
          checked = 'checked';
       else
          checked = '';
@@ -157,8 +157,7 @@ function updateOsmSpace(cb){
 }
 
 function updateOsmSpaceUtil(region, checked){
-  var mod = osmCatalog[region]
-  var size =  parseInt(mod.size);
+  var size =  parseInt(osmCatalog[region].size);
 
   var modIdx = selectedOsmItems.indexOf(region);
 
