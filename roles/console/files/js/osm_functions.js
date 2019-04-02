@@ -12,15 +12,15 @@ var onChangeFunc = "setSize";
 //var jquery = require("./assets/jquery.min");
 //window.$ = window.jQuery = jquery;
 
-function getMapStat(){
+function getOsmStat(){
   // called during the init
-  console.log('in getMapStat');
-  readMapCatalog( true ); // we want checkboxes
-  readMapIdx();
+  console.log('in getOsmStat');
+  readOsmCatalog( true ); // we want checkboxes
+  readOsmIdx();
 }
   
-function readMapIdx(){
-	//consoleLog ("in readMapIdx");
+function readOsmIdx(){
+	//consoleLog ("in readOsmIdx");
   var resp = $.ajax({
     type: 'GET',
     url: consoleJsonDir + 'osm-vector-idx.json',
@@ -41,9 +41,9 @@ function readMapIdx(){
   return resp;
 }
 
-function readMapCatalog(checkbox){
+function readOsmCatalog(checkbox){
    checkbox = checkbox || true;
-	console.log ("in readMapCalalog");
+	console.log ("in readOsmCalalog");
    regionList = [];
   var resp = $.ajax({
     type: 'GET',
@@ -96,12 +96,12 @@ function genRegionItem(region,checkbox) {
   html += '<div  class="extract" data-region={"name":"' + region.name + '"}>';
   html += ' <label>';
   if ( checkbox ) {
-      if (region.name in selectedMapItems)
+      if (region.name in selectedOsmItems)
          checked = 'checked';
       else
          checked = '';
       html += '<input type="checkbox" name="' + region.name + '"';
-      html += ' onChange="updateMapSpace(this)" ' + checked + '>';
+      html += ' onChange="updateOsmSpace(this)" ' + checked + '>';
   }
       html += itemId;
   if ( checkbox ) { html +=  '</input>';};
@@ -113,7 +113,7 @@ function genRegionItem(region,checkbox) {
   return html;
 }
 
-function instMapItem(name) {
+function instOsmItem(name) {
   var command = "INST-OSM-VECT-SET";
   var cmd_args = {};
   cmd_args['osm_vect_id'] = name;
@@ -150,28 +150,28 @@ function readableSize(kbytes) {
   return (bytes / Math.pow(1024, e)).toFixed(2) + " " + s[e];
 }
 
-function updateMapSpace(cb){
-  console.log("in updateMapSpace" + cb);
+function updateOsmSpace(cb){
+  console.log("in updateOsmSpace" + cb);
   var region = cb.name;
-  updateMapSpaceUtil(region, cb.checked);
+  updateOsmSpaceUtil(region, cb.checked);
 }
 
-function updateMapSpaceUtil(region, checked){
+function updateOsmSpaceUtil(region, checked){
   var mod = osmCatalog[region]
   var size =  parseInt(mod.size);
 
-  var modIdx = selectedMapItems.indexOf(region);
+  var modIdx = selectedOsmItems.indexOf(region);
 
   if (checked){
     if (regionInstalled.indexOf(region) == -1){ // only update if not already installed mods
       sysStorage.osm_selected_size += size;
-      selectedMapItems.push(region);
+      selectedOsmItems.push(region);
     }
   }
   else {
     if (modIdx != -1){
       sysStorage.osm_selected_size -= size;
-      selectedMapItems.splice(modIdx, 1);
+      selectedOsmItems.splice(modIdx, 1);
     }
   }
   
@@ -195,7 +195,7 @@ function totalSpace(){
 }
 
 $( '#instOsmRegion').on('click', function(evnt){
-   readMapCatalog();
+   readOsmCatalog();
    osm.render();
 });
 */
