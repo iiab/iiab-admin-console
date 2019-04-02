@@ -79,7 +79,7 @@ function renderRegionList(checkbox) { // generic
    html += '<form>';
 	regions.forEach((region, index) => { // now render the html
       //console.log(region.title + " " +region.seq);
-      html += genRegionItem(region,checkbox);
+      html += genRegionItem(osmCatalog[region],checkbox);
   });
   html += '</form>';
   //console.log(html);
@@ -203,6 +203,7 @@ function renderOsm(){
    console.log('in renderOsm');
    window.map.setTarget($("#osm-container")[0]);
    window.map.render();
+   renderRegionList(true);
 }
 function initOsm(){
 var dummy = 0;
