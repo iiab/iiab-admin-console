@@ -56,7 +56,7 @@ function readOsmCatalog(checkbox){
     for(var key in osmCatalog){
       //console.log(key + '  ' + osmCatalog[key]['title']);
       osmCatalog[key]['name'] = key;
-      regionList.push(key);
+      regionList.push(osmCatalog[key]);
     }
   })
   .fail(jsonErrhandler);
@@ -79,7 +79,7 @@ function renderRegionList(checkbox) { // generic
    html += '<form>';
 	regions.forEach((region, index) => { // now render the html
       //console.log(region.title + " " +region.seq);
-      html += genRegionItem(osmCatalog[region],checkbox);
+      html += genRegionItem(region,checkbox);
   });
   html += '</form>';
   //console.log(html);
