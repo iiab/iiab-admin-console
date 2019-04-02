@@ -39,7 +39,7 @@ var oer2goDownloading = []; // list of Oer2go items being downloaded
 var oer2goCopying = []; // list of Oer2go items being copied
 var oer2goExternal = []; // list of Oer2go items on external device
 var downloadedFiles = {};
-var osmDownloading = []; // list of Map items being downloaded
+var osmDownloading = []; // list of Osm items being downloaded
 var osmWip = {}; // list of copying, downloading, exporting
 var osmInstalled = {}; // list of osm regions already installed
 var externalDeviceContents = {}; // zims and other content on external devices, only one active at a time
@@ -51,7 +51,7 @@ var langGroups = {"en":"eng","fr":"fra"}; // language codes to treat as a single
 var selectedLangs = []; // languages selected by gui for display of content
 var selectedZims = [];
 var selectedOer2goItems = [];
-var selectedMapItems = [];
+var selectedOsmItems = [];
 var manContSelections = {};
 var selectedUsb = null;
 
@@ -261,7 +261,7 @@ function instContentButtonsEvents() {
   $("#INST-MAP").click(function(){
     var osm_id;
     make_button_disabled("#INST-MAP", true);
-    selectedMapItems = []; // items no longer selected as are being installed
+    selectedOsmItems = []; // items no longer selected as are being installed
     $('#osm_select input').each( function(){
       if (this.type == "checkbox")
         if (this.checked){
@@ -269,11 +269,11 @@ function instContentButtonsEvents() {
           if (osmInstalled.indexOf(osm_id) >= 0 || osm_id in osmWip)
             consoleLog("Skipping installed Module " + osm_id);
           else
-            instMapItem(osm_id);
+            instOsmItem(osm_id);
         }
     });
     //getOer2goStat();
-    alert ("Selected Map Region scheduled to be installed.\n\nPlease view Utilities->Display Job Status to see the results.");
+    alert ("Selected Osm Region scheduled to be installed.\n\nPlease view Utilities->Display Job Status to see the results.");
     make_button_disabled("#INST-MAP", false);
   });
 
@@ -1732,8 +1732,8 @@ function calcAllocatedSpace(){
 	totalSpace += sumZimWip();
 	totalSpace += sumAllocationList(selectedOer2goItems, 'oer2go');
 	totalSpace += sumOer2goWip();
-	totalSpace += sumAllocationList(selectedMapItems, 'osm');
-	totalSpace += sumMapWip();
+	totalSpace += sumAllocationList(selectedOsmItems, 'osm');
+	totalSpace += sumOsmWip();
 	return totalSpace;
 }
 
@@ -1778,7 +1778,7 @@ function sumOer2goWip(){
   return totalSpace;
 }
 
-function sumMapWip(){
+function sumOsmWip(){
   var totalSpace = 0;
 
   for (var moddir in osmWip){
@@ -2230,7 +2230,7 @@ function init ()
     $.when(sendCmdSrvCmd("GET-VARS", getInstallVars), sendCmdSrvCmd("GET-ANS", getAnsibleFacts),sendCmdSrvCmd("GET-CONF", getConfigVars),sendCmdSrvCmd("GET-IIAB-INI", procXsceIni)).done(initConfigVars),
     $.when(getLangCodes(),readKiwixCatalog(),sendCmdSrvCmd("GET-ZIM-STAT", procZimStatInit)).done(procZimCatalog),
     getOer2goStat(),
-    initMap(),
+    initOsm(),
     getSpaceAvail(),
     getExternalDevInfo())
     .done(initDone)
