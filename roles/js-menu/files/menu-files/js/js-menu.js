@@ -282,7 +282,7 @@ function procMenuItem(module) {
 		menuHtml += calcCalibreWebLink(module);
 	else if (module['intended_use'] == "osm")
 		menuHtml += calcOsmLink(module);
-	else if (module['intended_use'] == "osm")
+	else if (module['intended_use'] == "map")
 		menuHtml += calcMapLink(module);
 	else if (module['intended_use'] == "info")
 		menuHtml += calcInfoLink(module);
