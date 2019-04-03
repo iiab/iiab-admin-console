@@ -5,6 +5,7 @@ var regionGeojson = {};
 var regionList = [];
 var regionInstalled = [];
 var commonAssetsDir = '/common/assets/';
+var mapAssetsDir = '/osm-vector/assets/';
 var iiab_config_dir = '/etc/iiab/';
 var onChangeFunc = "setSize";
 
@@ -47,7 +48,7 @@ function readOsmCatalog(checkbox){
    regionList = [];
   var resp = $.ajax({
     type: 'GET',
-    url: commonAssetsDir + 'regions.json',
+    url: mapAssetsDir + 'regions.json',
     dataType: 'json'
   })
   .done(function( data ) {

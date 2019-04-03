@@ -63,29 +63,10 @@
   with_fileglob:
         - htmlf/*
 
-- name: Fetch the javascript bundle with openlayers module, and osm.js
+- name: Fetch the javascript bundle with openlayers module
   get_url:
-     url: "{{ iiab_osm_url }}/osm.js"
-     dest: "{{ admin_console_dir }}/js/osm.js"
-
-- name: Fetch the bounding box description for osm
-  get_url:
-     url: "{{ iiab_osm_url }}/regions.json"
-     dest: "{{ doc_root }}/common/assets/regions.json"
-
-- name: Install the script to update osm from osm catalog
-  template:
-    src: iiab-update-osm
-    dest: /usr/bin/iiab-update-osm
-    mode: "0755"
-
-- name: Generate the bounding bboxes.geojson file
-  shell: /usr/bin/iiab-update-osm
- 
-- name: Copy the Countries geojson to assets
-  copy: 
-    src: osm/countries.json
-    dest: "{{ doc_root }}/common/assets/"
+     url: "{{ iiab_osm_url }}/console/main.js"
+     dest: "{{ admin_console_dir }}/osm/main.js"
 
 - name: Install admin-console config file
   template: src=admin-console.conf.j2
