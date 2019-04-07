@@ -1,0 +1,26 @@
+#!/bin/bash -x
+# Temporary function to download and install a map - 1st arg = region
+
+ARCHIVE=https://archive.org/download
+MAP_PREFIX=en-osm-omt_
+MAP_VERSION=_2017-07-03_v0.1
+MAP_DIR=/library/osm-vector
+
+if [ $# -eq 0 ];then
+   echo "You must declare region as the first arguement"
+   exit 1
+fi
+region=$1
+ident=$MAP_PREFIX$region$MAP_VERSION
+url=$ARCHIVE/$ident/$ident.zip
+
+# Fetch the map
+if [ ! -f $MAP_DIR/$(basename $url) ];then
+   wget -c $url -P $MAP_DIR
+fi
+if [ ! -d $MAP_DIR/$ident ]; then
+   pushd $MAP_DIR
+   unzip $ident
+   popd
+fi
+rm -f $MAP_DIR/index.html

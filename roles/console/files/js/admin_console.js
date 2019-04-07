@@ -273,7 +273,8 @@ function instContentButtonsEvents() {
         }
     });
     //getOer2goStat();
-    alert ("Selected Osm Region scheduled to be installed.\n\nPlease view Utilities->Display Job Status to see the results.");
+    //alert ("Selected Osm Region scheduled to be installed.\n\nPlease view Utilities->Display Job Status to see the results.");
+    alert ("Selected Osm Region can be installed (in the short term) by typing.\n\niiab-install-map <bold name with _ for space>.");
     make_button_disabled("#INST-MAP", false);
   });
 
