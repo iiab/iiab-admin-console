@@ -5,7 +5,7 @@ var regionGeojson = {};
 var regionList = [];
 var regionInstalled = [];
 var commonAssetsDir = '/common/assets/';
-var mapAssetsDir = '/osm-vector/assets/';
+var mapAssetsDir = '/osm-vector/maplist/assets/';
 var iiab_config_dir = '/etc/iiab/';
 var onChangeFunc = "setSize";
 
