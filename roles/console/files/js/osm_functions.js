@@ -135,9 +135,9 @@ function jsonErrhandler (jqXHR, textStatus, errorThrown)
     displayServerCommandStatus("Json Errhandler: " + textStatus + ", " + errorThrown);
   }
   //consoleLog("In Error Handler logging jqXHR");
-  consoleLog(textStatus);
-  consoleLog(errorThrown);
-  consoleLog(jqXHR);
+  console.log(textStatus);
+  console.log(errorThrown);
+  console.log(jqXHR);
 
   return false;
 }
