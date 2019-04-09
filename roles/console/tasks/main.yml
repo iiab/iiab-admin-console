@@ -72,6 +72,7 @@
   copy:
      src: osm/iiab-install-map
      dest: /usr/bin/iiab-install-map
+     mode: '0755'
 
 - name: Install admin-console config file
   template: src=admin-console.conf.j2
