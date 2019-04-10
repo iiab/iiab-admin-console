@@ -398,9 +398,9 @@ function calcNoderedLink(module){
 function calcMapLink(module){
 	var href = '/osm-vector/';
 
-   if( osmVersions.hasOwnProperty(module.map_name) &&
-      typeof osmVersions[module.map_name].file_name != 'undefined' ){
-	  href = host + ':/' + href + osmVersions[module.map_name].file_name + '/';
+   if( osmVersions.hasOwnProperty(module.menu_item_name) &&
+      typeof osmVersions[module.menu_item_name].file_name != 'undefined' ){
+	  href = host + ':/' + href + osmVersions[module.menu_item_name].file_name + '/';
    } else {
       href = host + ':/' + href;
    }
