@@ -395,12 +395,12 @@ function calcNoderedLink(module){
 	return html
 }
 
-function calcOsmLink(module){
+function calcMapLink(module){
 	var href = '/osm-vector/';
 
-   if( osmVersions.hasOwnProperty(module.perma_ref) &&
-      typeof zimVersions[module.perma_ref].file_name != 'undefined' ){
-	  href = host + '://' + zimVersions[module.perma_ref].file_name + '/';
+   if( osmVersions.hasOwnProperty(module.map_name) &&
+      typeof osmVersions[module.map_name].file_name != 'undefined' ){
+	  href = host + ':/' + href + osmVersions[module.map_name].file_name + '/';
    } else {
       href = host + ':/' + href;
    }
