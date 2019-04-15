@@ -351,7 +351,7 @@ function contentMenuButtonsEvents() {
   $("#UPDATE-MENU-ITEM-DEF").click(function(){
     saveContentMenuItemDef();
   });
-  $("#SELECT-MENU-ICONS").one("click", function(){
+  $("#SELECT-MENU-ITEM-ICON").one("click", function(){
     selectMenuItemIcon();
   })
 }
