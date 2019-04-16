@@ -65,8 +65,14 @@
 
 - name: Fetch the javascript bundle with openlayers module
   get_url:
-     url: "{{ iiab_osm_url }}/console/main.js"
+     url: "{{ iiab_osm_url }}/admin-console/main.js"
      dest: "{{ admin_console_dir }}/osm/main.js"
+
+- name: Install the temporary script to download maps (replaces cmdsrv function)
+  copy:
+     src: osm/iiab-install-map
+     dest: /usr/bin/iiab-install-map
+     mode: '0755'
 
 - name: Install admin-console config file
   template: src=admin-console.conf.j2
