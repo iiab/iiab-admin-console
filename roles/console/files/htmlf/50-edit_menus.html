@@ -10,7 +10,7 @@
       <h2>Content Menu Tasks</h2>
       <ul id="editMenusMenu" class="nav nav-pills nav-stacked"> <!-- Start XXX Sub Level Menu -->
         <li class="active"><a href="#menusDefineMenu" call-after="getMenuItemDefList">Edit Content Menus</a></li>
-        <li><a href="#menusEditContentMenuItems" call-after="nop">Edit Menu Items</a></li>
+        <li><a href="#menusEditContentMenuItems" call-after="drawMenuItemSelectList">Edit Menu Items</a></li>
       </ul> <!-- End XXX Sub Level Menu -->
       <h2>Actions</h2>
       <div class="action-buttons">
@@ -75,7 +75,17 @@
                               </div>
                               <div class="checkbox">
                                 <label>
+                                  <input type="checkbox" name="mobile_incl_extra_description" id="mobile_incl_extra_description">Check to Show Extra Description for Mobile Users.
+                                </label>
+                              </div>
+                              <div class="checkbox">
+                                <label>
                                   <input type="checkbox" name="mobile_incl_extra_html" id="mobile_incl_extra_html">Check to Show Sub-menu for Mobile Users.
+                                </label>
+                              </div>
+                              <div class="checkbox">
+                                <label>
+                                  <input type="checkbox" name="mobile_incl_footnote" id="mobile_incl_footnote">Check to Show Footnote for Mobile Users.
                                 </label>
                               </div>
                             </div>
@@ -97,7 +107,17 @@
                             </div>
                             <div class="checkbox">
                               <label>
+                                <input type="checkbox" name="desktop_incl_extra_description" id="desktop_incl_extra_description">Check to Show Extra Description for Desktop Users.
+                              </label>
+                            </div>
+                            <div class="checkbox">
+                              <label>
                                 <input type="checkbox" name="desktop_incl_extra_html" id="desktop_incl_extra_html">Check to Show Sub-menu for Desktop Users.
+                              </label>
+                            </div>
+                            <div class="checkbox">
+                              <label>
+                                <input type="checkbox" name="desktop_incl_footnote" id="desktop_incl_footnote">Check to Show Footnote for Desktop Users.
                               </label>
                             </div>
                           </div>
@@ -105,7 +125,7 @@
                         <div class="row">
                           <div class="col-md-4">
                             <div class="form-group">
-                               <label for="menu_lang">Select Default Language</label>
+                              <label for="menu_lang">Select Default Language</label>
                               <select class="form-control" id="js_menu_lang"></select>
                               <div class="checkbox"><label>
                                 <input type="checkbox" name="autoupdate_menu" id="autoupdate_menu">Check to Have the Menu Automatically Updated.
@@ -145,13 +165,137 @@
           <h2>Edit Content Menus Items</h2>
           <div class="row">
             <div class="col-sm-8">
-              <p>COMING SOON.
-              </p>
+              <p>This menu option allows you to define individual items on home page menus.</p>
+              <div class="col-sm-12">
+                <ul id="menusEditMenuItemTabs" class="nav nav-tabs">
+                  <li class="nav-item active"><a href="#menusEditMenuItemSelect" class="nav-link small" call-after="nop">Select Menu Item</a></li>
+                  <li class="nav-item"><a href="#menusEditMenuItemEdit" class="nav-link small" call-after="nop">Edit Menu Item</a></li>
+                  <!-- <li class="nav-item"><a href="#menusEditMenuItemPreview" class="nav-link small" call-after="nop">Preview Menu Item</a></li> -->
+                </ul>
+              </div>
+              <div class="row">
+                <div class="col-sm-12">
+                  <div id="menusDefineMenuTabsPanes" class="tab-content">
+                    <div id="menusEditMenuItemSelect" class="tab-pane active"> <!-- Start menusEditMenuItemSelect -->
+                      <div class="row">
+                        <div class="col-sm-12">
+                          <h3>Select a Menu Item</h3>
+                          <div id="menusEditMenuItemSelectList" >
+                            current menu list here
+                          </div>
+                        </div>
+                      </div>
+                    </div> <!-- End menusEditMenuItemSelect -->
+                    <div id="menusEditMenuItemEdit" class="tab-pane"> <!-- Start menusEditMenuItemEdit -->
+                      <div class="row" id="menusEditMenuItemEditNew"> <!--  All fields should be readonly unless this is a new item -->
+                        <div class="col-sm-12">
+                          <h3>Only to Add a New Menu Item Definition</h3>
+                          <div class="row"> <!--  Code/Suffix -->
+                            <div class="col-md-4">
+                              <div class="form-group">
+                                <label for="menu_item_name">Menu Item Code</label>
+                                <input type="text" name="menu_item_name" class="form-control" id="menu_item_name" disabled>
+                              </div>
+                            </div>
+                            <div class="col-md-4">
+                              <div class="form-group">
+                                <label for="menu_item_name_suffix">Optional Code Suffix</label>
+                                <input type="text" name="menu_item_name_suffix" class="form-control" id="menu_item_name_suffix">
+                              </div>
+                            </div>
+                          </div> <!--  End Code/Suffix -->
+                          <div class="row"> <!--  Other New Def Fields -->
+                            <div class="col-md-8">
+                              <div class="form-group">
+                                <label for="menu_item_type">Select Menu Item Type</label>
+                                <select class="form-control" id="menu_item_type">
+                                  <option value="html">App in Modules Directory</option>
+                                  <option value="webroot">App in Web Root</option>
+                                  <option value="zim">Zim File Served by Kiwix</option>
+                                  <option value="kalite">Khan Academy Lite Link</option>
+                                  <option value="kolibri">Kolibri Link</option>
+                                  <option value="cups">CUPS</option>
+                                  <option value="nodered">Nodered</option>
+                                  <option value="calibre">Calibre</option>
+                                  <option value="calibreweb">Calibre Web</option>
+                                  <!-- <option value="osm">Original OpenStreetMap</option>-->
+                                  <option value="info">Information Only Menu Item with No Link</option>
+                                  <option value="download">Link to Downloadable Content</option>
+                                </select>
+                              </div>
+                              <div class="form-group">
+                                <label for="menu_item_lang">Select Menu Item Language</label>
+                                <select class="form-control" id="menu_item_lang"></select>
+                              </div>
+                              <div class="form-group">
+                                <label for="menu_item_content_target">Content this Menu Item Shows</label>
+                                <input type="text" name="menu_item_content_target" class="form-control" id="menu_item_content_target">
+                              </div>
+                              <div class="form-group">
+                                <button id="CREATE-MENU-ITEM-DEF" type="button" class="btn btn-primary">Create a New Menu Item Definition</button>
+                              </div>
+                            </div>
+
+                          </div> <!--  End Other New Def Fields -->
+                          <hr style="border-top-width:1px; border-top-color:#ddd">
+                        </div> <!--  End row -->
+                      </div> <!--  End New Def Fields -->
+
+
+                      <div class="row"> <!--  Start Existing Def Fields -->
+                        <div class="col-md-8">
+                          <h3>Change New or Existing Menu Item Definition</h3>
+                          <div class="form-group">
+                            <label for="menu_item_title">Title</label>
+                            <input type="text" name="menu_item_title" class="form-control" id="menu_item_title"/>
+                          </div>
+                          <div class="form-group">
+                            <label for="menu_item_icon_name">Name of Icon File - must be in /library/www/html/js-menu/menu-files/images </label>
+                            <input type="text" name="menu_item_icon_name" class="form-control" id="menu_item_icon_name">
+                          </div>
+                          <div class="form-group">
+                            <label for="menu_item_start_url">Optional Start URL - Only change this if the the blank default doesn't work.</label>
+                            <input type="text" name="menu_item_start_url" class="form-control" id="menu_item_start_url">
+                          </div>
+                          <div class="form-group">
+                            <label for="menu_item_description">Description</label>
+                            <textarea class="form-control" rows="5" id="menu_item_description"></textarea>
+                          </div>
+                          <div class="form-group">
+                            <label for="menu_item_extra_description">Optional Extra Description</label>
+                            <textarea class="form-control" rows="5" id="menu_item_extra_description"></textarea>
+                          </div>
+                          <div class="form-group">
+                            <label for="menu_item_extra_html">Optional Name of Html File for a Sub Menu</label>
+                            <input type="text" name="menu_item_extra_html" class="form-control" id="menu_item_extra_html">
+                          </div>
+                          <div class="form-group">
+                            <label for="menu_item_footnote">Optional Footnote - Things like size or number of items go here.</label>
+                            <input type="text" name="menu_item_footnote" class="form-control" id="menu_item_footnote">
+                          </div>
+                          <div class="form-group">
+                            <button id="UPDATE-MENU-ITEM-DEF" type="button" class="btn btn-primary">Update Menu Item Definition</button>
+                          </div>
+                        </div>
+                      </div> <!--  End Existing Def Fields -->
+                    </div>
+                  </div>
+                </div> <!-- End menusEditMenuItemEdit -->
+                <!-- <div id="menusEditMenuItemPreview" class="tab-pane"> < !-- Start menusEditMenuItemPreview -- >
+                <div class="row">
+                <div class="col-sm-6">
+                <h3>Preview Menu Item</h3>
+                <div id="menusEditMenuItemSelectedPreview">preview the selected menu item here  </div>
+                </div>
+                </div>
+                </div> <!-- End menusEditMenuItemPreview -->
+              </div>
             </div>
           </div>
-        </div> <!--  End menusEditContentMenuItems Submenu Option Pane -->
-      </div> <!-- End Container for Sub Menu Options Panes -->
-    </div> <!-- right column -->
-  </div> <!-- End containing row -->
+        </div>
+      </div> <!--  End menusEditContentMenuItems Submenu Option Pane -->
+    </div> <!-- End Container for Sub Menu Options Panes -->
+  </div> <!-- right column -->
+</div> <!-- End containing row -->
 </div> <!-- End XXX Sublevel Menu Items and Options -->
 </div> <!-- End EditMenus Top Level Pane -->

@@ -233,8 +233,12 @@
 		<script src="/common/js/Markdown.Sanitizer.js"></script>
 		<script src="js/zim_functions.js"></script>
 		<script src="js/oer2go_functions.js"></script>
+		<script src="js/osm_functions.js"></script>
 		<script src="js/js_menu_functions.js"></script>
 		<script src="js/admin_console.js"></script>
+      <!-- Declare a target for map. Will be redirected when real target exists -->
+      <div id="temp_map" style='display="none"'></div>
+		<script src="osm/main.js"></script>
     <script>
     	controlButtonsEvents(); // make first page active before others in case want to reboot or shutdown
     	make_button_disabled("#REBOOT", false);

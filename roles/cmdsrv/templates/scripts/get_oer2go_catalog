@@ -258,9 +258,8 @@ def proc_module (module):
     if age == None:
        age = ''
     menu_item['description'] = module.get('description','')
-    if menu_item['description'] != '':
-       menu_item['description'] += '<br>'
-    menu_item['description'] += "Size: " + size + ', Files: ' + files + ', Age: ' + age
+    menu_item['extra_description'] = ''
+    menu_item['footnote'] = "Size: " + size + ', Files: ' + files + ', Age: ' + age
 
     # get logo if there is one
     if 'logo_url' in module and module['logo_url'] != None:
@@ -318,7 +317,7 @@ def proc_module (module):
     if not os.path.exists(doc_root_menu_defs + moddir + '.json'):
        # as per discussion, put menu-def (minus html) into menu-defs
        menu_item['extra_html'] = ''
-       menu_item["automatically_generated"] = "true"
+       menu_item["change_ref"] = "auto"
        print("writing to %s"%doc_root_menu_defs + moddir + '.json')
        with open(doc_root_menu_defs + moddir + '.json', 'w') as fp:
           json.dump(menu_item, fp, indent=2)

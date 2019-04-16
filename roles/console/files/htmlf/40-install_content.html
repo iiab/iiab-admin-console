@@ -12,6 +12,7 @@
 				<li class="active"><a href="#instConStart">Get Started</a></li>
 				<li><a href="#instConZims" call-after="checkKiwixCatalogDate">Get ZIM Files from Kiwix</a></li>
 				<li><a href="#instConOer2go" call-after="oer2goMenuOption">Get OER2Go(RACHEL) Modules</a></li>
+				<li><a href="#instOsmRegion" call-after="renderOsm">Get Map Region</a></li>
 				<li><a href="#instConKAlite">Download Khan Academy Videos</a></li>
 				<li><a href="#instManageContent" call-after="manageContentInit">Manage Content</a></li>
 				<!-- <li><a href="#instRemoveContent" call-after="refreshAllInstalledList">Remove Content</a></li> -->
@@ -61,6 +62,29 @@
 
 					<div id="Oer2goDownload" >  </div>
 				</div> <!--  End instConOer2go Submenu Option Pane -->
+				<div class="tab-pane" id="instOsmRegion"> <!-- Start instOsmRegion Submenu Option Pane -->
+					<h2>Install World Map, Select Detailed Region</h2>
+					<p>The World Map is based upon OpenStreetMap Data. It includes regional views of the whole world and details of a region you can select.</p>
+					<div class="row">
+						<div class="col-sm-3"></div>
+						<div class="col-sm-4"><span id="osmDiskSpace">0</span> </div>
+						<div class="col-sm-2"><button id="INST-MAP" type="button" class="btn btn-lg btn-primary">Install Detailed Region or Regions</button></div>
+					</div>
+
+					<div id="osmRegionSelection" >
+                  <style>
+                     #osm-container{
+                       background-color: #b2d3f8; 
+                       float: right;
+                       width: 75%;
+                       right: 10px;
+                       height: 500px;
+                     }
+                  </style>
+                  <div id="osm-container"></div>
+                  <div id='regionlist'>placeholder</div>
+               </div>
+				</div> <!--  End instOsmRegion Submenu Option Pane -->
 				<div class="tab-pane" id="instConKAlite"> <!-- Start instConKAlite Submenu Option Pane -->
 					<h2>Download Khan Academy Videos</h2>
 					<p>Khan Academy Lite has the ability to download selected portions of the available videos in several different languages.</p>
@@ -166,3 +190,4 @@
 	</div> <!-- End containing row -->
 </div> <!-- End XXX Sublevel Menu Items and Options -->
 </div> <!-- End InstallContent Top Level Pane -->
+<script src="osm/main.js"></script>

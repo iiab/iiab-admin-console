@@ -26,6 +26,7 @@ var externalZimCatalog = {}; // catalog of zims on an external device
 var oer2goCatalog = {}; // catalog of rachel/oer2go modules, read from file downloaded from rachel
 var oer2goCatalogDate = new Date; // date of download, stored in json file
 var oer2goCatalogFilter = ["html"] // only manage these types as OER2GO; catalog can contain zims and kalite that we do elsewhere
+var osmCatalog = {}; // osm regions specified by bounding boxes, downloadable
 var rachelStat = {}; // installed, enabled and whether content is installed and which is enabled
 
 var zimsInstalled = []; // list of zims already installed
@@ -38,6 +39,9 @@ var oer2goDownloading = []; // list of Oer2go items being downloaded
 var oer2goCopying = []; // list of Oer2go items being copied
 var oer2goExternal = []; // list of Oer2go items on external device
 var downloadedFiles = {};
+var osmDownloading = []; // list of Osm items being downloaded
+var osmWip = {}; // list of copying, downloading, exporting
+var osmInstalled = {}; // list of osm regions already installed
 var externalDeviceContents = {}; // zims and other content on external devices, only one active at a time
 
 var langNames = []; // iso code, local name and English name for languages for which we have zims sorted by English name for language
@@ -47,6 +51,7 @@ var langGroups = {"en":"eng","fr":"fra"}; // language codes to treat as a single
 var selectedLangs = []; // languages selected by gui for display of content
 var selectedZims = [];
 var selectedOer2goItems = [];
+var selectedOsmItems = [];
 var manContSelections = {};
 var selectedUsb = null;
 
@@ -253,6 +258,26 @@ function instContentButtonsEvents() {
     make_button_disabled("#INST-MODS", false);
   });
 
+  $("#INST-MAP").click(function(){
+    var osm_id;
+    make_button_disabled("#INST-MAP", true);
+    selectedOsmItems = []; // items no longer selected as are being installed
+    $('#osm_select input').each( function(){
+      if (this.type == "checkbox")
+        if (this.checked){
+          osm_id = this.name;
+          if (osmInstalled.indexOf(osm_id) >= 0 || osm_id in osmWip)
+            consoleLog("Skipping installed Module " + osm_id);
+          else
+            instOsmItem(osm_id);
+        }
+    });
+    //getOer2goStat();
+    //alert ("Selected Osm Region scheduled to be installed.\n\nPlease view Utilities->Display Job Status to see the results.");
+    alert ("Selected Osm Region can be installed (in the short term) by typing.\n\niiab-install-map <bold name with _ for space>.");
+    make_button_disabled("#INST-MAP", false);
+  });
+
   $("#launchKaliteButton").click(function(){
     var url = "http://" + window.location.host + ":8008";
     //consoleLog(url);
@@ -344,6 +369,12 @@ function contentMenuButtonsEvents() {
   });
   $("#REFRESH-MENU-LISTS").click(function(){
     getMenuItemDefList();
+  });
+  $("#CREATE-MENU-ITEM-DEF").click(function(){
+    saveContentMenuItemDef();
+  });
+  $("#UPDATE-MENU-ITEM-DEF").click(function(){
+    saveContentMenuItemDef();
   });
 }
 
@@ -939,7 +970,7 @@ function procContentLangs() {
   $( "#ContentLanguages" ).html(topHtml);
   $( "#ContentLanguages2" ).html(bottomHtml);
 
-  if ($("#js_menu_lang").html() == ""){ // calc and insert language pickers
+  if ($("#js_menu_lang").html() == ""){ // calc and insert language pickers if not previously done
     for (i in langNames){
     	selectName = langNames[i].locname + ' [' + langCodes[langNames[i].code].iso2 + ']';
     	if (langNames[i].locname != langNames[i].engname)
@@ -955,6 +986,7 @@ function procContentLangs() {
       }
     }
     $( "#js_menu_lang" ).html(langPickerTopHtml+langPickerBottomHtml);
+    $( "#menu_item_lang" ).html(langPickerTopHtml+langPickerBottomHtml);
 
   }
 }
@@ -1658,6 +1690,7 @@ function displaySpaceAvail(){
 
   $( "#zimDiskSpace" ).html(html);
   $( "#oer2goDiskSpace" ).html(html);
+  $( "#osmDiskSpace" ).html(html);
 
   // calc internalContentSelected
 
@@ -1707,6 +1740,8 @@ function calcAllocatedSpace(){
 	totalSpace += sumZimWip();
 	totalSpace += sumAllocationList(selectedOer2goItems, 'oer2go');
 	totalSpace += sumOer2goWip();
+	totalSpace += sumAllocationList(selectedOsmItems, 'osm');
+	totalSpace += sumOsmWip();
 	return totalSpace;
 }
 
@@ -1722,6 +1757,9 @@ function sumAllocationList(list, type){
       }
     else if (type == "oer2go")
       totalSpace += parseInt(oer2goCatalog[id].ksize);
+    else if (type == "osm")
+      totalSpace += parseInt(osmCatalog[id].size / 1000);
+    
   }
   // sysStorage.oer2go_selected_size = totalSpace;
   return totalSpace;
@@ -1744,6 +1782,15 @@ function sumOer2goWip(){
 
   for (var moddir in oer2goWip){
   	totalSpace += parseInt(oer2goCatalog[moddir].ksize);
+  }
+  return totalSpace;
+}
+
+function sumOsmWip(){
+  var totalSpace = 0;
+
+  for (var moddir in osmWip){
+  	totalSpace += parseInt(osmCatalog[moddir].size);
   }
   return totalSpace;
 }
@@ -2027,40 +2074,47 @@ function sendCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArgs) {
   if (buttonId != '')
     make_button_disabled('#' + buttonId, true);
 
-    var resp = $.ajax({
-      type: 'POST',
-      url: iiabCmdService,
-      data: {
-        command: enCommand
-      },
-      dataType: 'json',
-      buttonId: buttonId
-    })
-    //.done(callback)
-    .done(function(dataResp, textStatus, jqXHR) {
-    	//consoleLog (dataResp);
-    	//consoleLog (callback);
-    	//var dataResp = data;
-    	if ("Error" in dataResp){
-    	  cmdSrvError(cmdVerb, dataResp);
-    	  if (typeof errCallback != 'undefined'){
-    	    consoleLog(errCallback);
-    	    errCallback(data, cmdArgs);
-    	  }
-    	}
-    	else {
-    		var data = dataResp.Data;
-    	  callback(data);
-    	  logServerCommands (cmdVerb, "succeeded", "", dataResp.Resp_time);
-    	}
-    })
-    .fail(jsonErrhandler)
-    .always(function() {
-    	if (this.buttonId != "")
-        make_button_disabled('#' + this.buttonId, false);
-    });
+  var resp = $.ajax({
+    type: 'POST',
+    url: iiabCmdService,
+    data: {
+      command: enCommand
+    },
+    dataType: 'json',
+    buttonId: buttonId
+  })
+  //.done(callback)
+  .done(function(dataResp, textStatus, jqXHR) {
+  	//consoleLog (dataResp);
+  	//consoleLog (callback);
+  	//var dataResp = data;
+  	if ("Error" in dataResp){
+  	  cmdSrvError(cmdVerb, dataResp);
+  	  if (typeof errCallback != 'undefined'){
+  	    consoleLog(errCallback);
+  	    errCallback(data, cmdArgs);
+  	  }
+  	}
+  	else {
+  		var data = dataResp.Data;
+  	  callback(data, command);
+  	  logServerCommands (cmdVerb, "succeeded", "", dataResp.Resp_time);
+  	}
+  })
+  .fail(jsonErrhandler)
+  .always(function() {
+  	if (this.buttonId != "")
+      make_button_disabled('#' + this.buttonId, false);
+  });
 
-    return resp;
+  return resp;
+}
+
+function genSendCmdSrvCmdCallback(command, cmdArgs, callbackName){
+	var callbackFunc = function() {
+    window[callbackName](command, cmdArgs);
+  };
+  return callbackFunc;
 }
 
 // Report errors that came from cmdsrv or cmd-service
@@ -2191,6 +2245,7 @@ function init ()
     $.when(sendCmdSrvCmd("GET-VARS", getInstallVars), sendCmdSrvCmd("GET-ANS", getAnsibleFacts),sendCmdSrvCmd("GET-CONF", getConfigVars),sendCmdSrvCmd("GET-IIAB-INI", procXsceIni)).done(initConfigVars),
     $.when(getLangCodes(),readKiwixCatalog(),sendCmdSrvCmd("GET-ZIM-STAT", procZimStatInit)).done(procZimCatalog),
     getOer2goStat(),
+    initOsm(),
     getSpaceAvail(),
     getExternalDevInfo())
     .done(initDone)

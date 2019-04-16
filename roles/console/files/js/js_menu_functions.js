@@ -7,11 +7,29 @@ var jsMenuItemDefUrl = "/js-menu/menu-files/menu-defs/";
 var currentJsMenuToEdit = {};
 var menuItemDefList = [];
 var menuItemDefs = {};
-menuItemDefs['call_count'] = -1; // mark as not downloaded
+menuItemDefs['call_count'] = null; // mark as not downloaded
+var menuItemDefPrefixes = {"all" : "all-items", "current" : "current-items", "select" : "select-items"};
 var homeMenuLoaded = false;
 var menuItemDragSrcElement = null;
 var menuItemDragSrcParent = null;
 var menuItemDragDuplicate = null;
+var menuItemEditMode = 'edit';
+var jsMenuTypeTargets =
+  {
+    "zim" : "zim_name",
+    "html" : "moddir",
+    "webroot" : "moddir",
+    //"kalite"  : "",
+    //"kolibri"  : "",
+    //"cups"  : "",
+    //"nodered"  : "",
+    //"calibre"  : "",
+    //"calibreweb"  : "",
+    //"osm"  : "",
+    //"info"  : "",
+    "download"  : "download_folder"
+  };
+// var targetTypes = ['zim', 'html', 'webroot', 'download']
 
 function getMenuItemDefLists(){
 	var resp = getMenuItemDefList();
@@ -29,11 +47,11 @@ function getMenuItemDefList(){
 function procMenuItemDefList (data){
 	var html = "";
 	menuItemDefList = data;
-	html = createMenuItemScaffold(menuItemDefList, "all-items");
+	html = createMenuItemScaffold(menuItemDefList, menuItemDefPrefixes.all);
 	$("#menusDefineMenuAllItemList").html(html);
 	menuItemDefs['call_count'] = 0; // ready to download
 	for (var i = 0; i < menuItemDefList.length; i++) {
-		getMenuItemDef(menuItemDefList[i], "all-items")
+		getMenuItemDef(menuItemDefList[i], menuItemDefPrefixes.all)
 	}
 }
 
@@ -52,9 +70,9 @@ function getContentMenuToEdit(currentJsMenuToEditUrl){ // passed by button click
 		  currentJsMenuToEdit.menu_items_1 = ['en-credits'];
 		setContentMenuToEditFormValues();
     if (homeMenuLoaded)
-      delayedProcCurrentMenuItemDefList (5000, currentJsMenuToEdit.menu_items_1, "current-items"); // hard coded name$
+      delayedProcCurrentMenuItemDefList (5000, currentJsMenuToEdit.menu_items_1, menuItemDefPrefixes.current); // hard coded name
     else { // the first time we let the all menu item list completion draw the current menu
-      var html = createMenuItemScaffold(currentJsMenuToEdit.menu_items_1, "current-items");
+      var html = createMenuItemScaffold(currentJsMenuToEdit.menu_items_1, menuItemDefPrefixes.current);
 	    $("#menusDefineMenuCurrentItemList").html(html);
       homeMenuLoaded = true;
     }
@@ -62,7 +80,7 @@ function getContentMenuToEdit(currentJsMenuToEditUrl){ // passed by button click
 	.fail(function (jqXHR, textStatus, errorThrown){
 		if (errorThrown == 'Not Found'){
 		  currentJsMenuToEdit = {};
-		  procCurrentMenuItemDefList ([], "current-items");
+		  procCurrentMenuItemDefList ([], menuItemDefPrefixes.current);
 		  alert ('Content Menu not Found.');
 		}
 		else
@@ -95,10 +113,14 @@ function saveContentMenuDef() {
 function setContentMenuToEditFormValues (){
   setContentMenuToEditFormValue('mobile_header_font');
   setContentMenuToEditFormChecked('mobile_incl_description');
+  setContentMenuToEditFormChecked('mobile_incl_extra_description');
   setContentMenuToEditFormChecked('mobile_incl_extra_html');
+  setContentMenuToEditFormChecked('mobile_incl_footnote');
   setContentMenuToEditFormValue('desktop_header_font');
   setContentMenuToEditFormChecked('desktop_incl_description');
+  setContentMenuToEditFormChecked('desktop_incl_extra_description');
   setContentMenuToEditFormChecked('desktop_incl_extra_html');
+  setContentMenuToEditFormChecked('desktop_incl_footnote');
   setContentMenuToEditFormValue('menu_lang', 'js_menu_lang');
   setContentMenuToEditFormChecked('autoupdate_menu');
   setContentMenuToEditFormChecked('allow_kiwix_search');
@@ -121,10 +143,14 @@ function setContentMenuToEditFormChecked (fieldName, screenName='') {
 function getContentMenuToEditFormValues (){
   getContentMenuToEditFormValue('mobile_header_font');
   getContentMenuToEditFormChecked('mobile_incl_description');
+  getContentMenuToEditFormChecked('mobile_incl_extra_description');
   getContentMenuToEditFormChecked('mobile_incl_extra_html');
+  getContentMenuToEditFormChecked('mobile_incl_footnote');
   getContentMenuToEditFormValue('desktop_header_font');
   getContentMenuToEditFormChecked('desktop_incl_description');
+  getContentMenuToEditFormChecked('desktop_incl_extra_description');
   getContentMenuToEditFormChecked('desktop_incl_extra_html');
+  getContentMenuToEditFormChecked('desktop_incl_footnote');
   getContentMenuToEditFormValue('menu_lang', 'js_menu_lang');
   getContentMenuToEditFormChecked('autoupdate_menu');
   getContentMenuToEditFormChecked('allow_kiwix_search');
@@ -155,6 +181,43 @@ function getContentMenuToEditItemList () {
   currentJsMenuToEdit.menu_items_1 = menuItemList;
 }
 
+function drawMenuItemSelectList () { // for selecting menu item to edit definition
+  var prefix = menuItemDefPrefixes.select;
+  var list = currentJsMenuToEdit.menu_items_1; // hard coded name
+
+  var html = createMenuItemScaffold(list, prefix, draggable = false);
+	$("#menusEditMenuItemSelectList").html(html);
+
+	for (var i = 0; i < list.length; i++) {
+    drawMenuItemSelectListItem (list[i], prefix);
+	}
+  $('#menusEditMenuItemSelectList').on('click', '.btnEdit' ,function (event) {
+    handleEditMenuItemClick($(this).attr('menu_item_name'), 'edit');
+    //consoleLog($(this));
+  });
+
+  $('#menusEditMenuItemSelectList').on('click', '.btnCopy' ,function (event) {
+    handleEditMenuItemClick($(this).attr('menu_item_name'), 'copy');
+    //consoleLog($(this));
+  });
+}
+
+function drawMenuItemSelectListItem (menuItemName, prefix) {
+	var html = "";
+	var buttonHtml = '<button type="button" style="margin-left: 5px;" class="btn btn-primary btnEdit" menu_item_name="' + menuItemName + '">Edit</button>';
+  //buttonHtml += '<button type="button" style="margin-left: 5px;" class="btn btn-primary btnCopy" menu_item_name="' + menuItemName + '">Copy</button>';
+  var itemHtml = genMenuItemHtml(menuItemName);
+  if (itemHtml != ""){
+  	html = buttonHtml;
+  	html += '<span style="width: 10em; margin-left: 10px; padding-top: 6px;">' + menuItemName + '</span>';
+  	html += itemHtml
+  }
+  else
+    html += '<span style="margin-left: 10px;">' + menuItemName + ' Menu Item Definition was not found.</span>';
+
+  $("#" + prefix + '-' + menuItemName).html(html);
+}
+
 function delayedProcCurrentMenuItemDefList (timeout, list, prefix){
 	if (menuItemDefs.call_count == 0)
 	  procCurrentMenuItemDefList (list, prefix);
@@ -182,7 +245,7 @@ function procCurrentMenuUpdateSelectedLangs (list) { // automatically select any
 		try {
 		  var lang = langCodesXRef[menuItemDefs[menu_item_name].lang];
 		}
-		catch {
+		catch (e){
 			lang = 'eng';
 		}
 
@@ -193,26 +256,31 @@ function procCurrentMenuUpdateSelectedLangs (list) { // automatically select any
 }
 
 function redrawAllMenuItemList() {
-  // createMenuItemScaffold(menuItemDefList, "all-items"); - not needed as done for all items initially
-  drawMenuItemDefList(menuItemDefList, "all-items");
+  // createMenuItemScaffold(menuItemDefList, menuItemDefPrefixes.all); - not needed as done for all items initially
+  drawMenuItemDefList(menuItemDefList, menuItemDefPrefixes.all);
 }
 
 function drawMenuItemDefList (list, prefix){
 	for (var i = 0; i < list.length; i++) {
-		var menu_item_name = list[i];
-		var divId = prefix + '-' + menu_item_name;
-
-		if (menuItemDefs.hasOwnProperty(menu_item_name))
-  		genMenuItem(divId, menu_item_name);
+		drawMenuItemDef(list[i], prefix)
   }
   activateTooltip();
 }
 
-function createMenuItemScaffold(list, prefix){
+function drawMenuItemDef (menuItemName, prefix){
+	var divId = prefix + '-' + menuItemName;
+		if (menuItemDefs.hasOwnProperty(menuItemName))
+  		genMenuItem(divId, menuItemName);
+}
+
+function createMenuItemScaffold(list, prefix, draggable = true){
   var html = "";
   for (var i = 0; i < list.length; i++) {
   	var menu_item_name = list[i];
-  	html += '<div id="' + prefix + '-' + menu_item_name + '" class="flex-row content-item" dir="auto" draggable="true" menu_item_name="' + menu_item_name + '">&emsp;Attempting to load ' + menu_item_name + ' </div>';
+  	html += '<div id="' + prefix + '-' + menu_item_name + '" dir="auto" class="flex-row content-item';
+  	if (draggable)
+  	  html += ' draggable-content-item" draggable="true'
+  	html += '" menu_item_name="' + menu_item_name + '">&emsp;Attempting to load ' + menu_item_name + ' </div>';
   }
   return html;
 }
@@ -253,7 +321,20 @@ function genMenuItem(divId, menuItemName) {
 		$(menuItemDivId).hide();
 		return;
 	}
-  // could check if already drawn and just show
+	var menuHtml = genMenuItemHtml(menuItemName);
+	if (menuHtml == "") // skip problem definitions, probably not found
+	  return;
+
+	$("#" + divId).html(menuHtml);
+	menuItemAddDnDHandlers($("#" + divId).get(0));
+	$("#" + divId).show();
+}
+
+function genMenuItemHtml(menuItemName) {
+  var menuHtml = "";
+  var module = menuItemDefs[menuItemName];
+  if (typeof(module) === "undefined") // skip not found
+	  return "";;
   var menuItemToolTip = genMenuItemTooltip(menuItemName, module);
 	menuHtml+='<div class="content-icon"' + menuItemToolTip + '>';
 	menuHtml+='<img src="' + jsMenuImageUrl + module.logo_url + '">';
@@ -266,10 +347,7 @@ function genMenuItem(divId, menuItemName) {
 	menuHtml+=module.title;
 	menuHtml+='</div>'; // end content-item-title
 	menuHtml+='</div></div>';
-
-	$("#" + divId).html(menuHtml);
-	menuItemAddDnDHandlers($("#" + divId).get(0));
-	$("#" + divId).show();
+  return menuHtml;
 }
 
 function genMenuItemTooltip(menuItemName, module) {
@@ -290,7 +368,7 @@ function checkMenuDone(){
 		//activateButtons();
 		//alert ("menu done");
 		if (currentJsMenuToEdit.hasOwnProperty('menu_items_1'))
-		  drawMenuItemDefList(currentJsMenuToEdit.menu_items_1, "current-items"); // refresh current menu
+		  drawMenuItemDefList(currentJsMenuToEdit.menu_items_1, menuItemDefPrefixes.current); // refresh current menu
 		activateTooltip();
 	}
 }
@@ -444,6 +522,205 @@ function menuItemAddDnDHandlers(elem) {
   elem.addEventListener('drop', menuItemDrop, false);
   elem.addEventListener('dragend', menuItemDragEnd, false);
 
+}
+
+// Functions to Edit a Menu Item Definition
+
+function saveContentMenuItemDef() {
+    var command = "SAVE-MENU-ITEM-DEF";
+    var cmdArgs = getEditMenuItemFormValues();
+    //var callbackFunction = genContentMenuItemDefCallback(command, cmdArgs);
+    var callbackFunction = genSendCmdSrvCmdCallback(command, cmdArgs, 'updateContentMenuItemDef');
+
+    cmd = command + " " + JSON.stringify(cmdArgs);
+    sendCmdSrvCmd(cmd, callbackFunction);
+    alert ("Saving Content Menu Item Definition.");
+    return true;
+  }
+
+function createContentMenuItemDef (command, cmdArgs){
+	//
+}
+
+function updateContentMenuItemDef (command, cmdArgs) {
+  console.log('in updateContentMenuItemDef');
+  console.log(cmdArgs);
+  var menuItemName = cmdArgs['menu_item_name'];
+  var menuDef = cmdArgs['menu_item_def'];
+  menuItemDefs[menuItemName] = menuDef;
+  drawMenuItemDef (menuItemName, menuItemDefPrefixes.all);
+  drawMenuItemDef (menuItemName, menuItemDefPrefixes.current);
+  drawMenuItemSelectListItem (menuItemName, menuItemDefPrefixes.select);
+}
+
+function handleEditMenuItemClick (menuItem, action){
+  setEditMenuItemTopFormValues (menuItem);
+  setEditMenuItemBottomFormValues (menuItem);
+  menuItemEditMode = action;
+  if (action == 'edit')
+    lockMenuItemHeader(true);
+  else
+  	lockMenuItemHeader(false);
+
+  $('#menusEditMenuItemTabs a[href="#menusEditMenuItemEdit"]').tab('show');
+}
+
+
+function setEditMenuItemTopFormValues (menuItem, menuDef){
+	if (typeof(menuDef) === 'undefined')
+	  var menuDef = menuItemDefs[menuItem];
+
+  setFormValue ('menu_item_name', menuItem);
+  setFormValue ('menu_item_name_suffix', "");
+
+  setEditMenuItemFormValue (menuDef, 'intended_use', screenName='menu_item_type');
+  setEditMenuItemFormValue (menuDef, 'lang', screenName='menu_item_lang');
+
+  // Target field name Differs by item type
+  var targetFieldNameValue = ""; // default
+  if (jsMenuTypeTargets.hasOwnProperty(menuDef['intended_use'])) {
+  	var targetFieldName = jsMenuTypeTargets[menuDef['intended_use']];
+  	 if (menuDef.hasOwnProperty(targetFieldName))
+      targetFieldNameValue = menuDef[targetFieldName];
+  }
+  console.log(targetFieldName)
+
+  setFormValue ('menu_item_content_target', targetFieldNameValue);
+}
+
+function setEditMenuItemBottomFormValues (menuItem, menuDef){
+	if (typeof(menuDef) === 'undefined')
+	  var menuDef = menuItemDefs[menuItem];
+
+  setEditMenuItemFormValue (menuDef, 'title', screenName='menu_item_title');
+  setEditMenuItemFormValue (menuDef, 'logo_url', screenName='menu_item_icon_name');
+  setEditMenuItemFormValue (menuDef, 'start_url', screenName='menu_item_start_url');
+  setEditMenuItemFormValue (menuDef, 'description', screenName='menu_item_description');
+  setEditMenuItemFormValue (menuDef, 'extra_description', screenName='menu_item_extra_description');
+  setEditMenuItemFormValue (menuDef, 'extra_html', screenName='menu_item_extra_html');
+  setEditMenuItemFormValue (menuDef, 'footnote', screenName='menu_item_footnote');
+}
+
+function setEditMenuItemFormValue (menuDef, fieldName, screenName='') {
+  var fieldValue = "";
+  console.log(fieldName)
+  console.log(menuDef)
+  if (screenName == '')
+	  screenName = fieldName;
+	if (menuDef.hasOwnProperty(fieldName))
+	  fieldValue = menuDef[fieldName];
+  setFormValue (fieldName, fieldValue, screenName)
+}
+
+function getEditMenuItemFormValues (){
+	var menuDefArgs = {}
+	var menuDef = {};
+
+	var menuItemName = getFormValue ('menu_item_name');
+	var suffix = getFormValue ('menu_item_name_suffix');
+	var content_target = getFormValue ('menu_item_content_target');
+
+  menuDef['intended_use'] = getFormValue ('intended_use', screenName='menu_item_type');
+  menuDef['lang'] = getFormValue ('lang', screenName='menu_item_lang');
+
+  menuDef['title'] = getFormValue ('title', screenName='menu_item_title');
+  menuDef['logo_url'] = getFormValue ('logo_url', screenName='menu_item_icon_name');
+  menuDef['start_url'] = getFormValue ('start_url', screenName='menu_item_start_url');
+  menuDef['description'] = getFormValue ('description', screenName='menu_item_description');
+  menuDef['extra_description'] = getFormValue ('extra_description', screenName='menu_item_extra_description');
+  menuDef['extra_html'] = getFormValue ('extra_html', screenName='menu_item_extra_html');
+  menuDef['footnote'] = getFormValue ('footnote', screenName='menu_item_footnote');
+
+  // calc menu item def name
+
+  //if edit mode use existing
+  //else if lang prefix = lang and suffix != '' ? except name + suffix
+  //else if use in zim, html, webroot, download =  lang - target - suffix
+  //else 	= lang - intended use
+
+  //report if duplicate
+
+  menuDefArgs['menu_item_name'] = menuItemName;
+  menuDefArgs['mode'] = menuItemEditMode;
+  menuDefArgs['menu_item_def'] = menuDef;
+
+  return menuDefArgs;
+}
+
+function valEditMenuItemFormValues (screenName){
+	var fieldValue = getFormValue (screenName);
+
+	switch (screenName) {
+    case 'menu_item_icon_name':
+      console.log('Oranges are $0.59 a pound.');
+      break;
+    case 'menu_item_extra_html':
+
+    default:
+      console.log('Sorry, we are out of ' + expr + '.');
+  }
+	var menuDef = {};
+
+	var menuItem = getFormValue ('menu_item_name');
+	var suffix = getFormValue ('menu_item_name_suffix');
+	var content_target = getFormValue ('menu_item_content_target');
+
+  menuDef['intended_use'] = getFormValue ('intended_use', screenName='menu_item_type');
+  menuDef['lang'] = getFormValue ('lang', screenName='lang');
+
+  menuDef['title'] = getFormValue ('title', screenName='menu_item_title');
+  menuDef['logo_url'] = getFormValue ('logo_url', screenName='menu_item_icon_name');
+  menuDef['start_url'] = getFormValue ('start_url', screenName='menu_item_start_url');
+  menuDef['description'] = getFormValue ('description', screenName='menu_item_description');
+  menuDef['extra_description'] = getFormValue ('extra_description', screenName='menu_item_extra_description');
+  menuDef['extra_html'] = getFormValue ('extra_html', screenName='menu_item_extra_html');
+  menuDef['footnote'] = getFormValue ('footnote', screenName='menu_item_footnote');
+}
+
+function setFormValue (fieldName, fieldValue, screenName='') {
+  if (screenName == '')
+	  screenName = fieldName;
+  gEBI(screenName).value = fieldValue;
+}
+
+function setFormChecked (fieldName, fieldValue, screenName='') {
+	if (screenName == '')
+	  screenName = fieldName;
+  gEBI(fieldName).checked = fieldValue;
+}
+
+function getFormValue (fieldName, screenName='') {
+	if (screenName == '')
+	  screenName = fieldName;
+  return gEBI(screenName).value;
+}
+
+function getFormChecked (fieldName, screenName='') {
+	if (screenName == '')
+	  screenName = fieldName;
+  return gEBI(screenName).checked;
+}
+
+function lockMenuItemHeader(lockFlag) {
+  $("#menusEditMenuItemEditNew input").each(function() {
+  	console.log(this)
+  	if ($(this).name != 'menu_item_name')
+  	  if (lockFlag) // lock it
+  	    $(this).attr('disabled', 'disabled');
+  	  else // unlock it
+  	  	$(this).prop("disabled",false);
+  });
+  // Doesn't catch the two selects
+  if (lockFlag){ // lock it
+    $("#menu_item_type").attr('disabled', 'disabled');
+    $("#menu_item_lang").attr('disabled', 'disabled');
+    make_button_disabled('#CREATE-MENU-ITEM-DEF', true);
+  }
+  else {// unlock it
+    $("#menu_item_type").prop("disabled",false);
+    $("#menu_item_lang").prop("disabled",false);
+    make_button_disabled('#CREATE-MENU-ITEM-DEF', false);
+  }
 }
 
 function gEBI(elementId){

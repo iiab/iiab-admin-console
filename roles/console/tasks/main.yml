@@ -4,6 +4,7 @@
   with_items:
     - libapache2-mod-authnz-external
     - pwauth
+    - python-geojson
   when: is_debuntu
   tags:
     - download
@@ -24,6 +25,7 @@
     - "{{ admin_console_dir }}/help"
     - "{{ admin_console_dir }}/js"
     - "{{ admin_console_dir }}/htmlf"
+    - "{{ admin_console_dir }}/osm"
 
 - name: Copy admin-console css files
   copy: src={{ item }}
@@ -60,6 +62,17 @@
         group=root
   with_fileglob:
         - htmlf/*
+
+- name: Fetch the javascript bundle with openlayers module
+  get_url:
+     url: "{{ iiab_osm_url }}/admin-console/main.js"
+     dest: "{{ admin_console_dir }}/osm/main.js"
+
+- name: Install the temporary script to download maps (replaces cmdsrv function)
+  copy:
+     src: osm/iiab-install-map
+     dest: /usr/bin/iiab-install-map
+     mode: '0755'
 
 - name: Install admin-console config file
   template: src=admin-console.conf.j2
