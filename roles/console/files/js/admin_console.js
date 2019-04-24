@@ -274,7 +274,7 @@ function instContentButtonsEvents() {
     });
     //getOer2goStat();
     //alert ("Selected Osm Region scheduled to be installed.\n\nPlease view Utilities->Display Job Status to see the results.");
-    alert ("Selected Osm Region can be installed (in the short term) by typing.\n\niiab-install-map <bold name with _ for space>.");
+    alert ("For now, a Map Region must be downloaded at the command-line, e.g. using:\n\niiab-install-map south_america\nor\niiab-install-map world\n\nSee https://github.com/iiab/maps/blob/master/osm-source/ukids/assets/regions.json");
     make_button_disabled("#INST-MAP", false);
   });
 
