@@ -309,6 +309,8 @@ function procMenuItem(module) {
 		menuHtml += calcInfoLink(module);
 	else if (module['intended_use'] == "download")
 		menuHtml += calcDownloadLink(module);
+	else if (module['intended_use'] == "external")
+		menuHtml += externalLink(module);
 
 	else
   	menuHtml += '<div class="content-item" style="padding:10px; color: red; font-size: 1.5em">' +  module['menu_item_name'] + ' - unknown module type</div>';
@@ -434,6 +436,11 @@ function calcDownloadLink(module){
     module['start_url'] = module['download_file']
 
 	var html = calcItemHtml(href,module);
+	return html
+}
+
+function externalLink(module){
+	var html = module['url'];
 	return html
 }
 
