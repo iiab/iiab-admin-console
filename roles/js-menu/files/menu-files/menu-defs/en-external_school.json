@@ -4,7 +4,7 @@
     "logo_url" : "skhila.jpg",
     "moddir" : "en-external_school",
     "title" : "skhilla.co.za",
-    "start_url" : "https://www.sites.google.com/skhila.co.za/assess",
+    "external_url" : "https://www.sites.google.com/skhila.co.za/assess",
     "description" : "Some Description in the correct language",
     "extra_html" : ""
 }

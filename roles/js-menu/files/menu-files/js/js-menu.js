@@ -310,7 +310,7 @@ function procMenuItem(module) {
 	else if (module['intended_use'] == "download")
 		menuHtml += calcDownloadLink(module);
 	else if (module['intended_use'] == "external")
-		menuHtml += externalLink(module);
+		menuHtml += calcExternalLink(module);
 
 	else
   	menuHtml += '<div class="content-item" style="padding:10px; color: red; font-size: 1.5em">' +  module['menu_item_name'] + ' - unknown module type</div>';
@@ -439,9 +439,10 @@ function calcDownloadLink(module){
 	return html
 }
 
-function externalLink(module){
-	var html = module['url'];
-	return html
+function calcExternalLink(module){
+   var href = module.external_url;
+	var html = calcItemHtml(href,module);
+	return html;
 }
 
 function calcItemHtml(href,module){
@@ -465,7 +466,7 @@ function calcItemHtml(href,module){
 	//var html = '<div style="display: table;"><div style="display: table-row;">';
 	// icon
 	html+='<div class="content-icon">';
-	if (href != null)
+	if (href != null && module.intended_use != 'external')
 	  html+='<a href="' + startPage + '"><img src="' + imageUrl + module.logo_url + '" alt="' + module.title + '"></div>';
 	else
 		html+='<img src="' + imageUrl + module.logo_url + '" alt="' + module.title + '"></div>';
@@ -474,7 +475,9 @@ function calcItemHtml(href,module){
 	html+='<div class="content-cell">';
 	// title
 	html+='<div class="content-item-title">';
-	if (href != null)
+	if (module.intended_use == 'external')
+	  html+='<a href="' + href + '">' + module.title + '</a>';
+	else if (href != null)
 	  html+='<a href="' + startPage + '">' + module.title + '</a>';
 	else
 		html+=module.title;
