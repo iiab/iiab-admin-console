@@ -209,9 +209,26 @@ border-radius: 8px 8px 0 0;
   cursor: no-drop;
 }
 
-#menusDefineMenuCurrentItemList, #menusDefineMenuAllItemList {
+#menusDefineMenuCurrentItemList, #menusDefineMenuAllItemList, #menuIconsModal {
   overflow: auto;
   max-height: 640px; /* 10 items */
+}
+
+.content-menu-icon  {
+  width: 50px;
+  height: 50px;
+}
+
+.content-menu-icon:hover {
+  -moz-transform: scale(1.5);
+  -webkit-transform: scale(1.5);
+  transform: scale(1.5);
+}
+
+#menuIconsModal {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 #INST-MAP {

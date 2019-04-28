@@ -733,6 +733,28 @@ function lockMenuItemHeader(lockFlag) {
   }
 }
 
+function selectMenuItemIcon() {
+  event.preventDefault()
+    $.ajax({
+    url: jsMenuImageUrl,
+    success: function(data) {
+      $(data).find("a").attr("href", function (i, val) {
+        if( val.match(/\.(jpe?g|png|gif)$/) ) {
+          $(".menu-icons-modal-body").append(
+            `<img onclick="setMenuItemIconName(this.src)" src=${jsMenuImageUrl + val} class="content-menu-icon" >`
+          )
+        }
+      })
+    }
+  })
+}
+
+function setMenuItemIconName(e) {
+  var newIcon = /[^/]*$/.exec(e)[0]
+  $("#menu_item_icon_name").val(newIcon),
+  $('#menuIconsModal').modal('hide')
+}
+
 function gEBI(elementId){
 	var element = document.getElementById(elementId);
 	return element;

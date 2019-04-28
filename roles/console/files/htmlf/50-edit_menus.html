@@ -240,8 +240,6 @@
                           <hr style="border-top-width:1px; border-top-color:#ddd">
                         </div> <!--  End row -->
                       </div> <!--  End New Def Fields -->
-
-
                       <div class="row"> <!--  Start Existing Def Fields -->
                         <div class="col-md-8">
                           <h3>Change New or Existing Menu Item Definition</h3>
@@ -249,9 +247,31 @@
                             <label for="menu_item_title">Title</label>
                             <input type="text" name="menu_item_title" class="form-control" id="menu_item_title"/>
                           </div>
-                          <div class="form-group">
+                          <div class="form-horizontal">
                             <label for="menu_item_icon_name">Name of Icon File - must be in /library/www/html/js-menu/menu-files/images </label>
                             <input type="text" name="menu_item_icon_name" class="form-control" id="menu_item_icon_name">
+                            <div class="input-group">
+                              <div class="input-group-append">
+                                <button id="SELECT-MENU-ITEM-ICON" type="button" class="btn btn-primary" data-toggle="modal" data-target="#menuIconsModal">
+                                  Select Icon
+                                </button>
+                                <!-- Modal -->
+                                <div class="modal fade" hasLoaded="false" id="menuIconsModal" tabindex="-1" role="dialog" aria-labelledby="menuIconsModalTitle" aria-hidden="true">
+                                  <div class="modal-dialog modal-dialog-centered" role="document">
+                                    <div class="modal-content">
+                                      <div class="modal-header">
+                                        <h5 class="modal-title" id="menuIconsModalTitle">Select Your Icon</h5>
+                                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                          </button>
+                                        </div>
+                                        <div class="menu-icons-modal-body" >
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
                           </div>
                           <div class="form-group">
                             <label for="menu_item_start_url">Optional Start URL - Only change this if the the blank default doesn't work.</label>
