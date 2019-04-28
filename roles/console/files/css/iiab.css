@@ -214,3 +214,6 @@ border-radius: 8px 8px 0 0;
   max-height: 640px; /* 10 items */
 }
 
+#INST-MAP {
+  margin-bottom: 10px;
+}
