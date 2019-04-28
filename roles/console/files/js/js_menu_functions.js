@@ -623,6 +623,16 @@ function getEditMenuItemFormValues (){
   menuDef['intended_use'] = getFormValue ('intended_use', screenName='menu_item_type');
   menuDef['lang'] = getFormValue ('lang', screenName='menu_item_lang');
 
+  // Target field name Differs by item type
+  // for now we will use moddir for webroot type, but may switch to start_url
+  var targetFieldNameValue = ""; // default
+  if (jsMenuTypeTargets.hasOwnProperty(menuDef['intended_use'])) {
+  	var targetFieldName = jsMenuTypeTargets[menuDef['intended_use']];
+  	menuDef[targetFieldName] = content_target;
+  }
+  console.log(targetFieldName)
+
+
   menuDef['title'] = getFormValue ('title', screenName='menu_item_title');
   menuDef['logo_url'] = getFormValue ('logo_url', screenName='menu_item_icon_name');
   menuDef['start_url'] = getFormValue ('start_url', screenName='menu_item_start_url');
@@ -721,6 +731,28 @@ function lockMenuItemHeader(lockFlag) {
     $("#menu_item_lang").prop("disabled",false);
     make_button_disabled('#CREATE-MENU-ITEM-DEF', false);
   }
+}
+
+function selectMenuItemIcon() {
+  event.preventDefault()
+    $.ajax({
+    url: jsMenuImageUrl,
+    success: function(data) {
+      $(data).find("a").attr("href", function (i, val) {
+        if( val.match(/\.(jpe?g|png|gif)$/) ) {
+          $(".menu-icons-modal-body").append(
+            `<img onclick="setMenuItemIconName(this.src)" src=${jsMenuImageUrl + val} class="content-menu-icon" >`
+          )
+        }
+      })
+    }
+  })
+}
+
+function setMenuItemIconName(e) {
+  var newIcon = /[^/]*$/.exec(e)[0]
+  $("#menu_item_icon_name").val(newIcon),
+  $('#menuIconsModal').modal('hide')
 }
 
 function gEBI(elementId){
