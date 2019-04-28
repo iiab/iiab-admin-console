@@ -1,10 +1,10 @@
 {
     "intended_use" : "external",
     "lang" : "en",
-    "logo_url" : "osm.jpg",
+    "logo_url" : "skhila.jpg",
     "moddir" : "en-external_school",
     "title" : "skhilla.co.za",
-    "url" : "http://d.iiab.io",
+    "start_url" : "https://www.sites.google.com/skhila.co.za/assess",
     "description" : "Some Description in the correct language",
     "extra_html" : ""
 }
