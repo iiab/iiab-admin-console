@@ -11,6 +11,7 @@ var dynamicHtml = true; // not used. is a hook for generation of static html
 var include_apk_links = false; // for now make this conditional
 // constants
 var zimVersionIdx = "/common/assets/zim_version_idx.json";
+var osmVersionIdx = "/common/assets/osm_version_idx.json";
 var htmlBaseUrl = "/modules/";
 var webrootBaseUrl = "/";
 var apkBaseUrl = "/content/apk/";
@@ -49,6 +50,7 @@ var menuItems = [];
 var menuHtml = "";
 var menuDefs = {};
 var zimVersions = {};
+var osmVersions = {};
 var zimSubstParams = ["article_count", "media_count", "size", "tags",
                      "language","zim_date"];
 var hrefRegEx;
@@ -111,6 +113,13 @@ var getZimVersions = $.getJSON(zimVersionIdx)
 .done(function( data ) {
 	//consoleLog(data);
 zimVersions = data;})
+.fail(jsonErrhandler);
+
+// get name to instance index for osm files
+var getZimVersions = $.getJSON(osmVersionIdx)
+.done(function( data ) {
+	//consoleLog(data);
+osmVersions = data;})
 .fail(jsonErrhandler);
 
 var getLangCodes = $.getJSON(consoleJsonDir + 'lang_codes.json')
@@ -294,6 +303,8 @@ function procMenuItem(module) {
 		menuHtml += calcCalibreWebLink(module);
 	else if (module['intended_use'] == "osm")
 		menuHtml += calcOsmLink(module);
+	else if (module['intended_use'] == "map")
+		menuHtml += calcMapLink(module);
 	else if (module['intended_use'] == "info")
 		menuHtml += calcInfoLink(module);
 	else if (module['intended_use'] == "download")
@@ -396,11 +407,18 @@ function calcNoderedLink(module){
 	return html
 }
 
-function calcOsmLink(module){
-	var href = '/iiab/static/map.html';
+function calcMapLink(module){
+	var href = '/osm-vector/';
 
+   if( osmVersions.hasOwnProperty(module.menu_item_name) &&
+      typeof osmVersions[module.menu_item_name].file_name != 'undefined' ){
+	  href = host + ':/' + href + osmVersions[module.menu_item_name].file_name + '/';
+   } else {
+      href = host + ':/' + href;
+   }
 	var html = calcItemHtml(href,module);
 	return html
+
 }
 
 function calcInfoLink(module){
