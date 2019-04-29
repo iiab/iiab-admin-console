@@ -289,6 +289,8 @@ function procMenuItem(module) {
 		menuHtml += calcHtmlLink(module);
   else if (module['intended_use'] == "webroot")
 	  menuHtml += calcWebrootLink(module);
+	else if (module['intended_use'] == "external")
+	  menuHtml += calcExternalLink(module);
 	else if (module['intended_use'] == "kalite")
 		menuHtml += calcKaliteLink(module);
 	else if (module['intended_use'] == "kolibri")
@@ -344,7 +346,15 @@ function calcHtmlLink(module){
 }
 
 function calcWebrootLink(module){
+	// var href = webrootBaseUrl; - future
 	var href = webrootBaseUrl + module.moddir;
+
+	var html = calcItemHtml(href,module);
+	return html
+}
+
+function calcExternalLink(module){
+	var href = "";
 
 	var html = calcItemHtml(href,module);
 	return html
