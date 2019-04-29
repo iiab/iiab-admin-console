@@ -457,12 +457,16 @@ function calcItemHtml(href,module){
 	// a little kluge but ignore start_url if is dummy link to undefinedPageUrl
   if (href != undefinedPageUrl){
   	if (module.hasOwnProperty("start_url") && module.start_url != ""){
-  	  if (startPage[startPage.length - 1] == '/')
-  	    startPage = startPage.substr(0,startPage.length - 1); // strip final /
-  	  if (module['start_url'][0] != '/')
-  	    startPage = startPage + '/' + module['start_url'];
-  	  else
-  	  	startPage = startPage + module['start_url'];
+  		if (module.intended_use == "external") // don't add initial / if external
+  		  startPage = module['start_url'];
+  		else {
+    	  if (startPage[startPage.length - 1] == '/')
+    	    startPage = startPage.substr(0,startPage.length - 1); // strip final /
+    	  if (module['start_url'][0] != '/')
+    	    startPage = startPage + '/' + module['start_url'];
+    	  else
+    	  	startPage = startPage + module['start_url'];
+      }
     }
   }
 	//var html = '<div style="display: table;"><div style="display: table-row;">';
