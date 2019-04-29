@@ -12,6 +12,7 @@
 				<li class="active"><a href="#instConStart">Get Started</a></li>
 				<li><a href="#instConZims" call-after="checkKiwixCatalogDate">Get ZIM Files from Kiwix</a></li>
 				<li><a href="#instConOer2go" call-after="oer2goMenuOption">Get OER2Go(RACHEL) Modules</a></li>
+				<li><a href="#instOsmRegion" call-after="renderOsm">Get Map Region</a></li>
 				<li><a href="#instConKAlite">Download Khan Academy Videos</a></li>
 				<li><a href="#instManageContent" call-after="manageContentInit">Manage Content</a></li>
 				<!-- <li><a href="#instRemoveContent" call-after="refreshAllInstalledList">Remove Content</a></li> -->
@@ -61,6 +62,29 @@
 
 					<div id="Oer2goDownload" >  </div>
 				</div> <!--  End instConOer2go Submenu Option Pane -->
+				<div class="tab-pane" id="instOsmRegion"> <!-- Start instOsmRegion Submenu Option Pane -->
+					<h2>Install Map Region</h2>
+					<p>Please select JUST ONE region to download and install (each region also includes at least 10 levels of zoom for the entire world &mdash; and a 25 MB searchable database of 127,654 cities/settlements worldwide, i.e. those whose populations appear larger than 1000).  Then click "Install Selected Region" to start the job.  Downloading and then installing this zoomable/searchable map data to /library/www/osm-vector takes time!  You can monitor the progress by clicking Utilities -> Display Job Status.</p>
+					<div class="row">
+						<div class="col-sm-3"></div>
+						<div class="col-sm-4"><span id="osmDiskSpace">0</span> </div>
+						<div class="col-sm-2"><button id="INST-MAP" type="button" class="btn btn-lg btn-primary">Install Selected Region</button></div>
+					</div>
+
+					<div id="osmRegionSelection" >
+                  <style>
+                     #osm-container{
+                       background-color: #b2d3f8; 
+                       float: right;
+                       width: 75%;
+                       right: 10px;
+                       height: 500px;
+                     }
+                  </style>
+                  <div id="osm-container"></div>
+                  <div id='regionlist'>placeholder</div>
+               </div>
+				</div> <!--  End instOsmRegion Submenu Option Pane -->
 				<div class="tab-pane" id="instConKAlite"> <!-- Start instConKAlite Submenu Option Pane -->
 					<h2>Download Khan Academy Videos</h2>
 					<p>Khan Academy Lite has the ability to download selected portions of the available videos in several different languages.</p>
@@ -72,7 +96,7 @@
 					<h2>Manage Content</h2>
 					<div class="row">
 						<div class="col-sm-8">
-						  <p>This menu option allows you to copy content to and from external storage as well as remove it. Please note that only ZIM Modules and OER2Go(RACHEL) Modules are supported at this time. Please also note that external storage is expected to be mounted in /media.</p><p> For more Info please review <b>Help->Install Content->Manage Content</b>.
+						  <p>This menu option allows you to copy content to and from external storage as well as remove it. Please note that only ZIM Files and OER2Go(RACHEL) Modules are supported at this time. Please also note that external storage is expected to be mounted in /media.</p><p> For more Info please review <b>Help->Install Content->Manage Content</b>.
 					    </p>
 							<table>
 								<thead>
@@ -113,7 +137,7 @@
 								<div id="instManageContentInternal" class="tab-pane active">
 									<div class="row">
 										<div class="col-sm-12">
-											<h3>Installed ZIM Modules: </h3>
+											<h3>Installed ZIM Files: </h3>
 											<div id="installedZimModules" >  </div>
 										</div>
 									</div>
@@ -145,7 +169,7 @@
 								<div id="instManageContentUsb" class="tab-pane">
 									<div class="row">
 										<div class="col-sm-12">
-											<h3>Available ZIM Modules: </h3>
+											<h3>Available ZIM Files: </h3>
 											<div id="externalZimModules" >  </div>
 										</div>
 									</div>
@@ -166,3 +190,4 @@
 	</div> <!-- End containing row -->
 </div> <!-- End XXX Sublevel Menu Items and Options -->
 </div> <!-- End InstallContent Top Level Pane -->
+<script src="osm/main.js"></script>

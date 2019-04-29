@@ -230,3 +230,7 @@ border-radius: 8px 8px 0 0;
   top: 50%;
   transform: translateY(-50%);
 }
+
+#INST-MAP {
+  margin-bottom: 10px;
+}

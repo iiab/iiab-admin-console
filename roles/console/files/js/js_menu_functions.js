@@ -623,6 +623,16 @@ function getEditMenuItemFormValues (){
   menuDef['intended_use'] = getFormValue ('intended_use', screenName='menu_item_type');
   menuDef['lang'] = getFormValue ('lang', screenName='menu_item_lang');
 
+  // Target field name Differs by item type
+  // for now we will use moddir for webroot type, but may switch to start_url
+  var targetFieldNameValue = ""; // default
+  if (jsMenuTypeTargets.hasOwnProperty(menuDef['intended_use'])) {
+  	var targetFieldName = jsMenuTypeTargets[menuDef['intended_use']];
+  	menuDef[targetFieldName] = content_target;
+  }
+  console.log(targetFieldName)
+
+
   menuDef['title'] = getFormValue ('title', screenName='menu_item_title');
   menuDef['logo_url'] = getFormValue ('logo_url', screenName='menu_item_icon_name');
   menuDef['start_url'] = getFormValue ('start_url', screenName='menu_item_start_url');
