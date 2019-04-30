@@ -1758,9 +1758,8 @@ def save_menu_item_def(cmd_info):
     menu_item_def['change_date'] = str(date.today())
 
     try:
-        with open(target_file, 'w') as outfile:
-            outfile.write(json.dumps(menu_item_def, indent=2))
-    except OSError as e:
+        write_json_file(menu_item_def, target_file)
+    except :
         resp = cmd_error(cmd_info['cmd'], msg='Error writing to Menu Item Definition File.')
         return (resp)
 
@@ -2370,6 +2369,18 @@ def read_oer2go_catalog():
         init_error = True
         log(syslog.LOG_ERR, 'OER2GO Catalog json file not found' )
         pass
+
+def write_json_file(dict, target_file):
+    str_json = json.dumps(dict, indent=2) # puts unicode in format \uxxx
+    str_uni = str_json.decode('unicode-escape') # removes that
+    str_utf8 = str_uni.encode('utf-8') # converts to utf-8
+
+    try:
+        with open(target_file, 'wb') as outfile:
+            outfile.write(str_utf8)
+
+    except OSError as e:
+        raise
 
 def get_incomplete_jobs():
     global jobs_requested
