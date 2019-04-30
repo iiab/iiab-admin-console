@@ -2371,7 +2371,7 @@ def read_oer2go_catalog():
         pass
 
 def write_json_file(dict, target_file):
-    str_json = json.dumps(dict, indent=2) # puts unicode in format \uxxx
+    str_json = json.dumps(dict, indent=2) # puts unicode in format \uxxxx
     str_uni = str_json.decode('unicode-escape') # removes that
     str_utf8 = str_uni.encode('utf-8') # converts to utf-8
 
