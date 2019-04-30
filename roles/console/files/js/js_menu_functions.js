@@ -317,7 +317,8 @@ function genMenuItem(divId, menuItemName) {
 
 	var langLookup = langCodesXRef[module.lang];
 
-  if (selectedLangs.length > 0 && selectedLangs.indexOf(langLookup) == -1) { // not a selected language
+  // don't hide any items on menu
+  if (divId.indexOf(menuItemDefPrefixes.current) == -1 && selectedLangs.length > 0 && selectedLangs.indexOf(langLookup) == -1) { // not a selected language
 		$(menuItemDivId).hide();
 		return;
 	}

@@ -1,0 +1,39 @@
+#!/usr/bin/python
+# For each .json file in /opt/iiab/iiab-admin-console/roles/js-menu/files/menu-files/menu-defs/
+# Read convert and write
+
+import sys, os.path, argparse, json, glob
+
+menu_defs = '/opt/iiab/iiab-admin-console/roles/js-menu/files/menu-files/menu-defs/*.json'
+
+def main():
+
+    #pattern = '*.json'
+    file_list = glob.glob(menu_defs)
+
+    for path in file_list:
+        print path
+        file = path.split('/')[-1]
+        #print file
+        with open(path, 'r') as f:
+            item = json.load(f)
+        if item.get('intended_use') == 'webroot':
+            new_item = convert_webroot(item)
+            write(new_item, file)
+
+def convert_webroot(item):
+    item['start_url'] = item['moddir']
+    item['moddir'] = ''
+    return item
+
+def write(item, file):
+    str_json = json.dumps(item, indent=2) # puts unicode in format \uxxxx
+    str_uni = str_json.decode('unicode-escape') # removes that
+    str_utf8 = str_uni.encode('utf-8') # converts to utf-8
+
+    with open(file, 'wb') as outfile:
+        outfile.write(str_utf8)
+
+if __name__ == "__main__":
+    # Now run the main routine
+    main()
