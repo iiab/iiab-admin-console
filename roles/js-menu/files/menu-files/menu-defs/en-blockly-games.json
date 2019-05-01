@@ -1,0 +1,23 @@
+{
+    "category": "educational,entertainment",
+    "lang": "en",
+    "age_range": "children,young adult",
+    "rating": "4.0",
+    "description": "Games for tomorrow's programmers that teach basic coding skills.",
+    "intended_use": "html",
+    "prereq_note": "",
+    "zip_http_url": null,
+    "title": "Blockly Games",
+    "index_mod_sample_url": "http://dev.worldpossible.org/cgi/sample_wrap.php?moddir=en-blockly_games",
+    "zip_ftp_url": null,
+    "prereq_id": null, "source_url": "",
+    "file_count": "153",
+    "ksize": "4412",
+    "module_id": "64",
+    "is_hidden": false,
+    "logo_url": "en-blockly_games.png",
+    "rsync_url": "rsync://dev.worldpossible.org/rachelmods/en-blockly_games",
+    "moddir": "en-blockly-games",
+    "start_url": "blockly-games/en/index.html",
+    "extra_html": "en-blockly-games.html"
+}
