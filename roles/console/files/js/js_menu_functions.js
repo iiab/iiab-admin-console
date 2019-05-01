@@ -763,17 +763,29 @@ function uploadMenuItemIcon() {
 
 	$.ajax({
   url: "upload-image.php", // Url to which the request is send
-  type: "POST",             // Type of request to be send, called as method
-  data: formData, // Data sent to server, a set of key/value pairs (i.e. form fields and values)
-  contentType: false,       // The content type used when sending data to the server.
-  cache: false,             // To unable request pages to be cached
-  processData:false,        // To send DOMDocument or non processed data file it is set to false
-  success: function(data)   // A function to be called if request succeeds
-  {
-  $('#loading').hide();
-  $("#message").html(data);
-  }
-  });
+  type: "POST",            // Type of request to be send, called as method
+  data: formData,          // Data sent to server, a set of key/value pairs (i.e. form fields and values)
+  //dataType: "json",
+  cache : false,
+  processData: false
+  })
+  .done(function(dataResp, textStatus, jqXHR) {
+  	if ("Error" in dataResp){
+  		console.log (dataResp);
+  	  alert ("Error uploading image");
+  	  }
+  	else {
+  		$("#menu_item_icon_name").val(files['name']);
+  		alert ("File Uploaded");
+  	}
+  })
+  .fail(function (jqXHR, textStatus, errorThrown){
+		if (errorThrown == 'Not Found'){
+		  alert ('Error uploading image file.');
+		}
+		else
+		  jsonErrhandler (jqXHR, textStatus, errorThrown); // probably a json error
+	});
 }
 
 function gEBI(elementId){
