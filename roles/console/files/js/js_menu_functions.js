@@ -756,6 +756,38 @@ function setMenuItemIconName(e) {
   $('#menuIconsModal').modal('hide')
 }
 
+function uploadMenuItemIcon() {
+	var formData = new FormData();
+  var files = $('#UPLOAD-MENU-ITEM-ICON')[0].files[0];
+  formData.append('file',files);
+
+	$.ajax({
+  url: "upload-image.php", // Url to which the request is send
+  type: "POST",            // Type of request to be send, called as method
+  data: formData,          // Data sent to server, a set of key/value pairs (i.e. form fields and values)
+  //dataType: "json",
+  cache : false,
+  processData: false
+  })
+  .done(function(dataResp, textStatus, jqXHR) {
+  	if ("Error" in dataResp){
+  		console.log (dataResp);
+  	  alert ("Error uploading image");
+  	  }
+  	else {
+  		$("#menu_item_icon_name").val(files['name']);
+  		alert ("File Uploaded");
+  	}
+  })
+  .fail(function (jqXHR, textStatus, errorThrown){
+		if (errorThrown == 'Not Found'){
+		  alert ('Error uploading image file.');
+		}
+		else
+		  jsonErrhandler (jqXHR, textStatus, errorThrown); // probably a json error
+	});
+}
+
 function gEBI(elementId){
 	var element = document.getElementById(elementId);
 	return element;
