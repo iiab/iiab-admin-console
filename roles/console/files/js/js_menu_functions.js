@@ -756,6 +756,26 @@ function setMenuItemIconName(e) {
   $('#menuIconsModal').modal('hide')
 }
 
+function uploadMenuItemIcon() {
+	var formData = new FormData();
+  var files = $('#UPLOAD-MENU-ITEM-ICON')[0].files[0];
+  formData.append('file',files);
+
+	$.ajax({
+  url: "upload-image.php", // Url to which the request is send
+  type: "POST",             // Type of request to be send, called as method
+  data: formData, // Data sent to server, a set of key/value pairs (i.e. form fields and values)
+  contentType: false,       // The content type used when sending data to the server.
+  cache: false,             // To unable request pages to be cached
+  processData:false,        // To send DOMDocument or non processed data file it is set to false
+  success: function(data)   // A function to be called if request succeeds
+  {
+  $('#loading').hide();
+  $("#message").html(data);
+  }
+  });
+}
+
 function gEBI(elementId){
 	var element = document.getElementById(elementId);
 	return element;

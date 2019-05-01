@@ -378,7 +378,10 @@ function contentMenuButtonsEvents() {
   });
   $("#SELECT-MENU-ITEM-ICON").one("click", function(){
     selectMenuItemIcon();
-  })
+  });
+  $("#UPLOAD-MENU-ITEM-ICON").one("click", function(){
+    uploadMenuItemIcon();
+  });
 }
 
   // Util Buttons
@@ -1762,7 +1765,7 @@ function sumAllocationList(list, type){
       totalSpace += parseInt(oer2goCatalog[id].ksize);
     else if (type == "osm")
       totalSpace += parseInt(osmCatalog[id].size / 1000);
-    
+
   }
   // sysStorage.oer2go_selected_size = totalSpace;
   return totalSpace;
