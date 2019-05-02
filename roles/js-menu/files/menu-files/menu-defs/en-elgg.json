@@ -1,10 +1,11 @@
 {
-  "intended_use" : "webroot",
-  "lang" : "en",
-  "logo_url" : "elgg.png",
-  "menu_item_name" : "en-elgg",
-  "moddir" : "elgg",
-  "title" : "Elgg",
-  "description" : "Elgg is a social networking engine used by offline schools to create a collaborative environment.",
-  "extra_html" : "en-elgg.html"
+  "lang": "en", 
+  "intended_use": "webroot", 
+  "title": "Elgg", 
+  "extra_html": "en-elgg.html", 
+  "description": "Elgg is a social networking engine used by offline schools to create a collaborative environment.", 
+  "start_url": "elgg", 
+  "menu_item_name": "en-elgg", 
+  "logo_url": "elgg.png", 
+  "moddir": ""
 }

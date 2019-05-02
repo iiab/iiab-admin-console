@@ -1,9 +1,10 @@
 {
-"intended_use" : "webroot",
-"lang" : "es",
-"logo_url" : "content.jpg",
-"menu_item_name" : "es-usb",
-"moddir" : "usb",
-"title" : "USB",
-"description" : "Inserte una unidad USB con contenido en una carpeta llamada 'usb' para publicar en http://box/usb"
+  "lang": "es", 
+  "intended_use": "webroot", 
+  "title": "USB", 
+  "description": "Inserte una unidad USB con contenido en una carpeta llamada 'usb' para publicar en http://box/usb", 
+  "start_url": "usb", 
+  "menu_item_name": "es-usb", 
+  "logo_url": "content.jpg", 
+  "moddir": ""
 }

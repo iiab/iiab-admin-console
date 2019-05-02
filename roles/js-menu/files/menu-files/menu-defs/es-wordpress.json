@@ -1,8 +1,9 @@
 {
-    "intended_use": "webroot",
-    "lang": "es",
-    "logo_url": "wordpress-icon.png",
-    "moddir": "wordpress",
-    "title": "WordPress",
-    "description": "¡Escriba un artículo personal (o publicación de blog de revista) para compartir con su comunidad!"
+  "lang": "es", 
+  "description": "¡Escriba un artículo personal (o publicación de blog de revista) para compartir con su comunidad!", 
+  "title": "WordPress", 
+  "moddir": "", 
+  "start_url": "wordpress", 
+  "logo_url": "wordpress-icon.png", 
+  "intended_use": "webroot"
 }

@@ -116,7 +116,7 @@ zimVersions = data;})
 .fail(jsonErrhandler);
 
 // get name to instance index for osm files
-var getZimVersions = $.getJSON(osmVersionIdx)
+var getOsmVersions = $.getJSON(osmVersionIdx)
 .done(function( data ) {
 	//consoleLog(data);
 osmVersions = data;})
@@ -130,7 +130,7 @@ var getLangCodes = $.getJSON(consoleJsonDir + 'lang_codes.json')
   consoleLog(langCodes);})
 .fail(jsonErrhandler);
 
-$.when(getMenuJson, getZimVersions, getConfigJson, getLangCodes).always(procMenu);
+// $.when(getMenuJson, getZimVersions, getConfigJson, getLangCodes).always(procMenu);
 
 // This is the main processing
 function jsMenuMain (menuDiv) {
@@ -346,8 +346,8 @@ function calcHtmlLink(module){
 }
 
 function calcWebrootLink(module){
-	// var href = webrootBaseUrl; - future
-	var href = webrootBaseUrl + module.moddir;
+	var href = webrootBaseUrl;
+	// var href = webrootBaseUrl + module.moddir;
 
 	var html = calcItemHtml(href,module);
 	return html

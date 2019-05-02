@@ -1,10 +1,11 @@
 {
-  "intended_use" : "webroot",
-  "lang" : "en",
-  "logo_url" : "wordpress-icon3.png",
-  "menu_item_name" : "en-wordpress",
-  "moddir" : "wordpress",
-  "title" : "WordPress",
-  "description" : "Write a personal article (or post photographs) to share with your community!",
-  "extra_html" : "en-wordpress.html"
+  "lang": "en", 
+  "intended_use": "webroot", 
+  "title": "WordPress", 
+  "extra_html": "en-wordpress.html", 
+  "description": "Write a personal article (or post photographs) to share with your community!", 
+  "start_url": "wordpress", 
+  "menu_item_name": "en-wordpress", 
+  "logo_url": "wordpress-icon3.png", 
+  "moddir": ""
 }
