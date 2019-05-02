@@ -57,5 +57,13 @@
 - name: Copy Menu Files and Create Feedback Database
   shell: ./cp-menus
 
+- name: Make web server user owner of images after copying
+  file: path="{{ js_menu_dir }}menu-files/images/"
+        mode=0644
+        owner="{{ apache_user }}"
+        group="{{ apache_user }}"
+        state=directory
+        recurse=true
+
 - name: Add any IIAB roles that are installed to home/menu.js
   shell: "{{ cmdsrv_dir }}/scripts/iiab_update_menus.py"
