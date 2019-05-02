@@ -1,9 +1,10 @@
 {
-"intended_use":"webroot",
-"lang" : "en",
-"logo_url" : "healthphone.jpg",
-"moddir" : "healthphone/en",
-"title" : "English: HealthPhone Health and Nutrition Video Collection & Apps",
-"description" : "A video reference library; guide to better maternal and child health and nutrition practices, for families and communities.",
-"extra_html":""
+  "lang": "en", 
+  "description": "A video reference library; guide to better maternal and child health and nutrition practices, for families and communities.", 
+  "title": "English: HealthPhone Health and Nutrition Video Collection & Apps", 
+  "extra_html": "", 
+  "moddir": "", 
+  "start_url": "healthphone/en", 
+  "logo_url": "healthphone.jpg", 
+  "intended_use": "webroot"
 }

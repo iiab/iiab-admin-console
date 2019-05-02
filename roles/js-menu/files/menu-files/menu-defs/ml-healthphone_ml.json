@@ -1,9 +1,10 @@
 {
-"intended_use":"webroot",
-"lang" : "ml",
-"logo_url" : "healthphone.jpg",
-"moddir" : "healthphone/ml",
-"title" : "മലയാളം (Malayalam): HealthPhone ആരോഗ്യവും ന്യൂട്രിഷൻ വീഡിയോ കളക്ഷൻ & ആപ്സ്",
-"description" : "ഒരു വീഡിയോ റഫറൻസ് ലൈബ്രറി; കുടുംബങ്ങൾക്കും സമൂഹങ്ങൾക്കും മികച്ച മാതൃശിശുവും ശിശു ആരോഗ്യവും പോഷകാഹാര രീതികളും നയിക്കുക.",
-"extra_html":""
+  "lang": "ml", 
+  "description": "ഒരു വീഡിയോ റഫറൻസ് ലൈബ്രറി; കുടുംബങ്ങൾക്കും സമൂഹങ്ങൾക്കും മികച്ച മാതൃശിശുവും ശിശു ആരോഗ്യവും പോഷകാഹാര രീതികളും നയിക്കുക.", 
+  "title": "മലയാളം (Malayalam): HealthPhone ആരോഗ്യവും ന്യൂട്രിഷൻ വീഡിയോ കളക്ഷൻ & ആപ്സ്", 
+  "extra_html": "", 
+  "moddir": "", 
+  "start_url": "healthphone/ml", 
+  "logo_url": "healthphone.jpg", 
+  "intended_use": "webroot"
 }

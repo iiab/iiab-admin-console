@@ -1,12 +1,13 @@
 {
-  "intended_use" : "webroot",
-  "COMMENTED_OUT_intended_use" : "calibre",
-  "lang" : "en",
-  "logo_url" : "calibreweb.png",
-  "menu_item_name" : "en-calibreweb",
-  "moddir" : "books",
-  "title" : "Calibre-Web",
-  "COMMENTED_OUT_start_url" : "",
-  "description" : "Electronic Books for your local community.",
-  "extra_html" : "en-calibreweb.html"
+  "lang": "en", 
+  "intended_use": "webroot", 
+  "title": "Calibre-Web", 
+  "extra_html": "en-calibreweb.html", 
+  "description": "Electronic Books for your local community.", 
+  "start_url": "books", 
+  "COMMENTED_OUT_intended_use": "calibre", 
+  "COMMENTED_OUT_start_url": "", 
+  "menu_item_name": "en-calibreweb", 
+  "logo_url": "calibreweb.png", 
+  "moddir": ""
 }

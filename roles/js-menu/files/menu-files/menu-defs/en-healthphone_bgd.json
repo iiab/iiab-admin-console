@@ -1,9 +1,10 @@
 {
-"intended_use":"webroot",
-"lang" : "bgd",
-"logo_url" : "healthphone.jpg",
-"moddir" : "healthphone/bgd",
-"title" : "Pawri: HealthPhone Health and Nutrition Video Collection & Apps",
-"description" : "A video reference library; guide to better maternal and child health and nutrition practices, for families and communities.",
-"extra_html":""
+  "lang": "bgd", 
+  "description": "A video reference library; guide to better maternal and child health and nutrition practices, for families and communities.", 
+  "title": "Pawri: HealthPhone Health and Nutrition Video Collection & Apps", 
+  "extra_html": "", 
+  "moddir": "", 
+  "start_url": "healthphone/bgd", 
+  "logo_url": "healthphone.jpg", 
+  "intended_use": "webroot"
 }
