@@ -4,7 +4,7 @@
   "logo_url" : "hamburger.png",
   "moddir" : "",
   "title" : "Put a short, one line name for the item here. Ideally it would be unique.",
-  "description" : "Put a fully description of the item here, but not more than one paragraph.",
+  "description" : "Put a full description of the item here, but not more than one paragraph.",
   "extra_description" : "If there is more description, put it here.",
   "footnote" : "You can put catalog type information here like number of pdfs or size. Also you can use the ##SIZE## and other substitution fields for zims."
 }
