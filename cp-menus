@@ -25,6 +25,9 @@ fi
 
 rsync -av roles/js-menu/files/menu-files $MENUDIR
 
+# restore modified files from local
+cp -rf $MENUDIR/local/* $MENUDIR/menu-files
+
 # refresh kiwix zim index - should already be done
 # iiab-make-kiwix-lib
 
