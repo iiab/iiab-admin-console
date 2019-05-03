@@ -38,17 +38,17 @@ def main():
    #print(json.dumps(map_catalog,indent=2))
    
    map_menu_def_list = get_menu_def_names()
-   print(json.dumps(map_menu_def_list,indent=2))
+   #print(json.dumps(map_menu_def_list,indent=2))
 
    installed_maps = get_installed_regions()
-   print(installed_maps)
+   #print(installed_maps)
 
    write_osm_vector_idx(installed_maps)
 
    # For installed regions, check that a menu def exists, and it's on home page
    for fname in installed_maps:
       region = extract_region_from_filename(fname)
-      print('checking for %s region'%region)
+      #print('checking for %s region'%region)
       if region == 'maplist': # it is the splash page, display only if no others
          menu_ref = 'en-map_test'
          item = { "perma_ref" : "en-map_test" }
@@ -59,10 +59,10 @@ def main():
           item = map_catalog['regions'][region]
           menu_ref = item['perma_ref']
           if not (region in map_menu_def_list):
-             print('creating menu def for %s'%item['perma_ref'])
+             #print('creating menu def for %s'%item['perma_ref'])
              create_menu_def(region,item['perma_ref'] + '.json')
       if fetch_menu_json_value('autoupdate_menu'):
-         print('autoudate of menu items is enabled:%s. Adding %s'%(\
+         #print('autoudate of menu items is enabled:%s. Adding %s'%(\
                     fetch_menu_json_value('autoupdate_menu'),region,))
          # verify this menu def is on home page
          menus.update_menu_json(menu_ref)
