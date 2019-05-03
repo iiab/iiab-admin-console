@@ -1,10 +1,9 @@
 {
-  "lang": "es", 
-  "intended_use": "webroot", 
-  "title": "Créditos", 
-  "description": "Gracias a todos los que aportaron y comisariaron el contenido utilizado por Internet in a Box.", 
-  "start_url": "iiab-menu/menu-files/html/credits.html", 
-  "moddir-OLD": "common/html/credits.html", 
-  "logo_url": "credits.png", 
+  "lang": "es",
+  "intended_use": "webroot",
+  "title": "Créditos",
+  "description": "Gracias a todos los que aportaron y comisariaron el contenido utilizado por Internet in a Box.",
+  "start_url": "common/html/credits.html",
+  "logo_url": "credits.png",
   "moddir": ""
 }
