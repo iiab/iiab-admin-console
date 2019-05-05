@@ -18,7 +18,7 @@ var jsMenuTypeTargets =
   {
     "zim" : "zim_name",
     "html" : "moddir",
-    "webroot" : "moddir",
+    //"webroot" : "moddir",
     //"kalite"  : "",
     //"kolibri"  : "",
     //"cups"  : "",
@@ -317,7 +317,8 @@ function genMenuItem(divId, menuItemName) {
 
 	var langLookup = langCodesXRef[module.lang];
 
-  if (selectedLangs.length > 0 && selectedLangs.indexOf(langLookup) == -1) { // not a selected language
+  // don't hide any items on menu
+  if (divId.indexOf(menuItemDefPrefixes.current) == -1 && selectedLangs.length > 0 && selectedLangs.indexOf(langLookup) == -1) { // not a selected language
 		$(menuItemDivId).hide();
 		return;
 	}
@@ -633,13 +634,13 @@ function getEditMenuItemFormValues (){
   console.log(targetFieldName)
 
 
-  menuDef['title'] = getFormValue ('title', screenName='menu_item_title');
+  menuDef['title'] = getEscapedFormValue ('title', screenName='menu_item_title');
   menuDef['logo_url'] = getFormValue ('logo_url', screenName='menu_item_icon_name');
   menuDef['start_url'] = getFormValue ('start_url', screenName='menu_item_start_url');
-  menuDef['description'] = getFormValue ('description', screenName='menu_item_description');
-  menuDef['extra_description'] = getFormValue ('extra_description', screenName='menu_item_extra_description');
+  menuDef['description'] = getEscapedFormValue ('description', screenName='menu_item_description');
+  menuDef['extra_description'] = getEscapedFormValue ('extra_description', screenName='menu_item_extra_description');
   menuDef['extra_html'] = getFormValue ('extra_html', screenName='menu_item_extra_html');
-  menuDef['footnote'] = getFormValue ('footnote', screenName='menu_item_footnote');
+  menuDef['footnote'] = getEscapedFormValue ('footnote', screenName='menu_item_footnote');
 
   // calc menu item def name
 
@@ -678,13 +679,13 @@ function valEditMenuItemFormValues (screenName){
   menuDef['intended_use'] = getFormValue ('intended_use', screenName='menu_item_type');
   menuDef['lang'] = getFormValue ('lang', screenName='lang');
 
-  menuDef['title'] = getFormValue ('title', screenName='menu_item_title');
+  menuDef['title'] = getEscapedFormValue ('title', screenName='menu_item_title');
   menuDef['logo_url'] = getFormValue ('logo_url', screenName='menu_item_icon_name');
   menuDef['start_url'] = getFormValue ('start_url', screenName='menu_item_start_url');
-  menuDef['description'] = getFormValue ('description', screenName='menu_item_description');
-  menuDef['extra_description'] = getFormValue ('extra_description', screenName='menu_item_extra_description');
+  menuDef['description'] = getEscapedFormValue ('description', screenName='menu_item_description');
+  menuDef['extra_description'] = getEscapedFormValue ('extra_description', screenName='menu_item_extra_description');
   menuDef['extra_html'] = getFormValue ('extra_html', screenName='menu_item_extra_html');
-  menuDef['footnote'] = getFormValue ('footnote', screenName='menu_item_footnote');
+  menuDef['footnote'] = getEscapedFormValue ('footnote', screenName='menu_item_footnote');
 }
 
 function setFormValue (fieldName, fieldValue, screenName='') {
@@ -702,7 +703,18 @@ function setFormChecked (fieldName, fieldValue, screenName='') {
 function getFormValue (fieldName, screenName='') {
 	if (screenName == '')
 	  screenName = fieldName;
-  return gEBI(screenName).value;
+	return gEBI(screenName).value;
+}
+
+function getEscapedFormValue (fieldName, screenName='') {
+	if (screenName == '')
+	  screenName = fieldName;
+	var value = gEBI(screenName).value;
+	var str = JSON.stringify(value); // puts quote on beginning and end
+	str = str.substring(1, str.length - 1); // strip them off
+	str = str.replace(/\\n/g, '<BR>').replace(/\\"/g, '&quot;'); // let's see if this is enough for actual fields
+	gEBI(screenName).value = str; // put back the escaped field
+  return str;
 }
 
 function getFormChecked (fieldName, screenName='') {
@@ -753,6 +765,38 @@ function setMenuItemIconName(e) {
   var newIcon = /[^/]*$/.exec(e)[0]
   $("#menu_item_icon_name").val(newIcon),
   $('#menuIconsModal').modal('hide')
+}
+
+function uploadMenuItemIcon() {
+	var formData = new FormData();
+  var files = $('#UPLOAD-MENU-ITEM-ICON')[0].files[0];
+  formData.append('file',files);
+
+	$.ajax({
+  url: "upload-image.php", // Url to which the request is send
+  type: "POST",            // Type of request to be send, called as method
+  data: formData,          // Data sent to server, a set of key/value pairs (i.e. form fields and values)
+  //dataType: "json",
+  cache : false,
+  processData: false
+  })
+  .done(function(dataResp, textStatus, jqXHR) {
+  	if ("Error" in dataResp){
+  		console.log (dataResp);
+  	  alert ("Error uploading image");
+  	  }
+  	else {
+  		$("#menu_item_icon_name").val(files['name']);
+  		alert ("File Uploaded");
+  	}
+  })
+  .fail(function (jqXHR, textStatus, errorThrown){
+		if (errorThrown == 'Not Found'){
+		  alert ('Error uploading image file.');
+		}
+		else
+		  jsonErrhandler (jqXHR, textStatus, errorThrown); // probably a json error
+	});
 }
 
 function gEBI(elementId){

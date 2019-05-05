@@ -1,9 +1,10 @@
 {
-  "intended_use" : "webroot",
-  "lang" : "en",
-  "logo_url" : "credits.png",
-  "menu_item_name" : "en-credits",
-  "moddir" : "common/html/credits.html",
-  "title" : "Credits",
-  "description" : "Thanks to all those who contributed and curated content used by Internet-in-a-Box."
+  "lang": "en", 
+  "intended_use": "webroot", 
+  "title": "Credits", 
+  "description": "Thanks to all those who contributed and curated content used by Internet-in-a-Box.", 
+  "start_url": "common/html/credits.html", 
+  "menu_item_name": "en-credits", 
+  "logo_url": "credits.png", 
+  "moddir": ""
 }

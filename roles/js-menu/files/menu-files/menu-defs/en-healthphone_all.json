@@ -1,9 +1,10 @@
 {
-"intended_use":"webroot",
-"lang" : "en",
-"logo_url" : "healthphone.jpg",
-"moddir" : "healthphone",
-"title" : "HealthPhone Health and Nutrition Collection",
-"description" : "Knowledge in the hands of those who need it most. What every health worker, family and community has a right to know. Complete list of languages for the HealthPhone video reference library and an overview of how to use it.",
-"extra_html":""
+  "lang": "en", 
+  "description": "Knowledge in the hands of those who need it most. What every health worker, family and community has a right to know. Complete list of languages for the HealthPhone video reference library and an overview of how to use it.", 
+  "title": "HealthPhone Health and Nutrition Collection", 
+  "extra_html": "", 
+  "moddir": "", 
+  "start_url": "healthphone", 
+  "logo_url": "healthphone.jpg", 
+  "intended_use": "webroot"
 }
