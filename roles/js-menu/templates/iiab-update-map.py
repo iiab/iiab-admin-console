@@ -24,7 +24,7 @@ if os.path.exists(os.path.join(SCRIPT_DIR,'iiab_update_menus.py')):
 
 doc_root = get_iiab_env('WWWROOT')
 menuDefs = doc_root + "/js-menu/menu-files/menu-defs/"
-osm_vector_idx_dir = doc_root + "/common/assets"
+map_vector_idx_dir = doc_root + "/common/assets"
 map_doc_root = '{{ map_vector_path }}'
 iiab_osm_url = '(( iiab_osm_url }}'
 #map_doc_root = '/library/www/map-vector'
@@ -44,7 +44,7 @@ def main():
    installed_maps = get_installed_regions()
    #print(installed_maps)
 
-   write_osm_vector_idx(installed_maps)
+   write_map_vector_idx(installed_maps)
 
    # For installed regions, check that a menu def exists, and it's on home page
    for fname in installed_maps:
@@ -111,7 +111,7 @@ def get_installed_regions():
          installed.append('maplist')
    return installed
 
-def write_osm_vector_idx(installed_maps):
+def write_map_vector_idx(installed_maps):
    map_dict ={} 
    idx_dict = {}
    for fname in installed_maps:
@@ -130,7 +130,7 @@ def write_osm_vector_idx(installed_maps):
       idx_dict[item]['region'] = region
       idx_dict[item]['language'] = map_dict['perma_ref'][:2]
 
-   with open(osm_vector_idx_dir + '/osm_version_idx.json','w') as idx:
+   with open(map_vector_idx_dir + '/osm_version_idx.json','w') as idx:
       idx.write(json.dumps(idx_dict,indent=2)) 
 
 def create_menu_def(region,default_name,intended_use='map'):
