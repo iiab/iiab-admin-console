@@ -303,8 +303,6 @@ function procMenuItem(module) {
 		menuHtml += calcCalibreLink(module);
    else if (module['intended_use'] == "calibreweb")
 		menuHtml += calcCalibreWebLink(module);
-	else if (module['intended_use'] == "osm")
-		menuHtml += calcOsmLink(module);
 	else if (module['intended_use'] == "map")
 		menuHtml += calcMapLink(module);
 	else if (module['intended_use'] == "info")

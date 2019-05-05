@@ -67,11 +67,17 @@
 
 - name: Add any IIAB roles that are installed to home/menu.js
   shell: "{{ cmdsrv_dir }}/scripts/iiab_update_menus.py"
-
 - name: Put the OSM update program in place
   template:
-      src: iiab-update-osm
+      src: iiab-update-osm.py
       dest: "{{ cmdsrv_dir }}/scripts/iiab-update-osm.py"
+      mode: 0755
 
 - name: Add any MAPS that are installed to home/menu.js
   shell: "{{ cmdsrv_dir }}/scripts/iiab-update-osm.py"
+
+- name: Let users update the OSM catalog from the command line
+  file:
+      src: "{{ cmdsrv_dir }}/scripts/iiab-update-osm.py" 
+      dest: /usr/bin/iiab-update-osm.py
+      state: link

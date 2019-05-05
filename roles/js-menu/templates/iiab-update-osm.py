@@ -7,6 +7,7 @@ import json
 import os
 import sys
 import fnmatch
+import subprocess
 import re
 
 IIAB_PATH='/etc/iiab'
@@ -14,19 +15,18 @@ if not IIAB_PATH in sys.path:
     sys.path.append(IIAB_PATH)
 from iiab_env import get_iiab_env
 
-SCRIPT_DIR = '/opt/admin/cmdsrv/scripts'
+#SCRIPT_DIR = '/opt/admin/cmdsrv/scripts'
+SCRIPT_DIR = '{{ cmdsrv_dir }}/scripts'
 if not SCRIPT_DIR in sys.path:
     sys.path.append(SCRIPT_DIR)
 if os.path.exists(os.path.join(SCRIPT_DIR,'iiab_update_menus.py')):
    import iiab_update_menus as menus
-   console_installed = True
-else:
-   console_installed = False
 
 doc_root = get_iiab_env('WWWROOT')
 menuDefs = doc_root + "/js-menu/menu-files/menu-defs/"
 osm_vector_idx_dir = doc_root + "/common/assets"
 map_doc_root = '{{ osm_vector_path }}'
+iiab_osm_url = '(( iiab_osm_url }}'
 #map_doc_root = '/library/www/osm-vector'
 # map_catalog will be global, assumed always available
 map_catalog = {}
@@ -34,6 +34,7 @@ map_menu_def_list = []
 
 def main():
    global map_menu_def_list
+   get_newest_osm_catalog()
    get_map_catalog()
    #print(json.dumps(map_catalog,indent=2))
    
@@ -50,8 +51,7 @@ def main():
       region = extract_region_from_filename(fname)
       #print('checking for %s region'%region)
       if region == 'maplist': # it is the splash page, display only if no others
-         menu_ref = 'en-map_test'
-         item = { "perma_ref" : "en-map_test" }
+         menu_ref = 'en-test_map'
          if len(installed_maps) == 1:
             menus.update_menu_json(menu_ref)
             return
@@ -63,9 +63,14 @@ def main():
              create_menu_def(region,item['perma_ref'] + '.json')
       if fetch_menu_json_value('autoupdate_menu'):
          #print('autoudate of menu items is enabled:%s. Adding %s'%(\
-                    fetch_menu_json_value('autoupdate_menu'),region,))
+                    #fetch_menu_json_value('autoupdate_menu'),region,))
          # verify this menu def is on home page
          menus.update_menu_json(menu_ref)
+
+def get_newest_osm_catalog():
+   cmd = 'wget -P ' +map_doc_root + '/maplist/assets/' + \
+                  '{{ iiab_osm_url }}/assets/regions.json'
+   subprocess.call(cmd,shell=True)
 
 def get_map_catalog():
    global map_catalog
@@ -176,9 +181,10 @@ def fetch_menu_json_value(key):
 
 def extract_region_from_filename(fname):
    nibble = re.search(r"^.*omt_(.*)_[0-9]{4}",fname)
+   if not nibble:
+      return("maplist")
    resp = nibble.group(1)
    return(resp)
       
 if __name__ == '__main__':
-   if console_installed:
-      main()
+   main()
