@@ -25,7 +25,7 @@ if os.path.exists(os.path.join(SCRIPT_DIR,'iiab_update_menus.py')):
 doc_root = get_iiab_env('WWWROOT')
 menuDefs = doc_root + "/js-menu/menu-files/menu-defs/"
 osm_vector_idx_dir = doc_root + "/common/assets"
-map_doc_root = '{{ osm_vector_path }}'
+map_doc_root = '{{ map_vector_path }}'
 iiab_osm_url = '(( iiab_osm_url }}'
 #map_doc_root = '/library/www/osm-vector'
 # map_catalog will be global, assumed always available
