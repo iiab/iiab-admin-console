@@ -1,11 +1,11 @@
-// osm_functions.js
+// map_functions.js
 // copyright 2019 George Hunt
 
 var regionGeojson = {};
 var regionList = [];
 var regionInstalled = [];
 var commonAssetsDir = '/common/assets/';
-var mapAssetsDir = '/osm-vector/maplist/assets/';
+var mapAssetsDir = '/map-vector/maplist/assets/';
 var iiab_config_dir = '/etc/iiab/';
 var onChangeFunc = "setSize";
 
@@ -24,7 +24,7 @@ function readOsmIdx(){
 	//consoleLog ("in readOsmIdx");
   var resp = $.ajax({
     type: 'GET',
-    url: consoleJsonDir + 'osm-vector-idx.json',
+    url: consoleJsonDir + 'map-vector-idx.json',
     dataType: 'json'
   })
   .done(function( data ) {

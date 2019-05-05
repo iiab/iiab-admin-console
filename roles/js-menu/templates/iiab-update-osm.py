@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Scan the osm-vector directory, update the osm-vector-idx.json, add menu-defs
+# Scan the map-vector directory, update the map-vector-idx.json, add menu-defs
 
 from geojson import Feature, Point, FeatureCollection, Polygon
 import geojson
@@ -27,7 +27,7 @@ menuDefs = doc_root + "/js-menu/menu-files/menu-defs/"
 osm_vector_idx_dir = doc_root + "/common/assets"
 map_doc_root = '{{ map_vector_path }}'
 iiab_osm_url = '(( iiab_osm_url }}'
-#map_doc_root = '/library/www/osm-vector'
+#map_doc_root = '/library/www/map-vector'
 # map_catalog will be global, assumed always available
 map_catalog = {}
 map_menu_def_list = []
