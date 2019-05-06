@@ -242,7 +242,7 @@ border-radius: 8px 8px 0 0;
 .menu-icons-modal-body {
 	position: relative;
   overflow-y: auto;
-  max-height: 300px;
+  max-height: 230px;
   padding: 15px;
   padding-left: 25px;
 }
