@@ -196,8 +196,8 @@ function drawMenuItemSelectList () { // for selecting menu item to edit definiti
     //consoleLog($(this));
   });
 
-  $('#menusEditMenuItemSelectList').on('click', '.btnCopy' ,function (event) {
-    handleEditMenuItemClick($(this).attr('menu_item_name'), 'copy');
+  $('#menusEditMenuItemSelectList').on('click', '.btnClone' ,function (event) {
+    handleEditMenuItemClick($(this).attr('menu_item_name'), 'clone');
     //consoleLog($(this));
   });
 }
@@ -205,7 +205,7 @@ function drawMenuItemSelectList () { // for selecting menu item to edit definiti
 function drawMenuItemSelectListItem (menuItemName, prefix) {
 	var html = "";
 	var buttonHtml = '<button type="button" style="margin-left: 5px;" class="btn btn-primary btnEdit" menu_item_name="' + menuItemName + '">Edit</button>';
-  //buttonHtml += '<button type="button" style="margin-left: 5px;" class="btn btn-primary btnCopy" menu_item_name="' + menuItemName + '">Copy</button>';
+  buttonHtml += '<button type="button" style="margin-left: 5px;" class="btn btn-primary btnClone" menu_item_name="' + menuItemName + '">Clone</button>';
   var itemHtml = genMenuItemHtml(menuItemName);
   if (itemHtml != ""){
   	html = buttonHtml;
@@ -393,7 +393,7 @@ function menuItemDragStart(e) {
 
   $('.tooltip' , this).remove(); // get rid of extraneous tooltips
 
-  e.dataTransfer.effectAllowed = 'moveCopy';
+  e.dataTransfer.effectAllowed = 'movecopy';
 
   e.dataTransfer.setData('text/html', this.outerHTML);
   e.dataTransfer.setData('menu_item_name', menu_item_name);
@@ -661,6 +661,8 @@ function getEditMenuItemFormValues (){
 function valEditMenuItemFormValues (screenName){
 	var fieldValue = getFormValue (screenName);
 
+	// ************* WTF
+
 	switch (screenName) {
     case 'menu_item_icon_name':
       console.log('Oranges are $0.59 a pound.');
@@ -721,6 +723,40 @@ function getFormChecked (fieldName, screenName='') {
 	if (screenName == '')
 	  screenName = fieldName;
   return gEBI(screenName).checked;
+}
+
+function attachMenuItemDefNameCalc () {
+	$("#menu_item_type").change(calcMenuItemDefName);
+	$("#menu_item_lang").change(calcMenuItemDefName);
+	$("#menu_item_content_target").change(calcMenuItemDefName);
+}
+
+function calcMenuItemDefName () {
+	var defName = getFormValue ('menu_item_name');
+	var newDefName = "";
+	var suffix = getFormValue ('menu_item_name_suffix');
+	var intendedUse = getFormValue ('intended_use', screenName='menu_item_type');
+  var lang = getFormValue ('lang', screenName='menu_item_lang');
+	var contentTarget = getFormValue ('menu_item_content_target');
+  var defNameBase = defName;
+  var hyphenPos = defName.indexOf('-');
+
+  var hyphenPos = defName.split('-');
+  if (hyphenPos.length > 1) {
+  	// match the longest string that could be a language (e.g. zh, zh-classical, zh-min-nan)
+    for (var i = hyphenPos.length-2; i >= 0; i--) {
+    	var testLang = hyphenPos[0];
+    	for (var j = 1; j <= i; j++) {
+    		testLang = testLang + '-' + hyphenPos[j];
+    	}
+    	if (langCodesXRef.hasOwnProperty(testLang))
+    	  break;
+    }
+    defNameBase = defName.split(testLang + '-')[1];
+  }
+  //console.log(defNameBase);
+  newDefName = lang + '-' + defNameBase;
+  setFormValue ('menu_item_name', newDefName)
 }
 
 function lockMenuItemHeader(lockFlag) {
