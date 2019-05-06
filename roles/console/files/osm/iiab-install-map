@@ -4,7 +4,7 @@
 ARCHIVE=https://archive.org/download
 MAP_PREFIX=en-osm-omt_
 MAP_VERSION=_2017-07-03_v0.1
-MAP_DIR=/library/www/vector-maps
+MAP_DIR=/library/www/osm-vector-maps
 
 if [ $# -eq 0 ];then
    echo "You must declare region as the first arguement"
