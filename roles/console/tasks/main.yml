@@ -66,11 +66,11 @@
 - name: Fetch the javascript bundle with openlayers module
   get_url:
      url: "{{ iiab_map_url }}/admin-console/main.js"
-     dest: "{{ admin_console_dir }}/osm/main.js"
+     dest: "{{ admin_console_dir }}/map/main.js"
 
 - name: Install the temporary script to download maps (replaces cmdsrv function)
   copy:
-     src: osm/iiab-install-map
+     src: map/iiab-install-map
      dest: /usr/bin/iiab-install-map
      mode: '0755'
 
