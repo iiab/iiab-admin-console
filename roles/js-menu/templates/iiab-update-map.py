@@ -26,7 +26,7 @@ doc_root = get_iiab_env('WWWROOT')
 menuDefs = doc_root + "/js-menu/menu-files/menu-defs/"
 vector_map_idx_dir = doc_root + "/common/assets"
 map_doc_root = '{{ vector_map_path }}'
-iiab_osm_url = '(( iiab_osm_url }}'
+iiab_map_url = '(( iiab_map_url }}'
 #map_doc_root = '/library/www/vector-map'
 # map_catalog will be global, assumed always available
 map_catalog = {}
@@ -69,7 +69,7 @@ def main():
 
 def get_newest_osm_catalog():
    cmd = 'wget -P ' +map_doc_root + '/maplist/assets/' + \
-                  '{{ iiab_osm_url }}/assets/regions.json'
+                  '{{ iiab_map_url }}/assets/regions.json'
    subprocess.call(cmd,shell=True)
 
 def get_map_catalog():
