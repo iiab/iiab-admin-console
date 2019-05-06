@@ -156,6 +156,13 @@
             group=root
             mode=0644
 
+- name: Install icon upload service
+  template: src=upload-image.php
+            dest="{{ admin_console_dir }}/upload-image.php"
+            owner=root
+            group=root
+            mode=0644
+
 - name: Install admin-console app
   copy: src=index.html
         dest="{{ admin_console_dir }}/index.html"
