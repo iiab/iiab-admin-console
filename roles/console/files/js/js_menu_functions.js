@@ -753,7 +753,7 @@ function selectMenuItemIcon() {
       $(data).find("a").attr("href", function (i, val) {
         if( val.match(/\.(jpe?g|png|gif)$/) ) {
           $(".menu-icons-modal-body").append(
-            `<img onclick="setMenuItemIconName(this.src)" src=${jsMenuImageUrl + val} class="content-menu-icon" >`
+            `<img onclick="setMenuItemIconName(this.src)" src=${jsMenuImageUrl + val} class="select-menu-icon" >`
           )
         }
       })
