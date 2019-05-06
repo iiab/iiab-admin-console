@@ -71,7 +71,7 @@
 
 # before the merge, use this version
 - name: Temporary webpack bundle which interfaces with new map directory
-  file:
+  copy:
      src: map/main.js
      dest: "{{ admin_console_dir }}/map/main.js"
 
