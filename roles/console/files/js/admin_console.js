@@ -382,6 +382,7 @@ function contentMenuButtonsEvents() {
   $("#UPLOAD-MENU-ITEM-ICON").one("click", function(){
     uploadMenuItemIcon();
   });
+  attachMenuItemDefNameCalc(); // attach events to fields
 }
 
   // Util Buttons
