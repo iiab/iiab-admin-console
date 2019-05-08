@@ -1,11 +1,12 @@
 {
-    "intended_use": "webroot",
-    "lang": "en",
-    "logo_url": "content.jpg",
-    "menu_item_name": "en-usb",
-    "moddir": "usb",
-    "title": "SAT Prep & YouTube Videos",
-    "oldtitle": "SAT Prep & YouTube Videos &mdash; Insert a USB Stick/Drive to Publish Files Here",
-    "description": "",
-    "extra_html": "en-usb_plus_ng.html"
+  "lang": "en", 
+  "oldtitle": "SAT Prep & YouTube Videos &mdash; Insert a USB Stick/Drive to Publish Files Here", 
+  "intended_use": "webroot", 
+  "title": "SAT Prep & YouTube Videos", 
+  "extra_html": "en-usb_plus_ng.html", 
+  "description": "", 
+  "start_url": "usb", 
+  "menu_item_name": "en-usb", 
+  "logo_url": "content.jpg", 
+  "moddir": ""
 }

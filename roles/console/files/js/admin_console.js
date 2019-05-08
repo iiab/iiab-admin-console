@@ -274,7 +274,7 @@ function instContentButtonsEvents() {
     });
     //getOer2goStat();
     //alert ("Selected Osm Region scheduled to be installed.\n\nPlease view Utilities->Display Job Status to see the results.");
-    alert ("Selected Osm Region can be installed (in the short term) by typing.\n\niiab-install-map <bold name with _ for space>.");
+    alert ("For now, a Map Region must be downloaded at the command-line, e.g. using:\n\niiab-install-map south_america\nor\niiab-install-map world\n\nSee: http://d.iiab.io/content/OSM/vector-tiles/maplist/hidden/assets/regions.json\n\nWhich originates from: https://github.com/iiab/maps/blob/master/osm-source/ukids/assets/regions.json");
     make_button_disabled("#INST-MAP", false);
   });
 
@@ -376,6 +376,13 @@ function contentMenuButtonsEvents() {
   $("#UPDATE-MENU-ITEM-DEF").click(function(){
     saveContentMenuItemDef();
   });
+  $("#SELECT-MENU-ITEM-ICON").one("click", function(){
+    selectMenuItemIcon();
+  });
+  $("#UPLOAD-MENU-ITEM-ICON").one("click", function(){
+    uploadMenuItemIcon();
+  });
+  attachMenuItemDefNameCalc(); // attach events to fields
 }
 
   // Util Buttons
@@ -1759,7 +1766,7 @@ function sumAllocationList(list, type){
       totalSpace += parseInt(oer2goCatalog[id].ksize);
     else if (type == "osm")
       totalSpace += parseInt(osmCatalog[id].size / 1000);
-    
+
   }
   // sysStorage.oer2go_selected_size = totalSpace;
   return totalSpace;

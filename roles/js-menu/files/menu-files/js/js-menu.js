@@ -116,7 +116,7 @@ zimVersions = data;})
 .fail(jsonErrhandler);
 
 // get name to instance index for osm files
-var getZimVersions = $.getJSON(osmVersionIdx)
+var getOsmVersions = $.getJSON(osmVersionIdx)
 .done(function( data ) {
 	//consoleLog(data);
 osmVersions = data;})
@@ -130,7 +130,7 @@ var getLangCodes = $.getJSON(consoleJsonDir + 'lang_codes.json')
   consoleLog(langCodes);})
 .fail(jsonErrhandler);
 
-$.when(getMenuJson, getZimVersions, getConfigJson, getLangCodes).always(procMenu);
+// $.when(getMenuJson, getZimVersions, getConfigJson, getLangCodes).always(procMenu);
 
 // This is the main processing
 function jsMenuMain (menuDiv) {
@@ -289,6 +289,8 @@ function procMenuItem(module) {
 		menuHtml += calcHtmlLink(module);
   else if (module['intended_use'] == "webroot")
 	  menuHtml += calcWebrootLink(module);
+	else if (module['intended_use'] == "external")
+	  menuHtml += calcExternalLink(module);
 	else if (module['intended_use'] == "kalite")
 		menuHtml += calcKaliteLink(module);
 	else if (module['intended_use'] == "kolibri")
@@ -344,7 +346,15 @@ function calcHtmlLink(module){
 }
 
 function calcWebrootLink(module){
-	var href = webrootBaseUrl + module.moddir;
+	var href = webrootBaseUrl;
+	// var href = webrootBaseUrl + module.moddir;
+
+	var html = calcItemHtml(href,module);
+	return html
+}
+
+function calcExternalLink(module){
+	var href = "";
 
 	var html = calcItemHtml(href,module);
 	return html
@@ -447,12 +457,16 @@ function calcItemHtml(href,module){
 	// a little kluge but ignore start_url if is dummy link to undefinedPageUrl
   if (href != undefinedPageUrl){
   	if (module.hasOwnProperty("start_url") && module.start_url != ""){
-  	  if (startPage[startPage.length - 1] == '/')
-  	    startPage = startPage.substr(0,startPage.length - 1); // strip final /
-  	  if (module['start_url'][0] != '/')
-  	    startPage = startPage + '/' + module['start_url'];
-  	  else
-  	  	startPage = startPage + module['start_url'];
+  		if (module.intended_use == "external") // don't add initial / if external
+  		  startPage = module['start_url'];
+  		else {
+    	  if (startPage[startPage.length - 1] == '/')
+    	    startPage = startPage.substr(0,startPage.length - 1); // strip final /
+    	  if (module['start_url'][0] != '/')
+    	    startPage = startPage + '/' + module['start_url'];
+    	  else
+    	  	startPage = startPage + module['start_url'];
+      }
     }
   }
 	//var html = '<div style="display: table;"><div style="display: table-row;">';

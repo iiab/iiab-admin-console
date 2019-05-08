@@ -1,9 +1,10 @@
 {
-"intended_use" : "webroot",
-"lang" : "en",
-"logo_url" : "content.jpg",
-"menu_item_name" : "en-local_content",
-"moddir" : "local_content",
-"title" : "Our Materials",
-"description" : "Materials collected by your teacher and school"
+  "lang": "en", 
+  "intended_use": "webroot", 
+  "title": "Our Materials", 
+  "description": "Materials collected by your teacher and school", 
+  "start_url": "local_content", 
+  "menu_item_name": "en-local_content", 
+  "logo_url": "content.jpg", 
+  "moddir": ""
 }

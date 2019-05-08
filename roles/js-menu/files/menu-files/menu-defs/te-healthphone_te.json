@@ -1,9 +1,10 @@
 {
-"intended_use":"webroot",
-"lang" : "te",
-"logo_url" : "healthphone.jpg",
-"moddir" : "healthphone/te",
-"title" : "తెలుగు (Telugu): HealthPhone హెల్త్ అండ్ న్యూట్రిషన్ వీడియో కలెక్షన్ & యాప్స్",
-"description" : "వీడియో సూచన లైబ్రరీ; కుటుంబాలు మరియు కమ్యూనిటీల కోసం మంచి తల్లి మరియు శిశు ఆరోగ్యం మరియు పోషకాహార విధానాలకు మార్గదర్శకత్వం చేయండి.",
-"extra_html":""
+  "lang": "te", 
+  "description": "వీడియో సూచన లైబ్రరీ; కుటుంబాలు మరియు కమ్యూనిటీల కోసం మంచి తల్లి మరియు శిశు ఆరోగ్యం మరియు పోషకాహార విధానాలకు మార్గదర్శకత్వం చేయండి.", 
+  "title": "తెలుగు (Telugu): HealthPhone హెల్త్ అండ్ న్యూట్రిషన్ వీడియో కలెక్షన్ & యాప్స్", 
+  "extra_html": "", 
+  "moddir": "", 
+  "start_url": "healthphone/te", 
+  "logo_url": "healthphone.jpg", 
+  "intended_use": "webroot"
 }

@@ -1,10 +1,11 @@
 {
-    "intended_use": "webroot",
-    "lang": "es",
-    "logo_url": "content.jpg",
-    "menu_item_name": "en-usb",
-    "moddir": "usb",
-    "title": "Inserte una Unidad USB para Publicar Archivos Aquí",
-    "description": "Maestros y Bibliotecarios: los folletos de su clase (contenido en PDF, fotos, avisos públicos, etc) <a href=/usb>Aparecerán Inmediatamente Aquí</a> después de insertar una unidad USB o disco duro USB en Internet-in-a-Box.<p>Por último: no dude en quitar físicamente su memoria USB en cualquier momento, después de que los usuarios de Wi-Fi hayan descargado lo que necesitan de usted.",
-    "extra_html": ""
+  "lang": "es", 
+  "intended_use": "webroot", 
+  "title": "Inserte una Unidad USB para Publicar Archivos Aquí", 
+  "extra_html": "", 
+  "description": "Maestros y Bibliotecarios: los folletos de su clase (contenido en PDF, fotos, avisos públicos, etc) <a href=/usb>Aparecerán Inmediatamente Aquí</a> después de insertar una unidad USB o disco duro USB en Internet-in-a-Box.<p>Por último: no dude en quitar físicamente su memoria USB en cualquier momento, después de que los usuarios de Wi-Fi hayan descargado lo que necesitan de usted.", 
+  "start_url": "usb", 
+  "menu_item_name": "en-usb", 
+  "logo_url": "content.jpg", 
+  "moddir": ""
 }

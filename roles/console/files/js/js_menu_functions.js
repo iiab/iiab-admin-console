@@ -18,7 +18,7 @@ var jsMenuTypeTargets =
   {
     "zim" : "zim_name",
     "html" : "moddir",
-    "webroot" : "moddir",
+    //"webroot" : "moddir",
     //"kalite"  : "",
     //"kolibri"  : "",
     //"cups"  : "",
@@ -196,8 +196,8 @@ function drawMenuItemSelectList () { // for selecting menu item to edit definiti
     //consoleLog($(this));
   });
 
-  $('#menusEditMenuItemSelectList').on('click', '.btnCopy' ,function (event) {
-    handleEditMenuItemClick($(this).attr('menu_item_name'), 'copy');
+  $('#menusEditMenuItemSelectList').on('click', '.btnClone' ,function (event) {
+    handleEditMenuItemClick($(this).attr('menu_item_name'), 'clone');
     //consoleLog($(this));
   });
 }
@@ -205,7 +205,7 @@ function drawMenuItemSelectList () { // for selecting menu item to edit definiti
 function drawMenuItemSelectListItem (menuItemName, prefix) {
 	var html = "";
 	var buttonHtml = '<button type="button" style="margin-left: 5px;" class="btn btn-primary btnEdit" menu_item_name="' + menuItemName + '">Edit</button>';
-  //buttonHtml += '<button type="button" style="margin-left: 5px;" class="btn btn-primary btnCopy" menu_item_name="' + menuItemName + '">Copy</button>';
+  buttonHtml += '<button type="button" style="margin-left: 5px;" class="btn btn-primary btnClone" menu_item_name="' + menuItemName + '">Clone</button>';
   var itemHtml = genMenuItemHtml(menuItemName);
   if (itemHtml != ""){
   	html = buttonHtml;
@@ -317,7 +317,8 @@ function genMenuItem(divId, menuItemName) {
 
 	var langLookup = langCodesXRef[module.lang];
 
-  if (selectedLangs.length > 0 && selectedLangs.indexOf(langLookup) == -1) { // not a selected language
+  // don't hide any items on menu
+  if (divId.indexOf(menuItemDefPrefixes.current) == -1 && selectedLangs.length > 0 && selectedLangs.indexOf(langLookup) == -1) { // not a selected language
 		$(menuItemDivId).hide();
 		return;
 	}
@@ -392,7 +393,7 @@ function menuItemDragStart(e) {
 
   $('.tooltip' , this).remove(); // get rid of extraneous tooltips
 
-  e.dataTransfer.effectAllowed = 'moveCopy';
+  e.dataTransfer.effectAllowed = 'movecopy';
 
   e.dataTransfer.setData('text/html', this.outerHTML);
   e.dataTransfer.setData('menu_item_name', menu_item_name);
@@ -623,13 +624,23 @@ function getEditMenuItemFormValues (){
   menuDef['intended_use'] = getFormValue ('intended_use', screenName='menu_item_type');
   menuDef['lang'] = getFormValue ('lang', screenName='menu_item_lang');
 
-  menuDef['title'] = getFormValue ('title', screenName='menu_item_title');
+  // Target field name Differs by item type
+  // for now we will use moddir for webroot type, but may switch to start_url
+  var targetFieldNameValue = ""; // default
+  if (jsMenuTypeTargets.hasOwnProperty(menuDef['intended_use'])) {
+  	var targetFieldName = jsMenuTypeTargets[menuDef['intended_use']];
+  	menuDef[targetFieldName] = content_target;
+  }
+  console.log(targetFieldName)
+
+
+  menuDef['title'] = getEscapedFormValue ('title', screenName='menu_item_title');
   menuDef['logo_url'] = getFormValue ('logo_url', screenName='menu_item_icon_name');
   menuDef['start_url'] = getFormValue ('start_url', screenName='menu_item_start_url');
-  menuDef['description'] = getFormValue ('description', screenName='menu_item_description');
-  menuDef['extra_description'] = getFormValue ('extra_description', screenName='menu_item_extra_description');
+  menuDef['description'] = getEscapedFormValue ('description', screenName='menu_item_description');
+  menuDef['extra_description'] = getEscapedFormValue ('extra_description', screenName='menu_item_extra_description');
   menuDef['extra_html'] = getFormValue ('extra_html', screenName='menu_item_extra_html');
-  menuDef['footnote'] = getFormValue ('footnote', screenName='menu_item_footnote');
+  menuDef['footnote'] = getEscapedFormValue ('footnote', screenName='menu_item_footnote');
 
   // calc menu item def name
 
@@ -650,6 +661,8 @@ function getEditMenuItemFormValues (){
 function valEditMenuItemFormValues (screenName){
 	var fieldValue = getFormValue (screenName);
 
+	// ************* WTF
+
 	switch (screenName) {
     case 'menu_item_icon_name':
       console.log('Oranges are $0.59 a pound.');
@@ -668,13 +681,13 @@ function valEditMenuItemFormValues (screenName){
   menuDef['intended_use'] = getFormValue ('intended_use', screenName='menu_item_type');
   menuDef['lang'] = getFormValue ('lang', screenName='lang');
 
-  menuDef['title'] = getFormValue ('title', screenName='menu_item_title');
+  menuDef['title'] = getEscapedFormValue ('title', screenName='menu_item_title');
   menuDef['logo_url'] = getFormValue ('logo_url', screenName='menu_item_icon_name');
   menuDef['start_url'] = getFormValue ('start_url', screenName='menu_item_start_url');
-  menuDef['description'] = getFormValue ('description', screenName='menu_item_description');
-  menuDef['extra_description'] = getFormValue ('extra_description', screenName='menu_item_extra_description');
+  menuDef['description'] = getEscapedFormValue ('description', screenName='menu_item_description');
+  menuDef['extra_description'] = getEscapedFormValue ('extra_description', screenName='menu_item_extra_description');
   menuDef['extra_html'] = getFormValue ('extra_html', screenName='menu_item_extra_html');
-  menuDef['footnote'] = getFormValue ('footnote', screenName='menu_item_footnote');
+  menuDef['footnote'] = getEscapedFormValue ('footnote', screenName='menu_item_footnote');
 }
 
 function setFormValue (fieldName, fieldValue, screenName='') {
@@ -692,13 +705,58 @@ function setFormChecked (fieldName, fieldValue, screenName='') {
 function getFormValue (fieldName, screenName='') {
 	if (screenName == '')
 	  screenName = fieldName;
-  return gEBI(screenName).value;
+	return gEBI(screenName).value;
+}
+
+function getEscapedFormValue (fieldName, screenName='') {
+	if (screenName == '')
+	  screenName = fieldName;
+	var value = gEBI(screenName).value;
+	var str = JSON.stringify(value); // puts quote on beginning and end
+	str = str.substring(1, str.length - 1); // strip them off
+	str = str.replace(/\\n/g, '<BR>').replace(/\\"/g, '&quot;'); // let's see if this is enough for actual fields
+	gEBI(screenName).value = str; // put back the escaped field
+  return str;
 }
 
 function getFormChecked (fieldName, screenName='') {
 	if (screenName == '')
 	  screenName = fieldName;
   return gEBI(screenName).checked;
+}
+
+function attachMenuItemDefNameCalc () {
+	$("#menu_item_type").change(calcMenuItemDefName);
+	$("#menu_item_lang").change(calcMenuItemDefName);
+	$("#menu_item_content_target").change(calcMenuItemDefName);
+}
+
+function calcMenuItemDefName () {
+	var defName = getFormValue ('menu_item_name');
+	var newDefName = "";
+	var suffix = getFormValue ('menu_item_name_suffix');
+	var intendedUse = getFormValue ('intended_use', screenName='menu_item_type');
+  var lang = getFormValue ('lang', screenName='menu_item_lang');
+	var contentTarget = getFormValue ('menu_item_content_target');
+  var defNameBase = defName;
+  var hyphenPos = defName.indexOf('-');
+
+  var hyphenPos = defName.split('-');
+  if (hyphenPos.length > 1) {
+  	// match the longest string that could be a language (e.g. zh, zh-classical, zh-min-nan)
+    for (var i = hyphenPos.length-2; i >= 0; i--) {
+    	var testLang = hyphenPos[0];
+    	for (var j = 1; j <= i; j++) {
+    		testLang = testLang + '-' + hyphenPos[j];
+    	}
+    	if (langCodesXRef.hasOwnProperty(testLang))
+    	  break;
+    }
+    defNameBase = defName.split(testLang + '-')[1];
+  }
+  //console.log(defNameBase);
+  newDefName = lang + '-' + defNameBase;
+  setFormValue ('menu_item_name', newDefName)
 }
 
 function lockMenuItemHeader(lockFlag) {
@@ -721,6 +779,60 @@ function lockMenuItemHeader(lockFlag) {
     $("#menu_item_lang").prop("disabled",false);
     make_button_disabled('#CREATE-MENU-ITEM-DEF', false);
   }
+}
+
+function selectMenuItemIcon() {
+  event.preventDefault()
+    $.ajax({
+    url: jsMenuImageUrl,
+    success: function(data) {
+      $(data).find("a").attr("href", function (i, val) {
+        if( val.match(/\.(jpe?g|png|gif)$/) ) {
+          $(".menu-icons-modal-body").append(
+            `<img onclick="setMenuItemIconName(this.src)" src=${jsMenuImageUrl + val} class="select-menu-icon" >`
+          )
+        }
+      })
+    }
+  })
+}
+
+function setMenuItemIconName(e) {
+  var newIcon = /[^/]*$/.exec(e)[0]
+  $("#menu_item_icon_name").val(newIcon),
+  $('#menuIconsModal').modal('hide')
+}
+
+function uploadMenuItemIcon() {
+	var formData = new FormData();
+  var files = $('#UPLOAD-MENU-ITEM-ICON')[0].files[0];
+  formData.append('file',files);
+
+	$.ajax({
+  url: "upload-image.php", // Url to which the request is send
+  type: "POST",            // Type of request to be send, called as method
+  data: formData,          // Data sent to server, a set of key/value pairs (i.e. form fields and values)
+  //dataType: "json",
+  cache : false,
+  processData: false
+  })
+  .done(function(dataResp, textStatus, jqXHR) {
+  	if ("Error" in dataResp){
+  		console.log (dataResp);
+  	  alert ("Error uploading image");
+  	  }
+  	else {
+  		$("#menu_item_icon_name").val(files['name']);
+  		alert ("File Uploaded");
+  	}
+  })
+  .fail(function (jqXHR, textStatus, errorThrown){
+		if (errorThrown == 'Not Found'){
+		  alert ('Error uploading image file.');
+		}
+		else
+		  jsonErrhandler (jqXHR, textStatus, errorThrown); // probably a json error
+	});
 }
 
 function gEBI(elementId){
