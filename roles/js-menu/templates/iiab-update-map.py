@@ -187,4 +187,5 @@ def extract_region_from_filename(fname):
    return(resp)
       
 if __name__ == '__main__':
-   main()
+   if os.path.isdir(map_doc_root):
+      main()

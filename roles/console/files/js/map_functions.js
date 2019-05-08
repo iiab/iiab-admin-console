@@ -206,8 +206,16 @@ function renderMap(){
    renderRegionList(true);
 }
 function initMap(){
-var dummy = 0;
-   sysStorage.map_selected_size = 0;
-   $.when(readMapCatalog(true)).then(renderRegionList);
+   var url =  mapAssetsDir + 'regions.json';
+   if (UrlExists(url)){
+      sysStorage.map_selected_size = 0;
+      $.when(readMapCatalog(true)).then(renderRegionList);
+   }
 }
-
+function UrlExists(url)
+{
+    var http = new XMLHttpRequest();
+    http.open('HEAD', url, false);
+    http.send();
+    return http.status!=404;
+}
