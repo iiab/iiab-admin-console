@@ -25,7 +25,7 @@
     - "{{ admin_console_dir }}/help"
     - "{{ admin_console_dir }}/js"
     - "{{ admin_console_dir }}/htmlf"
-    - "{{ admin_console_dir }}/osm"
+    - "{{ admin_console_dir }}/map"
 
 - name: Copy admin-console css files
   copy: src={{ item }}
@@ -63,14 +63,21 @@
   with_fileglob:
         - htmlf/*
 
-- name: Fetch the javascript bundle with openlayers module
-  get_url:
-     url: "{{ iiab_osm_url }}/admin-console/main.js"
-     dest: "{{ admin_console_dir }}/osm/main.js"
+# after this branch is merged into master, enable the following
+#- name: Fetch the javascript bundle with openlayers module
+#  get_url:
+#     url: "{{ iiab_map_url }}/admin-console/main.js"
+#     dest: "{{ admin_console_dir }}/map/main.js"
+
+# before the merge, use this version
+- name: Temporary webpack bundle which interfaces with new map directory
+  copy:
+     src: map/main.js
+     dest: "{{ admin_console_dir }}/map/main.js"
 
 - name: Install the temporary script to download maps (replaces cmdsrv function)
   copy:
-     src: osm/iiab-install-map
+     src: map/iiab-install-map
      dest: /usr/bin/iiab-install-map
      mode: '0755'
 

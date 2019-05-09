@@ -303,8 +303,6 @@ function procMenuItem(module) {
 		menuHtml += calcCalibreLink(module);
    else if (module['intended_use'] == "calibreweb")
 		menuHtml += calcCalibreWebLink(module);
-	else if (module['intended_use'] == "osm")
-		menuHtml += calcOsmLink(module);
 	else if (module['intended_use'] == "map")
 		menuHtml += calcMapLink(module);
 	else if (module['intended_use'] == "info")
@@ -418,7 +416,7 @@ function calcNoderedLink(module){
 }
 
 function calcMapLink(module){
-	var href = '/osm-vector/';
+	var href = '/osm-vector-maps/';
 
    if( osmVersions.hasOwnProperty(module.menu_item_name) &&
       typeof osmVersions[module.menu_item_name].file_name != 'undefined' ){
