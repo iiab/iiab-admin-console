@@ -127,21 +127,6 @@ function instMapItem(name) {
   return true;
 }
 
-function jsonErrhandler (jqXHR, textStatus, errorThrown)
-{
-  // only handle json parse errors here, others in ajaxErrHandler
-  if (textStatus == "parserror") {
-    //alert ("Json Errhandler: " + textStatus + ", " + errorThrown);
-    displayServerCommandStatus("Json Errhandler: " + textStatus + ", " + errorThrown);
-  }
-  //consoleLog("In Error Handler logging jqXHR");
-  console.log(textStatus);
-  console.log(errorThrown);
-  console.log(jqXHR);
-
-  return false;
-}
-
 function updateMapSpace(cb){
   console.log("in updateMapSpace" + cb);
   var region = cb.name;
