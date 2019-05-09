@@ -19,7 +19,7 @@ function getMapStat(){
   readMapCatalog( true ); // we want checkboxes
   readMapIdx();
 }
-  
+
 function readMapIdx(){
 	//consoleLog ("in readMapIdx");
   var resp = $.ajax({
@@ -142,15 +142,6 @@ function jsonErrhandler (jqXHR, textStatus, errorThrown)
   return false;
 }
 
-function readableSize(kbytes) {
-  if (kbytes == 0)
-  return "0";
-  var bytes = 1024 * kbytes;
-  var s = ['bytes', 'kB', 'MB', 'GB', 'TB', 'PB'];
-  var e = Math.floor(Math.log(bytes) / Math.log(1024));
-  return (bytes / Math.pow(1024, e)).toFixed(2) + " " + s[e];
-}
-
 function updateMapSpace(cb){
   console.log("in updateMapSpace" + cb);
   var region = cb.name;
@@ -174,7 +165,7 @@ function updateMapSpaceUtil(region, checked){
       selectedMapItems.splice(modIdx, 1);
     }
   }
-  
+
   displaySpaceAvail();
 }
 
