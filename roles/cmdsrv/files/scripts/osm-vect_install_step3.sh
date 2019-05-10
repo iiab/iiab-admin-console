@@ -8,8 +8,9 @@
 echo "Moving downloaded $1 to production"
 mv $1 $2
 
-echo "Updating home page menues"
-/usr/bin/iiab-update-map.py
+echo "Updating home page menus"
+/usr/bin/iiab-update-map
+# /usr/bin/iiab-update-map.py has syntax errors
 
 echo "Removing download"
 rm $3
