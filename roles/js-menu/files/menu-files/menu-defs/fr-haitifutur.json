@@ -20,5 +20,5 @@
   "logo_url": "fr-haitifutur.jpg",
   "rsync_url": "rsync://dev.worldpossible.org/rachelmods/fr-haitifutur",
   "moddir": "fr-haitifutur",
-  "start_url": "fr-haitifutur/www.haitifutur.com/ressources/videos/"
+  "start_url": "www.haitifutur.com/ressources/videos/"
 }
