@@ -25,7 +25,7 @@ var jsMenuTypeTargets =
     //"nodered"  : "",
     //"calibre"  : "",
     //"calibreweb"  : "",
-    //"osm"  : "",
+    "map"  : "map_name",
     //"info"  : "",
     "download"  : "download_folder"
   };
