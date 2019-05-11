@@ -35,7 +35,7 @@ function instMapError(data, cmd_args) {
 function getMapStat(){
   // called during the init
   console.log('in getMapStat');
-  readMapCatalog( true ); // we want checkboxes
+  readMapCatalog();
   readMapIdx();
 }
 
@@ -48,23 +48,24 @@ function readMapIdx(){
   })
   .done(function( data ) {
   	//mapInstalled = data['regions'];
+   consoleLog (data);
    mapInstalled = [];
-   for (region in data['regions']) {
-    if (data['regions'].hasOwnProperty(region)) {
-        mapInstalled.push(region);
-    }
-}
-    //consoleLog(mapInstalled + '');
+   mapInstalled = Object.keys(data);
+   //for (region in data['regions']) {
+   // if (data['regions'].hasOwnProperty(region)) {
+   //     mapInstalled.push(region);
+   // }
+  //}
+  //consoleLog(mapInstalled + '');
   })
   .fail(jsonErrhandler);
 
   return resp;
 }
 
-function readMapCatalog(checkbox){
-   checkbox = checkbox || true;
-	console.log ("in readMapCalalog");
-   regionList = [];
+function readMapCatalog(){
+	//console.log ("in readMapCalalog");
+  regionList = [];
   var resp = $.ajax({
     type: 'GET',
     url: mapAssetsDir + 'regions.json',
@@ -204,7 +205,7 @@ function initMap(){
    var url =  mapAssetsDir + 'regions.json';
    if (UrlExists(url)){
       sysStorage.map_selected_size = 0;
-      $.when(readMapCatalog(true)).then(renderRegionList);
+      $.when(getMapStat()).then(renderRegionList);
    }
 }
 function UrlExists(url)
