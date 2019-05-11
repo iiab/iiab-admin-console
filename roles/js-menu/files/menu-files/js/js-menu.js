@@ -11,7 +11,7 @@ var dynamicHtml = true; // not used. is a hook for generation of static html
 var include_apk_links = false; // for now make this conditional
 // constants
 var zimVersionIdx = "/common/assets/zim_version_idx.json";
-var osmVersionIdx = "/common/assets/osm_version_idx.json";
+var osmVersionIdx = "/common/assets/vector-map-idx.json";
 var htmlBaseUrl = "/modules/";
 var webrootBaseUrl = "/";
 var apkBaseUrl = "/content/apk/";
@@ -299,9 +299,9 @@ function procMenuItem(module) {
 		menuHtml += calcCupsLink(module);
 	else if (module['intended_use'] == "nodered")
 		menuHtml += calcNoderedLink(module);
-   else if (module['intended_use'] == "calibre")
+  else if (module['intended_use'] == "calibre")
 		menuHtml += calcCalibreLink(module);
-   else if (module['intended_use'] == "calibreweb")
+  else if (module['intended_use'] == "calibreweb")
 		menuHtml += calcCalibreWebLink(module);
 	else if (module['intended_use'] == "map")
 		menuHtml += calcMapLink(module);
