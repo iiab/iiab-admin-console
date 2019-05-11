@@ -50,13 +50,14 @@ function readMapIdx(){
   	//mapInstalled = data['regions'];
    consoleLog (data);
    mapInstalled = [];
-   mapInstalled = Object.keys(data);
-   //for (region in data['regions']) {
-   // if (data['regions'].hasOwnProperty(region)) {
-   //     mapInstalled.push(region);
-   // }
-  //}
-  //consoleLog(mapInstalled + '');
+   //mapInstalled = Object.keys(data);
+   for (var map in data) {
+   	 consoleLog (map)
+     if (data[map].hasOwnProperty('region')) {
+       mapInstalled.push(data[map].region);
+     }
+  }
+  consoleLog(mapInstalled + '');
   })
   .fail(jsonErrhandler);
 
