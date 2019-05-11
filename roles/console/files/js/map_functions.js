@@ -1,17 +1,36 @@
 // map_functions.js
 // copyright 2019 George Hunt
 
-var regionGeojson = {};
+//var regionGeojson = {};
 var regionList = [];
-var regionInstalled = [];
-var commonAssetsDir = '/common/assets/';
+//var regionInstalled = [];
+//var commonAssetsDir = '/common/assets/';
 var mapAssetsDir = '/osm-vector-maps/maplist/assets/';
-var iiab_config_dir = '/etc/iiab/';
-var onChangeFunc = "setSize";
+//var iiab_config_dir = '/etc/iiab/';
+//var onChangeFunc = "setSize";
 
 // following 2 lines an experiment to see if test page and console can be common
 //var jquery = require("./assets/jquery.min");
 //window.$ = window.jQuery = jquery;
+
+function instMapItem(map_id) {
+    mapDownloading.push(zim_id);
+    var command = "INST-OSM-VECT-SET"
+    var cmd_args = {}
+    cmd_args['osm_vect_id'] = map_id;
+    cmd = command + " " + JSON.stringify(cmd_args);
+    sendCmdSrvCmd(cmd, genericCmdHandler, "", instMapError, cmd_args);
+    return true;
+}
+
+function instMapError(data, cmd_args) {
+    consoleLog(cmd_args);
+    //cmdargs = JSON.parse(command);
+    //consoleLog(cmdargs);
+    consoleLog(cmd_args["map_id"]);
+    mapDownloading.pop(cmd_args["map_id"]);
+    return true;
+}
 
 function getMapStat(){
   // called during the init
@@ -28,11 +47,11 @@ function readMapIdx(){
     dataType: 'json'
   })
   .done(function( data ) {
-  	mapInstalled = data['regions'];
-   regionInstalled = [];
+  	//mapInstalled = data['regions'];
+   mapInstalled = [];
    for (region in data['regions']) {
     if (data['regions'].hasOwnProperty(region)) {
-        regionInstalled.push(region);
+        mapInstalled.push(region);
     }
 }
     //consoleLog(mapInstalled + '');
@@ -84,7 +103,7 @@ function renderRegionList(checkbox) { // generic
   });
   html += '</form>';
   //console.log(html);
-  $( "#regionlist" ).html(html);
+  $( "#mapRegionSelectList" ).html(html);
 }
 
 
@@ -117,7 +136,7 @@ function genRegionItem(region,checkbox) {
 function instMapItem(name) {
   var command = "INST-OSM-VECT-SET";
   var cmd_args = {};
-  cmd_args['map_vect_id'] = name;
+  cmd_args['osm_vect_id'] = name;
   cmd = command + " " + JSON.stringify(cmd_args);
   sendCmdSrvCmd(cmd, genericCmdHandler);
   mapDownloading.push(name);
@@ -139,7 +158,7 @@ function updateMapSpaceUtil(region, checked){
   var modIdx = selectedMapItems.indexOf(region);
 
   if (checked){
-    if (regionInstalled.indexOf(region) == -1){ // only update if not already installed mods
+    if (mapInstalled.indexOf(region) == -1){ // only update if not already installed mods
       sysStorage.map_selected_size += size;
       selectedMapItems.push(region);
     }

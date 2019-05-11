@@ -2434,7 +2434,7 @@ def read_maps_catalog():
         init_error = True
         log(syslog.LOG_ERR, 'Maps Catalog json file not found' )
         pass
-    print maps_catalog
+    #print maps_catalog
 
 def write_json_file(dict, target_file):
     str_json = json.dumps(dict, indent=2) # puts unicode in format \uxxxx
