@@ -79,7 +79,7 @@
     owner: root
     group: root
     mode: 0644
-    force: no
+    force: yes
 
   with_items:
     - regions.json

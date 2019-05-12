@@ -66,10 +66,11 @@ function readMapIdx(){
 
 function readMapCatalog(){
 	//console.log ("in readMapCalalog");
+	// read regions.json from common/assets in case osm vectors not installed
   regionList = [];
   var resp = $.ajax({
     type: 'GET',
-    url: mapAssetsDir + 'regions.json',
+    url: consoleJsonDir + 'regions.json',
     dataType: 'json'
   })
   .done(function( data ) {
@@ -204,8 +205,8 @@ function renderMap(){
 }
 function initMap(){
    var url =  mapAssetsDir + 'regions.json';
+   sysStorage.map_selected_size = 0; // always set to 0
    if (UrlExists(url)){
-      sysStorage.map_selected_size = 0;
       $.when(getMapStat()).then(renderRegionList);
    }
 }
