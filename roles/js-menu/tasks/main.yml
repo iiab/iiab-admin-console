@@ -68,17 +68,30 @@
 - name: Add any IIAB roles that are installed to home/menu.js
   shell: "{{ cmdsrv_dir }}/scripts/iiab_update_menus.py"
 
-#- name: Put the OSM update program in place
-#  template:
-#      src: iiab-update-map.py
-#      dest: "{{ cmdsrv_dir }}/scripts/iiab-update-map.py"
-#      mode: 0755
+# For Osm Vector Maps
+# If not enabled install empty files
+# Otherwise run /usr/bin/iiab-update-map
+
+- name: Copy Osm Vector Maps dummy files
+  copy:
+    src: map/{{ item }}
+    dest: "{{ doc_root }}/common/assets/{{ item }}"
+    owner: root
+    group: root
+    mode: 0644
+    force: no
+
+  with_items:
+    - regions.json
+    - vector-map-idx.json
+  when: not osm_vector_maps_enabled
+
+- name: Remove region.json dummy file if osm_vector_maps_enabled
+  file:
+    path: "{{ doc_root }}/common/assets/regions.json"
+    state: absent
+  when: osm_vector_maps_enabled
 
 - name: Add any MAPS that are installed to home/menu.js
   shell: /usr/bin/iiab-update-map
-
-#- name: Let users update the OSM catalog from the command line
-#  file:
-#      src: "{{ cmdsrv_dir }}/scripts/iiab-update-map.py"
-#      dest: /usr/bin/iiab-update-map.py
-#      state: link
+  when: osm_vector_maps_enabled
