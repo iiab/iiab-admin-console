@@ -92,6 +92,13 @@
     state: absent
   when: osm_vector_maps_enabled
 
+- name: Create a link to osm catalog in /common/assets
+  file:
+    src: "{{ vector_map_path }}/maplist/assets/regions.json"
+    dest: "{{ doc_root }}/common/assets/regions.json"
+    state: link
+  when: osm_vector_maps_enabled
+
 - name: Add any MAPS that are installed to home/menu.js
   shell: /usr/bin/iiab-update-map
   when: osm_vector_maps_enabled
