@@ -23,6 +23,7 @@ import uuid
 import re
 import argparse
 import fnmatch
+from datetime import date
 
 SCRIPT_DIR = '/opt/admin/cmdsrv/scripts'
 if not SCRIPT_DIR in sys.path:
@@ -317,7 +318,8 @@ def proc_module (module):
     if not os.path.exists(doc_root_menu_defs + moddir + '.json'):
        # as per discussion, put menu-def (minus html) into menu-defs
        menu_item['extra_html'] = ''
-       menu_item["change_ref"] = "auto"
+       menu_item["change_ref"] = "generated"
+       menu_item["change_date"] = str(date.today())
        print("writing to %s"%doc_root_menu_defs + moddir + '.json')
        with open(doc_root_menu_defs + moddir + '.json', 'w') as fp:
           json.dump(menu_item, fp, indent=2)

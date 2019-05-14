@@ -40,8 +40,8 @@ var oer2goCopying = []; // list of Oer2go items being copied
 var oer2goExternal = []; // list of Oer2go items on external device
 var downloadedFiles = {};
 var mapDownloading = []; // list of Map items being downloaded
-var mapWip = {}; // list of copying, downloading, exporting
-var mapInstalled = {}; // list of map regions already installed
+var mapWip = []; // list of copying, downloading, exporting
+var mapInstalled = []; // list of map regions already installed
 var externalDeviceContents = {}; // zims and other content on external devices, only one active at a time
 
 var langNames = []; // iso code, local name and English name for languages for which we have zims sorted by English name for language
@@ -262,7 +262,7 @@ function instContentButtonsEvents() {
     var map_id;
     make_button_disabled("#INST-MAP", true);
     selectedMapItems = []; // items no longer selected as are being installed
-    $('#map_select input').each( function(){
+    $('#mapRegionSelectList input').each( function(){
       if (this.type == "checkbox")
         if (this.checked){
           map_id = this.name;
@@ -273,8 +273,8 @@ function instContentButtonsEvents() {
         }
     });
     //getOer2goStat();
-    //alert ("Selected Map Region scheduled to be installed.\n\nPlease view Utilities->Display Job Status to see the results.");
-    alert ("For now, a Map Region must be downloaded at the command-line, e.g. using:\n\niiab-install-map south_america\nor\niiab-install-map world\n\nSee: http://d.iiab.io/content/OSM/vector-tiles/maplist/hidden/assets/regions.json\n\nWhich originates from: https://github.com/iiab/maps/blob/master/osm-source/ukids/assets/regions.json");
+    alert ("Selected Map Region scheduled to be installed.\n\nPlease view Utilities->Display Job Status to see the results.");
+    //alert ("For now, a Map Region must be downloaded at the command-line, e.g. using:\n\niiab-install-map south_america\nor\niiab-install-map world\n\nSee: http://d.iiab.io/content/OSM/vector-tiles/maplist/hidden/assets/regions.json\n\nWhich originates from: https://github.com/iiab/maps/blob/master/osm-source/ukids/assets/regions.json");
     make_button_disabled("#INST-MAP", false);
   });
 
@@ -1796,8 +1796,8 @@ function sumOer2goWip(){
 function sumMapWip(){
   var totalSpace = 0;
 
-  for (var moddir in mapWip){
-  	totalSpace += parseInt(mapCatalog[moddir].size);
+  for (var region in mapWip){
+  	totalSpace += parseInt(mapCatalog[region].size);
   }
   return totalSpace;
 }

@@ -185,7 +185,7 @@ def create_menu_def(perma_ref,default_name,intended_use='zim'):
    menuDef["extra_html"] = ""
    menuDef["footnote"] = 'Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Tags; [##tags##], Language: ##language##, Date: ##zim_date##'
 
-   menuDef["change_ref"] = "auto"
+   menuDef["change_ref"] = "generated"
    menuDef['change_date'] = str(date.today())
 
    if not os.path.isfile(menuDefs + default_name): # logic to here can still overwrite existing menu def
