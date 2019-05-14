@@ -1,0 +1,11 @@
+{
+  "intended_use" : "map",
+  "lang" : "en",
+  "logo_url" : "osm.jpg",
+  "module_id" : "",
+  "moddir" : "en-test_map",
+  "category" : null,
+  "title" : "Test OSM (OpenStreetMap) Regions",
+  "description" : "Can be used to see which regions are available for download.",
+  "extra_html" : ""
+}
