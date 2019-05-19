@@ -136,12 +136,6 @@ var getLangCodes = $.getJSON(consoleJsonDir + 'lang_codes.json')
 function jsMenuMain (menuDiv) {
 	menuDivId = menuDiv || "content";
   genRegEx(); // regular expressions for subtitution
-  if (isMobile || navigator.userAgent.includes('Win64') || navigator.platform == 'MacIntel') {
-  	var allowed = menuConfig.apache_allow_sudo || false;
-  	var desired = menuParams.allow_server_time_update || false;
-  	if (allowed && desired)
-  	  updateServerTime();
-  }
 
   if (dynamicHtml){
   	getLocalStore();
@@ -175,7 +169,7 @@ function updateServerTime() {
   var user_utc_datetime = now.toISOString().substr(0, 19) + 'Z';
   var user_timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-	$.ajax({ url: 'client-clock.php',
+	$.ajax({ url: menuServicesUrl + 'set-server-time.php',
 	  type: 'POST',
     data: {
       user_agent: navigator.userAgent,
@@ -185,10 +179,12 @@ function updateServerTime() {
     dataType: 'text'
 		})
 		.done(function( data ) {
-      alert(data);
+      consoleLog(data);
+      //alert(data);
     })
    .fail(function( data ) {
-      alert(data);
+      consoleLog(data);
+      //alert(data);
    });
 }
 
@@ -227,6 +223,13 @@ function procStatic(){
 }
 
 function procMenu() {
+	if (isMobile || navigator.userAgent.includes('Win64') || navigator.platform == 'MacIntel') {
+    	var allowed = menuConfig.apache_allow_sudo || false;
+    	var desired = menuParams.allow_server_time_update || false;
+  	  if (allowed && desired)
+  	    updateServerTime();
+  }
+
 	calcItemVerbosity();
 	//resizeHandler (); // if a mobile device set font-size for portrait or landscape
 	for (var i = 0; i < menuItems.length; i++) {
