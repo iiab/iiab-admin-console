@@ -137,7 +137,9 @@ function jsMenuMain (menuDiv) {
 	menuDivId = menuDiv || "content";
   genRegEx(); // regular expressions for subtitution
   if (isMobile || navigator.userAgent.includes('Win64') || navigator.platform == 'MacIntel') {
-  	if (menuConfig.apache_allow_sudo && menuParams.allow_time_sync)
+  	var allowed = menuConfig.apache_allow_sudo || false;
+  	var desired = menuParams.allow_time_sync || false;
+  	if (allowed && desired)
   	  updateServerTime();
   }
 
