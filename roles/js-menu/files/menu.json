@@ -16,6 +16,7 @@
   "allow_poweroff" : true,
   "poweroff_prompt" : "Power Off",
   "autoupdate_menu": true,
+  "allow_time_sync" : true,
   "multi_tab" : false,
   "tab_names" : ["Main"],
   "menu_items_1" :

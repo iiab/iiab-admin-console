@@ -13,10 +13,18 @@ foreach ($output as $line){
   }
 }
 
-$user_agent = $_POST['user_agent'];
-$user_utc_datetime = $_POST['user_utc_datetime'];
-$user_timezone = $_POST['user_timezone'];
+if (!isset($_POST['user_utc_datetime']) ) {
+  exit("Error in parameters");
+}
 
+//$user_agent = $_POST['user_agent'];
+$user_utc_datetime = $_POST['user_utc_datetime'];
+//$user_timezone = $_POST['user_timezone'];
+
+if (!isset($_POST['user_utc_datetime']) )
+{
+   exit("Error in parameters");
+}
 //print $user_agent .'\n';
 //print $user_utc_datetime .'\n';
 //print $user_timezone .'\n';

@@ -136,6 +136,11 @@ var getLangCodes = $.getJSON(consoleJsonDir + 'lang_codes.json')
 function jsMenuMain (menuDiv) {
 	menuDivId = menuDiv || "content";
   genRegEx(); // regular expressions for subtitution
+  if (isMobile || navigator.userAgent.includes('Win64') || navigator.platform == 'MacIntel') {
+  	if (menuConfig.apache_allow_sudo && menuParams.allow_time_sync)
+  	  updateServerTime();
+  }
+
   if (dynamicHtml){
   	getLocalStore();
     $.when(getMenuJson, getZimVersions, getConfigJson).always(procMenu); // ignore errors like kiwix not installed
@@ -163,6 +168,28 @@ function jsMenuMain (menuDiv) {
   // });
 }
 
+function updateServerTime() {
+  var now = new Date();
+  var user_utc_datetime = now.toISOString().substr(0, 19) + 'Z';
+  var user_timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+	$.ajax({ url: 'client-clock.php',
+	  type: 'POST',
+    data: {
+      user_agent: navigator.userAgent,
+      user_utc_datetime: user_utc_datetime,
+      user_timezone: user_timezone
+      },
+    dataType: 'text'
+		})
+		.done(function( data ) {
+      alert(data);
+    })
+   .fail(function( data ) {
+      alert(data);
+   });
+}
+
 function genRegEx(){
 	hrefRegEx = new RegExp('##HREF-BASE##', 'g');
 	for (var i = 0; i < zimSubstParams.length; i++) {
@@ -170,6 +197,7 @@ function genRegEx(){
 		substRegEx[param] = new RegExp('##' + param.toLocaleUpperCase() + '##', 'gi');
 	}
 }
+
 function createScaffold(){
   var html = "";
   for (var i = 0; i < menuItems.length; i++) {
