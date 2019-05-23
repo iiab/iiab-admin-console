@@ -136,6 +136,7 @@ var getLangCodes = $.getJSON(consoleJsonDir + 'lang_codes.json')
 function jsMenuMain (menuDiv) {
 	menuDivId = menuDiv || "content";
   genRegEx(); // regular expressions for subtitution
+
   if (dynamicHtml){
   	getLocalStore();
     $.when(getMenuJson, getZimVersions, getConfigJson).always(procMenu); // ignore errors like kiwix not installed
@@ -163,6 +164,30 @@ function jsMenuMain (menuDiv) {
   // });
 }
 
+function updateServerTime() {
+  var now = new Date();
+  var user_utc_datetime = now.toISOString().substr(0, 19) + 'Z';
+  var user_timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+	$.ajax({ url: menuServicesUrl + 'set-server-time.php',
+	  type: 'POST',
+    data: {
+      user_agent: navigator.userAgent,
+      user_utc_datetime: user_utc_datetime,
+      user_timezone: user_timezone
+      },
+    dataType: 'text'
+		})
+		.done(function( data ) {
+      consoleLog(data);
+      //alert(data);
+    })
+   .fail(function( data ) {
+      consoleLog(data);
+      //alert(data);
+   });
+}
+
 function genRegEx(){
 	hrefRegEx = new RegExp('##HREF-BASE##', 'g');
 	for (var i = 0; i < zimSubstParams.length; i++) {
@@ -170,6 +195,7 @@ function genRegEx(){
 		substRegEx[param] = new RegExp('##' + param.toLocaleUpperCase() + '##', 'gi');
 	}
 }
+
 function createScaffold(){
   var html = "";
   for (var i = 0; i < menuItems.length; i++) {
@@ -197,6 +223,13 @@ function procStatic(){
 }
 
 function procMenu() {
+	if (isMobile || navigator.userAgent.includes('Win64') || navigator.platform == 'MacIntel') {
+    	var allowed = menuConfig.apache_allow_sudo || false;
+    	var desired = menuParams.allow_server_time_update || false;
+  	  if (allowed && desired)
+  	    updateServerTime();
+  }
+
 	calcItemVerbosity();
 	//resizeHandler (); // if a mobile device set font-size for portrait or landscape
 	for (var i = 0; i < menuItems.length; i++) {

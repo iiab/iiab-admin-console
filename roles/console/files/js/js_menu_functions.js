@@ -124,6 +124,7 @@ function setContentMenuToEditFormValues (){
   setContentMenuToEditFormValue('menu_lang', 'js_menu_lang');
   setContentMenuToEditFormChecked('autoupdate_menu');
   setContentMenuToEditFormChecked('allow_kiwix_search');
+  setContentMenuToEditFormChecked('allow_server_time_update');
   setContentMenuToEditFormChecked('allow_poweroff');
   setContentMenuToEditFormValue('poweroff_prompt');
 }
@@ -154,6 +155,7 @@ function getContentMenuToEditFormValues (){
   getContentMenuToEditFormValue('menu_lang', 'js_menu_lang');
   getContentMenuToEditFormChecked('autoupdate_menu');
   getContentMenuToEditFormChecked('allow_kiwix_search');
+  getContentMenuToEditFormChecked('allow_server_time_update');
   getContentMenuToEditFormChecked('allow_poweroff');
   getContentMenuToEditFormValue('poweroff_prompt');
 
