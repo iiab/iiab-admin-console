@@ -683,6 +683,7 @@ def cmd_handler(cmd_msg):
         "GET-SPACE-AVAIL": get_space_avail,
         "GET-STORAGE-INFO": get_storage_info_lite,
         "GET-EXTDEV-INFO": get_external_device_info,
+        "GET-NETWORK-INFO": get_network_info,
         "REMOVE-USB": umount_usb,
         "RUN-ANSIBLE": run_ansible,
         "RESET-NETWORK": run_ansible,
@@ -1005,6 +1006,64 @@ def get_external_device_info(cmd_info):
 
     resp = json.dumps(extdev_info)
     return (resp)
+
+def get_network_info(cmd_info):
+    net_stat={}
+
+    # ip -br addr
+    # ip route | grep default
+    # brctl show
+    # systemctl is-active hostapd
+    # systemctl is-active openvpn
+    # /etc/iiab/uuid
+    # /etc/iiab/openvpn_handle
+
+    outp = run_command("/sbin/ip -br addr")
+
+    for line in outp:
+        dev_props = line.split()
+        if dev_props[0] == 'lo':
+            continue
+        dev = {}
+        dev['state'] = dev_props[1]
+        if len(dev_props) >= 3:
+            dev['addr'] = dev_props[2]
+        else:
+            dev['addr'] = None
+        net_stat[dev_props[0]] = dev
+
+    outp = run_command("ip route")
+    for line in outp:
+        route_props = line.split()
+        if dev_props[0] == 'default':
+            net_stat["gateway"] = dev_props[4]
+
+    outp = run_command("/sbin/brctl show")
+    bridge_devs = []
+    for line in outp:
+        bridge_props = line.split()
+        if bridge_props[0] == 'bridge':
+            continue # skip header
+        bridge_devs.append(bridge_props[3])
+
+    net_stat["bridge_devs"] = bridge_devs
+
+    net_stat["hostapd"] = run_command("/bin/systemctl is-active hostapd")[0]
+    net_stat["openvpn"] = run_command("/bin/systemctl is-active openvpn")[0]
+    net_stat["iiab_uuid"] = run_command("/bin/cat /etc/iiab/uuid")[0]
+    net_stat["openvpn_handle"] = run_command("/bin/cat /etc/iiab/openvpn_handle")[0]
+
+    resp = json.dumps(net_stat)
+    return (resp)
+
+def run_command(command):
+    args = shlex.split(command)
+    try:
+        outp = subprocess.check_output(args)
+    except: #skip things that don't work
+        outp = ''
+
+    return filter(None, outp.split('\n'))
 
 def get_ext_zim_catalog(dev_name):
     iiab_zim_path = dev_name + zim_dir
