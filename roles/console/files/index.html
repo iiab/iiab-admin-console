@@ -53,6 +53,7 @@
 									<h2>Control Server</h2>
 									<ul class="nav nav-pills nav-stacked"> <!-- Start XXX Sub Level Menu -->
 										<li class="active"><a href="#controlWarning">Warning</a></li>
+										<li><a href="#controlHotspot">Hotspot Control</a></li>
 										<!-- <li><a href="#">Services Enabled</a></li> -->
 									</ul> <!-- End XXX Sub Level Menu -->
 									<h2>Actions</h2>
@@ -63,7 +64,7 @@
 								</div> <!-- left column -->
 								<div class="col-md-9"> <!-- Start right column -->
 									<div class="tab-content"> <!-- Start Container for Sub Menu Options Panes -->
-										<div class="tab-pane active" id="controlWarning"> <!-- Start instConStart Submenu Option Pane -->
+										<div class="tab-pane active" id="controlWarning"> <!-- Start controlWarning Submenu Option Pane -->
 											<h2>WARNING</h2>
 											<p>Please use caution in rebooting or powering off the server.</p>
 											<p>Please make sure that no one is using it.</p>
@@ -73,6 +74,11 @@
 											<h2>Starting Application</h2>
 											<div id="initLog"></div>
 										</div> <!--  End controlWarning Submenu Option Pane -->
+										<div class="tab-pane" id="controlHotspot"> <!-- Start controlHotspot Submenu Option Pane -->
+											<h2>Hotspot Control</h2>
+											<p>Hotspot is <span id="hotspotState">OFF</span></p>
+											<button id="HOTSPOTCTL" type="button" class="btn btn-lg btn-danger" style="opacity:0.5" disabled>Change Hotspot</button>
+										</div> <!--  End controlHotspot Submenu Option Pane -->
 									</div> <!-- End Container for Sub Menu Options Panes -->
 								</div> <!-- right column -->
 							</div> <!-- End containing row -->
