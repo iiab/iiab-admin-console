@@ -61,6 +61,7 @@ iiab_menu_items={
      "moodle":"en-moodle",\
      "nextcloud":"en-nextcloud",\
      "nodered":"en-nodered",\
+     "internetarchive":"en-internetarchive",\
      "sugarizer":"en-sugarizer",\
      #"teamviewer":"en-teamviewer",\
      "wordpress":"en-wordpress"
