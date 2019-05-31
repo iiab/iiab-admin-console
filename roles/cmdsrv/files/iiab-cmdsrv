@@ -684,6 +684,7 @@ def cmd_handler(cmd_msg):
         "GET-STORAGE-INFO": get_storage_info_lite,
         "GET-EXTDEV-INFO": get_external_device_info,
         "GET-NETWORK-INFO": get_network_info,
+        "CTL-HOTSPOT": ctl_hotspot,
         "REMOVE-USB": umount_usb,
         "RUN-ANSIBLE": run_ansible,
         "RESET-NETWORK": run_ansible,
@@ -1008,6 +1009,11 @@ def get_external_device_info(cmd_info):
     return (resp)
 
 def get_network_info(cmd_info):
+    net_stat = calc_network_info(cmd_info)
+    resp = json.dumps(net_stat)
+    return (resp)
+
+def calc_network_info(cmd_info):
     net_stat={}
 
     # ip -br addr
@@ -1053,8 +1059,7 @@ def get_network_info(cmd_info):
     net_stat["iiab_uuid"] = run_command("/bin/cat /etc/iiab/uuid")[0]
     net_stat["openvpn_handle"] = run_command("/bin/cat /etc/iiab/openvpn_handle")[0]
 
-    resp = json.dumps(net_stat)
-    return (resp)
+    return (net_stat)
 
 def run_command(command):
     args = shlex.split(command)
@@ -1064,6 +1069,43 @@ def run_command(command):
         outp = ''
 
     return filter(None, outp.split('\n'))
+
+def ctl_hotspot(cmd_info):
+    if ansible_facts['ansible_local']['local_facts']['os'] != 'raspbian':
+        resp = cmd_error(cmd=cmd_info['cmd'], msg='Only supported on Raspberry Pi.')
+        return (resp)
+
+    if 'cmd_args' in cmd_info:
+        hotspot_on_off = cmd_info['cmd_args']['hotspot_on_off']
+    else:
+        return cmd_malformed(cmd_info['cmd'])
+
+    if hotspot_on_off == 'on':
+        outp = run_command("/usr/bin/iiab-hotspot-on")[0]
+        resp = cmd_success(cmd_info['cmd'])
+        return resp
+    else:
+        # hotspot off
+        #sed -i -e "s/^denyinterfaces/#denyinterfaces/" /etc/dhcpcd.conf
+        #systemctl disable hostapd
+        #systemctl stop hostapd
+        #systemctl disable dnsmasq
+        #systemctl stop dnsmasq
+        #systemctl daemon-reload
+        #systemctl restart dhcpcd
+        #systemctl restart networking
+
+        # Temporary promiscuous-mode workaround for RPi's WiFi "10SEC disease"
+        # Set wlan0 to promiscuous when AP's OFF (for possible WiFi gateway)
+        # SEE ALSO iiab-hotspot-on + /usr/libexec/iiab-startup.sh
+        # https://github.com/iiab/iiab/issues/638#issuecomment-355455454
+        #if grep -qi raspbian /etc/*release; then
+        #    ip link set dev wlan0 promisc on
+        #fi
+
+        #sed -i -e "s/^HOSTAPD_ENABLED.*/HOSTAPD_ENABLED=False/" /etc/iiab/iiab.env
+
+
 
 def get_ext_zim_catalog(dev_name):
     iiab_zim_path = dev_name + zim_dir
