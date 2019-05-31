@@ -19,8 +19,6 @@
     </div> <!-- left column -->
     <div class="col-md-9"> <!-- Start right column -->
       <div id="EditMenusOptions" class="tab-content"> <!-- Start Container for Sub Menu Options Panes -->
-
-
         <div class="tab-pane active" id="menusDefineMenu"> <!-- Start menusDefineMenu Submenu Option Pane -->
           <h2>Edit Content Menus</h2>
           <div class="row">
@@ -46,9 +44,8 @@
                 <li class="nav-item active"><a href="#menusDefineMenuProperties" class="nav-link small" call-after="nop">Menu Properties</a></li>
                 <li class="nav-item"><a href="#menusDefineMenuItems" class="nav-link small" call-after="nop">Content Item List</a></li>
               </ul>
-            </div>
+            </div> <!-- end row -->
           </div>
-
           <div class="row">
             <div class="col-sm-12">
               <div id="menusDefineMenuTabsPanes" class="tab-content">
@@ -162,7 +159,7 @@
                 </div>
               </div> <!-- End menusDefineMenuTabsPanes -->
             </div>
-          </div>
+          </div> <!-- end row -->
         </div> <!--  End menusDefineMenu Submenu Option Pane -->
         <div class="tab-pane" id="menusEditContentMenuItems"> <!-- Start menusEditContentMenuItems Submenu Option Pane -->
           <h2>Edit Content Menus Items</h2>
@@ -190,7 +187,7 @@
                       </div>
                     </div> <!-- End menusEditMenuItemSelect -->
                     <div id="menusEditMenuItemEdit" class="tab-pane"> <!-- Start menusEditMenuItemEdit -->
-                      <div class="row" id="menusEditMenuItemEditNew"> <!--  All fields should be readonly unless this is a new item -->
+                      <div class="row" id="menusEditMenuItemEditNew"> <!-- New Def Fields: All fields should be readonly unless this is a new item -->
                         <div class="col-sm-12">
                           <h3>Only to Add a New Menu Item Definition</h3>
                           <div class="row"> <!--  Other New Def Fields -->
@@ -214,7 +211,7 @@
                                   <option value="info">Information Only Menu Item with No Link</option>
                                   <option value="download">Link to Downloadable Content</option>
                                 </select>
-                              </div>
+                              </div> <!-- end select form group -->
                               <div class="form-group">
                                 <label for="menu_item_lang">Select Menu Item Language</label>
                                 <select class="form-control" id="menu_item_lang"></select>
@@ -224,24 +221,23 @@
                                 <input type="text" name="menu_item_content_target" class="form-control" id="menu_item_content_target">
                               </div>
                               <div class="row"> <!--  Code/Suffix -->
-                            <div class="col-md-4">
-                              <div class="form-group">
-                                <label for="menu_item_name">Menu Item Code</label>
-                                <input type="text" name="menu_item_name" class="form-control" id="menu_item_name" disabled>
-                              </div>
-                            </div>
-                            <div class="col-md-4">
-                              <div class="form-group">
-                                <label for="menu_item_name_suffix">Optional Code Suffix</label>
-                                <input type="text" name="menu_item_name_suffix" class="form-control" id="menu_item_name_suffix">
-                              </div>
-                            </div>
-                          </div> <!--  End Code/Suffix -->
+                                <div class="col-md-4">
+                                  <div class="form-group">
+                                    <label for="menu_item_name">Menu Item Code</label>
+                                    <input type="text" name="menu_item_name" class="form-control" id="menu_item_name" disabled>
+                                  </div>
+                                </div>
+                                <div class="col-md-4">
+                                  <div class="form-group">
+                                    <label for="menu_item_name_suffix">Optional Code Suffix</label>
+                                    <input type="text" name="menu_item_name_suffix" class="form-control" id="menu_item_name_suffix">
+                                  </div>
+                                </div>
+                              </div> <!--  End Code/Suffix row -->
                               <div class="form-group">
                                 <button id="CREATE-MENU-ITEM-DEF" type="button" class="btn btn-primary">Create a New Menu Item Definition</button>
                               </div>
-                            </div>
-
+                            </div> <!--  End col-md-8 -->
                           </div> <!--  End Other New Def Fields -->
                           <hr style="border-top-width:1px; border-top-color:#ddd">
                         </div> <!--  End row -->
@@ -268,17 +264,17 @@
                                     <div class="modal-content">
                                       <div class="modal-header">
                                         <h5 class="modal-title" id="menuIconsModalTitle">Select Your Icon</h5>
-                                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                            <span aria-hidden="true">&times;</span>
-                                          </button>
-                                        </div>
-                                        <div class="menu-icons-modal-body" >
-                                        </div>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                          <span aria-hidden="true">&times;</span>
+                                        </button>
+                                      </div>
+                                      <div class="menu-icons-modal-body" >
                                       </div>
                                     </div>
                                   </div>
-                                </div>
+                                </div> <!-- End Modal -->
                               </div>
+                            </div>
                           </div>
                           <div class="form-group">
                             <label for="menu_item_start_url">Optional Start URL - Only change this if the the blank default doesn't work.</label>
@@ -305,24 +301,15 @@
                           </div>
                         </div>
                       </div> <!--  End Existing Def Fields -->
-                    </div>
-                  </div>
-                </div> <!-- End menusEditMenuItemEdit -->
-                <!-- <div id="menusEditMenuItemPreview" class="tab-pane"> < !-- Start menusEditMenuItemPreview -- >
-                <div class="row">
-                <div class="col-sm-6">
-                <h3>Preview Menu Item</h3>
-                <div id="menusEditMenuItemSelectedPreview">preview the selected menu item here  </div>
-                </div>
-                </div>
-                </div> <!-- End menusEditMenuItemPreview -->
-              </div>
-            </div>
-          </div>
-        </div>
-      </div> <!--  End menusEditContentMenuItems Submenu Option Pane -->
-    </div> <!-- End Container for Sub Menu Options Panes -->
-  </div> <!-- right column -->
-</div> <!-- End containing row -->
-</div> <!-- End XXX Sublevel Menu Items and Options -->
-</div> <!-- End EditMenus Top Level Pane -->
+                    </div> <!-- End menusEditMenuItemEdit -->
+                  </div> <!-- menusDefineMenuTabsPanes -->
+                </div> <!-- End col-sm-12 -->
+              </div> <!-- End row -->
+            </div> <!-- End col-sm-8 -->
+          </div> <!-- End row -->
+        </div> <!--  End menusEditContentMenuItems Submenu Option Pane -->
+      </div> <!-- End Container for Sub Menu Options Panes -->
+    </div> <!-- right column -->
+  </div> <!-- End containing row -->
+</div> <!-- End EditMenus Sublevel Menu Items and Options -->
+<!-- End EditMenus Top Level Pane -->
