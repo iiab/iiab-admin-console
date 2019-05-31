@@ -1,0 +1,9 @@
+{
+    "intended_use": "html",
+    "lang": "fr",
+    "logo_url": "hesperianlogo.png",
+    "moddir" : "fr-hesperian",
+    "title" : "Hesperian Guides de Sant&eacute; en Fran&ccedil;ais",
+    "description": "Des guides faciles &agrave; comprendre, pratiques, pr&eacute;cis et fortement illustr&eacute;s sur les th&egrave;mes de sant&eacute; que dans les r&eacute;gions &eacute;loign&eacute;es o&ugrave; l'acc&egrave;s au personnel m&eacute;dical et les installations sont limit&eacute;es.",
+    "extra_html": "fr-hesperian.html"
+}

@@ -219,16 +219,32 @@ border-radius: 8px 8px 0 0;
   height: 50px;
 }
 
-.content-menu-icon:hover {
-  -moz-transform: scale(1.5);
-  -webkit-transform: scale(1.5);
-  transform: scale(1.5);
+.select-menu-icon {
+  width: 75px;
+  height: 75px;
+  padding: 20px;
+}
+
+.select-menu-icon:hover {
+  -moz-transform: scale(2);
+  -webkit-transform: scale(2);
+  transform: scale(2);
+  background: white;
 }
 
 #menuIconsModal {
   position: fixed;
   top: 50%;
   transform: translateY(-50%);
+  overflow-y: hidden;
+}
+
+.menu-icons-modal-body {
+	position: relative;
+  overflow-y: auto;
+  max-height: 230px;
+  padding: 15px;
+  padding-left: 25px;
 }
 
 #INST-MAP {

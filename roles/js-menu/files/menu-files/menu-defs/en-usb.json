@@ -1,10 +1,11 @@
 {
-  "intended_use" : "webroot",
-  "lang" : "en",
-  "logo_url" : "content.jpg",
-  "menu_item_name" : "en-usb",
-  "moddir" : "usb",
-  "title" : "Insert a USB Stick/Drive to Publish Files Here",
-  "description" : "Teachers and Librarians: your class handouts (PDF files, photos, public notices etc) will instantly <a href=/usb>Appear Right Here</a> after you insert a USB stick/drive into the Internet-in-a-Box.",
-  "extra_html" : "en-usb.html"
+  "lang": "en", 
+  "intended_use": "webroot", 
+  "title": "Insert a USB Stick/Drive to Publish Files Here", 
+  "extra_html": "en-usb.html", 
+  "description": "Teachers and Librarians: your class handouts (PDF files, photos, public notices etc) will instantly <a href=/usb>Appear Right Here</a> after you insert a USB stick/drive into the Internet-in-a-Box.", 
+  "start_url": "usb", 
+  "menu_item_name": "en-usb", 
+  "logo_url": "content.jpg", 
+  "moddir": ""
 }

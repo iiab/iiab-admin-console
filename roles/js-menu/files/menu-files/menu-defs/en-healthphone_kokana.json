@@ -1,9 +1,10 @@
 {
-"intended_use":"webroot",
-"lang" : "kokana",
-"logo_url" : "healthphone.jpg",
-"moddir" : "healthphone/kokana",
-"title" : "Kokana: HealthPhone Health and Nutrition Video Collection & Apps",
-"description" : "A video reference library; guide to better maternal and child health and nutrition practices, for families and communities.",
-"extra_html":""
+  "lang": "kokana", 
+  "description": "A video reference library; guide to better maternal and child health and nutrition practices, for families and communities.", 
+  "title": "Kokana: HealthPhone Health and Nutrition Video Collection & Apps", 
+  "extra_html": "", 
+  "moddir": "", 
+  "start_url": "healthphone/kokana", 
+  "logo_url": "healthphone.jpg", 
+  "intended_use": "webroot"
 }

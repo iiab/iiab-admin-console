@@ -87,6 +87,11 @@ oer2go_mods_url = None
 rachel_downloads_dir = None
 rachel_working_dir = None
 rachel_version = None
+maps_downloads_dir = None
+maps_working_dir = None
+maps_catalog_url = None
+maps_catalog_file = None
+vector_map_path = None
 modules_dir = None
 small_device_size = 250000
 js_menu_dir = None
@@ -144,6 +149,7 @@ ansible_tags = {}
 iiab_ini = {}
 kiwix_catalog = {}
 oer2go_catalog = {}
+maps_catalog = {}
 
 # vars set by admin-console
 config_vars = {}
@@ -698,6 +704,8 @@ def cmd_handler(cmd_msg):
         "GET-OER2GO-STAT": get_oer2go_stat,
         "GET-RACHEL-STAT": get_rachel_stat,
         "INST-RACHEL": install_rachel,
+        "GET-OSM-VECT-CAT": get_osm_vect_catalog,
+        "INST-OSM-VECT-SET": install_osm_vect_set,
         "DEL-DOWNLOADS": del_downloads,
         "DEL-MODULES": del_modules,
         "GET-MENU-ITEM-DEF-LIST": get_menu_item_def_list,
@@ -1715,6 +1723,49 @@ def install_rachel(cmd_info):
     #resp = cmd_error(cmd='INST-ZIMS', msg='Just testing')
     return resp
 
+def get_osm_vect_catalog(cmd_info):
+    return cmd_malformed("DUMMY")
+
+def install_osm_vect_set(cmd_info):
+    global ansible_running_flag
+    global jobs_requested
+
+    if 'cmd_args' in cmd_info:
+        map_id = cmd_info['cmd_args']['osm_vect_id']
+        if map_id not in maps_catalog['regions']:
+            resp = cmd_error(cmd='INST-OSM-VECT-SET', msg='Region is not in catalog in Command')
+            return resp
+    else:
+        return cmd_malformed(cmd_info['cmd'])
+
+    # at this point we can create all the jobs
+
+    download_url = maps_catalog['regions'][map_id]['url'] # https://archive.org/download/en-osm-omt_north_america_2017-07-03_v0.1/en-osm-omt_north_america_2017-07-03_v0.1.zip
+    zip_name = download_url.split('/')[-1] # en-osm-omt_north_america_2017-07-03_v0.1.zip
+    download_file = maps_downloads_dir + zip_name
+    unzipped_dir = maps_working_dir + zip_name.split('.zip')[0]
+
+    # download zip file
+    job_command = "/usr/bin/wget -c --progress=dot:giga " + download_url + " -O " + download_file
+    job_id = request_one_job(cmd_info, job_command, 1, -1, "Y")
+    #print job_command
+
+    # unzip
+    job_command = "/usr/bin/unzip -uo " + download_file + " -d " + maps_working_dir
+    job_id = request_one_job(cmd_info, job_command, 2, job_id, "Y")
+    #print job_command
+
+    # move to location and clean up
+    job_command = "scripts/osm-vect_install_step3.sh"
+    job_command +=  " " + unzipped_dir
+    job_command +=  " " + vector_map_path
+    job_command +=  " " + download_file
+
+    #print job_command
+    resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=3, depend_on_job_id=job_id, has_dependent="N")
+
+    return resp
+
 # Content Menu Commands
 
 def get_menu_item_def_list(cmd_info):
@@ -1758,9 +1809,8 @@ def save_menu_item_def(cmd_info):
     menu_item_def['change_date'] = str(date.today())
 
     try:
-        with open(target_file, 'w') as outfile:
-            outfile.write(json.dumps(menu_item_def, indent=2))
-    except OSError as e:
+        write_json_file(menu_item_def, target_file)
+    except :
         resp = cmd_error(cmd_info['cmd'], msg='Error writing to Menu Item Definition File.')
         return (resp)
 
@@ -2195,6 +2245,7 @@ def init():
     #get_ansible_tags()
     read_kiwix_catalog()
     read_oer2go_catalog()
+    read_maps_catalog()
 
     # Compute variables derived from all of the above
     compute_vars()
@@ -2371,6 +2422,32 @@ def read_oer2go_catalog():
         log(syslog.LOG_ERR, 'OER2GO Catalog json file not found' )
         pass
 
+def read_maps_catalog():
+    global maps_catalog
+    global init_error
+
+    try:
+        stream = open (maps_catalog_file,"r")
+        maps_catalog = json.load(stream)
+        stream.close()
+    except:
+        init_error = True
+        log(syslog.LOG_ERR, 'Maps Catalog json file not found' )
+        pass
+    #print maps_catalog
+
+def write_json_file(dict, target_file):
+    str_json = json.dumps(dict, indent=2) # puts unicode in format \uxxxx
+    str_uni = str_json.decode('unicode-escape') # removes that
+    str_utf8 = str_uni.encode('utf-8') # converts to utf-8
+
+    try:
+        with open(target_file, 'wb') as outfile:
+            outfile.write(str_utf8)
+
+    except OSError as e:
+        raise
+
 def get_incomplete_jobs():
     global jobs_requested
     global jobs_to_restart
@@ -2511,6 +2588,11 @@ def app_config():
     global rachel_downloads_dir
     global rachel_working_dir
     global rachel_version
+    global maps_downloads_dir
+    global maps_working_dir
+    global maps_catalog_url
+    global maps_catalog_file
+    global vector_map_path
     global modules_dir
     global js_menu_dir
     global ansible_playbook_program
@@ -2557,6 +2639,11 @@ def app_config():
     rachel_downloads_dir = conf['rachel_downloads_dir']
     rachel_working_dir = conf['rachel_working_dir']
     modules_dir = conf['modules_dir']
+    maps_downloads_dir = conf['maps_downloads_dir']
+    maps_working_dir = conf['maps_working_dir']
+    maps_catalog_url  = conf['maps_catalog_url']
+    maps_catalog_file  = conf['maps_catalog_file']
+    vector_map_path  = conf['vector_map_path']
     js_menu_dir = conf['js_menu_dir']
     squid_service = conf['squid_service']
     squid_whitelist = "/etc/%s/sites.whitelist.txt" % squid_service

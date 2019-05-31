@@ -1,0 +1,12 @@
+{
+  "lang": "en", 
+  "intended_use": "map", 
+  "title": "OpenStreetMap: 18 Levels of Zoom for <b> Oceania</b>", 
+  "extra_html": "", 
+  "change_ref": "generated", 
+  "change_date": "2019-05-13", 
+  "menu_item_name": "en-osm-omt_oceania.json", 
+  "map_name": "en-osm-omt_oceania", 
+  "logo_url": "osm.jpg", 
+  "description": "<p>Resolution of the Whole World to 5 KM. OpenStreetMap data for <b>Oceania</b> with details down to 5 Meters</p>"
+}

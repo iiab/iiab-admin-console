@@ -134,6 +134,9 @@
                                 <input type="checkbox" name="allow_kiwix_search" id="allow_kiwix_search">Check to Allow Kiwix Cross Zim Search.
                               </label></div>
                               <div class="checkbox"><label>
+                                <input type="checkbox" name="allow_server_time_update" id="allow_server_time_update">Check to Allow Browser to Update Server Time.
+                              </label></div
+                              <div class="checkbox"><label>
                                 <input type="checkbox" name="allow_poweroff" id="allow_poweroff">Check to Allow Power Off Link.
                               </label></div>
                               <label for="poweroff_prompt">Prompt on Power Off Link</label>
@@ -190,7 +193,36 @@
                       <div class="row" id="menusEditMenuItemEditNew"> <!--  All fields should be readonly unless this is a new item -->
                         <div class="col-sm-12">
                           <h3>Only to Add a New Menu Item Definition</h3>
-                          <div class="row"> <!--  Code/Suffix -->
+                          <div class="row"> <!--  Other New Def Fields -->
+                            <div class="col-md-8">
+                              <div class="form-group">
+                                <label for="menu_item_type">Select Menu Item Type</label>
+                                <select class="form-control" id="menu_item_type">
+                                  <option value="html">App in Modules Directory</option>
+                                  <option value="webroot">App in Web Root</option>
+                                  <option value="external">An External Link</option>
+                                  <option value="zim">Zim File Served by Kiwix</option>
+                                  <option value="kalite">Khan Academy Lite Link</option>
+                                  <option value="kolibri">Kolibri Link</option>
+                                  <option value="cups">CUPS</option>
+                                  <option value="nodered">Nodered</option>
+                                  <option value="calibre">Calibre</option>
+                                  <option value="calibreweb">Calibre Web</option>
+                                  <!-- <option value="osm">Original OpenStreetMap</option>-->
+                                  <option value="map">Vector OpenStreetMap</option>
+                                  <option value="info">Information Only Menu Item with No Link</option>
+                                  <option value="download">Link to Downloadable Content</option>
+                                </select>
+                              </div>
+                              <div class="form-group">
+                                <label for="menu_item_lang">Select Menu Item Language</label>
+                                <select class="form-control" id="menu_item_lang"></select>
+                              </div>
+                              <div class="form-group">
+                                <label for="menu_item_content_target">Content this Menu Item Shows</label>
+                                <input type="text" name="menu_item_content_target" class="form-control" id="menu_item_content_target">
+                              </div>
+                              <div class="row"> <!--  Code/Suffix -->
                             <div class="col-md-4">
                               <div class="form-group">
                                 <label for="menu_item_name">Menu Item Code</label>
@@ -204,33 +236,6 @@
                               </div>
                             </div>
                           </div> <!--  End Code/Suffix -->
-                          <div class="row"> <!--  Other New Def Fields -->
-                            <div class="col-md-8">
-                              <div class="form-group">
-                                <label for="menu_item_type">Select Menu Item Type</label>
-                                <select class="form-control" id="menu_item_type">
-                                  <option value="html">App in Modules Directory</option>
-                                  <option value="webroot">App in Web Root</option>
-                                  <option value="zim">Zim File Served by Kiwix</option>
-                                  <option value="kalite">Khan Academy Lite Link</option>
-                                  <option value="kolibri">Kolibri Link</option>
-                                  <option value="cups">CUPS</option>
-                                  <option value="nodered">Nodered</option>
-                                  <option value="calibre">Calibre</option>
-                                  <option value="calibreweb">Calibre Web</option>
-                                  <!-- <option value="osm">Original OpenStreetMap</option>-->
-                                  <option value="info">Information Only Menu Item with No Link</option>
-                                  <option value="download">Link to Downloadable Content</option>
-                                </select>
-                              </div>
-                              <div class="form-group">
-                                <label for="menu_item_lang">Select Menu Item Language</label>
-                                <select class="form-control" id="menu_item_lang"></select>
-                              </div>
-                              <div class="form-group">
-                                <label for="menu_item_content_target">Content this Menu Item Shows</label>
-                                <input type="text" name="menu_item_content_target" class="form-control" id="menu_item_content_target">
-                              </div>
                               <div class="form-group">
                                 <button id="CREATE-MENU-ITEM-DEF" type="button" class="btn btn-primary">Create a New Menu Item Definition</button>
                               </div>
@@ -255,6 +260,7 @@
                                 <button id="SELECT-MENU-ITEM-ICON" type="button" class="btn btn-primary" data-toggle="modal" data-target="#menuIconsModal">
                                   Select Icon
                                 </button>
+                                <label class="btn btn-primary">Upload Icon<input type="file" style="display: none;" id="UPLOAD-MENU-ITEM-ICON" onchange="javascript:uploadMenuItemIcon();"></label>
                                 <!-- Modal -->
                                 <div class="modal fade" hasLoaded="false" id="menuIconsModal" tabindex="-1" role="dialog" aria-labelledby="menuIconsModalTitle" aria-hidden="true">
                                   <div class="modal-dialog modal-dialog-centered" role="document">

@@ -1,9 +1,10 @@
 {
-"intended_use":"webroot",
-"lang" : "ur",
-"logo_url" : "healthphone.jpg",
-"moddir" : "healthphone/ur",
-"title" : "ہیلتھ فون ہیلتھ اور غذائیت ویڈیو مجموعہ اور اطلاقات",
-"description" : "ویڈیو ریفرنس لائبریری؛ خاندانوں اور کمیونٹیوں کے لئے ماؤں اور بچے کی صحت اور غذائیت کے طریقوں کو بہتر بنانا",
-"extra_html":""
+  "lang": "ur", 
+  "description": "ویڈیو ریفرنس لائبریری؛ خاندانوں اور کمیونٹیوں کے لئے ماؤں اور بچے کی صحت اور غذائیت کے طریقوں کو بہتر بنانا", 
+  "title": "ہیلتھ فون ہیلتھ اور غذائیت ویڈیو مجموعہ اور اطلاقات", 
+  "extra_html": "", 
+  "moddir": "", 
+  "start_url": "healthphone/ur", 
+  "logo_url": "healthphone.jpg", 
+  "intended_use": "webroot"
 }

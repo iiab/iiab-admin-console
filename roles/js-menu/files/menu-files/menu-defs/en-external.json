@@ -1,0 +1,10 @@
+{
+    "intended_use" : "external",
+    "lang" : "en",
+    "logo_url" : "200px-Icon-round-Question_mark.svg.png",
+    "title" : "Sample External Link",
+    "start_url" : "https://github.com/iiab/iiab/wiki",
+    "description" : "Some Description in the selected language",
+    "extra_html" : ""
+}
+

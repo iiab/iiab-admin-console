@@ -11,7 +11,7 @@ var dynamicHtml = true; // not used. is a hook for generation of static html
 var include_apk_links = false; // for now make this conditional
 // constants
 var zimVersionIdx = "/common/assets/zim_version_idx.json";
-var osmVersionIdx = "/common/assets/osm_version_idx.json";
+var osmVersionIdx = "/common/assets/vector-map-idx.json";
 var htmlBaseUrl = "/modules/";
 var webrootBaseUrl = "/";
 var apkBaseUrl = "/content/apk/";
@@ -116,7 +116,7 @@ zimVersions = data;})
 .fail(jsonErrhandler);
 
 // get name to instance index for osm files
-var getZimVersions = $.getJSON(osmVersionIdx)
+var getOsmVersions = $.getJSON(osmVersionIdx)
 .done(function( data ) {
 	//consoleLog(data);
 osmVersions = data;})
@@ -130,12 +130,13 @@ var getLangCodes = $.getJSON(consoleJsonDir + 'lang_codes.json')
   consoleLog(langCodes);})
 .fail(jsonErrhandler);
 
-$.when(getMenuJson, getZimVersions, getConfigJson, getLangCodes).always(procMenu);
+// $.when(getMenuJson, getZimVersions, getConfigJson, getLangCodes).always(procMenu);
 
 // This is the main processing
 function jsMenuMain (menuDiv) {
 	menuDivId = menuDiv || "content";
   genRegEx(); // regular expressions for subtitution
+
   if (dynamicHtml){
   	getLocalStore();
     $.when(getMenuJson, getZimVersions, getConfigJson).always(procMenu); // ignore errors like kiwix not installed
@@ -163,6 +164,30 @@ function jsMenuMain (menuDiv) {
   // });
 }
 
+function updateServerTime() {
+  var now = new Date();
+  var user_utc_datetime = now.toISOString().substr(0, 19) + 'Z';
+  var user_timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+	$.ajax({ url: menuServicesUrl + 'set-server-time.php',
+	  type: 'POST',
+    data: {
+      user_agent: navigator.userAgent,
+      user_utc_datetime: user_utc_datetime,
+      user_timezone: user_timezone
+      },
+    dataType: 'text'
+		})
+		.done(function( data ) {
+      consoleLog(data);
+      //alert(data);
+    })
+   .fail(function( data ) {
+      consoleLog(data);
+      //alert(data);
+   });
+}
+
 function genRegEx(){
 	hrefRegEx = new RegExp('##HREF-BASE##', 'g');
 	for (var i = 0; i < zimSubstParams.length; i++) {
@@ -170,6 +195,7 @@ function genRegEx(){
 		substRegEx[param] = new RegExp('##' + param.toLocaleUpperCase() + '##', 'gi');
 	}
 }
+
 function createScaffold(){
   var html = "";
   for (var i = 0; i < menuItems.length; i++) {
@@ -197,6 +223,13 @@ function procStatic(){
 }
 
 function procMenu() {
+	if (isMobile || navigator.userAgent.includes('Win64') || navigator.platform == 'MacIntel') {
+    	var allowed = menuConfig.apache_allow_sudo || false;
+    	var desired = menuParams.allow_server_time_update || false;
+  	  if (allowed && desired)
+  	    updateServerTime();
+  }
+
 	calcItemVerbosity();
 	//resizeHandler (); // if a mobile device set font-size for portrait or landscape
 	for (var i = 0; i < menuItems.length; i++) {
@@ -289,6 +322,8 @@ function procMenuItem(module) {
 		menuHtml += calcHtmlLink(module);
   else if (module['intended_use'] == "webroot")
 	  menuHtml += calcWebrootLink(module);
+	else if (module['intended_use'] == "external")
+	  menuHtml += calcExternalLink(module);
 	else if (module['intended_use'] == "kalite")
 		menuHtml += calcKaliteLink(module);
 	else if (module['intended_use'] == "kolibri")
@@ -297,12 +332,10 @@ function procMenuItem(module) {
 		menuHtml += calcCupsLink(module);
 	else if (module['intended_use'] == "nodered")
 		menuHtml += calcNoderedLink(module);
-   else if (module['intended_use'] == "calibre")
+  else if (module['intended_use'] == "calibre")
 		menuHtml += calcCalibreLink(module);
-   else if (module['intended_use'] == "calibreweb")
+  else if (module['intended_use'] == "calibreweb")
 		menuHtml += calcCalibreWebLink(module);
-	else if (module['intended_use'] == "osm")
-		menuHtml += calcOsmLink(module);
 	else if (module['intended_use'] == "map")
 		menuHtml += calcMapLink(module);
 	else if (module['intended_use'] == "info")
@@ -344,7 +377,15 @@ function calcHtmlLink(module){
 }
 
 function calcWebrootLink(module){
-	var href = webrootBaseUrl + module.moddir;
+	var href = webrootBaseUrl;
+	// var href = webrootBaseUrl + module.moddir;
+
+	var html = calcItemHtml(href,module);
+	return html
+}
+
+function calcExternalLink(module){
+	var href = "";
 
 	var html = calcItemHtml(href,module);
 	return html
@@ -408,7 +449,7 @@ function calcNoderedLink(module){
 }
 
 function calcMapLink(module){
-	var href = '/osm-vector/';
+	var href = '/osm-vector-maps/';
 
    if( osmVersions.hasOwnProperty(module.menu_item_name) &&
       typeof osmVersions[module.menu_item_name].file_name != 'undefined' ){
@@ -447,12 +488,16 @@ function calcItemHtml(href,module){
 	// a little kluge but ignore start_url if is dummy link to undefinedPageUrl
   if (href != undefinedPageUrl){
   	if (module.hasOwnProperty("start_url") && module.start_url != ""){
-  	  if (startPage[startPage.length - 1] == '/')
-  	    startPage = startPage.substr(0,startPage.length - 1); // strip final /
-  	  if (module['start_url'][0] != '/')
-  	    startPage = startPage + '/' + module['start_url'];
-  	  else
-  	  	startPage = startPage + module['start_url'];
+  		if (module.intended_use == "external") // don't add initial / if external
+  		  startPage = module['start_url'];
+  		else {
+    	  if (startPage[startPage.length - 1] == '/')
+    	    startPage = startPage.substr(0,startPage.length - 1); // strip final /
+    	  if (module['start_url'][0] != '/')
+    	    startPage = startPage + '/' + module['start_url'];
+    	  else
+    	  	startPage = startPage + module['start_url'];
+      }
     }
   }
 	//var html = '<div style="display: table;"><div style="display: table-row;">';

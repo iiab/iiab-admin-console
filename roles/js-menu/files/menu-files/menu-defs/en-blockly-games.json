@@ -15,7 +15,7 @@
     "ksize": "4412",
     "module_id": "64",
     "is_hidden": false,
-    "logo_url": "en-blockly_games.png",
+    "logo_url": "en-blockly-games.png",
     "rsync_url": "rsync://dev.worldpossible.org/rachelmods/en-blockly_games",
     "moddir": "en-blockly-games",
     "start_url": "blockly-games/en/index.html",
