@@ -336,6 +336,8 @@ function procMenuItem(module) {
 		menuHtml += calcCalibreLink(module);
   else if (module['intended_use'] == "calibreweb")
 		menuHtml += calcCalibreWebLink(module);
+	else if (module['intended_use'] == "internetarchive")
+		menuHtml += calcInternetArchiveLink(module);
 	else if (module['intended_use'] == "map")
 		menuHtml += calcMapLink(module);
 	else if (module['intended_use'] == "info")
@@ -444,6 +446,12 @@ function calcCupsLink(module){
 function calcNoderedLink(module){
 	var href = host + ':' + menuConfig.noderedPort;
 
+	var html = calcItemHtml(href,module);
+	return html
+}
+
+function calcInternetArchiveLink(module){
+  var href = host + ':' + menuConfig.internetarchivePort;
 	var html = calcItemHtml(href,module);
 	return html
 }
