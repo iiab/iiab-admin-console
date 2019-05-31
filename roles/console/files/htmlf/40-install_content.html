@@ -1,193 +1,189 @@
 <!-- Start InstallContent Top Level Pane -->
 <div class="row-fluid"> <!-- InstallContent Top Level Header -->
-	<div class="col-md-9 col-md-offset-3">
-		<h1>Install Server Content</h1>
-	</div>
+  <div class="col-md-9 col-md-offset-3">
+    <h1>Install Server Content</h1>
+  </div>
 </div> <!-- row-fluid -->
 <div class="tabbable"> <!-- Start InstallContent Sublevel Menu Items and Options -->
-	<div class="row-fluid"> <!-- Start containing row -->
-		<div class="col-md-3 iiab-left-nav"> <!-- Start left column -->
-			<h2>Installation Tasks</h2>
-			<ul id="installContentMenu" class="nav nav-pills nav-stacked"> <!-- Start XXX Sub Level Menu -->
-				<li class="active"><a href="#instConStart">Get Started</a></li>
-				<li><a href="#instConZims" call-after="checkKiwixCatalogDate">Get ZIM Files from Kiwix</a></li>
-				<li><a href="#instConOer2go" call-after="oer2goMenuOption">Get OER2Go(RACHEL) Modules</a></li>
-				<li><a href="#instOsmRegion" call-after="renderMap">Get Map Region</a></li>
-				<li><a href="#instConKAlite">Download Khan Academy Videos</a></li>
-				<li><a href="#instManageContent" call-after="manageContentInit">Manage Content</a></li>
-				<!-- <li><a href="#instRemoveContent" call-after="refreshAllInstalledList">Remove Content</a></li> -->
-				<!-- <li><a href="#">Services Enabled</a></li> -->
-			</ul> <!-- End XXX Sub Level Menu -->
-			<h2>Actions</h2>
-			<div class="action-buttons">
-				<button id="REFRESH-CONTENT-DISPLAY" type="button" class="btn btn-lg btn-success">Refresh Display</button>
-				<button id="MAKE-KIWIX-LIB" type="button" class="btn btn-lg btn-success">Reindex Kiwix Content</button>
-				<button id="KIWIX-LIB-REFRESH" type="button" class="btn btn-lg btn-success">Refresh Kiwix Catalog</button>
-				<button id="OER2GO-CAT-REFRESH" type="button" class="btn btn-lg btn-success">Refresh OER2Go Catalog</button>
-			</div>
-		</div> <!-- left column -->
-		<div class="col-md-9"> <!-- Start right column -->
-			<div id="installContentOptions" class="tab-content"> <!-- Start Container for Sub Menu Options Panes -->
-				<div class="tab-pane active" id="instConStart"> <!-- Start instConStart Submenu Option Pane -->
-					<h2>Get Started</h2>
-					<p>The options on this menu allow you to copy, download and install content onto Internet-in-a-Box. This content comes from the internet or a portable hard disk drive.</p>
-					<p>These options are aimed at people who plan to set up the server in a location where there is a relatively high bandwidth connection and then deploy it where there is little or no connectivity.</p>
-					<p>Options planned but not yet implemented</p>
-					<ul>
-						<li>Ability to set removable storage as working disk for downloads.</li>
-						<li>Flag to allow downloads of content to be valid only for each session.</li>
-					</ul>
-				</div> <!--  End instConStart Submenu Option Pane -->
-				<div class="tab-pane" id="instConZims"> <!-- Start instConZims Submenu Option Pane -->
-					<h2>Install Kiwix ZIM Files</h2>
-					<p>Kiwix has a large number of files containing compressed content which you can select by language.</p>
-					<div class="row">
-						<div class="col-sm-3"><button type="button" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#selectLangCodes">Select Languages</button></div>
-						<div class="col-sm-4"><span id="zimDiskSpace" >Disk Space: </span></div>
-						<div class="col-sm-2"><button id="INST-ZIMS" type="button" class="btn btn-lg btn-primary">Install Selected ZIMs</button></div>
-					</div>
-					<div id="ZimDownload" >  </div>
-				</div> <!--  End instConZims Submenu Option Pane -->
-				<div class="tab-pane" id="instConOer2go"> <!-- Start instConOer2go Submenu Option Pane -->
-					<h2>Install OER2Go Modules</h2>
-					<p>OER2Go is a collection of educational content currated by World Possible and others.  This menu option allows you to select modules to download and install.</p>
-					<!--  <h3>PLEASE NOTE</h3>
-					<p>There is an error in one or two files of the current version of RACHEL in use here, so it may be necessary to <b>run this command a second time</b> if the job fails.</p>
-					-->
-					<div class="row">
-						<div class="col-sm-3"><button type="button" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#selectLangCodes">Select Languages</button></div>
-						<div class="col-sm-4"><span id="oer2goDiskSpace" >Disk Space: </span></div>
-						<div class="col-sm-2"><button id="INST-MODS" type="button" class="btn btn-lg btn-primary">Install Selected Modules</button></div>
-					</div>
+  <div class="row-fluid"> <!-- Start containing row -->
+    <div class="col-md-3 iiab-left-nav"> <!-- Start left column -->
+      <h2>Installation Tasks</h2>
+      <ul id="installContentMenu" class="nav nav-pills nav-stacked"> <!-- Start XXX Sub Level Menu -->
+        <li class="active"><a href="#instConStart">Get Started</a></li>
+        <li><a href="#instConZims" call-after="checkKiwixCatalogDate">Get ZIM Files from Kiwix</a></li>
+        <li><a href="#instConOer2go" call-after="oer2goMenuOption">Get OER2Go(RACHEL) Modules</a></li>
+        <li><a href="#instOsmRegion" call-after="renderMap">Get Map Region</a></li>
+        <li><a href="#instConKAlite">Download Khan Academy Videos</a></li>
+        <li><a href="#instManageContent" call-after="manageContentInit">Manage Content</a></li>
+        <!-- <li><a href="#instRemoveContent" call-after="refreshAllInstalledList">Remove Content</a></li> -->
+        <!-- <li><a href="#">Services Enabled</a></li> -->
+      </ul> <!-- End XXX Sub Level Menu -->
+      <h2>Actions</h2>
+      <div class="action-buttons">
+        <button id="REFRESH-CONTENT-DISPLAY" type="button" class="btn btn-lg btn-success">Refresh Display</button>
+        <button id="MAKE-KIWIX-LIB" type="button" class="btn btn-lg btn-success">Reindex Kiwix Content</button>
+        <button id="KIWIX-LIB-REFRESH" type="button" class="btn btn-lg btn-success">Refresh Kiwix Catalog</button>
+        <button id="OER2GO-CAT-REFRESH" type="button" class="btn btn-lg btn-success">Refresh OER2Go Catalog</button>
+      </div>
+    </div> <!-- left column -->
+    <div class="col-md-9"> <!-- Start right column -->
+      <div id="installContentOptions" class="tab-content"> <!-- Start Container for Sub Menu Options Panes -->
+        <div class="tab-pane active" id="instConStart"> <!-- Start instConStart Submenu Option Pane -->
+          <h2>Get Started</h2>
+          <p>The options on this menu allow you to copy, download and install content onto Internet-in-a-Box. This content comes from the internet or a portable hard disk drive.</p>
+          <p>These options are aimed at people who plan to set up the server in a location where there is a relatively high bandwidth connection and then deploy it where there is little or no connectivity.</p>
+          <p>Options planned but not yet implemented</p>
+          <ul>
+            <li>Ability to set removable storage as working disk for downloads.</li>
+            <li>Flag to allow downloads of content to be valid only for each session.</li>
+          </ul>
+        </div> <!--  End instConStart Submenu Option Pane -->
+        <div class="tab-pane" id="instConZims"> <!-- Start instConZims Submenu Option Pane -->
+          <h2>Install Kiwix ZIM Files</h2>
+          <p>Kiwix has a large number of files containing compressed content which you can select by language.</p>
+          <div class="row">
+            <div class="col-sm-3"><button type="button" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#selectLangCodes">Select Languages</button></div>
+            <div class="col-sm-4"><span id="zimDiskSpace" >Disk Space: </span></div>
+            <div class="col-sm-2"><button id="INST-ZIMS" type="button" class="btn btn-lg btn-primary">Install Selected ZIMs</button></div>
+          </div>
+          <div id="ZimDownload" >  </div>
+        </div> <!--  End instConZims Submenu Option Pane -->
+        <div class="tab-pane" id="instConOer2go"> <!-- Start instConOer2go Submenu Option Pane -->
+          <h2>Install OER2Go Modules</h2>
+          <p>OER2Go is a collection of educational content currated by World Possible and others.  This menu option allows you to select modules to download and install.</p>
+          <!--  <h3>PLEASE NOTE</h3>
+          <p>There is an error in one or two files of the current version of RACHEL in use here, so it may be necessary to <b>run this command a second time</b> if the job fails.</p>
+          -->
+          <div class="row">
+            <div class="col-sm-3"><button type="button" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#selectLangCodes">Select Languages</button></div>
+            <div class="col-sm-4"><span id="oer2goDiskSpace" >Disk Space: </span></div>
+            <div class="col-sm-2"><button id="INST-MODS" type="button" class="btn btn-lg btn-primary">Install Selected Modules</button></div>
+          </div>
 
-					<div id="Oer2goDownload" >  </div>
-				</div> <!--  End instConOer2go Submenu Option Pane -->
-				<div class="tab-pane" id="instOsmRegion"> <!-- Start instOsmRegion Submenu Option Pane -->
-					<h2>Install Map Region</h2>
-					<p>Please select JUST ONE region to download and install (each region also includes at least 10 levels of zoom for the entire world &mdash; and a 25 MB searchable database of 127,654 cities/settlements worldwide, i.e. those whose populations appear larger than 1000).  Then click "Install Selected Region" to start the job.  Downloading and then installing this zoomable/searchable map data to /library/www/osm-vector-maps takes time!  You can monitor the progress by clicking Utilities -> Display Job Status.</p>
-					<div class="row">
-						<div class="col-sm-3"></div>
-						<div class="col-sm-4"><span id="mapDiskSpace">0</span> </div>
-						<div class="col-sm-2"><button id="INST-MAP" type="button" class="btn btn-lg btn-primary">Install Selected Region</button></div>
-					</div>
-
-					<div id="mapRegionSelection" >
-                  <style>
-                     #map-container{
-                       background-color: #b2d3f8;
-                       float: right;
-                       width: 75%;
-                       right: 10px;
-                       height: 500px;
-                     }
-                  </style>
-                  <div id="map-container"></div>
-                  <div id='mapRegionSelectList'>placeholder</div>
-               </div>
-				</div> <!--  End instOsmRegion Submenu Option Pane -->
-				<div class="tab-pane" id="instConKAlite"> <!-- Start instConKAlite Submenu Option Pane -->
-					<h2>Download Khan Academy Videos</h2>
-					<p>Khan Academy Lite has the ability to download selected portions of the available videos in several different languages.</p>
-					<p>Click the Button below to launch it.</p>
-					<button id="launchKaliteButton" type="button" class="btn btn-lg btn-success">Launch KA Lite</button>
-				</div> <!--  End instConKAlite Submenu Option Pane -->
-
-				<div class="tab-pane" id="instManageContent"> <!-- Start instManageContent Submenu Option Pane -->
-					<h2>Manage Content</h2>
-					<div class="row">
-						<div class="col-sm-8">
-						  <p>This menu option allows you to copy content to and from external storage as well as remove it. Please note that only ZIM Files and OER2Go(RACHEL) Modules are supported at this time. Please also note that external storage is expected to be mounted in /media.</p><p> For more Info please review <b>Help->Install Content->Manage Content</b>.
-					    </p>
-							<table>
-								<thead>
-									<tr>
-										<th style="width:3%; text-align: left;"></th>
-										<th style="width:15%; text-align: left;">Device</th>
-										<th style="width:10%; text-align: right">Used</th>
-										<th style="width:10%; text-align: right">Available</th>
-										<th style="width:10%; text-align: right">Selected</th>
-									</tr>
-								</thead>
-								<tbody id="instManContInternal"></tbody>
-								<tbody id="instManContExternal"></tbody>
-							</table>
-							<p></p>
-						</div>
-						<div class="col-sm-2">
-							<div class="btn-group-vertical">
-								<button id="FIND-USB" type="button" class="btn btn-lg btn-primary">Find USB Device</button>
-								<button id="COPY-CONTENT" type="button" class="btn btn-lg btn-primary">Copy Selected Content</button>
-								<button id="REMOVE-CONTENT" type="button" class="btn btn-lg btn-primary">Remove Selected Content</button>
-								<button id="REMOVE-USB" type="button" class="btn btn-lg btn-primary">Remove USB from Server</button>
-							</div>
-						</div>
-					</div>
-					<div class="row">
-						<div class="col-sm-12">
-							<ul id="instManageContentTabs" class="nav nav-tabs">
-								<li class="nav-item active"><a href="#instManageContentInternal" class="nav-link small" call-after="setCopyContentButtonText">Installed Content </a></li>
-								<li class="nav-item"><a id="instManageContentUsbTab" href="#instManageContentUsb" class="nav-link small" call-after="setCopyContentButtonText">Content on USB</a></li>
-							</ul>
-						</div>
-					</div>
-
-					<div class="row">
-						<div class="col-sm-12">
-							<div id="instManageContentTabsPanes" class="tab-content">
-								<div id="instManageContentInternal" class="tab-pane active">
-									<div class="row">
-										<div class="col-sm-12">
-											<h3>Installed ZIM Files: </h3>
-											<div id="installedZimModules" >  </div>
-										</div>
-									</div>
-									<div class="row">
-										<div class="col-sm-12">
-											<h3>Installed OER2Go(RACHEL) Modules: </h3>
-											<div id="installedOer2goModules" >  </div>
-										</div>
-									</div>
-									<div class="row">
-										<div class="col-sm-4">
-											<h3>Downloaded Files: </h3>
-											<div> <!--  Start downloadedFiles Table -->
-												<table>
-													<thead>
-														<tr>
-															<th style="width:40%">File Name</th>
-															<th style="width:10%">Size</th>
-															<th style="width:10%">Delete</th>
-														</tr>
-													</thead>
-													<tbody id="downloadedFilesRachel"></tbody>
-													<tbody id="downloadedFilesZims"></tbody>
-												</table>
-											</div> <!--  End downloadedFiles Table -->
-										</div>
-									</div>
-								</div>
-								<div id="instManageContentUsb" class="tab-pane">
-									<div class="row">
-										<div class="col-sm-12">
-											<h3>Available ZIM Files: </h3>
-											<div id="externalZimModules" >  </div>
-										</div>
-									</div>
-									<div class="row">
-										<div class="col-sm-12">
-											<h3>Available OER2Go(RACHEL) Modules: </h3>
-											<div id="externalOer2goModules" >  </div>
-										</div>
-									</div>
-								</div>
-
-							</div>
-						</div>
-					</div>
-				</div> <!--  End instManageContent Submenu Option Pane -->
-			</div> <!-- End Container for Sub Menu Options Panes -->
-		</div> <!-- right column -->
-	</div> <!-- End containing row -->
-</div> <!-- End XXX Sublevel Menu Items and Options -->
-</div> <!-- End InstallContent Top Level Pane -->
+          <div id="Oer2goDownload" >  </div>
+        </div> <!--  End instConOer2go Submenu Option Pane -->
+        <div class="tab-pane" id="instOsmRegion"> <!-- Start instOsmRegion Submenu Option Pane -->
+          <h2>Install Map Region</h2>
+          <p>Please select JUST ONE region to download and install (each region also includes at least 10 levels of zoom for the entire world &mdash; and a 25 MB searchable database of 127,654 cities/settlements worldwide, i.e. those whose populations appear larger than 1000).  Then click "Install Selected Region" to start the job.  Downloading and then installing this zoomable/searchable map data to /library/www/osm-vector-maps takes time!  You can monitor the progress by clicking Utilities -> Display Job Status.</p>
+          <div class="row">
+            <div class="col-sm-3"></div>
+            <div class="col-sm-4"><span id="mapDiskSpace">0</span> </div>
+            <div class="col-sm-2"><button id="INST-MAP" type="button" class="btn btn-lg btn-primary">Install Selected Region</button></div>
+          </div>
+          <div id="mapRegionSelection" >
+            <style>
+              #map-container{
+                background-color: #b2d3f8;
+                float: right;
+                width: 75%;
+                right: 10px;
+                height: 500px;
+              }
+            </style>
+            <div id="map-container"></div>
+            <div id='mapRegionSelectList'>placeholder</div>
+          </div>
+        </div> <!--  End instOsmRegion Submenu Option Pane -->
+        <div class="tab-pane" id="instConKAlite"> <!-- Start instConKAlite Submenu Option Pane -->
+          <h2>Download Khan Academy Videos</h2>
+          <p>Khan Academy Lite has the ability to download selected portions of the available videos in several different languages.</p>
+          <p>Click the Button below to launch it.</p>
+          <button id="launchKaliteButton" type="button" class="btn btn-lg btn-success">Launch KA Lite</button>
+        </div> <!--  End instConKAlite Submenu Option Pane -->
+        <div class="tab-pane" id="instManageContent"> <!-- Start instManageContent Submenu Option Pane -->
+          <h2>Manage Content</h2>
+          <div class="row">
+            <div class="col-sm-8">
+              <p>This menu option allows you to copy content to and from external storage as well as remove it. Please note that only ZIM Files and OER2Go(RACHEL) Modules are supported at this time. Please also note that external storage is expected to be mounted in /media.</p><p> For more Info please review <b>Help->Install Content->Manage Content</b>.
+              </p>
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width:3%; text-align: left;"></th>
+                    <th style="width:15%; text-align: left;">Device</th>
+                    <th style="width:10%; text-align: right">Used</th>
+                    <th style="width:10%; text-align: right">Available</th>
+                    <th style="width:10%; text-align: right">Selected</th>
+                  </tr>
+                </thead>
+                <tbody id="instManContInternal"></tbody>
+                <tbody id="instManContExternal"></tbody>
+              </table>
+              <p></p>
+            </div>
+            <div class="col-sm-2">
+              <div class="btn-group-vertical">
+                <button id="FIND-USB" type="button" class="btn btn-lg btn-primary">Find USB Device</button>
+                <button id="COPY-CONTENT" type="button" class="btn btn-lg btn-primary">Copy Selected Content</button>
+                <button id="REMOVE-CONTENT" type="button" class="btn btn-lg btn-primary">Remove Selected Content</button>
+                <button id="REMOVE-USB" type="button" class="btn btn-lg btn-primary">Remove USB from Server</button>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-sm-12">
+              <ul id="instManageContentTabs" class="nav nav-tabs">
+                <li class="nav-item active"><a href="#instManageContentInternal" class="nav-link small" call-after="setCopyContentButtonText">Installed Content </a></li>
+                <li class="nav-item"><a id="instManageContentUsbTab" href="#instManageContentUsb" class="nav-link small" call-after="setCopyContentButtonText">Content on USB</a></li>
+              </ul>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-sm-12">
+              <div id="instManageContentTabsPanes" class="tab-content">
+                <div id="instManageContentInternal" class="tab-pane active">
+                  <div class="row">
+                    <div class="col-sm-12">
+                      <h3>Installed ZIM Files: </h3>
+                      <div id="installedZimModules" >  </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-sm-12">
+                      <h3>Installed OER2Go(RACHEL) Modules: </h3>
+                      <div id="installedOer2goModules" >  </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-sm-4">
+                      <h3>Downloaded Files: </h3>
+                      <div> <!--  Start downloadedFiles Table -->
+                        <table>
+                          <thead>
+                            <tr>
+                              <th style="width:40%">File Name</th>
+                              <th style="width:10%">Size</th>
+                              <th style="width:10%">Delete</th>
+                            </tr>
+                          </thead>
+                          <tbody id="downloadedFilesRachel"></tbody>
+                          <tbody id="downloadedFilesZims"></tbody>
+                        </table>
+                      </div> <!--  End downloadedFiles Table -->
+                    </div>
+                  </div>
+                </div>
+                <div id="instManageContentUsb" class="tab-pane">
+                  <div class="row">
+                    <div class="col-sm-12">
+                      <h3>Available ZIM Files: </h3>
+                      <div id="externalZimModules" >  </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-sm-12">
+                      <h3>Available OER2Go(RACHEL) Modules: </h3>
+                      <div id="externalOer2goModules" >  </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div> <!--  End instManageContent Submenu Option Pane -->
+      </div> <!-- End Container for Sub Menu Options Panes -->
+    </div> <!-- right column -->
+  </div> <!-- End containing row -->
+</div> <!-- End InstallContent Sublevel Menu Items and Options -->
+<!-- End InstallContent Top Level Pane -->
 <script src="map/main.js"></script>
