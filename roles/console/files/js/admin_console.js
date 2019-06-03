@@ -662,6 +662,22 @@ function getAnsibleTags (data)
   return true;
 }
 
+// Control Functions
+
+function getNetworkInfo(){
+  var command = "GET-NETWORK-INFO";
+  return sendCmdSrvCmd(command, procNetworkInfo);
+}
+
+function procNetworkInfo(data){
+  var networkInfo = data;
+  Object.keys(networkInfo).forEach(function(key) {
+  	serverInfo[key] = networkInfo[key];
+  });
+}
+
+// Configure Functions
+
 function getInstallVars (data)
 {
   //alert ("in getInstallVars");

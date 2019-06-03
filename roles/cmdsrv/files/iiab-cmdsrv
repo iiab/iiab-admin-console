@@ -1054,8 +1054,9 @@ def calc_network_info(cmd_info):
 
     net_stat["bridge_devs"] = bridge_devs
 
-    net_stat["hostapd"] = run_command("/bin/systemctl is-active hostapd")[0]
-    net_stat["openvpn"] = run_command("/bin/systemctl is-active openvpn")[0]
+    net_stat["hostapd"] = check_systemd_service_active('hostapd')
+    net_stat["openvpn"] = check_systemd_service_active('openvpn')
+    net_stat["bt_pan"] = check_systemd_service_active('bt-pan')
     net_stat["iiab_uuid"] = run_command("/bin/cat /etc/iiab/uuid")[0]
     net_stat["openvpn_handle"] = run_command("/bin/cat /etc/iiab/openvpn_handle")[0]
 
@@ -1066,9 +1067,22 @@ def run_command(command):
     try:
         outp = subprocess.check_output(args)
     except: #skip things that don't work
-        outp = ''
+        outp = ['']
+    outp = filter(None, outp.split('\n'))
+    if len(outp) == 0:
+        outp = ['']
+    return outp
 
-    return filter(None, outp.split('\n'))
+def check_systemd_service_active(service):
+    args = shlex.split("/bin/systemctl status " + service)
+    FNULL = open(os.devnull, 'w')
+    rc = subprocess.call(args, stdout=FNULL, stderr=subprocess.STDOUT)
+    if rc == 0:
+        return 'active'
+    elif rc == 3:
+        return 'inactive'
+    else:
+        return 'unavailable'
 
 def ctl_hotspot(cmd_info):
     if ansible_facts['ansible_local']['local_facts']['os'] != 'raspbian':
@@ -1104,8 +1118,8 @@ def ctl_hotspot(cmd_info):
         #fi
 
         #sed -i -e "s/^HOSTAPD_ENABLED.*/HOSTAPD_ENABLED=False/" /etc/iiab/iiab.env
-
-
+        print "hotspot off"
+    return
 
 def get_ext_zim_catalog(dev_name):
     iiab_zim_path = dev_name + zim_dir
