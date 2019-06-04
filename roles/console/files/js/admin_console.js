@@ -123,6 +123,17 @@ function navButtonsEvents() {
 // Control Buttons
 
 function controlButtonsEvents() {
+	$("#HOTSPOT-CTL").click(function(){
+    controlHotspot();
+  });
+
+	$("#BLUETOOTH-CTL").click(function(){
+    controlBluetooth();
+  });
+	$("#VPN-CTL").click(function(){
+    controlVpn();
+  });
+
   $("#REBOOT").click(function(){
     rebootServer();
   });
@@ -674,6 +685,70 @@ function procNetworkInfo(data){
   Object.keys(networkInfo).forEach(function(key) {
   	serverInfo[key] = networkInfo[key];
   });
+  // hostapd
+
+  // bluetooth
+  $("#bluetoothState").html(serverInfo.bt_pan_status);
+  $("#BLUETOOTH-CTL").html('Turn Bluetooth Access ON');
+  make_button_disabled('#BLUETOOTH-CTL', true); // disable
+
+  if (serverInfo.bt_pan_status == 'ON'){
+    $("#BLUETOOTH-CTL").html('Turn Support VPN OFF');
+    make_button_disabled('#BLUETOOTH-CTL', false); // enable
+  }
+  else if (serverInfo.bt_pan_status == 'OFF'){
+  	$("#BLUETOOTH-CTL").html('Turn Bluetooth Access ON');
+    make_button_disabled('#BLUETOOTH-CTL', false); // enable
+  }
+
+  // openvpn
+  $("#supportVpnState").html(serverInfo.openvpn_status);
+  gEBI('support_vpn_handle').value = serverInfo.openvpn_handle;
+  $("#VPN-CTL").html('Turn Support VPN ON');
+  make_button_disabled('#VPN-CTL', true); // disable
+  $("#support_vpn_handle").prop('disabled', true);
+  if (serverInfo.openvpn_status == 'ON'){
+    $("#support_vpn_handle").prop('disabled', false)
+    $("#VPN-CTL").html('Turn Support VPN OFF');
+    make_button_disabled('#VPN-CTL', false); // enable
+  }
+  else if (serverInfo.openvpn_status == 'OFF'){
+  	$("#support_vpn_handle").prop('disabled', false)
+  	$("#VPN-CTL").html('Turn Support VPN ON');
+    make_button_disabled('#VPN-CTL', false); // enable
+  }
+}
+
+function controlHotspot(){
+
+}
+
+function controlBluetooth(){
+  var cmd_args = {};
+
+  if (serverInfo.bt_pan_status == 'ON')
+    cmd_args['bluetooth_on_off'] = 'off';
+  if (serverInfo.bt_pan_status == 'OFF')
+    cmd_args['bluetooth_on_off'] = 'on';
+  cmd_args['make_permanent'] = 'False';
+
+  var command = "CTL-BLUETOOTH " + JSON.stringify(cmd_args);
+  return sendCmdSrvCmd(command, getNetworkInfo);
+}
+
+function controlVpn(){
+  var cmd_args = {};
+
+  if (serverInfo.openvpn_status == 'ON')
+    cmd_args['vpn_on_off'] = 'off';
+  if (serverInfo.openvpn_status == 'OFF')
+    cmd_args['vpn_on_off'] = 'on';
+  serverInfo.openvpn_handle = gEBI('support_vpn_handle').value;
+  cmd_args['vpn_handle'] = serverInfo.openvpn_handle;
+  cmd_args['make_permanent'] = 'False';
+
+  var command = "CTL-VPN " + JSON.stringify(cmd_args);
+  return sendCmdSrvCmd(command, getNetworkInfo);
 }
 
 // Configure Functions

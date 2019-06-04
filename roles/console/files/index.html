@@ -53,9 +53,9 @@
 									<h2>Control Server</h2>
 									<ul class="nav nav-pills nav-stacked"> <!-- Start XXX Sub Level Menu -->
 										<li class="active"><a href="#controlWarning">Warning</a></li>
-										<li><a href="#controlHotspot">Hotspot Control</a></li>
-										<li><a href="#controlBluetooth">Bluetooth Control</a></li>
-										<li><a href="#controlVPN">VPN Control</a></li>
+										<li><a href="#controlHotspot" call-after="getNetworkInfo">Hotspot Control</a></li>
+										<li><a href="#controlBluetooth" call-after="getNetworkInfo">Bluetooth Control</a></li>
+										<li><a href="#controlVPN" call-after="getNetworkInfo">VPN Control</a></li>
 										<!-- <li><a href="#">Services Enabled</a></li> -->
 									</ul> <!-- End XXX Sub Level Menu -->
 									<h2>Actions</h2>
@@ -79,17 +79,23 @@
 										<div class="tab-pane" id="controlHotspot"> <!-- Start controlHotspot Submenu Option Pane -->
 											<h2>Hotspot Control</h2>
 											<p>Hotspot is <span id="hotspotState">OFF</span></p>
-											<button id="HOTSPOTCTL" type="button" class="btn btn-lg btn-danger" style="opacity:0.5" disabled>Change Hotspot</button>
+											<button id="HOTSPO-TCTL" type="button" class="btn btn-lg btn-danger" style="opacity:0.5" disabled>Change Hotspot</button>
 										</div> <!--  End controlHotspot Submenu Option Pane -->
 										<div class="tab-pane" id="controlBluetooth"> <!-- Start controlHotspot Submenu Option Pane -->
 											<h2>Bluetooth Control</h2>
-											<p>Hotspot is <span id="hotspotState">OFF</span></p>
-											<button id="HOTSPOTCTL" type="button" class="btn btn-lg btn-danger" style="opacity:0.5" disabled>Change Hotspot</button>
+											<p>Bluetooth is <span id="bluetoothState">OFF</span></p>
+											<button id="BLUETOOTH-CTL" type="button" class="btn btn-lg btn-danger" style="opacity:0.5" disabled>Change Hotspot</button>
 										</div> <!--  End controlBluetooth Submenu Option Pane -->
 										<div class="tab-pane" id="controlVPN"> <!-- Start controlHotspot Submenu Option Pane -->
 											<h2>Support VPN Control</h2>
-											<p>Support VPN is <span id="supportVpnState">OFF</span></p>
-											<button id="HOTSPOTCTL" type="button" class="btn btn-lg btn-danger" style="opacity:0.5" disabled>Change Hotspot</button>
+											<p>Support VPN is <strong><span id="supportVpnState">OFF</span></strong></p>
+											<div class="form-group row">
+											  <div class="col-xs-4">
+                          <label for="support_vpn_handle">Your Name on the Support VPN</label>
+                          <input type="text" name="support_vpn_handle" class="form-control" id="support_vpn_handle">
+                        </div>
+                      </div>
+											<button id="VPN-CTL" type="button" class="btn btn-lg btn-danger" style="opacity:0.5" disabled>Change Support VPN</button>
 										</div> <!--  End controlVPN Submenu Option Pane -->
 									</div> <!-- End Container for Sub Menu Options Panes -->
 								</div> <!-- right column -->
