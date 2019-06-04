@@ -1052,7 +1052,8 @@ def calc_network_info(cmd_info):
         bridge_props = line.split()
         if bridge_props[0] == 'bridge':
             continue # skip header
-        bridge_devs.append(bridge_props[3])
+        if len(bridge_props) >= 4:
+            bridge_devs.append(bridge_props[3])
 
     net_stat["bridge_devs"] = bridge_devs
 

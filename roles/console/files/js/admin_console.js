@@ -686,6 +686,18 @@ function procNetworkInfo(data){
   	serverInfo[key] = networkInfo[key];
   });
   // hostapd
+  $("#hotspotState").html(serverInfo.hostapd_status);
+  $("#HOTSPOT-CTL").html('Turn Hotspot Access ON');
+  make_button_disabled('#HOTSPOT-CTL', true); // disable
+
+  if (serverInfo.hostapd_status == 'ON'){
+    $("#HOTSPOT-CTL").html('Turn Hotspot Access OFF');
+    make_button_disabled('#HOTSPOT-CTL', false); // enable
+  }
+  else if (serverInfo.hostapd_status == 'OFF'){
+  	$("#HOTSPOT-CTL").html('Turn Hotspot Access ON');
+    make_button_disabled('#HOTSPOT-CTL', false); // enable
+  }
 
   // bluetooth
   $("#bluetoothState").html(serverInfo.bt_pan_status);
@@ -693,7 +705,7 @@ function procNetworkInfo(data){
   make_button_disabled('#BLUETOOTH-CTL', true); // disable
 
   if (serverInfo.bt_pan_status == 'ON'){
-    $("#BLUETOOTH-CTL").html('Turn Support VPN OFF');
+    $("#BLUETOOTH-CTL").html('Turn Bluetooth Access OFF');
     make_button_disabled('#BLUETOOTH-CTL', false); // enable
   }
   else if (serverInfo.bt_pan_status == 'OFF'){
@@ -720,7 +732,16 @@ function procNetworkInfo(data){
 }
 
 function controlHotspot(){
+  var cmd_args = {};
 
+  if (serverInfo.hostapd_status == 'ON')
+    cmd_args['hotspot_on_off'] = 'off';
+  if (serverInfo.hostapd_status == 'OFF')
+    cmd_args['hotspot_on_off'] = 'on';
+  cmd_args['make_permanent'] = 'False';
+
+  var command = "CTL-HOTSPOT " + JSON.stringify(cmd_args);
+  return sendCmdSrvCmd(command, getNetworkInfo);
 }
 
 function controlBluetooth(){
