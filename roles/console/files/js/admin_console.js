@@ -266,10 +266,16 @@ function instContentButtonsEvents() {
       if (this.type == "checkbox")
         if (this.checked){
           map_id = this.name;
-          if (mapInstalled.indexOf(map_id) >= 0 || map_id in mapWip)
-            consoleLog("Skipping installed Module " + map_id);
-          else
-            instMapItem(map_id);
+          var skipMap = false;
+          if (mapInstalled.indexOf(map_id) >= 0){ 
+            // Does installed map have same basename (ignores .zip)
+            basename = mapInstalled[map_id].filename.replace(/.*\//, '');
+            if (basename.indexOf(mapCatalog[map_id].filename) != -1) skipMap = true;
+          }; 
+          if (map_id in mapWip ||  skipMap) 
+               consoleLog("Skipping installed Module " + map_id);
+            else
+               instMapItem(map_id);
         }
     });
     //getOer2goStat();
