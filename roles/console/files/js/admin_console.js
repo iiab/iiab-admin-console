@@ -269,7 +269,9 @@ function instContentButtonsEvents() {
           var skipMap = false;
           if (mapInstalled.indexOf(map_id) >= 0){ 
             // Does installed map have same basename (ignores .zip)
-            basename = mapInstalled[map_id].filename.replace(/.*\//, '');
+            var basename = mapInstalled[map_id].filename.replace(/.*\//, '');
+            // Clip off .zip
+            basename = basename.replace(/\.zip/, '');
             if (basename.indexOf(mapCatalog[map_id].filename) != -1) skipMap = true;
           }; 
           if (map_id in mapWip ||  skipMap) 
