@@ -5,6 +5,6 @@
     "zim_name": "wikibooks_en_all",
     "title": "Wikibooks",
     "description": "Open books for an open world: e-book textbooks from Wikipedia, that anyone can edit.",
-  "footnote": "Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Date: ##zim_date##",
+    "footnote": "Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Date: ##zim_date##",
     "extra_html": ""
 }
