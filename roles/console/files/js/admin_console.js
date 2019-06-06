@@ -699,6 +699,28 @@ function procNetworkInfo(data){
     make_button_disabled('#HOTSPOT-CTL', false); // enable
   }
 
+  var html = "";
+  html += '<div class="col-sm-4">';
+  html += '<div>Bluetooth Status</div>';
+  html += '<div>Support VPN Status</div>';
+  html += '<div>Wired IP Address</div>';
+  html += '<div>Wireless IP Address</div>';
+  html += '<div>Internet Access</div>';
+  html += '<div>Gateway Address</div>';
+  html += '<div>Gateway Device</div>';
+  html += '</div>';
+  html += '<div class="col-sm-4">';
+  html += '<div>' + serverInfo.bt_pan_status + '</div>';
+  html += '<div>' + serverInfo.openvpn_status + '</div>';
+  html += '<div>' + serverInfo.eth0.addr + '</div>';
+  html += '<div>' + serverInfo.wlan0.addr + '</div>';
+  html += '<div>' + serverInfo.internet_access + '</div>';
+  html += '<div>' + serverInfo.gateway_addr + '</div>';
+  html += '<div>' + serverInfo.gateway_dev + '</div>';
+  html += '</div>';
+
+  $("#currentNetworkState").html(html);
+
   // bluetooth
   $("#bluetoothState").html(serverInfo.bt_pan_status);
   $("#BLUETOOTH-CTL").html('Turn Bluetooth Access ON');

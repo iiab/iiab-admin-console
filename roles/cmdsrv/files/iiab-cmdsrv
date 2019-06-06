@@ -1025,6 +1025,7 @@ def calc_network_info(cmd_info):
     # systemctl is-active openvpn
     # /etc/iiab/uuid
     # /etc/iiab/openvpn_handle
+    # /bin/ping -qc 1 1.1.1.1
 
     outp = run_command("/sbin/ip -br addr")
 
@@ -1035,7 +1036,7 @@ def calc_network_info(cmd_info):
         dev = {}
         dev['state'] = dev_props[1]
         if len(dev_props) >= 3:
-            dev['addr'] = dev_props[2]
+            dev['addr'] = dev_props[2].split('/')[0]
         else:
             dev['addr'] = None
         net_stat[dev_props[0]] = dev
@@ -1043,8 +1044,15 @@ def calc_network_info(cmd_info):
     outp = run_command("ip route")
     for line in outp:
         route_props = line.split()
-        if dev_props[0] == 'default':
-            net_stat["gateway"] = dev_props[4]
+        if route_props[0] == 'default':
+            net_stat["gateway_addr"] = route_props[2]
+            net_stat["gateway_dev"] = route_props[4]
+
+    outp = run_command("/bin/ping -qc 1 1.1.1.1")
+    if '0% packet loss' in outp[2]:
+        net_stat["internet_access"] = True
+    else:
+        net_stat["internet_access"] = False
 
     outp = run_command("/sbin/brctl show")
     bridge_devs = []
