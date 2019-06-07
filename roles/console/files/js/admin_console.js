@@ -27,6 +27,7 @@ var oer2goCatalog = {}; // catalog of rachel/oer2go modules, read from file down
 var oer2goCatalogDate = new Date; // date of download, stored in json file
 var oer2goCatalogFilter = ["html"] // only manage these types as OER2GO; catalog can contain zims and kalite that we do elsewhere
 var mapCatalog = {}; // map regions specified by bounding boxes, downloadable
+var mapIdx = {}; // data about the installed maps
 var rachelStat = {}; // installed, enabled and whether content is installed and which is enabled
 
 var zimsInstalled = []; // list of zims already installed
@@ -269,10 +270,10 @@ function instContentButtonsEvents() {
           var skipMap = false;
           if (mapInstalled.indexOf(map_id) >= 0){ 
             // Does installed map have same basename (ignores .zip)
-            var basename = mapInstalled[map_id].filename.replace(/.*\//, '');
+            var basename = mapCatalog[map_id].url.replace(/.*\//, '');
             // Clip off .zip
             basename = basename.replace(/\.zip/, '');
-            if (basename.indexOf(mapCatalog[map_id].filename) != -1) skipMap = true;
+            if (basename.indexOf(mapIdx['en-osm-omt_' + map_id].file_name) != -1) skipMap = true;
           }; 
           if (map_id in mapWip ||  skipMap) 
                consoleLog("Skipping installed Module " + map_id);
