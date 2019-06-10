@@ -1044,12 +1044,12 @@ def calc_network_info(cmd_info):
     outp = run_command("ip route")
     for line in outp:
         route_props = line.split()
-        if route_props[0] == 'default':
+        if route_props[0] == 'default': # ? not for bluetooth bnep0
             net_stat["gateway_addr"] = route_props[2]
             net_stat["gateway_dev"] = route_props[4]
 
     outp = run_command("/bin/ping -qc 1 1.1.1.1")
-    if '0% packet loss' in outp[2]:
+    if len(outp) >= 3 and '0% packet loss' in outp[2]:
         net_stat["internet_access"] = True
     else:
         net_stat["internet_access"] = False
@@ -1078,7 +1078,7 @@ def run_command(command):
     try:
         outp = subprocess.check_output(args)
     except: #skip things that don't work
-        outp = ['']
+        outp = ''
     outp = filter(None, outp.split('\n'))
     if len(outp) == 0:
         outp = ['']
