@@ -47,7 +47,7 @@ function readMapIdx(){
     dataType: 'json'
   })
   .done(function( data ) {
-  	//mapInstalled = data['regions'];
+  	mapIdx = data;
    consoleLog (data);
    mapInstalled = [];
    //mapInstalled = Object.keys(data);
