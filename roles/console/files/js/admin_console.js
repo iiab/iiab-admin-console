@@ -272,7 +272,7 @@ function instContentButtonsEvents() {
             var basename = mapInstalled[map_id].filename.replace(/.*\//, '');
             // Clip off .zip
             basename = basename.replace(/\.zip/, '');
-            if (basename.indexOf(mapCatalog[map_id].filename) != -1) skipMap = true;
+            if (basename.indexOf(mapCatalog[map_id].filename) >= 0) skipMap = true;
           }; 
           if (map_id in mapWip ||  skipMap) 
                consoleLog("Skipping installed Module " + map_id);
