@@ -685,6 +685,7 @@ def cmd_handler(cmd_msg):
         "GET-EXTDEV-INFO": get_external_device_info,
         "GET-NETWORK-INFO": get_network_info,
         "CTL-HOTSPOT": ctl_hotspot,
+        "SET-HOTSPOT-CREDENTIALS": set_wpa_credentials,
         "CTL-BLUETOOTH": ctl_bluetooth,
         "CTL-VPN": ctl_vpn,
         "REMOVE-USB": umount_usb,
@@ -1114,6 +1115,9 @@ def ctl_hotspot(cmd_info):
         resp = cmd_success(cmd_info['cmd'])
         return resp
     else:
+        # call iiab-hotspot-off
+
+
         # hotspot off
         #sed -i -e "s/^denyinterfaces/#denyinterfaces/" /etc/dhcpcd.conf
         #systemctl disable hostapd
@@ -1135,6 +1139,51 @@ def ctl_hotspot(cmd_info):
         #sed -i -e "s/^HOSTAPD_ENABLED.*/HOSTAPD_ENABLED=False/" /etc/iiab/iiab.env
         print "hotspot off"
     return
+
+def set_wpa_credentials (cmd_info):
+    if ansible_facts['ansible_local']['local_facts']['os'] != 'raspbian':
+        resp = cmd_error(cmd=cmd_info['cmd'], msg='Only supported on Raspberry Pi.')
+        return (resp)
+
+    print cmd_info
+    if 'cmd_args' in cmd_info:
+        connect_hotspot_ssid = cmd_info['cmd_args']['connect_hotspot_ssid']
+        connect_hotspot_password = cmd_info['cmd_args']['connect_hotspot_password']
+    else:
+        return cmd_malformed(cmd_info['cmd'])
+
+    try:
+        with open('/etc/wpa_supplicant/wpa_supplicant.conf', 'r') as f:
+            wpa_txt = f.read()
+    except IOError: # for now patch missing file
+        wpa_txt = 'ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1\ncountry=US\n'
+
+    # if ssid in wpa remove it
+    # if password != '' call wpa_passphrase
+    # else set to static array
+    # write lines
+
+    if connect_hotspot_ssid in wpa_txt:
+        ssid_loc = wpa_txt.index(connect_hotspot_ssid)
+        network_start = wpa_txt.rindex("network={",0,ssid_loc)
+        network_end = wpa_txt.index('}', network_start) + 3
+        wpa_txt = wpa_txt.replace(wpa_txt[network_start:network_end], '')
+
+    wpa_lines = wpa_txt.split('\n')
+    print wpa_lines
+
+    if connect_hotspot_password != '':
+        network_lines = run_command("/usr/bin/wpa_passphrase " + connect_hotspot_ssid + " " + connect_hotspot_password)
+    else:
+        network_lines = ['network={', '\tssid="' + connect_hotspot_ssid + '"', '\tkey_mgmt=NONE', '}']
+    print network_lines
+    wpa_lines.extend(network_lines)
+    print wpa_lines
+    with open('/etc/wpa_supplicant/wpa_supplicant.conf', 'w') as f:
+        for l in wpa_lines:
+            f.write(l + '\n')
+    resp = cmd_success(cmd_info['cmd'])
+    return resp
 
 def ctl_bluetooth(cmd_info):
     if ansible_facts['ansible_local']['local_facts']['os'] != 'raspbian':

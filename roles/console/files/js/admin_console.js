@@ -127,6 +127,10 @@ function controlButtonsEvents() {
     controlHotspot();
   });
 
+	$("#HOTSPOT-CREDENTIALS").click(function(){
+    setHotspotCredentials();
+  });
+
 	$("#BLUETOOTH-CTL").click(function(){
     controlBluetooth();
   });
@@ -762,8 +766,21 @@ function controlHotspot(){
     cmd_args['hotspot_on_off'] = 'on';
   cmd_args['make_permanent'] = 'False';
 
+  cmd_args['connect_hotspot_ssid'] = gEBI('connect_hotspot_ssid').value;
+  cmd_args['connect_hotspot_password'] = gEBI('connect_hotspot_password').value;
+
   var command = "CTL-HOTSPOT " + JSON.stringify(cmd_args);
   return sendCmdSrvCmd(command, getNetworkInfo);
+}
+
+function setHotspotCredentials(){
+  var cmd_args = {};
+
+  cmd_args['connect_hotspot_ssid'] = gEBI('connect_hotspot_ssid').value;
+  cmd_args['connect_hotspot_password'] = gEBI('connect_hotspot_password').value;
+
+  var command = "SET-HOTSPOT-CREDENTIALS " + JSON.stringify(cmd_args);
+  return sendCmdSrvCmd(command, genericCmdHandler);
 }
 
 function controlBluetooth(){
