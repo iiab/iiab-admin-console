@@ -1113,11 +1113,8 @@ def ctl_hotspot(cmd_info):
     if hotspot_on_off == 'on':
         outp = run_command("/usr/bin/iiab-hotspot-on")[0]
         resp = cmd_success(cmd_info['cmd'])
-        return resp
+
     else:
-        # call iiab-hotspot-off
-
-
         # hotspot off
         #sed -i -e "s/^denyinterfaces/#denyinterfaces/" /etc/dhcpcd.conf
         #systemctl disable hostapd
@@ -1126,7 +1123,7 @@ def ctl_hotspot(cmd_info):
         #systemctl stop dnsmasq
         #systemctl daemon-reload
         #systemctl restart dhcpcd
-        #systemctl restart networking
+        # #systemctl restart networking
 
         # Temporary promiscuous-mode workaround for RPi's WiFi "10SEC disease"
         # Set wlan0 to promiscuous when AP's OFF (for possible WiFi gateway)
@@ -1137,8 +1134,11 @@ def ctl_hotspot(cmd_info):
         #fi
 
         #sed -i -e "s/^HOSTAPD_ENABLED.*/HOSTAPD_ENABLED=False/" /etc/iiab/iiab.env
-        print "hotspot off"
-    return
+
+        # this should be more nuanced and not set wifi gateway if there is wired gateway
+        outp = run_command("/usr/bin/iiab-hotspot-off")[0]
+        resp = cmd_success(cmd_info['cmd'])
+    return resp
 
 def set_wpa_credentials (cmd_info):
     if ansible_facts['ansible_local']['local_facts']['os'] != 'raspbian':
@@ -1170,18 +1170,16 @@ def set_wpa_credentials (cmd_info):
         wpa_txt = wpa_txt.replace(wpa_txt[network_start:network_end], '')
 
     wpa_lines = wpa_txt.split('\n')
-    print wpa_lines
 
     if connect_hotspot_password != '':
         network_lines = run_command("/usr/bin/wpa_passphrase " + connect_hotspot_ssid + " " + connect_hotspot_password)
     else:
         network_lines = ['network={', '\tssid="' + connect_hotspot_ssid + '"', '\tkey_mgmt=NONE', '}']
-    print network_lines
     wpa_lines.extend(network_lines)
-    print wpa_lines
     with open('/etc/wpa_supplicant/wpa_supplicant.conf', 'w') as f:
         for l in wpa_lines:
-            f.write(l + '\n')
+            if l != '':
+                f.write(l + '\n')
     resp = cmd_success(cmd_info['cmd'])
     return resp
 
