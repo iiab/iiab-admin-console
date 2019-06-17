@@ -778,6 +778,12 @@ function setHotspotCredentials(){
 
   cmd_args['connect_hotspot_ssid'] = gEBI('connect_hotspot_ssid').value;
   cmd_args['connect_hotspot_password'] = gEBI('connect_hotspot_password').value;
+  var len = cmd_args['connect_hotspot_password'].length
+
+  if (len < 8 || len > 63){
+  	alert ("Hotspot passphrase must be between 8 and 63 characters.");
+  	return;
+  }
 
   var command = "SET-HOTSPOT-CREDENTIALS " + JSON.stringify(cmd_args);
   return sendCmdSrvCmd(command, genericCmdHandler);
