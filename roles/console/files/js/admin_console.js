@@ -116,6 +116,12 @@ function navButtonsEvents() {
     else
       console.log(' no call-after');
   });
+  // Special Cases
+  if (ansibleFacts.ansible_local.local_facts.os == "raspbian"){
+    $("#controlWifiLink").show();
+    $("#controlBluetoothLink").show();
+    $("#controlVPNLink").show();
+  }
 }
 
 // BUTTONS
