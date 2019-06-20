@@ -684,8 +684,8 @@ def cmd_handler(cmd_msg):
         "GET-STORAGE-INFO": get_storage_info_lite,
         "GET-EXTDEV-INFO": get_external_device_info,
         "GET-NETWORK-INFO": get_network_info,
-        "CTL-HOTSPOT": ctl_hotspot,
-        "SET-HOTSPOT-CREDENTIALS": set_wpa_credentials,
+        "CTL-WIFI": ctl_wifi,
+        "SET-WPA-CREDENTIALS": set_wpa_credentials,
         "CTL-BLUETOOTH": ctl_bluetooth,
         "CTL-VPN": ctl_vpn,
         "REMOVE-USB": umount_usb,
@@ -1100,7 +1100,7 @@ def systemctl_wrapper(verb, service):
     rc = subprocess.call(['/bin/systemctl', verb, service], stdout=FNULL, stderr=subprocess.STDOUT)
     return rc
 
-def ctl_hotspot(cmd_info):
+def ctl_wifi(cmd_info):
     if ansible_facts['ansible_local']['local_facts']['os'] != 'raspbian':
         resp = cmd_error(cmd=cmd_info['cmd'], msg='Only supported on Raspberry Pi.')
         return (resp)
@@ -1147,8 +1147,8 @@ def set_wpa_credentials (cmd_info):
 
     print cmd_info
     if 'cmd_args' in cmd_info:
-        connect_hotspot_ssid = cmd_info['cmd_args']['connect_hotspot_ssid']
-        connect_hotspot_password = cmd_info['cmd_args']['connect_hotspot_password']
+        connect_wifi_ssid = cmd_info['cmd_args']['connect_wifi_ssid']
+        connect_wifi_password = cmd_info['cmd_args']['connect_wifi_password']
     else:
         return cmd_malformed(cmd_info['cmd'])
 
@@ -1163,18 +1163,18 @@ def set_wpa_credentials (cmd_info):
     # else set to static array
     # write lines
 
-    if connect_hotspot_ssid in wpa_txt:
-        ssid_loc = wpa_txt.index(connect_hotspot_ssid)
+    if connect_wifi_ssid in wpa_txt:
+        ssid_loc = wpa_txt.index(connect_wifi_ssid)
         network_start = wpa_txt.rindex("network={",0,ssid_loc)
         network_end = wpa_txt.index('}', network_start) + 3
         wpa_txt = wpa_txt.replace(wpa_txt[network_start:network_end], '')
 
     wpa_lines = wpa_txt.split('\n')
 
-    if connect_hotspot_password != '':
-        network_lines = run_command("/usr/bin/wpa_passphrase " + connect_hotspot_ssid + " " + connect_hotspot_password)
+    if connect_wifi_ssid != '':
+        network_lines = run_command("/usr/bin/wpa_passphrase " + connect_wifi_ssid + " " + connect_wifi_password)
     else:
-        network_lines = ['network={', '\tssid="' + connect_hotspot_ssid + '"', '\tkey_mgmt=NONE', '}']
+        network_lines = ['network={', '\tssid="' + connect_wifi_ssid + '"', '\tkey_mgmt=NONE', '}']
     wpa_lines.extend(network_lines)
     with open('/etc/wpa_supplicant/wpa_supplicant.conf', 'w') as f:
         for l in wpa_lines:

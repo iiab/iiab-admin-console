@@ -53,7 +53,7 @@
 									<h2>Control Server</h2>
 									<ul class="nav nav-pills nav-stacked"> <!-- Start XXX Sub Level Menu -->
 										<li class="active"><a href="#controlWarning">Warning</a></li>
-										<li><a href="#controlHotspot" call-after="getNetworkInfo">Hotspot Control</a></li>
+										<li><a href="#controlWifi" call-after="getNetworkInfo">Wifi Control</a></li>
 										<li><a href="#controlBluetooth" call-after="getNetworkInfo">Bluetooth Control</a></li>
 										<li><a href="#controlVPN" call-after="getNetworkInfo">VPN Control</a></li>
 										<!-- <li><a href="#">Services Enabled</a></li> -->
@@ -76,23 +76,23 @@
 											<h2>Starting Application</h2>
 											<div id="initLog"></div>
 										</div> <!--  End controlWarning Submenu Option Pane -->
-										<div class="tab-pane" id="controlHotspot"> <!-- Start controlHotspot Submenu Option Pane -->
-											<h2>Hotspot Control</h2>
+										<div class="tab-pane" id="controlWifi"> <!-- Start controlWifi Submenu Option Pane -->
+											<h2>WiFi Control</h2>
 											<p><b>WARNING:</b> When you turn off the IIAB Wifi Hotspot you will no longer be able to connect to it.</p>
 											<p>So it is <b>highly recommended</b> that you have another means of connecting to IIAB, either via Bluetooth or OpenVPN before turning the Hotspot Off.</p>
 											<div class = "row" id="currentNetworkState"></div>
 											<h4>Hotspot is <b><span id="hotspotState">OFF</span></b></h4>
 											<div class="form-group row">
 											  <div class="col-xs-4">
-                          <label for="connect_hotspot_ssid">Wifi Connection Hotspot</label>
-                          <input type="text" name="connect_hotspot_ssid" class="form-control" id="connect_hotspot_ssid">
-                          <label for="connect_hotspot_password">Wifi Connection Password</label>
-                          <input type="text" name="connect_hotspot_password" class="form-control" id="connect_hotspot_password">
+                          <label for="connect_wifi_ssid">Wifi Connection Hotspot</label>
+                          <input type="text" name="connect_wifi_ssid" class="form-control" id="connect_wifi_ssid">
+                          <label for="connect_wifi_password">Wifi Connection Password</label>
+                          <input type="text" name="connect_wifi_password" class="form-control" id="connect_wifi_password">
                         </div>
                       </div>
-											<button id="HOTSPOT-CREDENTIALS" type="button" class="btn btn-lg btn-primary">Set Connection Credentials</button>
-											<button id="HOTSPOT-CTL" type="button" class="btn btn-lg btn-primary" style="opacity:0.5" disabled>Change Hotspot</button>
-										</div> <!--  End controlHotspot Submenu Option Pane -->
+											<button id="WIFI-CREDENTIALS" type="button" class="btn btn-lg btn-primary">Set Connection Credentials</button>
+											<button id="WIFI-CTL" type="button" class="btn btn-lg btn-primary" style="opacity:0.5" disabled>Change Hotspot</button>
+										</div> <!--  End controlWifi Submenu Option Pane -->
 										<div class="tab-pane" id="controlBluetooth"> <!-- Start controlBluetooth Submenu Option Pane -->
 											<h2>Bluetooth Control</h2>
 											<h4>Bluetooth is <b><span id="bluetoothState">OFF</span></b></h4>

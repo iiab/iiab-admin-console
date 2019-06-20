@@ -123,12 +123,12 @@ function navButtonsEvents() {
 // Control Buttons
 
 function controlButtonsEvents() {
-	$("#HOTSPOT-CTL").click(function(){
-    controlHotspot();
+	$("#WIFI-CTL").click(function(){
+    controlWifi();
   });
 
-	$("#HOTSPOT-CREDENTIALS").click(function(){
-    setHotspotCredentials();
+	$("#WIFI-CREDENTIALS").click(function(){
+    setWifiCredentials();
   });
 
 	$("#BLUETOOTH-CTL").click(function(){
@@ -691,16 +691,16 @@ function procNetworkInfo(data){
   });
   // hostapd
   $("#hotspotState").html(serverInfo.hostapd_status);
-  $("#HOTSPOT-CTL").html('Turn Hotspot Access ON');
-  make_button_disabled('#HOTSPOT-CTL', true); // disable
+  $("#WIFI-CTL").html('Turn Hotspot Access ON');
+  make_button_disabled('#WIFI-CTL', true); // disable
 
   if (serverInfo.hostapd_status == 'ON'){
-    $("#HOTSPOT-CTL").html('Turn Hotspot Access OFF');
-    make_button_disabled('#HOTSPOT-CTL', false); // enable
+    $("#WIFI-CTL").html('Use Wifi to Connect');
+    make_button_disabled('#WIFI-CTL', false); // enable
   }
   else if (serverInfo.hostapd_status == 'OFF'){
-  	$("#HOTSPOT-CTL").html('Turn Hotspot Access ON');
-    make_button_disabled('#HOTSPOT-CTL', false); // enable
+  	$("#WIFI-CTL").html('Turn Hotspot Access ON');
+    make_button_disabled('#WIFI-CTL', false); // enable
   }
 
   var html = "";
@@ -757,7 +757,7 @@ function procNetworkInfo(data){
   }
 }
 
-function controlHotspot(){
+function controlWifi(){
   var cmd_args = {};
 
   if (serverInfo.hostapd_status == 'ON')
@@ -766,26 +766,23 @@ function controlHotspot(){
     cmd_args['hotspot_on_off'] = 'on';
   cmd_args['make_permanent'] = 'False';
 
-  cmd_args['connect_hotspot_ssid'] = gEBI('connect_hotspot_ssid').value;
-  cmd_args['connect_hotspot_password'] = gEBI('connect_hotspot_password').value;
-
-  var command = "CTL-HOTSPOT " + JSON.stringify(cmd_args);
+  var command = "CTL-WIFI " + JSON.stringify(cmd_args);
   return sendCmdSrvCmd(command, getNetworkInfo);
 }
 
-function setHotspotCredentials(){
+function setWpaCredentials(){
   var cmd_args = {};
 
-  cmd_args['connect_hotspot_ssid'] = gEBI('connect_hotspot_ssid').value;
-  cmd_args['connect_hotspot_password'] = gEBI('connect_hotspot_password').value;
-  var len = cmd_args['connect_hotspot_password'].length
+  cmd_args['connect_wifi_ssid'] = gEBI('connect_wifi_ssid').value;
+  cmd_args['connect_wifi_password'] = gEBI('connect_wifi_password').value;
+  var len = cmd_args['connect_wifi_password'].length
 
   if (len < 8 || len > 63){
   	alert ("Hotspot passphrase must be between 8 and 63 characters.");
   	return;
   }
 
-  var command = "SET-HOTSPOT-CREDENTIALS " + JSON.stringify(cmd_args);
+  var command = "SET-WPA-CREDENTIALS " + JSON.stringify(cmd_args);
   return sendCmdSrvCmd(command, genericCmdHandler);
 }
 
