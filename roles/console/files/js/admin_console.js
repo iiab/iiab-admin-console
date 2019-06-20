@@ -2234,6 +2234,7 @@ function sendCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArgs) {
 
   if (buttonId != '')
     make_button_disabled('#' + buttonId, true);
+  $('#sendCmdsrvWorkingModal').modal('show');
 
   var resp = $.ajax({
     type: 'POST',
@@ -2264,6 +2265,7 @@ function sendCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArgs) {
   })
   .fail(jsonErrhandler)
   .always(function() {
+  	$('#sendCmdsrvWorkingModal').modal('hide');
   	if (this.buttonId != "")
       make_button_disabled('#' + this.buttonId, false);
   });
