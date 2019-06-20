@@ -123,6 +123,21 @@ function navButtonsEvents() {
 // Control Buttons
 
 function controlButtonsEvents() {
+	$("#WIFI-CTL").click(function(){
+    controlWifi();
+  });
+
+	$("#WIFI-CREDENTIALS").click(function(){
+    setWpaCredentials();
+  });
+
+	$("#BLUETOOTH-CTL").click(function(){
+    controlBluetooth();
+  });
+	$("#VPN-CTL").click(function(){
+    controlVpn();
+  });
+
   $("#REBOOT").click(function(){
     rebootServer();
   });
@@ -661,6 +676,145 @@ function getAnsibleTags (data)
   //consoleLog(jqXHR);
   return true;
 }
+
+// Control Functions
+
+function getNetworkInfo(){
+  var command = "GET-NETWORK-INFO";
+  return sendCmdSrvCmd(command, procNetworkInfo);
+}
+
+function procNetworkInfo(data){
+  var networkInfo = data;
+  Object.keys(networkInfo).forEach(function(key) {
+  	serverInfo[key] = networkInfo[key];
+  });
+  // hostapd
+  $("#hotspotState").html(serverInfo.hostapd_status);
+  $("#WIFI-CTL").html('Turn Hotspot Access ON');
+  make_button_disabled('#WIFI-CTL', true); // disable
+
+  if (serverInfo.hostapd_status == 'ON'){
+    $("#WIFI-CTL").html('Use Wifi to Connect');
+    make_button_disabled('#WIFI-CTL', false); // enable
+  }
+  else if (serverInfo.hostapd_status == 'OFF'){
+  	$("#WIFI-CTL").html('Turn Hotspot Access ON');
+    make_button_disabled('#WIFI-CTL', false); // enable
+  }
+
+  var html = "";
+  html += '<div class="col-sm-4">';
+  html += '<div>Bluetooth Status</div>';
+  html += '<div>Support VPN Status</div>';
+  html += '<div>Wired IP Address</div>';
+  html += '<div>Wireless IP Address</div>';
+  html += '<div>Internet Access</div>';
+  html += '<div>Gateway Address</div>';
+  html += '<div>Gateway Device</div>';
+  html += '</div>';
+  html += '<div class="col-sm-4">';
+  html += '<div>' + serverInfo.bt_pan_status + '</div>';
+  html += '<div>' + serverInfo.openvpn_status + '</div>';
+  html += '<div>' + serverInfo.eth0.addr + '</div>';
+  html += '<div>' + serverInfo.wlan0.addr + '</div>';
+  html += '<div>' + serverInfo.internet_access + '</div>';
+  html += '<div>' + serverInfo.gateway_addr + '</div>';
+  html += '<div>' + serverInfo.gateway_dev + '</div>';
+  html += '</div>';
+
+  $("#currentNetworkState").html(html);
+
+  // bluetooth
+  $("#bluetoothState").html(serverInfo.bt_pan_status);
+  $("#BLUETOOTH-CTL").html('Turn Bluetooth Access ON');
+  make_button_disabled('#BLUETOOTH-CTL', true); // disable
+
+  if (serverInfo.bt_pan_status == 'ON'){
+    $("#BLUETOOTH-CTL").html('Turn Bluetooth Access OFF');
+    make_button_disabled('#BLUETOOTH-CTL', false); // enable
+  }
+  else if (serverInfo.bt_pan_status == 'OFF'){
+  	$("#BLUETOOTH-CTL").html('Turn Bluetooth Access ON');
+    make_button_disabled('#BLUETOOTH-CTL', false); // enable
+  }
+
+  // openvpn
+  $("#supportVpnState").html(serverInfo.openvpn_status);
+  gEBI('support_vpn_handle').value = serverInfo.openvpn_handle;
+  $("#VPN-CTL").html('Turn Support VPN ON');
+  make_button_disabled('#VPN-CTL', true); // disable
+  $("#support_vpn_handle").prop('disabled', true);
+  if (serverInfo.openvpn_status == 'ON'){
+    $("#support_vpn_handle").prop('disabled', false)
+    $("#VPN-CTL").html('Turn Support VPN OFF');
+    make_button_disabled('#VPN-CTL', false); // enable
+  }
+  else if (serverInfo.openvpn_status == 'OFF'){
+  	$("#support_vpn_handle").prop('disabled', false)
+  	$("#VPN-CTL").html('Turn Support VPN ON');
+    make_button_disabled('#VPN-CTL', false); // enable
+  }
+}
+
+function controlWifi(){
+  var cmd_args = {};
+
+  if (serverInfo.hostapd_status == 'ON')
+    cmd_args['hotspot_on_off'] = 'off';
+  if (serverInfo.hostapd_status == 'OFF')
+    cmd_args['hotspot_on_off'] = 'on';
+  cmd_args['make_permanent'] = 'False';
+
+  var command = "CTL-WIFI " + JSON.stringify(cmd_args);
+  return sendCmdSrvCmd(command, getNetworkInfo);
+}
+
+function setWpaCredentials(){
+  var cmd_args = {};
+
+  cmd_args['connect_wifi_ssid'] = gEBI('connect_wifi_ssid').value;
+  cmd_args['connect_wifi_password'] = gEBI('connect_wifi_password').value;
+  var len = cmd_args['connect_wifi_password'].length
+
+  if (len != 0 && (len < 8 || len > 63)){
+  	alert ("Hotspot passphrase must be between 8 and 63 characters.");
+  	return;
+  }
+
+  var command = "SET-WPA-CREDENTIALS " + JSON.stringify(cmd_args);
+  return sendCmdSrvCmd(command, genericCmdHandler);
+}
+
+function controlBluetooth(){
+  var cmd_args = {};
+
+  if (serverInfo.bt_pan_status == 'ON')
+    cmd_args['bluetooth_on_off'] = 'off';
+  if (serverInfo.bt_pan_status == 'OFF')
+    cmd_args['bluetooth_on_off'] = 'on';
+  cmd_args['make_permanent'] = 'False';
+
+  var command = "CTL-BLUETOOTH " + JSON.stringify(cmd_args);
+  return sendCmdSrvCmd(command, getNetworkInfo);
+}
+
+function controlVpn(){
+  var cmd_args = {};
+
+  if (serverInfo.openvpn_status == 'ON')
+    cmd_args['vpn_on_off'] = 'off';
+  if (serverInfo.openvpn_status == 'OFF')
+    cmd_args['vpn_on_off'] = 'on';
+  serverInfo.openvpn_handle = gEBI('support_vpn_handle').value;
+  cmd_args['vpn_handle'] = serverInfo.openvpn_handle;
+  cmd_args['make_permanent'] = 'False';
+
+  var command = "CTL-VPN " + JSON.stringify(cmd_args);
+  return sendCmdSrvCmd(command, getNetworkInfo);
+}
+
+// Configure Functions
 
 function getInstallVars (data)
 {
@@ -2080,6 +2234,7 @@ function sendCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArgs) {
 
   if (buttonId != '')
     make_button_disabled('#' + buttonId, true);
+  $('#sendCmdsrvWorkingModal').modal('show');
 
   var resp = $.ajax({
     type: 'POST',
@@ -2110,6 +2265,7 @@ function sendCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArgs) {
   })
   .fail(jsonErrhandler)
   .always(function() {
+  	$('#sendCmdsrvWorkingModal').modal('hide');
   	if (this.buttonId != "")
       make_button_disabled('#' + this.buttonId, false);
   });

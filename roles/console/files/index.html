@@ -53,6 +53,9 @@
 									<h2>Control Server</h2>
 									<ul class="nav nav-pills nav-stacked"> <!-- Start XXX Sub Level Menu -->
 										<li class="active"><a href="#controlWarning">Warning</a></li>
+										<li><a href="#controlWifi" call-after="getNetworkInfo">Wifi Control</a></li>
+										<li><a href="#controlBluetooth" call-after="getNetworkInfo">Bluetooth Control</a></li>
+										<li><a href="#controlVPN" call-after="getNetworkInfo">VPN Control</a></li>
 										<!-- <li><a href="#">Services Enabled</a></li> -->
 									</ul> <!-- End XXX Sub Level Menu -->
 									<h2>Actions</h2>
@@ -63,7 +66,7 @@
 								</div> <!-- left column -->
 								<div class="col-md-9"> <!-- Start right column -->
 									<div class="tab-content"> <!-- Start Container for Sub Menu Options Panes -->
-										<div class="tab-pane active" id="controlWarning"> <!-- Start instConStart Submenu Option Pane -->
+										<div class="tab-pane active" id="controlWarning"> <!-- Start controlWarning Submenu Option Pane -->
 											<h2>WARNING</h2>
 											<p>Please use caution in rebooting or powering off the server.</p>
 											<p>Please make sure that no one is using it.</p>
@@ -73,6 +76,39 @@
 											<h2>Starting Application</h2>
 											<div id="initLog"></div>
 										</div> <!--  End controlWarning Submenu Option Pane -->
+										<div class="tab-pane" id="controlWifi"> <!-- Start controlWifi Submenu Option Pane -->
+											<h2>WiFi Control</h2>
+											<p><b>WARNING:</b> When you turn off the IIAB Wifi Hotspot you will no longer be able to connect to it.</p>
+											<p>So it is <b>highly recommended</b> that you have another means of connecting to IIAB, either via Bluetooth or OpenVPN before turning the Hotspot Off.</p>
+											<div class = "row" id="currentNetworkState"></div>
+											<h4>Hotspot is <b><span id="hotspotState">OFF</span></b></h4>
+											<div class="form-group row">
+											  <div class="col-xs-4">
+                          <label for="connect_wifi_ssid">Wifi Connection Hotspot</label>
+                          <input type="text" name="connect_wifi_ssid" class="form-control" id="connect_wifi_ssid">
+                          <label for="connect_wifi_password">Wifi Connection Password</label>
+                          <input type="text" name="connect_wifi_password" class="form-control" id="connect_wifi_password">
+                        </div>
+                      </div>
+											<button id="WIFI-CREDENTIALS" type="button" class="btn btn-lg btn-primary">Set Connection Credentials</button>
+											<button id="WIFI-CTL" type="button" class="btn btn-lg btn-primary" style="opacity:0.5" disabled>Change Hotspot</button>
+										</div> <!--  End controlWifi Submenu Option Pane -->
+										<div class="tab-pane" id="controlBluetooth"> <!-- Start controlBluetooth Submenu Option Pane -->
+											<h2>Bluetooth Control</h2>
+											<h4>Bluetooth is <b><span id="bluetoothState">OFF</span></b></h4>
+											<button id="BLUETOOTH-CTL" type="button" class="btn btn-lg btn-primary" style="opacity:0.5" disabled>Change Bluetooth</button>
+										</div> <!--  End controlBluetooth Submenu Option Pane -->
+										<div class="tab-pane" id="controlVPN"> <!-- Start controlVPN Submenu Option Pane -->
+											<h2>Support VPN Control</h2>
+											<h4>Support VPN is <b><span id="supportVpnState">OFF</span></b></h4>
+											<div class="form-group row">
+											  <div class="col-xs-4">
+                          <label for="support_vpn_handle">Your Name on the Support VPN</label>
+                          <input type="text" name="support_vpn_handle" class="form-control" id="support_vpn_handle">
+                        </div>
+                      </div>
+											<button id="VPN-CTL" type="button" class="btn btn-lg btn-primary" style="opacity:0.5" disabled>Change Support VPN</button>
+										</div> <!--  End controlVPN Submenu Option Pane -->
 									</div> <!-- End Container for Sub Menu Options Panes -->
 								</div> <!-- right column -->
 							</div> <!-- End containing row -->
@@ -204,6 +240,17 @@
             </div>
         </div>
       </div>
+      <!-- Send Command to Server Working Modal -->
+      <div id="sendCmdsrvWorkingModal" class="modal fade">
+        <div class="modal-dialog modal-sm" style="margin-top:200px;">
+            <div class="modal-content">
+                <div class="sendCmdsrvWorking" style="margin-left:auto;margin-right:auto;margin-top:10px;margin-bottom:10px"></div>
+                <h4><center>Waiting for Response</center></h4>
+                <h4><center>From Command Server</center></h4>
+            </div>
+        </div>
+      </div>
+
       <!-- Select LangCodes Modal -->
       <div class="modal fade modal-wide" id="selectLangCodes" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
         <div class="modal-dialog">

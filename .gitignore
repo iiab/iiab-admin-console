@@ -1,0 +1,4 @@
+.ansible
+*.patches
+*.log
+*.retry
