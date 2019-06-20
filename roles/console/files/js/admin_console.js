@@ -128,7 +128,7 @@ function controlButtonsEvents() {
   });
 
 	$("#WIFI-CREDENTIALS").click(function(){
-    setWifiCredentials();
+    setWpaCredentials();
   });
 
 	$("#BLUETOOTH-CTL").click(function(){
@@ -777,7 +777,7 @@ function setWpaCredentials(){
   cmd_args['connect_wifi_password'] = gEBI('connect_wifi_password').value;
   var len = cmd_args['connect_wifi_password'].length
 
-  if (len < 8 || len > 63){
+  if (len != 0 && (len < 8 || len > 63)){
   	alert ("Hotspot passphrase must be between 8 and 63 characters.");
   	return;
   }

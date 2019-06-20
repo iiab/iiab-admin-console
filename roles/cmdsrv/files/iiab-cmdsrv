@@ -1163,6 +1163,7 @@ def set_wpa_credentials (cmd_info):
     # else set to static array
     # write lines
 
+    print wpa_txt
     if connect_wifi_ssid in wpa_txt:
         ssid_loc = wpa_txt.index(connect_wifi_ssid)
         network_start = wpa_txt.rindex("network={",0,ssid_loc)
@@ -1171,10 +1172,13 @@ def set_wpa_credentials (cmd_info):
 
     wpa_lines = wpa_txt.split('\n')
 
-    if connect_wifi_ssid != '':
+    if connect_wifi_password != '':
         network_lines = run_command("/usr/bin/wpa_passphrase " + connect_wifi_ssid + " " + connect_wifi_password)
     else:
         network_lines = ['network={', '\tssid="' + connect_wifi_ssid + '"', '\tkey_mgmt=NONE', '}']
+    print wpa_lines
+    print network_lines
+
     wpa_lines.extend(network_lines)
     with open('/etc/wpa_supplicant/wpa_supplicant.conf', 'w') as f:
         for l in wpa_lines:
