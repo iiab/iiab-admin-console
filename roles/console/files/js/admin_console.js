@@ -67,6 +67,7 @@ sysStorage.library.partition = false; // no separate library partition
 // defaults for ip addr of server and other info returned from server-info.php
 var serverInfo = {"iiab_server_ip":"","iiab_client_ip":"","iiab_server_found":"TRUE","iiab_cmdsrv_running":"FALSE"};
 var initStat = {};
+var cmdsrvWorkingModalCount = 0;
 
 // MAIN ()
 
@@ -2240,7 +2241,7 @@ function sendCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArgs) {
 
   if (buttonId != '')
     make_button_disabled('#' + buttonId, true);
-  $('#sendCmdsrvWorkingModal').modal('show');
+    setCmdsrvWorkingModalOn();
 
   var resp = $.ajax({
     type: 'POST',
@@ -2271,7 +2272,7 @@ function sendCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArgs) {
   })
   .fail(jsonErrhandler)
   .always(function() {
-  	$('#sendCmdsrvWorkingModal').modal('hide');
+  	setCmdsrvWorkingModalOff();
   	if (this.buttonId != "")
       make_button_disabled('#' + this.buttonId, false);
   });
@@ -2353,6 +2354,18 @@ function jsonErrhandler (jqXHR, textStatus, errorThrown)
   consoleLog(jqXHR);
 
   return false;
+}
+
+function setCmdsrvWorkingModalOn (){
+	cmdsrvWorkingModalCount += 1;
+  if (cmdsrvWorkingModalCount == 1)
+		  $('#sendCmdsrvWorkingModal').modal('show');
+}
+
+function setCmdsrvWorkingModalOff (){
+  cmdsrvWorkingModalCount -= 1;
+	if (cmdsrvWorkingModalCount == 0)
+	  $('#sendCmdsrvWorkingModal').modal('hide');
 }
 
 function consoleLog (msg)
