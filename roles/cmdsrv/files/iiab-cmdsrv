@@ -683,6 +683,7 @@ def cmd_handler(cmd_msg):
         "GET-SPACE-AVAIL": get_space_avail,
         "GET-STORAGE-INFO": get_storage_info_lite,
         "GET-EXTDEV-INFO": get_external_device_info,
+        "GET-SYSTEM-INFO": get_system_info,
         "GET-NETWORK-INFO": get_network_info,
         "CTL-WIFI": ctl_wifi,
         "SET-WPA-CREDENTIALS": set_wpa_credentials,
@@ -1011,12 +1012,19 @@ def get_external_device_info(cmd_info):
     resp = json.dumps(extdev_info)
     return (resp)
 
+def get_system_info(cmd_info):
+    sys_stat = calc_network_info()
+    sys_stat['pi_passwd_known'] = check_password_match('pi', 'raspberry')
+    sys_stat['admin_passwd_known'] = check_password_match(effective_vars['iiab_admin_user'], effective_vars['iiab_admin_published_pwd'])
+    resp = json.dumps(sys_stat)
+    return (resp)
+
 def get_network_info(cmd_info):
-    net_stat = calc_network_info(cmd_info)
+    net_stat = calc_network_info()
     resp = json.dumps(net_stat)
     return (resp)
 
-def calc_network_info(cmd_info):
+def calc_network_info():
     net_stat={}
 
     # ip -br addr
@@ -2164,6 +2172,28 @@ def isStrongPassword(password):
         message = e.message
 
     return is_valid, message
+
+def check_password_match(user, password):
+    # return True if password matches current hash or False if user not found or no match
+    # see if user exists
+    try:
+        spwddb = spwd.getspnam(user)
+    except:
+        return False
+
+    # check old password - N.B. allows password guessing
+    passwd_hash = spwddb[1]
+    pwparts = passwd_hash.split('$')
+    if len (pwparts) > 1:
+        salt = '$' + pwparts[1] + '$' +  pwparts[2] +'$'
+    else:
+        return False # no salt so must not match
+
+    calc_passwd_hash = crypt.crypt(password, salt)
+    if calc_passwd_hash != passwd_hash:
+        return False
+    else:
+        return True
 
 def request_job(cmd_info, job_command, cmd_step_no=1, depend_on_job_id=-1, has_dependent="N"):
     global jobs_requested
