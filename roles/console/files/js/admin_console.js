@@ -686,15 +686,24 @@ function getAnsibleTags (data)
 
 // Control Functions
 
+function getSystemInfo(){
+  var command = "GET-SYSTEM-INFO";
+  return sendCmdSrvCmd(command, procSystemInfo);
+}
+
 function getNetworkInfo(){
   var command = "GET-NETWORK-INFO";
   return sendCmdSrvCmd(command, procNetworkInfo);
 }
 
 function procNetworkInfo(data){
-  var networkInfo = data;
-  Object.keys(networkInfo).forEach(function(key) {
-  	serverInfo[key] = networkInfo[key];
+	procSystemInfo(data);
+}
+
+function procSystemInfo(data){
+  var systemInfo = data;
+  Object.keys(systemInfo).forEach(function(key) {
+  	serverInfo[key] = systemInfo[key];
   });
   // hostapd
   $("#hotspotState").html(serverInfo.hostapd_status);
@@ -719,6 +728,8 @@ function procNetworkInfo(data){
   html += '<div>Internet Access</div>';
   html += '<div>Gateway Address</div>';
   html += '<div>Gateway Device</div>';
+  html += '<div>User pi Password is Published</div>';
+  html += '<div>User iiab-admin Password is Published</div>';
   html += '</div>';
   html += '<div class="col-sm-4">';
   html += '<div>' + serverInfo.bt_pan_status + '</div>';
@@ -728,6 +739,8 @@ function procNetworkInfo(data){
   html += '<div>' + serverInfo.internet_access + '</div>';
   html += '<div>' + serverInfo.gateway_addr + '</div>';
   html += '<div>' + serverInfo.gateway_dev + '</div>';
+  html += '<div>' + serverInfo.pi_passwd_known + '</div>';
+  html += '<div>' + serverInfo.admin_passwd_known + '</div>';
   html += '</div>';
 
   $("#currentNetworkState").html(html);
@@ -774,7 +787,7 @@ function controlWifi(){
   cmd_args['make_permanent'] = 'False';
 
   var command = "CTL-WIFI " + JSON.stringify(cmd_args);
-  return sendCmdSrvCmd(command, getNetworkInfo);
+  return sendCmdSrvCmd(command, getSystemInfo);
 }
 
 function setWpaCredentials(){
@@ -803,7 +816,7 @@ function controlBluetooth(){
   cmd_args['make_permanent'] = 'False';
 
   var command = "CTL-BLUETOOTH " + JSON.stringify(cmd_args);
-  return sendCmdSrvCmd(command, getNetworkInfo);
+  return sendCmdSrvCmd(command, getSystemInfo);
 }
 
 function controlVpn(){
@@ -818,7 +831,7 @@ function controlVpn(){
   cmd_args['make_permanent'] = 'False';
 
   var command = "CTL-VPN " + JSON.stringify(cmd_args);
-  return sendCmdSrvCmd(command, getNetworkInfo);
+  return sendCmdSrvCmd(command, getSystemInfo);
 }
 
 // Configure Functions
