@@ -13,22 +13,6 @@ var mapAssetsDir = '/osm-vector-maps/maplist/assets/';
 //var jquery = require("./assets/jquery.min");
 //window.$ = window.jQuery = jquery;
 
-function instMapItem(map_id) {
-    mapDownloading.push(map_id);
-    var command = "INST-OSM-VECT-SET"
-    var cmd_args = {}
-    for (var i=0; i<mapCatalog.length; i++ ){
-      if (mapCatalog[i].url === map_id){
-         var region = mapCatalog[i].name;
-         break;
-      }
-    }
-    if ( !region ) return false;
-    cmd_args['osm_vect_id'] = region;
-    cmd = command + " " + JSON.stringify(cmd_args);
-    sendCmdSrvCmd(cmd, genericCmdHandler, "", instMapError, cmd_args);
-    return true;
-}
 
 function instMapError(data, cmd_args) {
     consoleLog(cmd_args);
@@ -146,7 +130,14 @@ function genRegionItem(region,checkbox) {
 function instMapItem(name) {
   var command = "INST-OSM-VECT-SET";
   var cmd_args = {};
-  cmd_args['osm_vect_id'] = name;
+    for (var i=0; i<mapCatalog.length; i++ ){
+      if (mapCatalog[i].url === map_id){
+         var region = mapCatalog[i].name;
+         break;
+      }
+    }
+    if ( !region ) return false;
+  cmd_args['osm_vect_id'] = region;
   cmd = command + " " + JSON.stringify(cmd_args);
   sendCmdSrvCmd(cmd, genericCmdHandler);
   mapDownloading.push(name);
