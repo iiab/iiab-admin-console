@@ -123,8 +123,7 @@ function genRegionItem(region,checkbox) {
       checked = 'checked';
     else
       checked = '';
-      var basename = region.url.replace(/.*\//, '');
-      html += '<input type="checkbox" name="' + basename + '"';
+      html += '<input type="checkbox" name="' + region.url + '"';
       html += ' onChange="updateMapSpace(this)" ' + checked + '> ';
   }
   html += itemId;
