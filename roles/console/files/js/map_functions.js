@@ -127,16 +127,20 @@ function genRegionItem(region,checkbox) {
   return html;
 }
 
-function instMapItem(map_id) {
-  var command = "INST-OSM-VECT-SET";
-  var cmd_args = {};
+function get_region_from_url(url){
   for (const region in mapCatalog ){
     if (mapCatalog[region].hasOwnProperty('url') &&
       mapCatalog[region].url === map_id ){
-      var region_id = mapCatalog[region].name;
-      break;
+      return mapCatalog[region].name;
     }
   }
+  return null
+}
+  
+function instMapItem(map_id) {
+  var command = "INST-OSM-VECT-SET";
+  var cmd_args = {};
+  region_id = get_region_from_url(map_id);
   if ( !region_id ) return false;
   cmd_args['osm_vect_id'] = region_id;
   cmd = command + " " + JSON.stringify(cmd_args);
@@ -152,7 +156,7 @@ function instMapItem(map_id) {
 
 function updateMapSpace(cb){
   console.log("in updateMapSpace" + cb);
-  var region = cb.name;
+  var region = get_region_from_url(cb.name);
   updateMapSpaceUtil(region, cb.checked);
 }
 
