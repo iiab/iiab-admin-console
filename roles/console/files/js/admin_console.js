@@ -47,7 +47,7 @@ var externalDeviceContents = {}; // zims and other content on external devices, 
 var langNames = []; // iso code, local name and English name for languages for which we have zims sorted by English name for language
 var topNames = ["ara","eng","spa","fra","hin","por"]; // languages for top language menu
 var defaultLang = "eng";
-var langGroups = {"en":"eng","fr":"fra"}; // language codes to treat as a single code
+var langGroups = {"en":"eng","fr":"fra","es":"spa"}; // language codes to treat as a single code
 var selectedLangs = []; // languages selected by gui for display of content
 var selectedZims = [];
 var selectedOer2goItems = [];
@@ -1179,12 +1179,16 @@ function selectedLangsDefaults() {
 
   for (var id in installedZimCatalog['INSTALLED']){
     lang = installedZimCatalog['INSTALLED'][id]['language'];
+    if (lang in langGroups)
+      lang = langGroups[lang]; // some locally generated zims use wrong code for EN and FR
     if (selectedLangs.indexOf(lang) == -1) // automatically select any language for which zim is installed
       selectedLangs.push (lang);
   }
   for (var id in installedZimCatalog['WIP']){
   	var zim = lookupZim(id);
     lang = zim.language;
+    if (lang in langGroups)
+      lang = langGroups[lang]; // some locally generated zims use wrong code for EN and FR
     if (selectedLangs.indexOf(lang) == -1) // automatically select any language for which zim is being installed
       selectedLangs.push (lang);
   }
