@@ -287,12 +287,21 @@ function instContentButtonsEvents() {
     $('#mapRegionSelectList input').each( function(){
       if (this.type == "checkbox")
         if (this.checked){
+          var skip_map = false;
           map_id = this.name;
-          if (mapInstalled.indexOf(map_id) >= 0 || map_id in mapWip)
-            consoleLog("Skipping installed Module " + map_id);
-          else
-            instMapItem(map_id);
+          for (var installed in mapInstalled){
+             if (mapInstalled[installed].hasOwnProperty('file_name') &&
+               this.name.indexOf(mapInstalled[installed].file_name != -1 )){
+               skip_map = true;
+               break;
+             }
+             if (skip_map || map_id in mapWip)
+               consoleLog("Skipping installed Module " + map_id);
+             else
+               instMapItem(map_id);
+          }
         }
+      })
     });
     //getOer2goStat();
     alert ("Selected Map Region scheduled to be installed.\n\nPlease view Utilities->Display Job Status to see the results.");

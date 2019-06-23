@@ -127,22 +127,25 @@ function genRegionItem(region,checkbox) {
   return html;
 }
 
-function instMapItem(name) {
+function instMapItem(map_id) {
   var command = "INST-OSM-VECT-SET";
   var cmd_args = {};
-    for (var i=0; i<mapCatalog.length; i++ ){
-      if (mapCatalog[i].url === map_id){
-         var region = mapCatalog[i].name;
-         break;
-      }
+  for (const region in mapCatalog ){
+    if (mapCatalog[region].hasOwnProperty('url') &&
+      mapCatalog[region].url === map_id ){
+      var region_id = mapCatalog[region].name;
+      break;
     }
-    if ( !region ) return false;
-  cmd_args['osm_vect_id'] = region;
+  }
+  if ( !region_id ) return false;
+  cmd_args['osm_vect_id'] = region_id;
   cmd = command + " " + JSON.stringify(cmd_args);
   sendCmdSrvCmd(cmd, genericCmdHandler);
-  mapDownloading.push(name);
-  if ( mapWip.indexOf(name) != -1 )
-     mapWip.push(mapCatalog[name]);
+  // get the unique map name
+  var map_url = mapCatalog[map_id].url
+  mapDownloading.push(map_url);
+  if ( mapWip.indexOf(map_url) == -1 )
+     mapWip.push(map_url);
   console.log('mapWip: ' + mapWip);
   return true;
 }
