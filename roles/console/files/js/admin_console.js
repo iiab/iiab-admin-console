@@ -287,8 +287,7 @@ function instContentButtonsEvents() {
     $('#mapRegionSelectList input').each( function(){
       if (this.type == "checkbox")
         if (this.checked){
-          var index = mapInstalled.map(function(e) {return e.url;}).indexof(this.name);
-          map_id = mapInstalled[index].name;
+          map_id = this.name;
           if (mapInstalled.indexOf(map_id) >= 0 || map_id in mapWip)
             consoleLog("Skipping installed Module " + map_id);
           else
