@@ -251,7 +251,7 @@ function procCurrentMenuUpdateSelectedLangs (list) { // automatically select any
 			lang = 'eng';
 		}
 
-    if (selectedLangs.indexOf(lang) == -1) // automatically select any language for which oer2go item is installed
+    if (selectedLangs.indexOf(lang) == -1)
       selectedLangs.push(lang);
     }
   }

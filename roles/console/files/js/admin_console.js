@@ -47,7 +47,7 @@ var externalDeviceContents = {}; // zims and other content on external devices, 
 var langNames = []; // iso code, local name and English name for languages for which we have zims sorted by English name for language
 var topNames = ["ara","eng","spa","fra","hin","por"]; // languages for top language menu
 var defaultLang = "eng";
-var langGroups = {"en":"eng","fr":"fra"}; // language codes to treat as a single code
+var langGroups = {"en":"eng","fr":"fra","es":"spa"}; // language codes to treat as a single code
 var selectedLangs = []; // languages selected by gui for display of content
 var selectedZims = [];
 var selectedOer2goItems = [];
@@ -67,6 +67,7 @@ sysStorage.library.partition = false; // no separate library partition
 // defaults for ip addr of server and other info returned from server-info.php
 var serverInfo = {"iiab_server_ip":"","iiab_client_ip":"","iiab_server_found":"TRUE","iiab_cmdsrv_running":"FALSE"};
 var initStat = {};
+var cmdsrvWorkingModalCount = 0;
 
 // MAIN ()
 
@@ -116,6 +117,12 @@ function navButtonsEvents() {
     else
       console.log(' no call-after');
   });
+  // Special Cases
+  if (ansibleFacts.ansible_local.local_facts.os == "raspbian"){
+    $("#controlWifiLink").show();
+    $("#controlBluetoothLink").show();
+    $("#controlVPNLink").show();
+  }
 }
 
 // BUTTONS
@@ -123,6 +130,21 @@ function navButtonsEvents() {
 // Control Buttons
 
 function controlButtonsEvents() {
+	$("#WIFI-CTL").click(function(){
+    controlWifi();
+  });
+
+	$("#WIFI-CREDENTIALS").click(function(){
+    setWpaCredentials();
+  });
+
+	$("#BLUETOOTH-CTL").click(function(){
+    controlBluetooth();
+  });
+	$("#VPN-CTL").click(function(){
+    controlVpn();
+  });
+
   $("#REBOOT").click(function(){
     rebootServer();
   });
@@ -662,6 +684,158 @@ function getAnsibleTags (data)
   return true;
 }
 
+// Control Functions
+
+function getSystemInfo(){
+  var command = "GET-SYSTEM-INFO";
+  return sendCmdSrvCmd(command, procSystemInfo);
+}
+
+function getNetworkInfo(){
+  var command = "GET-NETWORK-INFO";
+  return sendCmdSrvCmd(command, procNetworkInfo);
+}
+
+function procNetworkInfo(data){
+	procSystemInfo(data);
+}
+
+function procSystemInfo(data){
+  var systemInfo = data;
+  Object.keys(systemInfo).forEach(function(key) {
+  	serverInfo[key] = systemInfo[key];
+  });
+  // hostapd
+  $("#hotspotState").html(serverInfo.hostapd_status);
+  $("#WIFI-CTL").html('Turn Hotspot Access ON');
+  make_button_disabled('#WIFI-CTL', true); // disable
+
+  if (serverInfo.hostapd_status == 'ON'){
+    $("#WIFI-CTL").html('Use Wifi to Connect');
+    make_button_disabled('#WIFI-CTL', false); // enable
+  }
+  else if (serverInfo.hostapd_status == 'OFF'){
+  	$("#WIFI-CTL").html('Turn Hotspot Access ON');
+    make_button_disabled('#WIFI-CTL', false); // enable
+  }
+
+  var html = "";
+  html += '<div class="col-sm-4">';
+  html += '<div>Bluetooth Status</div>';
+  html += '<div>Support VPN Status</div>';
+  html += '<div>Wired IP Address</div>';
+  html += '<div>Wireless IP Address</div>';
+  html += '<div>Internet Access</div>';
+  html += '<div>Gateway Address</div>';
+  html += '<div>Gateway Device</div>';
+  html += '<div>User pi Password is Published</div>';
+  html += '<div>User iiab-admin Password is Published</div>';
+  html += '</div>';
+  html += '<div class="col-sm-4">';
+  html += '<div>' + serverInfo.bt_pan_status + '</div>';
+  html += '<div>' + serverInfo.openvpn_status + '</div>';
+  html += '<div>' + serverInfo.eth0.addr + '</div>';
+  html += '<div>' + serverInfo.wlan0.addr + '</div>';
+  html += '<div>' + serverInfo.internet_access + '</div>';
+  html += '<div>' + serverInfo.gateway_addr + '</div>';
+  html += '<div>' + serverInfo.gateway_dev + '</div>';
+  html += '<div>' + serverInfo.pi_passwd_known + '</div>';
+  html += '<div>' + serverInfo.admin_passwd_known + '</div>';
+  html += '</div>';
+
+  $("#currentNetworkState").html(html);
+
+  // bluetooth
+  $("#bluetoothState").html(serverInfo.bt_pan_status);
+  $("#BLUETOOTH-CTL").html('Turn Bluetooth Access ON');
+  make_button_disabled('#BLUETOOTH-CTL', true); // disable
+
+  if (serverInfo.bt_pan_status == 'ON'){
+    $("#BLUETOOTH-CTL").html('Turn Bluetooth Access OFF');
+    make_button_disabled('#BLUETOOTH-CTL', false); // enable
+  }
+  else if (serverInfo.bt_pan_status == 'OFF'){
+  	$("#BLUETOOTH-CTL").html('Turn Bluetooth Access ON');
+    make_button_disabled('#BLUETOOTH-CTL', false); // enable
+  }
+
+  // openvpn
+  $("#supportVpnState").html(serverInfo.openvpn_status);
+  gEBI('support_vpn_handle').value = serverInfo.openvpn_handle;
+  $("#VPN-CTL").html('Turn Support VPN ON');
+  make_button_disabled('#VPN-CTL', true); // disable
+  $("#support_vpn_handle").prop('disabled', true);
+  if (serverInfo.openvpn_status == 'ON'){
+    $("#support_vpn_handle").prop('disabled', false)
+    $("#VPN-CTL").html('Turn Support VPN OFF');
+    make_button_disabled('#VPN-CTL', false); // enable
+  }
+  else if (serverInfo.openvpn_status == 'OFF'){
+  	$("#support_vpn_handle").prop('disabled', false)
+  	$("#VPN-CTL").html('Turn Support VPN ON');
+    make_button_disabled('#VPN-CTL', false); // enable
+  }
+}
+
+function controlWifi(){
+  var cmd_args = {};
+
+  if (serverInfo.hostapd_status == 'ON')
+    cmd_args['hotspot_on_off'] = 'off';
+  if (serverInfo.hostapd_status == 'OFF')
+    cmd_args['hotspot_on_off'] = 'on';
+  cmd_args['make_permanent'] = 'False';
+
+  var command = "CTL-WIFI " + JSON.stringify(cmd_args);
+  return sendCmdSrvCmd(command, getSystemInfo);
+}
+
+function setWpaCredentials(){
+  var cmd_args = {};
+
+  cmd_args['connect_wifi_ssid'] = gEBI('connect_wifi_ssid').value;
+  cmd_args['connect_wifi_password'] = gEBI('connect_wifi_password').value;
+  var len = cmd_args['connect_wifi_password'].length
+
+  if (len != 0 && (len < 8 || len > 63)){
+  	alert ("Hotspot passphrase must be between 8 and 63 characters.");
+  	return;
+  }
+
+  var command = "SET-WPA-CREDENTIALS " + JSON.stringify(cmd_args);
+  return sendCmdSrvCmd(command, genericCmdHandler);
+}
+
+function controlBluetooth(){
+  var cmd_args = {};
+
+  if (serverInfo.bt_pan_status == 'ON')
+    cmd_args['bluetooth_on_off'] = 'off';
+  if (serverInfo.bt_pan_status == 'OFF')
+    cmd_args['bluetooth_on_off'] = 'on';
+  cmd_args['make_permanent'] = 'False';
+
+  var command = "CTL-BLUETOOTH " + JSON.stringify(cmd_args);
+  return sendCmdSrvCmd(command, getSystemInfo);
+}
+
+function controlVpn(){
+  var cmd_args = {};
+
+  if (serverInfo.openvpn_status == 'ON')
+    cmd_args['vpn_on_off'] = 'off';
+  if (serverInfo.openvpn_status == 'OFF')
+    cmd_args['vpn_on_off'] = 'on';
+  serverInfo.openvpn_handle = gEBI('support_vpn_handle').value;
+  cmd_args['vpn_handle'] = serverInfo.openvpn_handle;
+  cmd_args['make_permanent'] = 'False';
+
+  var command = "CTL-VPN " + JSON.stringify(cmd_args);
+  return sendCmdSrvCmd(command, getSystemInfo);
+}
+
+// Configure Functions
+
 function getInstallVars (data)
 {
   //alert ("in getInstallVars");
@@ -1005,12 +1179,16 @@ function selectedLangsDefaults() {
 
   for (var id in installedZimCatalog['INSTALLED']){
     lang = installedZimCatalog['INSTALLED'][id]['language'];
+    if (lang in langGroups)
+      lang = langGroups[lang]; // some locally generated zims use wrong code for EN and FR
     if (selectedLangs.indexOf(lang) == -1) // automatically select any language for which zim is installed
       selectedLangs.push (lang);
   }
   for (var id in installedZimCatalog['WIP']){
   	var zim = lookupZim(id);
     lang = zim.language;
+    if (lang in langGroups)
+      lang = langGroups[lang]; // some locally generated zims use wrong code for EN and FR
     if (selectedLangs.indexOf(lang) == -1) // automatically select any language for which zim is being installed
       selectedLangs.push (lang);
   }
@@ -2080,6 +2258,7 @@ function sendCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArgs) {
 
   if (buttonId != '')
     make_button_disabled('#' + buttonId, true);
+    setCmdsrvWorkingModalOn();
 
   var resp = $.ajax({
     type: 'POST',
@@ -2110,6 +2289,7 @@ function sendCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArgs) {
   })
   .fail(jsonErrhandler)
   .always(function() {
+  	setCmdsrvWorkingModalOff();
   	if (this.buttonId != "")
       make_button_disabled('#' + this.buttonId, false);
   });
@@ -2191,6 +2371,18 @@ function jsonErrhandler (jqXHR, textStatus, errorThrown)
   consoleLog(jqXHR);
 
   return false;
+}
+
+function setCmdsrvWorkingModalOn (){
+	cmdsrvWorkingModalCount += 1;
+  if (cmdsrvWorkingModalCount == 1)
+		  $('#sendCmdsrvWorkingModal').modal('show');
+}
+
+function setCmdsrvWorkingModalOff (){
+  cmdsrvWorkingModalCount -= 1;
+	if (cmdsrvWorkingModalCount == 0)
+	  $('#sendCmdsrvWorkingModal').modal('hide');
 }
 
 function consoleLog (msg)
