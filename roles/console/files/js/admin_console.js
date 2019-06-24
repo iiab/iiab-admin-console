@@ -305,7 +305,7 @@ function instContentButtonsEvents() {
              }
              if (skip_map || map_id in mapWip){
                consoleLog("Skipping installed Module " + map_id);
-               alert ("Selected Map Region is alreaddy installed.\n");
+               alert ("Selected Map Region is already installed.\n");
 
              } else {
                instMapItem(map_id);
@@ -314,7 +314,6 @@ function instContentButtonsEvents() {
           }
       })
     //getOer2goStat();
-    //alert ("For now, a Map Region must be downloaded at the command-line, e.g. using:\n\niiab-install-map south_america\nor\niiab-install-map world\n\nSee: http://d.iiab.io/content/OSM/vector-tiles/maplist/hidden/assets/regions.json\n\nWhich originates from: https://github.com/iiab/maps/blob/master/osm-source/ukids/assets/regions.json");
     make_button_disabled("#INST-MAP", false);
   });
 
