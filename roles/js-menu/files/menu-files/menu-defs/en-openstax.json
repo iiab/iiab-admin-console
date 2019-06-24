@@ -17,7 +17,7 @@
     "prereq_id": null,
     "version": "v1.0",
     "ksize": "2966152",
-    "logo_url": "en-openstax_OpenStaxLogo.jpeg",
+    "logo_url": "en-openstax.jpeg",
     "type": "html",
     "description": "University textbooks from OpenStax (openstax.org) based at Rice University.",
     "extra_description": "Topics include business, mathematics, humanities, social science, science, and technology.",
