@@ -288,22 +288,32 @@ function instContentButtonsEvents() {
       if (this.type == "checkbox")
         if (this.checked){
           var skip_map = false;
-          map_id = this.name;
+          map_id = this.name
+          var region = get_region_from_url(map_id);
           for (var installed in mapInstalled){
-             if (mapInstalled[installed].hasOwnProperty('file_name') &&
-               this.name.indexOf(mapInstalled[installed].file_name != -1 )){
-               skip_map = true;
-               break;
+             if (mapInstalled[installed] &&
+               mapInstalled[installed].hasOwnProperty('region') &&
+               mapInstalled[installed].region === region){
+                  // Does installed map have same basename (ignores .zip)
+                  var basename = mapCatalog[region].url.replace(/.*\//, '');
+                  // Clip off .zip
+                  basename = basename.replace(/\.zip/, '');
+                  if (basename === mapInstalled[installed].file_name) 
+                     skip_map = true;
+                  break;
+               }
              }
-             if (skip_map || map_id in mapWip)
+             if (skip_map || map_id in mapWip){
                consoleLog("Skipping installed Module " + map_id);
-             else
+               alert ("Selected Map Region is alreaddy installed.\n");
+
+             } else {
                instMapItem(map_id);
+               alert ("Selected Map Region scheduled to be installed.\n\nPlease view Utilities->Display Job Status to see the results.");
+            }
           }
-        }
       })
     //getOer2goStat();
-    alert ("Selected Map Region scheduled to be installed.\n\nPlease view Utilities->Display Job Status to see the results.");
     //alert ("For now, a Map Region must be downloaded at the command-line, e.g. using:\n\niiab-install-map south_america\nor\niiab-install-map world\n\nSee: http://d.iiab.io/content/OSM/vector-tiles/maplist/hidden/assets/regions.json\n\nWhich originates from: https://github.com/iiab/maps/blob/master/osm-source/ukids/assets/regions.json");
     make_button_disabled("#INST-MAP", false);
   });
@@ -1982,7 +1992,8 @@ function sumOer2goWip(){
 function sumMapWip(){
   var totalSpace = 0;
 
-  for (var region in mapWip){
+  for (var url in mapWip){
+   var region = get_region_from_url(url);
   	totalSpace += parseInt(mapCatalog[region].size);
   }
   return totalSpace;
