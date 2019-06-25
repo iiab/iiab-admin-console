@@ -304,7 +304,7 @@ function instContentButtonsEvents() {
                   break;
                }
              }
-             if (skip_map || map_id in mapWip){
+             if (skip_map || mapWip.indexOf(map_id) != -1){
                consoleLog("Skipping installed Module " + map_id);
                alert ("Selected Map Region is already installed.\n");
 
