@@ -289,6 +289,7 @@ function instContentButtonsEvents() {
         if (this.checked){
           var skip_map = false;
           map_id = this.name
+          $.when(readMapIdx()).then(function(){
           var region = get_region_from_url(map_id);
           for (var installed in mapInstalled){
              if (mapInstalled[installed] &&
@@ -311,7 +312,8 @@ function instContentButtonsEvents() {
                instMapItem(map_id);
                alert ("Selected Map Region scheduled to be installed.\n\nPlease view Utilities->Display Job Status to see the results.");
             }
-          }
+          })
+        }
       })
     //getOer2goStat();
     make_button_disabled("#INST-MAP", false);
