@@ -554,11 +554,12 @@ function calcItemHtml(href,module){
 }
 
 function getTextField (module, fieldName, addPar) {
+	addPar = addPar || false;
 	var html = "";
 
 	if (module.hasOwnProperty(fieldName) && module[fieldName] != "") {
 		html = substitute(module[fieldName], module)
-		if (addPar || true)
+		if (addPar)
 		  html = '<p>' + html + '</p>';
 	}
 	return html;
