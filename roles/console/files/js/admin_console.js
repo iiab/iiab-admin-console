@@ -291,15 +291,15 @@ function instContentButtonsEvents() {
           map_id = this.name
           $.when(readMapIdx()).then(function(){
           var region = get_region_from_url(map_id);
-          for (var installed in mapInstalled){
-             if (mapInstalled[installed] &&
-               mapInstalled[installed].hasOwnProperty('region') &&
-               mapInstalled[installed].region === region){
+          for (var installed_region in mapInstalled){
+             if (mapInstalled[installed_region] &&
+               mapInstalled[installed_region].hasOwnProperty('region') &&
+               mapInstalled[installed_region].region === region){
                   // Does installed map have same basename (ignores .zip)
                   var basename = mapCatalog[region].url.replace(/.*\//, '');
                   // Clip off .zip
                   basename = basename.replace(/\.zip/, '');
-                  if (basename === mapInstalled[installed].file_name) 
+                  if (basename === mapInstalled[installed_region].file_name) 
                      skip_map = true;
                   break;
                }
