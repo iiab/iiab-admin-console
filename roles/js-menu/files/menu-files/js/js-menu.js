@@ -544,16 +544,19 @@ function calcItemHtml(href,module){
 	consoleLog('href = ' + href);
 	html += '<div id="' + module.menu_id + '-htmlf" class="content-extra toggleExtraHtml"></div>'; // scaffold for extra html
 	if (showFootnote)
-    html += getTextField (module, 'footnote');
+    html += '<p><small>' + getTextField (module, 'footnote', false) + '</small></p>';
 	html+='</div></div></div>';
 
 	return html;
 }
 
-function getTextField (module, fieldName) {
+function getTextField (module, fieldName, addPar) {
 	var html = "";
+
 	if (module.hasOwnProperty(fieldName) && module[fieldName] != "") {
-		html = '<p>' + substitute(module[fieldName], module) + '</p>';
+		html = substitute(module[fieldName], module)
+		if (addPar || true)
+		  html = '<p>' + html + '</p>';
 	}
 	return html;
 }
