@@ -543,8 +543,11 @@ function calcItemHtml(href,module){
     html += getTextField (module, 'extra_description');
 	consoleLog('href = ' + href);
 	html += '<div id="' + module.menu_id + '-htmlf" class="content-extra toggleExtraHtml"></div>'; // scaffold for extra html
-	if (showFootnote)
-    html += '<p><small>' + getTextField (module, 'footnote', false) + '</small></p>';
+	if (showFootnote){
+    var footnote = getTextField (module, 'footnote', false);
+    if (footnote != "")
+      html += '<p><small>' + footnote + '</small></p>';
+  }
 	html+='</div></div></div>';
 
 	return html;
