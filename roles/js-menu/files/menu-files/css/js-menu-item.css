@@ -31,6 +31,7 @@
 
 .content-item p {
   margin-top: 5px;
+  margin-bottom: 2px;
   /* margin-right: 1vw; wait for :dir() support */
 }
 
