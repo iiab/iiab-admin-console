@@ -1,10 +1,10 @@
 {
-  "lang": "en",
-  "intended_use": "map",
-  "title": "OpenStreetMap Test Page",
-  "start_url": "maplist",
-  "map_name": "en-map_test",
-  "logo_url": "osm.jpg",
-  "description": "To install a Map Pack for a continent or the entire world, use <a href=http://box.lan/admin>Admin Console</a> (see <a href='/info/FAQ.html#What_are_the_default_passwords.3F'>default passwords</a>) > <b>Install Content</b> > <b>Add Map Region</b>.",
-  "extra_description": "See also the <a href='https://github.com/iiab/iiab/wiki/IIAB-Maps'>full instructions</a> for IIAB Maps.<p>(This stub is installed by default during the initial installation of Internet-in-a-Box.  Remove this stub using <a href=http://box.lan/admin>Admin Console</a> > <b>Manage Content</b> > <b>Content Item List</b>)"
+    "lang": "en",
+    "intended_use": "map",
+    "title": "OpenStreetMap Test Page",
+    "start_url": "maplist",
+    "map_name": "en-map_test",
+    "logo_url": "osm.jpg",
+    "description": "To install a Map Pack for a continent or the entire world, use <a href=http://box.lan/admin>Admin Console</a> (see <a href='/info/FAQ.html#What_are_the_default_passwords.3F'>default passwords</a>) > <b>Install Content</b> > <b>Add Map Region</b>.",
+    "extra_description": "You can remove this stub from your IIAB home page using <a href=http://box.lan/admin>Admin Console</a> > <b>Manage Content</b> > <b>Content Item List</b>.<p>See also the <a href='https://github.com/iiab/iiab/wiki/IIAB-Maps'>full instructions</a> for IIAB Maps."
 }
