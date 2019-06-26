@@ -554,7 +554,7 @@ function calcItemHtml(href,module){
 }
 
 function getTextField (module, fieldName, addPar) {
-	addPar = addPar || false;
+	addPar = addPar || true;
 	var html = "";
 
 	if (module.hasOwnProperty(fieldName) && module[fieldName] != "") {
