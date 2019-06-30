@@ -306,7 +306,7 @@ function instContentButtonsEvents() {
              }
              if (skip_map || mapWip.indexOf(map_id) != -1){
                consoleLog("Skipping installed Module " + map_id);
-               alert ("Selected Map Region is already installed.\n");
+               //alert ("Selected Map Region is already installed.\n");
 
              } else {
                instMapItem(map_id);
