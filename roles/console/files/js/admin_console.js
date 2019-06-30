@@ -446,7 +446,7 @@ function utilButtonsEvents() {
       if (this.type == "checkbox")
         if (this.checked){
           var job_idArr = this.id.split('-');
-          job_id = job_idArr[1];
+          job_id = job_idArr[0];
 
           // cancelJobFunc returns the function to call not the result as needed by array.push()
           cmdList.push(cancelJobFunc(job_id));
@@ -1709,14 +1709,14 @@ function procJobStat(data)
 
     // there should be one or two parts - ? still need this; for cancel
     var cmd_parse = statusJob.cmd_msg.split(" ");
-    job_status['cmd_verb'] = cmd_parse[0];
+    statusJob['cmd_verb'] = cmd_parse[0];
     if(cmd_parse.length == 0 || typeof cmd_parse[1] === 'undefined')
-      job_status['cmd_args'] = ""
+      statusJob['cmd_args'] = ""
     else
-      job_status['cmd_args'] = JSON.parse(cmd_parse[1]);
+      statusJob['cmd_args'] = JSON.parse(cmd_parse[1]);
 
     consoleLog(statusJob);
-    job_status[statusJob.job_no] = statusJob;
+    job_status[statusJob.job_id] = statusJob;
 
   });
   $( "#jobStatTable tbody" ).html(html);
