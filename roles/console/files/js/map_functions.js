@@ -1,27 +1,8 @@
 // map_functions.js
 // copyright 2019 George Hunt
 
-//var regionGeojson = {};
 var regionList = [];
-//var regionInstalled = [];
-//var commonAssetsDir = '/common/assets/';
 var mapAssetsDir = '/osm-vector-maps/maplist/assets/';
-//var iiab_config_dir = '/etc/iiab/';
-//var onChangeFunc = "setSize";
-
-// following 2 lines an experiment to see if test page and console can be common
-//var jquery = require("./assets/jquery.min");
-//window.$ = window.jQuery = jquery;
-
-function instMapItem(map_id) {
-    mapDownloading.push(zim_id);
-    var command = "INST-OSM-VECT-SET"
-    var cmd_args = {}
-    cmd_args['osm_vect_id'] = map_id;
-    cmd = command + " " + JSON.stringify(cmd_args);
-    sendCmdSrvCmd(cmd, genericCmdHandler, "", instMapError, cmd_args);
-    return true;
-}
 
 function instMapError(data, cmd_args) {
     consoleLog(cmd_args);
@@ -53,10 +34,10 @@ function readMapIdx(){
    //mapInstalled = Object.keys(data);
    for (var map in data) {
    	 consoleLog (map)
-     if (data[map].hasOwnProperty('region')) {
-       mapInstalled.push(data[map].region);
+     if (data[map]) {
+       mapInstalled.push(data[map]);
      }
-  }
+  };
   consoleLog(mapInstalled + '');
   })
   .fail(jsonErrhandler);
@@ -123,7 +104,7 @@ function genRegionItem(region,checkbox) {
       checked = 'checked';
     else
       checked = '';
-      html += '<input type="checkbox" name="' + region.name + '"';
+      html += '<input type="checkbox" name="' + region.url + '"';
       html += ' onChange="updateMapSpace(this)" ' + checked + '> ';
   }
   html += itemId;
@@ -136,22 +117,34 @@ function genRegionItem(region,checkbox) {
   return html;
 }
 
-function instMapItem(name) {
+function get_region_from_url(url){
+  for (const region in mapCatalog ){
+    if (mapCatalog[region].hasOwnProperty('url') &&
+      mapCatalog[region].url === url ){
+      return mapCatalog[region].name;
+    }
+  }
+  return null
+}
+  
+function instMapItem(map_url) {
   var command = "INST-OSM-VECT-SET";
   var cmd_args = {};
-  cmd_args['osm_vect_id'] = name;
+  region_id = get_region_from_url(map_url);
+  if ( !region_id ) return false;
+  cmd_args['osm_vect_id'] = region_id;
   cmd = command + " " + JSON.stringify(cmd_args);
   sendCmdSrvCmd(cmd, genericCmdHandler);
-  mapDownloading.push(name);
-  if ( mapWip.indexOf(name) != -1 )
-     mapWip.push(mapCatalog[name]);
+  mapDownloading.push(map_url);
+  if ( mapWip.indexOf(map_url) == -1 )
+     mapWip.push(map_url);
   console.log('mapWip: ' + mapWip);
   return true;
 }
 
 function updateMapSpace(cb){
   console.log("in updateMapSpace" + cb);
-  var region = cb.name;
+  var region = get_region_from_url(cb.name);
   updateMapSpaceUtil(region, cb.checked);
 }
 
@@ -176,27 +169,6 @@ function updateMapSpaceUtil(region, checked){
   displaySpaceAvail();
 }
 
-/*
-function totalSpace(){
-  // obsolete but perhaps useful in debugging since it worked
-  var sum = 0;
-  $( ".extract" ).each(function(ind,elem){
-    var data = JSON.parse($(this).attr('data-region'));
-    var region = data.name;
-    var size = parseInt(mapCatalog[region]['size']);
-    var chk = $( this ).find(':checkbox').prop("checked") == true;
-    if (chk && typeof size !== 'undefined')
-        sum += size;
-    });
-   var ksize = sum / 1000;
-  $( "#mapDiskSpace" ).html(readableSize(ksize));
-}
-
-$( '#instMapRegion').on('click', function(evnt){
-   readMapCatalog();
-   map.render();
-});
-*/
 function renderMap(){
    console.log('in renderMap');
    window.map.setTarget($("#map-container")[0]);

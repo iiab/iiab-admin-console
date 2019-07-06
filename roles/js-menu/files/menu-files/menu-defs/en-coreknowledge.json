@@ -17,10 +17,9 @@
     "prereq_id": null,
     "version": "v1.0",
     "ksize": "2427332",
-    "logo_url": "en-coreknowledge_CoreKnowledge_logo.png",
+    "logo_url": "en-coreknowledge.png",
     "type": "html",
-    "description": "Teaching materials in PDF format for preschool to grade 5 from Core Knowledge (www.coreknowledge.org) in language arts, social studies and science.\
-",
+    "description": "Teaching materials in PDF format for preschool to grade 5 from Core Knowledge (www.coreknowledge.org) in language arts, social studies and science.",
     "extra_html": "",
     "index_mod_sample_url": null,
     "source_url": "https://www.coreknowledge.org/",

@@ -543,17 +543,24 @@ function calcItemHtml(href,module){
     html += getTextField (module, 'extra_description');
 	consoleLog('href = ' + href);
 	html += '<div id="' + module.menu_id + '-htmlf" class="content-extra toggleExtraHtml"></div>'; // scaffold for extra html
-	if (showFootnote)
-    html += getTextField (module, 'footnote');
+	if (showFootnote){
+    var footnote = getTextField (module, 'footnote', false);
+    if (footnote != "")
+      html += '<p><small>' + footnote + '</small></p>';
+  }
 	html+='</div></div></div>';
 
 	return html;
 }
 
-function getTextField (module, fieldName) {
+function getTextField (module, fieldName, addPar) {
+	addPar = addPar || true;
 	var html = "";
+
 	if (module.hasOwnProperty(fieldName) && module[fieldName] != "") {
-		html = '<p>' + substitute(module[fieldName], module) + '</p>';
+		html = substitute(module[fieldName], module)
+		if (addPar)
+		  html = '<p>' + html + '</p>';
 	}
 	return html;
 }

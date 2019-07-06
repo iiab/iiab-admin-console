@@ -287,16 +287,35 @@ function instContentButtonsEvents() {
     $('#mapRegionSelectList input').each( function(){
       if (this.type == "checkbox")
         if (this.checked){
-          map_id = this.name;
-          if (mapInstalled.indexOf(map_id) >= 0 || map_id in mapWip)
-            consoleLog("Skipping installed Module " + map_id);
-          else
-            instMapItem(map_id);
+          var skip_map = false;
+          map_id = this.name
+          $.when(readMapIdx()).then(function(){
+          var region = get_region_from_url(map_id);
+          for (var installed_region in mapInstalled){
+             if (mapInstalled[installed_region] &&
+               mapInstalled[installed_region].hasOwnProperty('region') &&
+               mapInstalled[installed_region].region === region){
+                  // Does installed map have same basename (ignores .zip)
+                  var basename = mapCatalog[region].url.replace(/.*\//, '');
+                  // Clip off .zip
+                  basename = basename.replace(/\.zip/, '');
+                  if (basename === mapInstalled[installed_region].file_name) 
+                     skip_map = true;
+                  break;
+               }
+             }
+             if (skip_map || mapWip.indexOf(map_id) != -1){
+               consoleLog("Skipping installed Module " + map_id);
+               alert ("Selected Map Region is already installed.\n");
+
+             } else {
+               instMapItem(map_id);
+               alert ("Selected Map Region scheduled to be installed.\n\nPlease view Utilities->Display Job Status to see the results.");
+            }
+          })
         }
-    });
+      })
     //getOer2goStat();
-    alert ("Selected Map Region scheduled to be installed.\n\nPlease view Utilities->Display Job Status to see the results.");
-    //alert ("For now, a Map Region must be downloaded at the command-line, e.g. using:\n\niiab-install-map south_america\nor\niiab-install-map world\n\nSee: http://d.iiab.io/content/OSM/vector-tiles/maplist/hidden/assets/regions.json\n\nWhich originates from: https://github.com/iiab/maps/blob/master/osm-source/ukids/assets/regions.json");
     make_button_disabled("#INST-MAP", false);
   });
 
@@ -427,7 +446,7 @@ function utilButtonsEvents() {
       if (this.type == "checkbox")
         if (this.checked){
           var job_idArr = this.id.split('-');
-          job_id = job_idArr[1];
+          job_id = job_idArr[0];
 
           // cancelJobFunc returns the function to call not the result as needed by array.push()
           cmdList.push(cancelJobFunc(job_id));
@@ -1690,14 +1709,14 @@ function procJobStat(data)
 
     // there should be one or two parts - ? still need this; for cancel
     var cmd_parse = statusJob.cmd_msg.split(" ");
-    job_status['cmd_verb'] = cmd_parse[0];
+    statusJob['cmd_verb'] = cmd_parse[0];
     if(cmd_parse.length == 0 || typeof cmd_parse[1] === 'undefined')
-      job_status['cmd_args'] = ""
+      statusJob['cmd_args'] = ""
     else
-      job_status['cmd_args'] = JSON.parse(cmd_parse[1]);
+      statusJob['cmd_args'] = JSON.parse(cmd_parse[1]);
 
     consoleLog(statusJob);
-    job_status[statusJob.job_no] = statusJob;
+    job_status[statusJob.job_id] = statusJob;
 
   });
   $( "#jobStatTable tbody" ).html(html);
@@ -1974,7 +1993,8 @@ function sumOer2goWip(){
 function sumMapWip(){
   var totalSpace = 0;
 
-  for (var region in mapWip){
+  for (var url in mapWip){
+   var region = get_region_from_url(url);
   	totalSpace += parseInt(mapCatalog[region].size);
   }
   return totalSpace;
