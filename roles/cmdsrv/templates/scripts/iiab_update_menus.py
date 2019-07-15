@@ -38,9 +38,11 @@ if IIAB_INI:
 
 iiab_base_path = "/opt/iiab"
 doc_root = get_iiab_env('WWWROOT')
-zim_version_idx_dir = doc_root + "/common/assets/"
-zim_version_idx_file = "zim_version_idx.json"
+assets_dir = doc_root + "/common/assets/"
+zim_version_idx_file = assets_dir + "zim_version_idx.json"
 zim_path = "/library/zims"
+lang_codes_path = assets_dir + "lang_codes.json"
+lang_codes = {}
 menuDefs = doc_root + "/js-menu/menu-files/menu-defs/"
 menuImages = doc_root + "/js-menu/menu-files/images/"
 menuJsonPath = doc_root + "/home/menu.json"
@@ -71,7 +73,6 @@ def main():
    put_kiwix_enabled_into_menu_json()
    print('Updating iiab installed services\' menus')
    put_iiab_enabled_into_menu_json()
-
 
 def put_iiab_enabled_into_menu_json():
    cmd = "cat " + iiab_ini_file + " | grep True | grep _enabled | cut -d_ -f1"
@@ -121,7 +122,7 @@ def put_kiwix_enabled_into_menu_json():
    kiwix.get_zim_list(zim_path)
    kiwix.write_zim_versions_idx()
    # use that data
-   zim_idx = zim_version_idx_dir + zim_version_idx_file
+   zim_idx = zim_version_idx_file
    if os.path.isfile(zim_idx):
       with open(zim_idx,"r") as zim_fp:
          zim_versions_info = json.loads(zim_fp.read())
@@ -132,6 +133,8 @@ def put_kiwix_enabled_into_menu_json():
             # create the canonical menu_item name
             lang = zim_versions_info[perma_ref].get('language','en')
             default_name = lang + '-' + perma_ref + '.json'
+            print default_name, zim_versions_info[perma_ref]
+
             # check if menuDef exists for this perma_ref
             menu_item = kiwix.find_menuitem_from_zimname(perma_ref)
             if menu_item == '':
@@ -147,6 +150,7 @@ def put_kiwix_enabled_into_menu_json():
          zim_fp.write(json.dumps(zim_versions_info,indent=2))
 
 def create_menu_def(perma_ref,default_name,intended_use='zim'):
+   # this looks only to be used by zims
    # do not generate a menuDef for the test zim
    if perma_ref == 'tes': return ""
    # check for collision
@@ -165,18 +169,16 @@ def create_menu_def(perma_ref,default_name,intended_use='zim'):
    if default_name.find('.') > -1:
        default_name = default_name[:-5].replace('.','_') + '.json'
    item = kiwix.get_kiwix_catalog_item(perma_ref)
-   if len(item.get('language','')) > 2:
-     lang = item['language'][:2]
-   else: # default to english
-     lang = 'en'
-   filename = lang + '-' + perma_ref + '.json'
+   zim_lang = item['language']
+   menu_def_lang = kiwix.kiwix_lang_to_iso2(zim_lang)
+   filename = menu_def_lang + '-' + perma_ref + '.json'
    # create a stub for this zim
    menuDef = {}
-   default_logo = get_default_logo(perma_ref,lang)
+   default_logo = get_default_logo(perma_ref,menu_def_lang)
    menuDef["intended_use"] = "zim"
-   menuDef["lang"] = lang
+   menuDef["lang"] = menu_def_lang
    menuDef["logo_url"] = default_logo
-   menuitem = lang + '-' + perma_ref
+   menuitem = menu_def_lang + '-' + perma_ref
    menuDef["menu_item_name"] = default_name[:-5]
    menuDef["title"] = item.get('title','')
    menuDef["zim_name"] = perma_ref
@@ -239,7 +241,7 @@ def check_default_logos(selector):
       "wikinews":"wikinews-logo.png",
       "wiktionary":"en-wiktionary.png",
       "wikipedia":"en-wikipedia.png",
-      "phet_en":"phet-logo-48x48.phg",
+      "phet_en":"phet-logo-48x48.png",
       "wikem":"WikEM-Logo-m.png"
    }
    for logo in default_logos:
@@ -262,7 +264,7 @@ def check_jpg_png(selector):
       return selector.lower()+ '.png'
    return ''
 
-def human_readable(num):
+def human_readable(num): # ? not used
     # return 3 significant digits and unit specifier
     num = float(num)
     units = [ '','K','M','G']
@@ -273,7 +275,7 @@ def human_readable(num):
             return "%.1f%s"%(num,units[i])
         if num < 1000.0:
             return "%.0f%s"%(num,units[i])
-        num /= 1000.0
+        num /= 1024.0
 
 
 # Now start the application
