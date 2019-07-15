@@ -239,7 +239,7 @@ def check_default_logos(selector):
       "wikinews":"wikinews-logo.png",
       "wiktionary":"en-wiktionary.png",
       "wikipedia":"en-wikipedia.png",
-      "phet_en":"phet-logo-48x48.phg",
+      "phet_en":"phet-logo-48x48.png",
       "wikem":"WikEM-Logo-m.png"
    }
    for logo in default_logos:
