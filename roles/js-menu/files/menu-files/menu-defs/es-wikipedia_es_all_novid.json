@@ -1,11 +1,15 @@
 {
-    "intended_use": "zim",
-    "lang": "es",
-    "logo_url": "220px-Wikipedia-logo-v2.svg.png",
-    "zim_name": "wikipedia_es_all_novid",
-    "title": "Wikipedia en Español",
-    "description": "Wikipedia es la enciclopedia más grande del mundo, creado, moderado, y editado por los usuarios para los usuarios.",
-    "extra_description": "Libremente disponible para cualquier persona, en cualquier lugar.",
-    "extra_html": "",
-    "footnote": "Tamaño: ##SIZE##, Artículos: ##ARTICLE_COUNT##, Medios: ##MEDIA_COUNT##, Fecha: ##zim_date##"
+  "lang": "sp", 
+  "extra_description": "", 
+  "intended_use": "zim", 
+  "title": "Wikipedia", 
+  "extra_html": "", 
+  "zim_name": "wikipedia_es_all_novid", 
+  "start_url": "", 
+  "change_ref": "generated", 
+  "footnote": "Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Tags; [##tags##], Language: ##language##, Date: ##zim_date##", 
+  "menu_item_name": "sp-wikipedia_es_all_novid", 
+  "change_date": "2019-07-12", 
+  "logo_url": "en-wikipedia.png", 
+  "description": "De Wikipedia, la enciclopedia libre"
 }
