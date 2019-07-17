@@ -1,15 +1,11 @@
 {
-  "lang": "sp", 
-  "extra_description": "", 
-  "intended_use": "zim", 
-  "title": "Wikcionario", 
-  "extra_html": "", 
-  "zim_name": "wiktionary_es_all_novid", 
-  "start_url": "", 
-  "change_ref": "generated", 
-  "footnote": "Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Tags; [##tags##], Language: ##language##, Date: ##zim_date##", 
-  "menu_item_name": "sp-wiktionary_es_all_novid", 
-  "change_date": "2019-07-13", 
-  "logo_url": "en-wiktionary.png", 
-  "description": "De Wikcionario, el diccionario libre"
+    "intended_use": "zim",
+    "lang": "es",
+    "logo_url": "220px-Wiktionary-logo.svg.png",
+    "zim_name": "wiktionary_es_all_novid",
+    "title": "Wiktionary en Español",
+    "description": "Wikcionario es un proyecto colaborativo para producir un diccionario multilingüe libre de contenido. Su objetivo es describir todas las palabras de todas las lenguas que utilizan definiciones y descripciones en español.",
+    "extra_description": "",
+    "extra_html": "",
+    "footnote": "Tamaño: ##SIZE##, Artículos: ##ARTICLE_COUNT##, Medios: ##MEDIA_COUNT##, Fecha: ##zim_date##"
 }
