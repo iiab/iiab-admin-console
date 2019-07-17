@@ -1,0 +1,15 @@
+{
+    "lang": "en",
+    "intended_use": "zim",
+    "title": "Open Data Stack Exchange",
+    "zim_name": "opendata.stackexchange.com_en_all",
+    "start_url": "",
+    "change_ref": "generated",
+    "menu_item_name": "en-opendata_stackexchange_com_en_all",
+    "change_date": "2019-07-12",
+    "logo_url": "stackexchange.png",
+    "description": "Q&A for developers and researchers interested in open data.",
+    "extra_description": "",
+    "extra_html": "",
+    "footnote": "Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Date: ##zim_date##"
+}

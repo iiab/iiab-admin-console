@@ -3,7 +3,6 @@
     "lang": "en",
     "age_range": "children,young adult",
     "rating": "4.0",
-    "description": "Games for tomorrow's programmers that teach basic coding skills.",
     "intended_use": "html",
     "prereq_note": "",
     "zip_http_url": null,
@@ -19,5 +18,6 @@
     "rsync_url": "rsync://dev.worldpossible.org/rachelmods/en-blockly_games",
     "moddir": "en-blockly-games",
     "start_url": "blockly-games/en/index.html",
-    "extra_html": "en-blockly-games.html"
+    "description": "Games for tomorrow's programmers that teach basic coding skills.",
+    "footnote": "Size: 4.4M; Date: August 2017"
 }

@@ -5,7 +5,7 @@
     "zim_name": "wikipedia_en_all_novid",
     "title": "Wikipedia",
     "description": "Wikipedia is the world's largest encyclopedia, created, moderated, and edited by users for users.  It includes more than 4 Million illustrations and photographs.",
-    "extra_description": "Its 5+ Million articles can be searched using any word(s) that appear in article titles (this is fast!)<p>Or, do a deep search using any keyword(s) that appear further down in the articles themselves (have patience, this takes time!)",
-    "footnote": "Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Date: ##zim_date##",
-    "extra_html": ""
+    "extra_description": "About 6 Million articles can be searched using any word(s) that appear in article titles (this is fast!)<p>Or, do a deep search using any keyword(s) that appear further down in the articles themselves (have patience, this takes time!)",
+    "extra_html": "",
+    "footnote": "Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Date: ##zim_date##"
 }

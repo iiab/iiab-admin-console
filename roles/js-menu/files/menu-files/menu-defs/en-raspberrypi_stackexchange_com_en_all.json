@@ -1,0 +1,15 @@
+{
+    "lang": "en",
+     "intended_use": "zim",
+    "title": "Raspberry Pi Stack Exchange",
+    "zim_name": "raspberrypi.stackexchange.com_en_all",
+    "start_url": "",
+    "change_ref": "generated",
+    "menu_item_name": "en-raspberrypi_stackexchange_com_en_all",
+    "change_date": "2019-07-12",
+    "logo_url": "stackexchange.png",
+    "description": "Q&A for users and developers of hardware and software for Raspberry Pi.",
+    "extra_description": "",
+    "extra_html": "",
+    "footnote": "Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Date: ##zim_date##"
+}

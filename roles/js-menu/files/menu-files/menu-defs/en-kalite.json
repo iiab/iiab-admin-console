@@ -1,10 +1,11 @@
 {
-  "intended_use" : "kalite",
-  "lang" : "en",
-  "logo_url" : "khan-logo-vertical-transparent.png",
-  "menu_item_name" : "en-kalite",
-  "title" : "Khan Academy Lite",
-  "start_url" : "learn/khan/math/",
-  "description" : "KA Lite is the offline version of Khan Academy that includes thousands of learning videos and quizzes.  It is very popular in high schools and includes some university classes too.",
-  "extra_html" : "en-kalite.html"
+    "intended_use": "kalite",
+    "lang": "en",
+    "logo_url": "khan-logo-vertical-transparent.png",
+    "menu_item_name": "en-kalite",
+    "title": "Khan Academy Lite",
+    "start_url": "learn/khan/math/",
+    "description": "KA Lite is the offline version of Khan Academy that includes thousands of learning videos and quizzes.  It is very popular in high schools and includes some university classes too.",
+    "extra_html": "en-kalite.html",
+    "footnote": "Size: 45G, Videos: 9855, Quizzes: 4101, Subtitles: 8468, August 2017"
 }

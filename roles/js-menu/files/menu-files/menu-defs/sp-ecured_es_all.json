@@ -1,0 +1,15 @@
+{
+  "lang": "sp", 
+  "extra_description": "", 
+  "intended_use": "zim", 
+  "title": "EcuRed", 
+  "extra_html": "", 
+  "zim_name": "ecured_es_all", 
+  "start_url": "", 
+  "change_ref": "generated", 
+  "footnote": "Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Tags; [##tags##], Language: ##language##, Date: ##zim_date##", 
+  "menu_item_name": "sp-ecured_es_all", 
+  "change_date": "2019-07-13", 
+  "logo_url": "ecured.jpg", 
+  "description": "EcuRed"
+}
