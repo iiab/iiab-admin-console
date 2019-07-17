@@ -186,7 +186,7 @@ def create_menu_def(perma_ref,default_name,intended_use='zim'):
    menuDef["description"] = item.get('description','')
    menuDef["extra_description"] = ""
    menuDef["extra_html"] = ""
-   menuDef["footnote"] = 'Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Tags; [##tags##], Language: ##language##, Date: ##zim_date##'
+   menuDef["footnote"] = 'Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Date: ##zim_date##'
 
    menuDef["change_ref"] = "generated"
    menuDef['change_date'] = str(date.today())
