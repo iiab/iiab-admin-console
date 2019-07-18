@@ -2,8 +2,6 @@
     "size": "2.97G",
     "rating": "0.0",
     "age_range": "adult",
-    "extra_description": "",
-    "footnote": "Size: 2.97G, Files: 48, Age: adult",
     "has_live_menudef": false,
     "zip_ftp_url": "ftp://dev.worldpossible.org/zipped-modules/en-openstax.zip",
     "module_id": "116",
@@ -19,8 +17,6 @@
     "ksize": "2966152",
     "logo_url": "en-openstax.jpeg",
     "type": "html",
-    "description": "University textbooks from OpenStax (openstax.org) based at Rice University.",
-    "extra_description": "Topics include business, mathematics, humanities, social science, science, and technology.",
     "extra_html": "",
     "index_mod_sample_url": null,
     "source_url": "",
@@ -33,5 +29,8 @@
     "file_count": "48",
     "menu_item_name": "en-openstax",
     "change_date": "2019-06-15",
-    "start_url": "OpenStax.html"
+    "start_url": "OpenStax.html",
+    "description": "University textbooks from OpenStax (openstax.org) based at Rice University.",
+    "extra_description": "Topics include business, mathematics, humanities, social science, science, and technology.",
+    "footnote": "Size: 2.9G, PDFs: 45, Date: August 2017"
 }

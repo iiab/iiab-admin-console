@@ -1,11 +1,11 @@
 {
-"intended_use" : "html",
-"lang" : "en",
-"logo_url" : "WikEM-Logo-m.png",
-"menu_item_name" : "en-wikem2",
-"moddir": "en-wikem",
-"zim_name" : "wikem_en",
-"title" : "The Global Emergency Medicine Wiki",
-"description" : "WikEM, The Global Emergency Medicine Wiki, is the world's largest emergency medicine open-access reference resource.",
-"extra_html" : ""
+    "intended_use": "html",
+    "lang": "en",
+    "logo_url": "WikEM-Logo-m.png",
+    "moddir": "en-wikem",
+    "zim_name": "wikem_en",
+    "title": "The Global Emergency Medicine Wiki",
+    "description": "WikEM, The Global Emergency Medicine Wiki, is the world's largest emergency medicine open-access reference resource.",
+    "footnote": "Size: 1.4G, PDF's: 14,098, Images: 17,340, Date: May 2017",
+    "extra_html": ""
 }

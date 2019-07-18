@@ -2,8 +2,6 @@
     "size": "39.4M",
     "rating": "3.0",
     "age_range": "children",
-    "extra_description": "",
-    "footnote": "Size: 39.4M, Files: 87, Age: children",
     "has_live_menudef": false,
     "zip_ftp_url": "ftp://dev.worldpossible.org/zipped-modules/en-mustardseedbooks.zip",
     "module_id": "117",
@@ -19,7 +17,6 @@
     "ksize": "39400",
     "logo_url": "en-mustardseedbooks.png",
     "type": "html",
-    "description": "High quality low-cost books for beginning readers.",
     "extra_html": "",
     "index_mod_sample_url": null,
     "source_url": "http://mustardseedbooks.org/",
@@ -30,7 +27,9 @@
     "zip_http_url": "http://dev.worldpossible.org/zipped-modules/en-mustardseedbooks.zip",
     "module_downloaded": true,
     "file_count": "87",
-    "menu_item_name": "en-mustardseedbooks",
     "change_date": "2019-06-15",
-    "start_url": "MustardSeedBooks.html"
+    "start_url": "MustardSeedBooks.html",
+    "description": "High quality low-cost books for beginning readers.",
+    "extra_description": "",
+    "footnote": "Size: 39M, PDFs: 42, Date: August 2017"
 }

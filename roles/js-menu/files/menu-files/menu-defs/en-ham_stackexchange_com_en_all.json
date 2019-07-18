@@ -1,0 +1,15 @@
+{
+    "lang": "en",
+    "intended_use": "zim",
+    "title": "Amateur Radio Stack Exchange",
+    "zim_name": "ham.stackexchange.com_en_all",
+    "start_url": "",
+    "change_ref": "generated",
+    "menu_item_name": "en-ham_stackexchange_com_en_all",
+    "change_date": "2019-07-12",
+    "logo_url": "stackexchange.png",
+    "description": "Q&A for amateur radio enthusiasts.",
+    "extra_description": "",
+    "extra_html": "",
+    "footnote": "Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Date: ##zim_date##"
+}

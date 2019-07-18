@@ -6,7 +6,9 @@
     "start_url": "A/Golfo_de_M%C3%A9xico.html",
     "OLD_start_url": "A/M%C3%A9xico.html",
     "TEST_start_url": "A/México.html",
-    "title": "EcuRed",
+    "title": "EcuRed en Español",
     "description": "Enciclopedia Cubana 'con un objetivo sin fines de lucro, a favor de la democracia desde un punto de vista descolonizador'.",
-    "extra_html": ""
+    "extra_description": "",
+    "extra_html": "",
+    "footnote": "Tamaño: ##SIZE##, Artículos: ##ARTICLE_COUNT##, Medios: ##MEDIA_COUNT##, Fecha: ##zim_date##"
 }
