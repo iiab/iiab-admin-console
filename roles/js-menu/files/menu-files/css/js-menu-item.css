@@ -51,6 +51,7 @@
     font-size: 80%;
     line-height: 120%;
     width:100%;
+    list-style-type: none;
 }
 
 .content-extra >table {
