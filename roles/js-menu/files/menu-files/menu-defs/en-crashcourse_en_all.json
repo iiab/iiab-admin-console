@@ -1,0 +1,14 @@
+{
+    "lang": "en",
+    "intended_use": "zim",
+    "title": "CrashCourse",
+    "extra_html": "",
+    "zim_name": "crashcourse_en_all",
+    "start_url": "",
+    "change_ref": "generated",
+    "change_date": "2019-07-13",
+    "logo_url": "Crash_Course_logo.png",
+    "description": "Entertaining science and humanities videos, professionally-produced in association with PBS.",
+    "extra_description": "",
+    "footnote": "Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Date: ##zim_date##"
+}

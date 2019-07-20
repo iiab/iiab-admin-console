@@ -18,9 +18,6 @@
     "ksize": "251704",
     "logo_url": "en-catdogbooks.png",
     "type": "html",
-    "description": "Fun books for learning to read",
-    "footnote": "Size: 252M, Files: 53, Age: children",
-    "extra_html": "",
     "index_mod_sample_url": null,
     "source_url": "http://cat-and-dog.org/",
     "rsync_url": "rsync://dev.worldpossible.org/rachelmods/en-catdogbooks",
@@ -29,6 +26,8 @@
     "zip_http_url": "http://dev.worldpossible.org/zipped-modules/en-catdogbooks.zip",
     "module_downloaded": true,
     "file_count": "53",
-    "menu_item_name": "en-catdogbooks",
-    "start_url": "CatDog.html"
+    "start_url": "CatDog.html",
+    "description": "Fun books for learning to read.",
+    "footnote": "Size: 246M, PDFs: 34, Date: August 2017",
+    "extra_html": ""
 }

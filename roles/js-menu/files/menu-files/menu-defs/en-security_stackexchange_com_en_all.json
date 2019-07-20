@@ -1,0 +1,15 @@
+{
+    "lang": "en",
+    "intended_use": "zim",
+    "title": "Information Security Stack Exchange",
+    "zim_name": "security.stackexchange.com_en_all",
+    "start_url": "",
+    "change_ref": "generated",
+    "menu_item_name": "en-security_stackexchange_com_en_all",
+    "change_date": "2019-07-14",
+    "logo_url": "stackexchange.png",
+    "description": "Q&A for information security professionals.",
+    "extra_description": "",
+    "extra_html": "",
+    "footnote": "Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Date: ##zim_date##"
+}

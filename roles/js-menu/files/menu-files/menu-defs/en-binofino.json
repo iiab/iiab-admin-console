@@ -18,9 +18,6 @@
     "ksize": "280752",
     "logo_url": "binofino.png",
     "type": "html",
-    "description": "A Nigerian cartoon teaching children around the world about African culture and much more",
-    "footnote": "Size: 281M, Files: 22, Age: children",
-    "extra_html": "",
     "index_mod_sample_url": null,
     "source_url": "",
     "rsync_url": "rsync://dev.worldpossible.org/rachelmods/en-binofino",
@@ -29,5 +26,7 @@
     "zip_http_url": "http://dev.worldpossible.org/zipped-modules/en-binofino.zip",
     "module_downloaded": true,
     "file_count": "22",
-    "menu_item_name": "en-binofino"
+    "description": "A Nigerian cartoon teaching children around the world about African culture and much more",
+    "footnote": "Size: 275M, MP4 videos: 5, Date: June 2018",
+    "extra_html": ""
 }
