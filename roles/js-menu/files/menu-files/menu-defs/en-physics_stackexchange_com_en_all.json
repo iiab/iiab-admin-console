@@ -1,0 +1,14 @@
+{
+    "lang": "en",
+    "intended_use": "zim",
+    "title": "Physics Stack Exchange",
+    "zim_name": "physics.stackexchange.com_en_all",
+    "start_url": "",
+    "change_ref": "generated",
+    "change_date": "2019-07-21",
+    "logo_url": "stackexchange.png",
+    "description": "Q&A for active researchers, academics and students of physics.",
+    "extra_description": "",
+    "extra_html": "",
+    "footnote": "Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Date: ##zim_date##"
+}
