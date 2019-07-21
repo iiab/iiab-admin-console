@@ -1,1 +1,27 @@
-{"rating": "3.0", "age_range": "adult", "zip_ftp_url": null, "module_id": "96", "is_hidden": false, "intended_use": "html", "category": "educational,justice", "title": "Saylor Academy Textbooks", "prereq_id": null, "moddir": "en-saylor", "ksize": "1901484", "logo_url": "en-saylor.png", "description": "Open textbooks gathered by Saylor Academy.", "extra_html": "en-saylor.html", "index_mod_sample_url": "http://dev.worldpossible.org/cgi/sample_wrap.php?moddir=en-saylor", "source_url": "http://www.saylor.org/books/", "rsync_url": "rsync://dev.worldpossible.org/rachelmods/en-saylor", "lang": "en", "prereq_note": "", "zip_http_url": null, "file_count": null, "menu_item_name": "en-saylor"}
+{
+    "rating": "3.0",
+    "age_range": "adult",
+    "zip_ftp_url": null,
+    "module_id": "96",
+    "is_hidden": false,
+    "intended_use": "html",
+    "category": "educational,justice",
+    "title": "Saylor Academy Textbooks",
+    "prereq_id": null,
+    "moddir": "en-saylor",
+    "ksize": "1901484",
+    "logo_url": "en-saylor.png",
+    "extra_html": "en-saylor.html",
+    "index_mod_sample_url": "http://dev.worldpossible.org/cgi/sample_wrap.php?moddir=en-saylor",
+    "source_url": "http://www.saylor.org/books/",
+    "rsync_url": "rsync://dev.worldpossible.org/rachelmods/en-saylor",
+    "lang": "en",
+    "prereq_note": "",
+    "zip_http_url": null,
+    "file_count": null,
+    "start_url": "content/www.saylor.org/books.html",
+    "description": "Open textbooks gathered by Saylor Academy.",
+    "extra_description": "",
+    "extra_html": "",
+    "footnote": "Size: 4.3G, Textbooks: 104, HTML: 81, PDFs: 102, docx: 82, doc: 4, Date: August 2017"
+}

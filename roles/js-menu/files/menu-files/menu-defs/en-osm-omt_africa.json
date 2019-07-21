@@ -1,0 +1,13 @@
+{
+    "lang": "en",
+    "intended_use": "map",
+    "title": "OpenStreetMap: Africa & Earth",
+    "change_ref": "generated",
+    "change_date": "2019-07-12",
+    "map_name": "en-osm-omt_africa",
+    "logo_url": "osm.jpg",
+    "description": "18 levels of zoom (~1 m details) for Africa, illustrating human geography.<p>10 levels of zoom (~1 km details) for satellite photos, covering the whole world.",
+    "extra_description": "Search for cities/towns with more than 1000 people.", 
+    "extra_html": "", 
+    "footnote": "Size: 11G, Zoom levels: 14 (overzoom to level 18+), Searchable cities/towns: 127,654, Date: August 2017"
+}

@@ -1,0 +1,14 @@
+{
+    "lang": "en",
+    "intended_use": "zim",
+    "title": "Chemistry Stack Exchange",
+    "zim_name": "chemistry.stackexchange.com_en_all",
+    "start_url": "",
+    "change_ref": "generated",
+    "change_date": "2019-07-21",
+    "logo_url": "stackexchange.png",
+    "description": "Q&A for scientists, academics, teachers, and students in the field of chemistry.",
+    "extra_description": "",
+    "extra_html": "",
+    "footnote": "Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Date: ##zim_date##"
+}
