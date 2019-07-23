@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Python func install_osm_vect_set calls this, in roles/cmdsrv/files/iiab-cmdsrv
+
 # Params:
 # $1 - full path to unzipped map directory
 # $2 - full path to vector_map_path
