@@ -1,0 +1,14 @@
+{
+    "lang": "en",
+    "intended_use": "zim",
+    "title": "Earth Science Stack Exchange",
+    "zim_name": "earthscience.stackexchange.com_en_all",
+    "start_url": "",
+    "change_ref": "generated",
+    "change_date": "2019-07-21",
+    "logo_url": "stackexchange.png",
+    "description": "Q&A for those interested in the geology, meteorology, oceanography, and environmental sciences.",
+    "extra_description": "",
+    "extra_html": "",
+    "footnote": "Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Date: ##zim_date##"
+}
