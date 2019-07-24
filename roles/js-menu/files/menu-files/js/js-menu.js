@@ -568,9 +568,17 @@ function getTextField (module, fieldName, addPar) {
 function substitute(instr,module){
    for (var i = 0; i < zimSubstParams.length; i++) {
       field = zimSubstParams[i];
-      instr = instr.replace(substRegEx[field], module[field]);
+      instr = instr.replace(substRegEx[field], numberWithCommas(module[field]));
    }
    return instr;
+}
+
+// e.g. 9999999 -> 9,999,999 in footnotes, for big ZIMs etc
+function numberWithCommas(x) {
+    if (typeof x == "string")
+        return x.replace(/\B(?=(\d{3})+(?!\d))/g, ",");    //return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    else
+        return x;
 }
 
 function detectMob() {
