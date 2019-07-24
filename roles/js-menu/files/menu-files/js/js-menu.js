@@ -577,6 +577,7 @@ function substitute(instr,module){
 function numberWithCommas(x) {
     if (typeof x == "string")
         return x.replace(/\B(?=(\d{3})+(?!\d))/g, ",");    //return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        //return Number(x).toLocaleString();    // Would internationalize/localize beyond just commas (some countries use dots/spaces) BUT...this line fails on ZIM metadata like "222M"
     else
         return x;
 }
