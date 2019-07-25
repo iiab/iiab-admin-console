@@ -565,10 +565,14 @@ function getTextField (module, fieldName, addPar) {
 	return html;
 }
 
-function substitute(instr,module){
+function substitute(instr,module) {
    for (var i = 0; i < zimSubstParams.length; i++) {
       field = zimSubstParams[i];
-      instr = instr.replace(substRegEx[field], module[field]);
+      if (field === "article_count" || field === "media_count")    //  && typeof module[field] === "string"
+	 // 9999999 -> 9,999,999 or 9.999.999 or 9 999 999 in footnotes, depending on locale
+         instr = instr.replace(substRegEx[field], Number(module[field]).toLocaleString());
+      else
+         instr = instr.replace(substRegEx[field], module[field]);
    }
    return instr;
 }
