@@ -12,7 +12,7 @@
 cd $1
 #if [ $(wc -c < main.js) -eq 3300000 ]; then    # Check for current/problematic main.js which is exactly 3,300,000 bytes
 echo "Swapping 3MB $1/main.js for a newer one, to help with low-memory client devices"
-mv main.js main.js.old
+#mv main.js main.js.old
 wget https://raw.githubusercontent.com/iiab/maps/master/osm-source/regional-base/build/main.js    # This newer main.js is 3,300,039 bytes as of 2019-07-23
 #fi
 
