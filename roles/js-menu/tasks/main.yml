@@ -59,7 +59,7 @@
 
 - name: Make web server user owner of images after copying
   file: path="{{ js_menu_dir }}menu-files/images/"
-        mode=0755
+        mode=u+rw,go+r
         owner="{{ apache_user }}"
         group="{{ apache_user }}"
         state=directory
