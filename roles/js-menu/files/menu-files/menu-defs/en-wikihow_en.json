@@ -1,0 +1,11 @@
+{
+    "intended_use": "zim",
+    "lang": "en",
+    "logo_url": "es-wikihow.png",
+    "zim_name": "wikihow_en",
+    "title": "wikiHow",
+    "description": "Illustrated how-to guides, on practical and personal/life topics.",
+    "extra_description": "",
+    "extra_html": "",
+    "footnote": "Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Date: ##zim_date##"
+}

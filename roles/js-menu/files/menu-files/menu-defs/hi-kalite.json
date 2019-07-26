@@ -1,0 +1,19 @@
+{
+    "rating": "3.0",
+    "intended_use": "kalite",
+    "lang": "fr",
+    "age_range": "children,young adult,adult",
+    "zip_ftp_url": null,
+    "module_id": "58",
+    "is_hidden": false,
+    "category": "educational",
+    "title": "Khan Academy in Hindi",
+    "prereq_id": null,
+    "moddir": "in-kalite",
+    "ksize": "18363684",
+    "logo_url": "es-kalite.png",
+    "description": "KA Lite videos and lessons in Hindi.",
+    "zip_http_url": null,
+    "file_count": "52333",
+    "extra_html": ""
+}

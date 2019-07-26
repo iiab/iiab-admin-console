@@ -1,0 +1,14 @@
+{
+    "lang": "en",
+    "intended_use": "zim",
+    "title": "Sustainable Living Stack Exchange",
+    "zim_name": "sustainability.stackexchange.com_en_all",
+    "start_url": "",
+    "change_ref": "generated",
+    "change_date": "2019-07-26",
+    "logo_url": "stackexchange.png",
+    "description": "Q&A for folks dedicated to a lifestyle that can be maintained indefinitely without depleting available resources.",
+    "extra_description": "",
+    "extra_html": "",
+    "footnote": "Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Date: ##zim_date##"
+}

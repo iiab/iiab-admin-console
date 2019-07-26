@@ -1,0 +1,14 @@
+{
+    "lang": "en",
+    "intended_use": "zim",
+    "title": "Global Issues TED Talks",
+    "zim_name": "ted_en_global_issues",
+    "start_url": "",
+    "change_ref": "generated",
+    "change_date": "2019-07-26",
+    "logo_url": "wikinews-logo.png",
+    "description": "497+ global issues videos.  Most are 5 to 20 minutes long.",
+    "extra_description": "These are professionally produced short lectures from 2002-2018 TED (Technology, Entertainment, and Design) conferences.",
+    "extra_html": "",
+    "footnote": "Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Date: ##zim_date##"
+}

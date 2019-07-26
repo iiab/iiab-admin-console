@@ -1,0 +1,14 @@
+{
+    "lang": "de",
+    "intended_use": "zim",
+    "title": "Wiktionary in German",
+    "zim_name": "wiktionary_de_all_novid",
+    "start_url": "",
+    "change_ref": "generated",
+    "change_date": "2019-07-25",
+    "logo_url": "en-wiktionary.png",
+    "description": "Aus Wiktionary, dem freien W\u00f6rterbuch.",
+    "extra_description": "",
+    "extra_html": "",
+    "footnote": "Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Date: ##zim_date##"
+}
