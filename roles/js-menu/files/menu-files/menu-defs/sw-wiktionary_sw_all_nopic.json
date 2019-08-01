@@ -1,0 +1,14 @@
+{
+    "lang": "sw",
+    "intended_use": "zim",
+    "title": "Wiktionary in Swahili",
+    "zim_name": "wiktionary_sw_all_nopic",
+    "start_url": "",
+    "change_ref": "generated",
+    "change_date": "2019-07-25",
+  "logo_url": "en-wiktionary.png",
+    "description": "Ufafanuzi kutoka Wiktionary, kamusi iliyo huru.",
+    "extra_description": "",
+    "extra_html": "",
+    "footnote": "Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Date: ##zim_date##"
+}

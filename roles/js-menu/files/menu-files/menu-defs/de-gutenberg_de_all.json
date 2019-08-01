@@ -1,0 +1,14 @@
+{
+    "lang": "de",
+    "intended_use": "zim",
+    "title": "Project Gutenberg Library in German",
+    "zim_name": "gutenberg_de_all",
+    "start_url": "",
+    "change_ref": "generated",
+    "change_date": "2019-07-26",
+    "logo_url": "gutenberg.jpg",
+    "description": "The first producer of free ebooks.  Includes epub, html and pdf.",
+    "extra_description": "",
+    "extra_html": "",
+    "footnote": "Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Date: ##zim_date##"
+}

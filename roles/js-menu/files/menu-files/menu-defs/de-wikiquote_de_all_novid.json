@@ -1,0 +1,14 @@
+{
+    "lang": "de",
+    "intended_use": "zim",
+    "title": "Wikiquote in German",
+    "zim_name": "wikiquote_de_all_novid",
+    "start_url": "",
+    "change_ref": "generated",
+    "change_date": "2019-07-26",
+    "logo_url": "Ncwikiquote2.png",
+    "description": "Aus Wikiquote, der freien Zitatsammlung.",
+    "extra_description": "",
+    "extra_html": "",
+    "footnote": "Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Date: ##zim_date##"    
+}

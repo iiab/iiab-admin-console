@@ -1,0 +1,14 @@
+{
+    "lang": "en",
+    "intended_use": "zim",
+    "title": "Interpersonal Skills Stack Exchange",
+    "zim_name": "interpersonal.stackexchange.com_en_all",
+    "start_url": "",
+    "change_ref": "generated",
+    "change_date": "2019-07-26",
+    "logo_url": "stackexchange.png",
+    "description": "Q&A for people looking to improve their interpersonal communication skills.",
+    "extra_description": "",
+    "extra_html": "",
+    "footnote": "Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Date: ##zim_date##"
+}

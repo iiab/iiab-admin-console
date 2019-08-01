@@ -1,0 +1,14 @@
+{
+    "lang": "sw",
+    "intended_use": "zim",
+    "title": "Wikipedia in Swahili",
+    "zim_name": "wikipedia_sw_all_novid",
+    "start_url": "",
+    "change_ref": "generated",
+    "change_date": "2019-07-25",
+    "logo_url": "en-wikipedia.png",
+    "description": "Kutoka Wikipedia, kamusi elezo huru.",
+    "extra_description": "", 
+    "extra_html": "",
+    "footnote": "Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Date: ##zim_date##"
+}
