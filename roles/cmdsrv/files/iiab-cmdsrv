@@ -35,6 +35,8 @@ import string
 import crypt
 import spwd
 import cracklib
+import httplib # in python 3 is http.client import http.client as httplib
+
 # import cgi keep to escape html in future
 
 # cmdsrv config file
@@ -670,58 +672,58 @@ def cmd_handler(cmd_msg):
     # Don't do anything else
 
     avail_cmds = {
-        "TEST": do_test,
-        "LIST-LIBR": list_library,
-        "WGET": wget_file,
-        "GET-ANS": get_ans_facts,
-        "GET-ANS-TAGS": get_ans_tags,
-        "GET-VARS": get_install_vars,
-        "GET-IIAB-INI": get_iiab_ini,
-        "GET-CONF": get_config_vars,
-        "SET-CONF": set_config_vars,
-        "GET-MEM-INFO": get_mem_info,
-        "GET-SPACE-AVAIL": get_space_avail,
-        "GET-STORAGE-INFO": get_storage_info_lite,
-        "GET-EXTDEV-INFO": get_external_device_info,
-        "GET-SYSTEM-INFO": get_system_info,
-        "GET-NETWORK-INFO": get_network_info,
-        "CTL-WIFI": ctl_wifi,
-        "SET-WPA-CREDENTIALS": set_wpa_credentials,
-        "CTL-BLUETOOTH": ctl_bluetooth,
-        "CTL-VPN": ctl_vpn,
-        "REMOVE-USB": umount_usb,
-        "RUN-ANSIBLE": run_ansible,
-        "RESET-NETWORK": run_ansible,
-        "GET-JOB-STAT": get_last_jobs_stat,
-        "CANCEL-JOB": cancel_job,
-        "GET-WHLIST": get_white_list,
-        "SET-WHLIST": set_white_list,
-        "GET-INET-SPEED": get_inet_speed,
-        "GET-INET-SPEED2": get_inet_speed2,
-        "GET-KIWIX-CAT": get_kiwix_catalog,
-        "GET-ZIM-STAT": get_zim_stat,
-        "INST-ZIMS": install_zims,
-        "COPY-ZIMS": copy_zims,
-        "MAKE-KIWIX-LIB": make_kiwix_lib, # runs as job
-        "RESTART-KIWIX": restart_kiwix, # runs immediately
-        "GET-OER2GO-CAT": get_oer2go_catalog,
-        "INST-OER2GO-MOD": install_oer2go_mod,
-        "COPY-OER2GO-MOD": copy_oer2go_mod,
-        "GET-OER2GO-STAT": get_oer2go_stat,
-        "GET-RACHEL-STAT": get_rachel_stat,
-        "INST-RACHEL": install_rachel,
-        "GET-OSM-VECT-CAT": get_osm_vect_catalog,
-        "INST-OSM-VECT-SET": install_osm_vect_set,
-        "DEL-DOWNLOADS": del_downloads,
-        "DEL-MODULES": del_modules,
-        "GET-MENU-ITEM-DEF-LIST": get_menu_item_def_list,
-        "SAVE-MENU-DEF": save_menu_def,
-        "SAVE-MENU-ITEM-DEF": save_menu_item_def,
-        "REBOOT": reboot_server,
-        "POWEROFF": poweroff_server,
-        #"REMOTE-ADMIN-CTL": remote_admin_ctl, #true/false
-        #"GET-REMOTE-ADMIN-STATUS": get_remote_admin_status, #returns activated
-        "CHGPW": change_password
+        "TEST": {"funct": do_test, "inet_req": False},
+        "LIST-LIBR": {"funct": list_library, "inet_req": False},
+        "WGET": {"funct": wget_file, "inet_req": True},
+        "GET-ANS": {"funct": get_ans_facts, "inet_req": False},
+        "GET-ANS-TAGS": {"funct": get_ans_tags, "inet_req": False},
+        "GET-VARS": {"funct": get_install_vars, "inet_req": False},
+        "GET-IIAB-INI": {"funct": get_iiab_ini, "inet_req": False},
+        "GET-CONF": {"funct": get_config_vars, "inet_req": False},
+        "SET-CONF": {"funct": set_config_vars, "inet_req": False},
+        "GET-MEM-INFO": {"funct": get_mem_info, "inet_req": False},
+        "GET-SPACE-AVAIL": {"funct": get_space_avail, "inet_req": False},
+        "GET-STORAGE-INFO": {"funct": get_storage_info_lite, "inet_req": False},
+        "GET-EXTDEV-INFO": {"funct": get_external_device_info, "inet_req": False},
+        "GET-SYSTEM-INFO": {"funct": get_system_info, "inet_req": False},
+        "GET-NETWORK-INFO": {"funct": get_network_info, "inet_req": False},
+        "CTL-WIFI": {"funct": ctl_wifi, "inet_req": False},
+        "SET-WPA-CREDENTIALS": {"funct": set_wpa_credentials, "inet_req": False},
+        "CTL-BLUETOOTH": {"funct": ctl_bluetooth, "inet_req": False},
+        "CTL-VPN": {"funct": ctl_vpn, "inet_req": True},
+        "REMOVE-USB": {"funct": umount_usb, "inet_req": False},
+        "RUN-ANSIBLE": {"funct": run_ansible, "inet_req": False},
+        "RESET-NETWORK": {"funct": run_ansible, "inet_req": False},
+        "GET-JOB-STAT": {"funct": get_last_jobs_stat, "inet_req": False},
+        "CANCEL-JOB": {"funct": cancel_job, "inet_req": False},
+        "GET-WHLIST": {"funct": get_white_list, "inet_req": False},
+        "SET-WHLIST": {"funct": set_white_list, "inet_req": False},
+        "GET-INET-SPEED": {"funct": get_inet_speed, "inet_req": True},
+        "GET-INET-SPEED2": {"funct": get_inet_speed2, "inet_req": True},
+        "GET-KIWIX-CAT": {"funct": get_kiwix_catalog, "inet_req": True},
+        "GET-ZIM-STAT": {"funct": get_zim_stat, "inet_req": False},
+        "INST-ZIMS": {"funct": install_zims, "inet_req": True},
+        "COPY-ZIMS": {"funct": copy_zims, "inet_req": False},
+        "MAKE-KIWIX-LIB": {"funct": make_kiwix_lib, "inet_req": False}, # runs as job
+        "RESTART-KIWIX": {"funct": restart_kiwix, "inet_req": False}, # runs immediately
+        "GET-OER2GO-CAT": {"funct": get_oer2go_catalog, "inet_req": True},
+        "INST-OER2GO-MOD": {"funct": install_oer2go_mod, "inet_req": True},
+        "COPY-OER2GO-MOD": {"funct": copy_oer2go_mod, "inet_req": False},
+        "GET-OER2GO-STAT": {"funct": get_oer2go_stat, "inet_req": False},
+        "GET-RACHEL-STAT": {"funct": get_rachel_stat, "inet_req": False},
+        "INST-RACHEL": {"funct": install_rachel, "inet_req": True},
+        "GET-OSM-VECT-CAT": {"funct": get_osm_vect_catalog, "inet_req": True},
+        "INST-OSM-VECT-SET": {"funct": install_osm_vect_set, "inet_req": True},
+        "DEL-DOWNLOADS": {"funct": del_downloads, "inet_req": False},
+        "DEL-MODULES": {"funct": del_modules, "inet_req": False},
+        "GET-MENU-ITEM-DEF-LIST": {"funct": get_menu_item_def_list, "inet_req": False},
+        "SAVE-MENU-DEF": {"funct": save_menu_def, "inet_req": False},
+        "SAVE-MENU-ITEM-DEF": {"funct": save_menu_item_def, "inet_req": False},
+        "REBOOT": {"funct": reboot_server, "inet_req": False},
+        "POWEROFF": {"funct": poweroff_server, "inet_req": False},
+        #"REMOTE-ADMIN-CTL": {"funct": remote_admin_ctl, "inet_req": True}, #true/false
+        #"GET-REMOTE-ADMIN-STATUS": {"funct": get_remote_admin_status, "inet_req": True}, #returns activated
+        "CHGPW": {"funct": change_password, "inet_req": False}
         }
 
     # Check for Duplicate Command
@@ -751,6 +753,7 @@ def cmd_handler(cmd_msg):
     else:
         cmd_args = {}
 
+
     cmd_info['cmd_rowid'] = cmd_rowid
     cmd_info['cmd_msg'] = cmd_msg
     cmd_info['cmd'] = cmd
@@ -762,19 +765,36 @@ def cmd_handler(cmd_msg):
 
     # if not in daemon mode don't trap errors
     if daemon_mode == False:
-        resp = avail_cmds[cmd](cmd_info)
+        resp = avail_cmds[cmd]["funct"](cmd_info)
     else:
         if cmd in avail_cmds:
+            if avail_cmds[cmd]["inet_req"]:
+                if not is_internet_avail():
+                    resp = cmd_error(cmd, msg='Internet is Required for this Command, but Not Available.')
+                    return resp
             try:
-                resp = avail_cmds[cmd](cmd_info)
+                resp = avail_cmds[cmd]["funct"](cmd_info)
             except:
                 log(syslog.LOG_ERR, "Error: Unexpected error in Command %s." % cmd)
                 resp = '{"Error": "Unexpected error in Command ' + cmd + '"}'
         else:
             log(syslog.LOG_ERR, "Error: Unknown Command %s." % cmd)
             resp = '{"Error": "Unknown Command"}'
-
     return (resp)
+
+# Helper functions
+def is_internet_avail():
+    return is_url_avail("www.google.com")
+
+def is_url_avail(url, timeout=5):
+    conn = httplib.HTTPConnection(url, timeout)
+    try:
+        conn.request("HEAD", "/")
+        conn.close()
+        return True
+    except:
+        conn.close()
+        return False
 
 #
 # Functions to process Commands
@@ -1181,7 +1201,7 @@ def set_wpa_credentials (cmd_info):
     wpa_lines = wpa_txt.split('\n')
 
     if connect_wifi_password != '':
-        network_lines = run_command("/usr/bin/wpa_passphrase " + connect_wifi_ssid + " " + connect_wifi_password)
+        network_lines = run_command("/usr/bin/wpa_passphrase '" + connect_wifi_ssid + "' " + connect_wifi_password)
     else:
         network_lines = ['network={', '\tssid="' + connect_wifi_ssid + '"', '\tkey_mgmt=NONE', '}']
     print wpa_lines
