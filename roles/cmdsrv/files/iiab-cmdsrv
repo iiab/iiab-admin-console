@@ -154,7 +154,7 @@ oer2go_catalog = {}
 maps_catalog = {}
 
 # vars set by admin-console
-config_vars = {}
+# config_vars = {} no longer distinct from local vars
 
 # available commands are in cmd_handler
 
@@ -957,8 +957,20 @@ def get_ans_tags(cmd_info):
     return (resp)
 
 def get_install_vars(cmd_info):
-    resp = json.dumps(effective_vars)
+    # assumes default vars already read
+    resp = read_iiab_local_vars()
+    if resp == None: # no error
+        resp = json.dumps(effective_vars)
     return (resp)
+
+def get_install_vars_init():
+    # assumes default vars already read
+
+    resp = read_iiab_local_vars()
+    if resp != None: # error
+        tprint(resp)
+        log(syslog.LOG_INFO, "Init - " + resp)
+        raise
 
 def get_iiab_ini(cmd_info):
     read_iiab_ini_file()
@@ -1583,13 +1595,8 @@ def get_config_vars(cmd_info):
     return (resp)
 
 def set_config_vars(cmd_info):
-    global config_vars
-    lock.acquire() # will block if lock is already held
-    try:
-        config_vars = cmd_info['cmd_args']['config_vars']
-    finally:
-        lock.release() # release lock, no matter what
-    write_config_vars()
+    config_vars = cmd_info['cmd_args']['config_vars']
+    write_iiab_local_vars(config_vars)
     #print config_vars
     resp = cmd_success(cmd_info['cmd'])
     return (resp)
@@ -2524,6 +2531,7 @@ def init():
 
     # Read vars from ansible file into global vars
     read_iiab_vars()
+    get_install_vars_init()
     read_iiab_ini_file()
 
     # Get ansible facts for localhost
@@ -2609,6 +2617,128 @@ def write_config_vars():
         stream.close()
     finally:
         lock.release() # release lock, no matter what
+
+def write_iiab_local_vars(config_vars): # from George Hunt
+    local_vars_lines = []
+    found_vars = []
+    separator_found = False
+
+    with open(local_vars_file) as f:
+        local_vars_lines = f.readlines()
+
+    # accumulate new local_vars.yml into outstr
+    outstr = ""
+    for line in local_vars_lines:
+        # copy blank lines
+        if line.strip() == "":
+            outstr += line
+            continue
+
+        # if commented out, check for disagreement in value
+        hash = line.find("#")
+        if hash == 0:
+            m = re.match('# *([a-zA-Z0-9_]*) *: *([a-zA-Z0-9\'\"\.]*) *(#.*)*',line)
+            if m:
+                if m.group(1) in config_vars:
+                    if m.group(1) not in default_vars or config_vars[m.group(1)] != default_vars[m.group(1)]:
+                        vardec = m.group(1) + ": " + str(config_vars[m.group(1)]) + "  \n"
+                        if m.group(3):
+                            vardec =  vardec.strip() + "   " + m.group(3) + "\n"
+                        outstr += vardec
+                    found_vars.append(m.group(1))
+            else:
+                outstr += line
+            if line.startswith("# IIAB"):
+                separator_found = True
+            continue
+
+        # change value if there is disagreement, trailing comments are unchanged
+        m = re.match(' *([a-zA-Z0-9_]*) *: *([a-zA-Z0-9\'\"\.]*) *(#.*)*',line)
+        if m and m.group(1) in config_vars:
+            if config_vars[m.group(1)] != m.group(2):
+                if isinstance(config_vars[m.group(1)], unicode) and config_vars[m.group(1)].find(" ") != -1:
+                    vardec = m.group(1) + ": \"" + str(config_vars[m.group(1)]) + "\"\n"
+                else:
+                    vardec = m.group(1) + ": " + str(config_vars[m.group(1)]) + "\n"
+                    if m.group(3):
+                        vardec = vardec.strip() + "   " + m.group(3) + "\n"
+                outstr += vardec
+            else:
+                outstr += line
+            found_vars.append(m.group(1))
+        else:
+            print("no match for: %s"%line)
+            outstr += line
+
+    # put any variables not already found in local_vars.yml
+    if not separator_found:
+        outstr +="\n\n############################################################################\n"
+        outstr +="# IIAB -- following variables are first set by browser via the Admin Console\n"
+        outstr +="#  They may be changed via text editor, or by the Admin Console.\n\n"
+    for variable_name in config_vars:
+        if variable_name not in found_vars:
+            if str(config_vars[variable_name]).find(" ") == -1:
+                outstr += variable_name + ": " + str(config_vars[variable_name]) + "\n"
+            else:
+                outstr += variable_name + ": \"" + str(config_vars[variable_name]) + "\"\n"
+
+    with open(local_vars_file) as f:
+        f.write(outstr)
+
+def read_iiab_local_vars():
+    global local_vars
+    local_vars_error = None
+
+    try:
+        with open(iiab_local_vars_file) as f:
+            local_vars = yaml.load(f)
+    except Exception as e:
+        local_vars_error = "Error in " + iiab_local_vars_file
+        if hasattr(e, 'problem_mark'):
+            mark = e.problem_mark
+            local_vars_error += " on line %s"%str(mark.line+1)
+
+    if local_vars_error == None: # no error
+        merge_effective_vars()
+    return local_vars_error
+
+def merge_effective_vars():
+    # combine vars with local taking precedence
+    # exclude derived vars marked by {
+
+    for key in default_vars:
+        if isinstance(default_vars[key], str):
+            findpos = default_vars[key].find("{")
+            if findpos == -1:
+                effective_vars[key] = default_vars[key]
+        else:
+            effective_vars[key] = default_vars[key]
+
+    for key in local_vars:
+        if isinstance(local_vars[key], str):
+            findpos = local_vars[key].find("{")
+            if findpos == -1:
+                effective_vars[key] = local_vars[key]
+        else:
+            effective_vars[key] = local_vars[key]
+
+def merge_config_vars(config_vars):
+    # put config vars in effective vars on write
+
+    for key in config_vars:
+        if isinstance(config_vars[key], str):
+            findpos = config_vars[key].find("{")
+            if findpos == -1:
+                effective_vars[key] = config_vars[key]
+        else:
+            effective_vars[key] = config_vars[key]
+
+def read_iiab_default_vars():
+    global default_vars
+
+    stream = open(iiab_repo + "/vars/default_vars.yml", 'r')
+    default_vars = yaml.load(stream)
+    stream.close()
 
 def read_iiab_vars():
     global default_vars
