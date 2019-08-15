@@ -2623,7 +2623,7 @@ def write_iiab_local_vars(config_vars): # from George Hunt
     found_vars = []
     separator_found = False
 
-    with open(local_vars_file) as f:
+    with open(iiab_local_vars_file) as f:
         local_vars_lines = f.readlines()
 
     # accumulate new local_vars.yml into outstr
@@ -2682,7 +2682,7 @@ def write_iiab_local_vars(config_vars): # from George Hunt
             else:
                 outstr += variable_name + ": \"" + str(config_vars[variable_name]) + "\"\n"
 
-    with open(local_vars_file) as f:
+    with open(iiab_local_vars_file, "w") as f:
         f.write(outstr)
 
 def read_iiab_local_vars():
