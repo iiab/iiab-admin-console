@@ -745,7 +745,7 @@ function openSlideMenu() {
 
 	if (isMobile){ // separate search icon in mobile
 		slideMenuSearch.style.display = "none";
-		slideMenu.style.height = "200px";
+		slideMenu.style.height = "250px";
 		slideMenu.style.width = "120px";
 	}
 	else {
@@ -755,7 +755,7 @@ function openSlideMenu() {
 		}
 		else {
 			slideMenuSearch.style.display = "none";
-			slideMenu.style.height = "200px";
+			slideMenu.style.height = "250px";
 			slideMenu.style.width = "120px";
 		}
 	}
