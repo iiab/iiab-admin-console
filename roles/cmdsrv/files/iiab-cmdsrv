@@ -792,7 +792,7 @@ def is_url_avail(url):
         # reachable
         socket.create_connection((url, 80))
         return True
-    except OSError:
+    except: # any exception means no connection
         pass
     return False
 
