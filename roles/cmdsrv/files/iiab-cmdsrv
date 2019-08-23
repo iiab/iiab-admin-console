@@ -35,7 +35,7 @@ import string
 import crypt
 import spwd
 import cracklib
-import httplib # in python 3 is http.client import http.client as httplib
+import socket
 
 # import cgi keep to escape html in future
 
@@ -786,15 +786,15 @@ def cmd_handler(cmd_msg):
 def is_internet_avail():
     return is_url_avail("www.google.com")
 
-def is_url_avail(url, timeout=5):
-    conn = httplib.HTTPConnection(url, timeout)
+def is_url_avail(url):
     try:
-        conn.request("HEAD", "/")
-        conn.close()
+        # connect to the host -- tells us if the host is actually
+        # reachable
+        socket.create_connection((url, 80))
         return True
-    except:
-        conn.close()
-        return False
+    except OSError:
+        pass
+    return False
 
 #
 # Functions to process Commands
