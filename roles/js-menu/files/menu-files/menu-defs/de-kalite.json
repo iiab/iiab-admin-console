@@ -1,0 +1,17 @@
+{
+    "intended_use": "kalite",
+    "lang": "es",
+    "age_range": "children,young adult,adult",
+    "zip_ftp_url": null,
+    "is_hidden": false,
+    "category": "educational",
+    "title": "Khan Academy in German",
+    "prereq_id": null,
+    "moddir": "de-kalite",
+    "logo_url": "es-kalite.png",
+    "zip_http_url": null,
+    "description": "KA Lite videos and lessons in German.",
+    "extra_description": "", 
+    "extra_html": "",
+    "footnote": "Size: 7.6G, Videos: 831, Quizzes: 4,101, Subtitles: 459, August 2017"
+}
