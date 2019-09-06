@@ -1,0 +1,12 @@
+{
+    "intended_use": "zim",
+    "lang": "en",
+    "OLDlogo_url": "en-wiktionary.png",
+    "logo_url": "220px-Wiktionary-logo.svg.png",
+    "zim_name": "wiktionary_en_simple_all_novid",
+    "title": "Wiktionary in Simple English",
+    "description": "Simple English dictionary from Wikipedia, for children and non-native speakers.",
+    "extra_description": "",
+    "extra_html": "",
+    "footnote": "Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Date: ##zim_date##"
+}

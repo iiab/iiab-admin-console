@@ -1,9 +1,12 @@
 {
-  "lang": "es",
-  "intended_use": "webroot",
-  "title": "Créditos",
-  "description": "Gracias a todos los que aportaron y comisariaron el contenido utilizado por Internet in a Box.",
-  "start_url": "common/html/credits.html",
-  "logo_url": "credits.png",
-  "moddir": ""
+    "lang": "es",
+    "intended_use": "webroot",
+    "title": "Créditos",
+    "start_url": "common/html/credits.html",
+    "logo_url": "credits.png",
+    "moddir": "",
+    "description": "Gracias a todos los que contribuyeron y revisaron el contenido utilizado por Internet-in-a-Box.",
+    "extra_description": "",
+    "extra_html": "",
+    "footnote": ""
 }
