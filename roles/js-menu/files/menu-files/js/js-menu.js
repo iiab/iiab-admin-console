@@ -280,7 +280,7 @@ function setDisplayToggle() {
 	toggleDisplay = !toggleDisplay;
 	drawMenu();
 	setLocalStore();
-	activateButtons();
+	//activateButtons();
 }
 
 function getMenuDef(menuItem) {
@@ -718,7 +718,7 @@ function activateButtons(){
     $('#langCodeSelector').modal('show');
  	  closeSlideMenu();
   });
-  $('#btn-toggleDisplay').click(function(){
+  $('#btn-toggleDisplay').off().on('click', function(){
  	  setDisplayToggle();
  	  closeSlideMenu();
   });
