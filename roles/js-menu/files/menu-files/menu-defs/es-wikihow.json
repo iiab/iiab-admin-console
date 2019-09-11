@@ -6,7 +6,7 @@
     "is_hidden": false,
     "intended_use": "html",
     "category": "educational,entertainment",
-    "title": "wikiHow en Español",
+    "title": "wikiHow",
     "start_url": "content/Portada.html",
     "prereq_id": null,
     "moddir": "es-wikihow",
@@ -19,7 +19,7 @@
     "prereq_note": "",
     "zip_http_url": null,
     "file_count": "613541",
-    "description": "Detallamente ilustradas guías de 'How-To' sobre todo, escrito en colaboración por personas de todo el mundo.",
+    "description": "Guías ilustradas detalladamente, escrito en colaboración por personas de todo el mundo.",
     "extra_description": "",
     "extra_html": "es-wikihow.html",
     "footnote": "Tamaño: 13G, Artículos: 59796, Medios: 551384, Fecha: Febrero 2018"

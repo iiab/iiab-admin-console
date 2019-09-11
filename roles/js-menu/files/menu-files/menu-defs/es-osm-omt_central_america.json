@@ -1,0 +1,14 @@
+{
+    "lang": "es", 
+    "intended_use": "map", 
+    "title": "OpenStreetMap: Centroamérica-Caribe y Tierra", 
+    "change_ref": "generated", 
+    "change_date": "2019-08-14", 
+    "menu_item_name": "en-osm-omt_central_america.json", 
+    "map_name": "en-osm-omt_central_america", 
+    "logo_url": "osm.jpg", 
+    "description": "19 niveles de zoom (~ 1 m de detalles) para Centroamérica-Caribe, que ilustran la geografía.<p>10 niveles de zoom (~ 1 km de detalles) para fotos satelitales, que cubren todo el mundo.",
+    "extra_description": "Busca ciudades / pueblos con más de 1000 personas. Hay alrededor de 127,654 en todo el mundo.",
+    "extra_html": "",
+    "footnote": "Tamaño: 3.8G, Fecha: 2017-2019"
+}
