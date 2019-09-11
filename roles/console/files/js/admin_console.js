@@ -905,6 +905,8 @@ function assignConfigVars (data)
       	else
       	  $(service_id).hide();
       }
+      else
+      	  $(service_id).hide();
     }
     if (this.type == "text")
     this.value = config_vars[this.name];
