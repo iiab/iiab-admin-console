@@ -1,5 +1,5 @@
 // admin_console.js
-// copyright 2018 Tim Moody
+// copyright 2019 Tim Moody
 
 var today = new Date();
 var dayInMs = 1000*60*60*24;
@@ -10,7 +10,7 @@ var iiabCmdService = "/cmd-service";
 var ansibleFacts = {};
 var ansibleTagsStr = "";
 var effective_vars = {};
-var config_vars = {};
+var config_vars = {}; // working variable, no long separate from local vars
 var iiab_ini = {};
 var job_status = {};
 var langCodes = {}; // iso code, local name and English name for all languages we support, read from file
@@ -299,7 +299,7 @@ function instContentButtonsEvents() {
                   var basename = mapCatalog[region].url.replace(/.*\//, '');
                   // Clip off .zip
                   basename = basename.replace(/\.zip/, '');
-                  if (basename === mapInstalled[installed_region].file_name) 
+                  if (basename === mapInstalled[installed_region].file_name)
                      skip_map = true;
                   break;
                }
@@ -860,10 +860,11 @@ function getInstallVars (data)
   //alert ("in getInstallVars");
   consoleLog(data);
   effective_vars = data;
+  config_vars = effective_vars;
   //consoleLog(jqXHR);
   return true;
 }
-function getConfigVars (data)
+function getConfigVars (data) // not used
 {
   //alert ("in getConfigVars");
   consoleLog(data);
@@ -904,6 +905,8 @@ function assignConfigVars (data)
       	else
       	  $(service_id).hide();
       }
+      else
+      	  $(service_id).hide();
     }
     if (this.type == "text")
     this.value = config_vars[this.name];
@@ -986,6 +989,7 @@ function setConfigVars ()
 {
   var cmd_args = {}
   //alert ("in setConfigVars");
+  config_vars = {} // reset data then read fields
   $('#Configure input').each( function(){
     if (this.type == "checkbox") {
       if (this.checked)
@@ -2461,7 +2465,7 @@ function init ()
   $.when(
     //sendCmdSrvCmd("GET-ANS-TAGS", getAnsibleTags),
     sendCmdSrvCmd("GET-WHLIST", getWhitelist),
-    $.when(sendCmdSrvCmd("GET-VARS", getInstallVars), sendCmdSrvCmd("GET-ANS", getAnsibleFacts),sendCmdSrvCmd("GET-CONF", getConfigVars),sendCmdSrvCmd("GET-IIAB-INI", procXsceIni)).done(initConfigVars),
+    $.when(sendCmdSrvCmd("GET-VARS", getInstallVars), sendCmdSrvCmd("GET-ANS", getAnsibleFacts),sendCmdSrvCmd("GET-IIAB-INI", procXsceIni)).done(initConfigVars),
     $.when(getLangCodes(),readKiwixCatalog(),sendCmdSrvCmd("GET-ZIM-STAT", procZimStatInit)).done(procZimCatalog),
     getOer2goStat(),
     initMap(),
