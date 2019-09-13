@@ -104,7 +104,7 @@ height: 120px;
 
 /* elipsis menu */
 .slide-menu {
-    height: 300px;
+    height: 320px;
     width: 0;
     position: fixed;
     z-index: 2;
