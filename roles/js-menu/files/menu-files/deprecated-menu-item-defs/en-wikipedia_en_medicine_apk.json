@@ -1,0 +1,11 @@
+{
+"intended_use" : "download",
+"lang" : "en",
+"logo_url" : "medwiki.png",
+"title" : "Medical Wiki Android App (1.1G)",
+"description" : "An offline Android app containing the Medical Wikipedia. <p>Download the offline app io.iiab.kiwix.wikipedia.medicine.en-17-08.apk (1.1G)",
+"extra_html"  :"",
+"download_folder" : "apk",
+"download_file" : "org.kiwix.wikipedia.en.medicine.apk",
+"zim_name" : "wikipedia_en_medicine_novid"
+}
