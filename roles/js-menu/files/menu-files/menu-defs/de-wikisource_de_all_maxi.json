@@ -1,0 +1,15 @@
+{
+  "name": "de-wikisource_de_all_maxi",
+  "lang": "de",
+  "intended_use": "zim",
+  "zim_name": "wikisource_de_all_maxi",
+  "start_url": "",
+  "title": "Wikisource in German",
+  "logo_url": "en-wikisource.png",
+  "description": "Aus Wikisource, der freien Quellensammlung.",
+  "extra_description": "",
+  "extra_html": "",
+  "footnote": "Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Date: ##zim_date##",
+  "change_ref": "generated",
+  "change_date": "2019-07-26"
+}

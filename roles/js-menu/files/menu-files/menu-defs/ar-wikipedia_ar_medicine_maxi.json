@@ -1,0 +1,10 @@
+{
+  "name": "ar-wikipedia_ar_medicine_maxi",
+  "lang": "ar",
+  "intended_use": "zim",
+  "zim_name": "wikipedia_ar_medicine_maxi",
+  "title": "وِيكيبيديا الطبية",
+  "logo_url": "ar-medwiki.png",
+  "description": "مَقالات عن الرعاية الصحية متوافرة بدون اتصال بالإنترنت في كل مكان وبشكل مجاني",
+  "extra_html": ""
+}
