@@ -1,0 +1,14 @@
+{
+  "lang": "hi", 
+  "extra_description": "नेपाल", 
+  "intended_use": "map", 
+  "title": "OpenStreetMap: 18 Levels of Zoom for <b> South Asia</b>हिन्दी", 
+  "extra_html": "", 
+  "change_ref": "admin_console - clone", 
+  "footnote": "", 
+  "start_url": "", 
+  "map_name": "en-osm-omt_south_asia", 
+  "logo_url": "osm.jpg", 
+  "change_date": "2019-05-14", 
+  "description": "<p>Resolution of the Whole World to 5 KM. OpenStreetMap data for <b>South Asia</b> with details down to 5 Meters</p>"
+}

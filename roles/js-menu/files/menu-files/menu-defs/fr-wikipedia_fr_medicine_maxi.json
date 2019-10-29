@@ -1,0 +1,9 @@
+{
+ "intended_use": "zim",
+ "lang": "fr",
+ "title": "Encyclopédie médicale hors ligne de Wikipedia",
+ "description": "Une collection complète de tous les sujets liés aux soins de santé, à l'anatomie et aux médicaments de Wikipedia dans un format hors ligne.<BR>Comme tout le contenu de Wikipédia est un accès libre, ce qui signifie qu'il est gratuit à télécharger, réutiliser, partager et exploiter.",
+ "zim_name" : "wikipedia_fr_medicine_maxi",
+ "logo_url": "medwiki.png",
+ "extra_html":"",
+}

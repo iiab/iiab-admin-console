@@ -1,0 +1,12 @@
+{
+  "name": "hi-wikipedia_hi_all_maxi",
+  "lang": "hi",
+  "intended_use": "zim",
+  "zim_name": "wikipedia_hi_all_maxi",
+  "title": "हिन्दी मे विकिपीडिया",
+  "logo_url": "Wikipedia-logo-v2-hi.png",
+  "description": "एक ऑफ़लाइन और खोज योग्य प्रारूप में हिंदी विकिपीडिया के लेखों का एक पूरा सेट। सामग्री सभी के लिए उपलब्ध है, जिसका अर्थ है कि आप इसे डाउनलोड, पुन: उपयोग, साझा करने और बनाने के लिए मुक्त हैं। हमारे साथ जुड़ें और अगले संस्करण को और भी बेहतर बनाएं।",
+  "extra_description": "",
+  "extra_html": "",
+  "footnote": "Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Date: ##zim_date##"
+}
