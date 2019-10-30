@@ -18,6 +18,7 @@
     downloads_dir: "{{ iiab_base }}/downloads"
     use_cache: False
     no_network: False
+    iiab_python_lib: /usr/lib/python3/dist-packages
     # doc_root: /library/www/html inherited from iiab
     adm_cons_force_ssl: False
     iiab_home_url: /home
