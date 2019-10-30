@@ -1,0 +1,4 @@
+#!/bin/bash
+
+CMDSRV_SCRIPTS="{{ cmdsrv_dir }}/scripts"
+$CMDSRV_SCRIPTS/sync_menu_defs.py
