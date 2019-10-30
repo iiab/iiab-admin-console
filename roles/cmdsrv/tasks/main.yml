@@ -142,6 +142,8 @@
             - scripts/get_oer2go_catalog
             - scripts/constants.sh
             - scripts/iiab_update_menus.py
+            - scripts/install_menu_defs.py
+            - scripts/sync_menu_defs.py
 
 - name: Allow running iiab_update_menus from the command line
   file: src="{{ cmdsrv_dir }}/scripts/iiab_update_menus.py"

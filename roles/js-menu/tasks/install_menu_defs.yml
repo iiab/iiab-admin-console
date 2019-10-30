@@ -1,0 +1,19 @@
+- name: Clone js-menu-files for images and menu defs
+  git:
+    repo: "{{ menu_def_base_url }}    "
+    dest: "{{ downloads_dir }}"
+    depth: 1
+  when: internet_available
+
+- name: Synchronize/Copy menu-defs
+  synchronize:
+    src: "{{ downloads_dir }}/js-menu-files/menu-defs"
+    dest: "{{ js_menu_dir }}/menu-files/menu-defs"
+
+- name: Synchronize/Copy images
+  synchronize:
+    src: "{{ downloads_dir }}/js-menu-files/imagess"
+    dest: "{{ js_menu_dir }}/menu-files/images"
+
+- name: Post process the downloaded menu defs
+  shell: "{{ cmdsrv_dir }}/scripts/install_menu_defs.py"

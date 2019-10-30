@@ -20,6 +20,19 @@
         mode=0644
         force=no
 
+- name: Does "{{ js_menu_dir }}menu-files/menu-defs" directory exist?
+  stat:
+        path: "{{ js_menu_dir }}menu-files/menu-defs"
+  register: menu_defs_dir
+
+- name: Include copying of menu defs
+  include: install_menu_defs.yml
+  when: not menu_defs_dir.stat.exists
+
+- name: Otherwise sync local menu defs with repo
+  shell: "{{ cmdsrv_dir }}/scripts/sync_menu_defs.py"
+  when: menu_defs_dir.stat.exists
+
 # need to merge locally edited menu-defs
 # continue to use cp-menu until we have forms-based menu-def editing
 #- name: Synchronize/Copy menu-files

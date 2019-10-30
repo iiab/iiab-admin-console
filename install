@@ -10,9 +10,6 @@ else
  exit
 fi
 
-# facts file for admin console, assumes iiab created directory
-cp ./scripts/admin_facts.fact /etc/ansible/facts.d/admin_facts.fact
-
 PLAYBOOK="iiab-admin.yml"
 INVENTORY="ansible_hosts"
 
@@ -26,6 +23,9 @@ if [ ! -f $IIAB_ADMIN_DIR/$PLAYBOOK ]; then
 fi
 
 cd $IIAB_ADMIN_DIR
+
+# facts file for admin console, assumes iiab created directory
+cp ./scripts/admin_facts.fact /etc/ansible/facts.d/admin_facts.fact
 
 echo "Running local playbooks! "
 
