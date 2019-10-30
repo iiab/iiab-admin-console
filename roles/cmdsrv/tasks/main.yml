@@ -166,6 +166,7 @@
             - utilities/iiab-get-kiwix-cat
             - utilities/iiab-get-oer2go-cat
             - utilities/iiab-install-oer2go-mod
+            - utilities/iiab-sync-menu-defs
 
 - name: Copy default kiwix_catalog.json
   copy: src="json/kiwix_catalog.json"
