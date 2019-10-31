@@ -1,6 +1,6 @@
 - name: Clone js-menu-files for images and menu defs
   git:
-    repo: "{{ menu_def_base_url }}"
+    repo: "https://github.com/{{ menu_files_repo }}"
     dest: "{{ downloads_dir }}/js-menu-files"
     depth: 1
 

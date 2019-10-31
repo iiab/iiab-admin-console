@@ -17,7 +17,8 @@ oer2go_mods_url : "{{ rachel_mods_url }}"
 iiab_map_url : http://download.iiab.io/content/OSM/vector-tiles/maplist/hidden
 iiab_modules_dir : "{{ doc_root }}/modules/"
 js_menu_dir : "{{ doc_root }}/js-menu/"
-menu_def_base_url : 'https://api.github.com/repos/iiab-share/js-menu-files/'
+menu_files_repo : iiab-share/js-menu-files/
+menu_def_base_url : 'https://api.github.com/repos/{{ menu_files_repo }}'
 menu_def_path : 'menu-defs/'
 menu_def_icon_path : 'images/'
 iiab_users_token : '0331dcf50ad8b7b69b79965c93821af7dfb16589' # iiab users
