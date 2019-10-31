@@ -1,9 +1,8 @@
 - name: Clone js-menu-files for images and menu defs
   git:
-    repo: "{{ menu_def_base_url }}    "
-    dest: "{{ downloads_dir }}"
+    repo: "{{ menu_def_base_url }}"
+    dest: "{{ downloads_dir }}/js-menu-files"
     depth: 1
-  when: internet_available
 
 - name: Synchronize/Copy menu-defs
   synchronize:

@@ -20,3 +20,21 @@
             mode=0644
             owner=root
             group=root
+
+# Duplicate iiab test for internet
+- name: Test for Internet access ({{ iiab_download_url }}/heart-beat.txt)
+  get_url:
+    url: "{{ iiab_download_url }}/heart-beat.txt"
+    dest: /tmp/heart-beat.txt
+  ignore_errors: True
+  register: internet_access_test
+
+- name: Set internet_available if download succeeded and not disregard_network
+  set_fact:
+    internet_available: True
+  when: not internet_access_test.failed
+
+- name: Remove downloaded Internet test file /tmp/heart-beat.txt
+  file:
+    path: /tmp/heart-beat.txt
+    state: absent
