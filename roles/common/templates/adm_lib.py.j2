@@ -7,16 +7,16 @@ import shlex
 from datetime import date
 import base64
 
-menu_def_base_url = {{ menu_def_base_url }}
-menu_def_path = {{ menu_def_path }}
-menu_def_icon_path = {{ menu_def_icon_path }}
+menu_def_base_url = "{{ menu_def_base_url }}"
+menu_def_path = "{{ menu_def_path }}"
+menu_def_icon_path = "{{ menu_def_icon_path }}"
 # add ?ref=xxx for branch
 
-iiab_users_token = {{ iiab_users_token }}
-iiab_users_name = {{ iiab_users_name }}
-iiab_users_email = {{ iiab_users_email }}
+iiab_users_token = "{{ iiab_users_token }}"
+iiab_users_name = "{{ iiab_users_name }}"
+iiab_users_email = "{{ iiab_users_email }}"
 
-js_menu_dir = {{ js_menu_dir }}
+js_menu_dir = "{{ js_menu_dir }}"
 
 headers={'Content-Type':'application/json',
          'Authorization': 'token ' + iiab_users_token}
