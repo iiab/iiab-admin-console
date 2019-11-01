@@ -21,6 +21,6 @@ menu_files_repo : iiab-share/js-menu-files/
 menu_def_base_url : 'https://api.github.com/repos/{{ menu_files_repo }}'
 menu_def_path : 'menu-defs/'
 menu_def_icon_path : 'images/'
-iiab_users_token : '0331dcf50ad8b7b69b79965c93821af7dfb16589' # iiab users
+iiab_users_token : '6b78c1eafb9d54778cbd9d79608a5fbcd204efe9' # iiab users
 iiab_users_name : 'IIAB Users'
 iiab_users_email : 'iiab.users@gmail.com'
