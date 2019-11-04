@@ -12,6 +12,12 @@ from datetime import date
 import base64
 from iiab.adm_lib import *
 
+try:
+    pcgvtd9()
+except:
+    print("Unable to contact Server")
+    sys.exit(1)
+
 local_menu_item_defs = get_local_menu_item_defs() # returns dict
 repo_menu_item_defs = get_repo_menu_item_defs() # returns dict
 

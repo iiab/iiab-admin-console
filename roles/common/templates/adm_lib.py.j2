@@ -11,15 +11,13 @@ menu_def_base_url = "{{ menu_def_base_url }}"
 menu_def_path = "{{ menu_def_path }}"
 menu_def_icon_path = "{{ menu_def_icon_path }}"
 # add ?ref=xxx for branch
-
-iiab_users_token = "{{ iiab_users_token }}"
+iiab_pat_url = "{{ iiab_pat_url }}"
 iiab_users_name = "{{ iiab_users_name }}"
 iiab_users_email = "{{ iiab_users_email }}"
 
 js_menu_dir = "{{ js_menu_dir }}"
 
-headers={'Content-Type':'application/json',
-         'Authorization': 'token ' + iiab_users_token}
+headers = {}
 
 def get_repo_menu_item_defs():
     menu_item_defs = {}
@@ -192,6 +190,13 @@ def put_github_file(menu_def_base_url, path, byte_blob, sha=None):
     payload_json = json.dumps(payload)
     response = requests.put(menu_def_base_url + 'contents/' + path, data=payload_json, headers=headers)
     return response
+
+def pcgvtd9():
+    global headers
+    response = requests.get(iiab_pat_url)
+    dict = json.loads(response._content)
+    headers={'Content-Type':'application/json',
+             'Authorization': 'token ' + dict['pat']}
 
 # duplicates cmdsrv - but now revised
 
