@@ -376,6 +376,27 @@ function checkMenuDone(){
 	}
 }
 
+function syncMenuItemDefs(){
+  var command = "SYNC-MENU-ITEM-DEFS";
+  var cmd_args = {};
+
+  cmd = command + " " + JSON.stringify(cmd_args);
+  sendCmdSrvCmd(cmd, syncMenuItemDefsHandler, "SYNC-MENU-ITEM-DEFS");
+  //alert ("Syncing Menu Item Definitions.");
+  return true;
+}
+
+function syncMenuItemDefsHandler(data){
+  var alertText = "Sync Menu Item Defs Results:\n";
+  console.log(data)
+  for (var i = 0; i < data.sync_menu_item_defs.length; i++)
+    alertText += data.sync_menu_item_defs[i] + "\n";
+
+  alert (alertText);
+  return true;
+ }
+
+
 // drag and drop funtions
 
 function menuItemDragStart(e) {
