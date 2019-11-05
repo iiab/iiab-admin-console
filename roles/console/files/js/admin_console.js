@@ -411,6 +411,9 @@ function contentMenuButtonsEvents() {
   $("#REFRESH-MENU-LISTS").click(function(){
     getMenuItemDefList();
   });
+  $("#SYNC-MENU-ITEM-DEFS").click(function(){
+    syncMenuItemDefs();
+  });
   $("#CREATE-MENU-ITEM-DEF").click(function(){
     saveContentMenuItemDef();
   });
