@@ -17,3 +17,10 @@ oer2go_mods_url : "{{ rachel_mods_url }}"
 iiab_map_url : http://download.iiab.io/content/OSM/vector-tiles/maplist/hidden
 iiab_modules_dir : "{{ doc_root }}/modules/"
 js_menu_dir : "{{ doc_root }}/js-menu/"
+menu_files_repo : iiab-share/js-menu-files/
+menu_def_base_url : 'https://api.github.com/repos/{{ menu_files_repo }}'
+menu_def_path : 'menu-defs/'
+menu_def_icon_path : 'images/'
+iiab_pat_url : 'http://medbox.iiab.me/catalog/pcgvtd9.php'
+iiab_users_name : 'IIAB Users'
+iiab_users_email : 'iiab.users@gmail.com'

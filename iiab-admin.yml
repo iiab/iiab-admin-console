@@ -18,6 +18,8 @@
     downloads_dir: "{{ iiab_base }}/downloads"
     use_cache: False
     no_network: False
+    internet_available: False
+    iiab_python_lib: /usr/lib/python3/dist-packages
     # doc_root: /library/www/html inherited from iiab
     adm_cons_force_ssl: False
     iiab_home_url: /home
@@ -33,9 +35,9 @@
   vars_files:
   - "{{ iiab_repo }}/vars/default_vars.yml"
   - "{{ iiab_repo }}/vars/{{ ansible_local.local_facts.os_ver }}.yml"
-  - "{{ iiab_local_vars_file }}"
   - vars/default_vars.yml
   - vars/{{ ansible_distribution }}.yml
+  - "{{ iiab_local_vars_file }}"
 
   tasks:
 

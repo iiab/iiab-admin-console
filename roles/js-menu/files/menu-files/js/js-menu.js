@@ -1,5 +1,5 @@
-// iiab-menu.js
-// copyright 2018 Tim Moody
+// js-menu.js
+// copyright 2019 Tim Moody
 
 var menuConfig = {};
 
