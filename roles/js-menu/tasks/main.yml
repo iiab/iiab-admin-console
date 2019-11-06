@@ -9,8 +9,38 @@
   with_items:
     - "{{ js_menu_dir }}"
     - "{{ js_menu_dir }}menu-files"
+    - "{{ js_menu_dir }}menu-files/css"
+    - "{{ js_menu_dir }}menu-files/js"
+    - "{{ js_menu_dir }}menu-files/html"
     - "{{ js_menu_dir }}sample-menus"
     - "{{ doc_root }}/modules/en-test_mod"
+
+- name: Copy js-menu css files
+  copy: src={{ item }}
+        dest="{{ js_menu_dir }}menu-files/css"
+        mode=0644
+        owner=root
+        group=root
+  with_fileglob:
+        - menu-files/css/*.css
+
+- name: Copy js-menu html files
+  copy: src={{ item }}
+        dest="{{ js_menu_dir }}menu-files/html"
+        mode=0644
+        owner=root
+        group=root
+  with_fileglob:
+        - menu-files/html/*
+
+- name: Copy js-menu javascript files
+  copy: src={{ item }}
+        dest="{{ js_menu_dir }}menu-files/js"
+        mode=0644
+        owner=root
+        group=root
+  with_fileglob:
+        - menu-files/js/*
 
 - name: Copy a dummy module for oob menu
   copy: src=en-test_mod/index.html
