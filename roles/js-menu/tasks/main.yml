@@ -12,6 +12,7 @@
     - "{{ js_menu_dir }}menu-files/css"
     - "{{ js_menu_dir }}menu-files/js"
     - "{{ js_menu_dir }}menu-files/html"
+    - "{{ js_menu_dir }}menu-files/services"
     - "{{ js_menu_dir }}sample-menus"
     - "{{ doc_root }}/modules/en-test_mod"
 
@@ -41,6 +42,16 @@
         group=root
   with_fileglob:
         - menu-files/js/*
+
+- name: Copy js-menu services files
+  copy: src={{ item }}
+        dest="{{ js_menu_dir }}menu-files/services"
+        mode=0644
+        owner=root
+        group=root
+  with_fileglob:
+        - menu-files/services/*
+
 
 - name: Copy a dummy module for oob menu
   copy: src=en-test_mod/index.html
