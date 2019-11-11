@@ -14,7 +14,7 @@ import base64
 import os.path
 import sys
 import shutil
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import json
 import time
 import subprocess
@@ -60,15 +60,15 @@ iiab_catalog_file = jsonPath + "iiab_catalog.json"
 #iiab_root_dir = "/library/www/html/"
 #iiab_modules_dir = iiab_root_dir + "modules/"
 iiab_menu_repo_dir = "/opt/iiab/iiab-admin-console/roles/js-menu/files/"
-iiab_root_dir = "{{ doc_root }}/"
-iiab_modules_dir = "{{ iiab_modules_dir }}"
+iiab_root_dir = "/library/www/html/"
+iiab_modules_dir = "/library/www/html/modules/"
 
 iiab_menu_dir = iiab_root_dir + "js-menu/"
 iiab_menu_files = iiab_menu_dir + "menu-files/"
 iiab_menu_download_dir = iiab_menu_dir + "local/unedited/"
 doc_root_menu_defs = iiab_menu_dir  + 'menu-files/menu-defs/'
 
-#iiab_menu_repo_dir = "{{ iiab_base }}/iiab-admin-console/roles/js-menu/files/"
+#iiab_menu_repo_dir = "/opt/iiab/iiab-admin-console/roles/js-menu/files/"
 working_dir = "/library/working/rachel/" + str(uuid.uuid4()) + "/"
 
 php_parser = re.compile('\<\?php echo .+? \?>')
@@ -101,18 +101,18 @@ def main ():
 
     if not args.no_download:
         try:
-            url_handle = urllib2.urlopen(oer2go_cat_url)
+            url_handle = urllib.request.urlopen(oer2go_cat_url)
             oer2go_catalog_json = url_handle.read()
             url_handle.close()
-        except (urllib2.URLError) as exc:
+        except (urllib.error.URLError) as exc:
             sys.stdout.write("GET-OER2GO-CAT ERROR - " + str(exc.reason) +'\n')
             sys.stdout.flush()
             sys.exit(1)
         try:
-            url_handle = urllib2.urlopen(iiab_cat_url)
+            url_handle = urllib.request.urlopen(iiab_cat_url)
             iiab_catalog_json = url_handle.read()
             url_handle.close()
-        except (urllib2.URLError) as exc:
+        except (urllib.error.URLError) as exc:
             sys.stdout.write("GET-OER2GO-CAT ERROR - " + str(exc.reason) +'\n')
             sys.stdout.flush()
             sys.exit(2)
@@ -160,14 +160,14 @@ def main ():
                 proc_module(module) # process menu item
                 msg = "Generating menu files"
                 if verbose:
-                    print "%s %s %s" % (msg, id, moddir)
+                    print("%s %s %s" % (msg, id, moddir))
             if module['has_live_menudef'] and module['module_downloaded']:
-                print('Updating /home/menu.json with %s'%moddir)
+                print(('Updating /home/menu.json with %s'%moddir))
                 tools.update_menu_json(moddir)
         else:
             msg = "Skipping module not needed by Internet in a Box"
             if verbose:
-                print "%s %s %s" % (msg, id, moddir)
+                print("%s %s %s" % (msg, id, moddir))
             continue
 
         iiab_oer2go_catalog[moddir] = module
@@ -213,7 +213,7 @@ def get_status (item):
         gen_new_menudef = False
 
     if verbose:
-        print "%s %s %s" % (msg, id, moddir)
+        print("%s %s %s" % (msg, id, moddir))
 
     # check if menu def exists
     if os.path.exists(doc_root_menu_defs + moddir + '.json'):
@@ -234,7 +234,7 @@ def get_status (item):
     #    gen_new_menudef = False
 
     if verbose:
-        print "%s %s %s" % (msg, id, moddir)
+        print("%s %s %s" % (msg, id, moddir))
 
     return(item, gen_new_menudef)
 
@@ -320,7 +320,7 @@ def proc_module (module):
        menu_item['extra_html'] = ''
        menu_item["change_ref"] = "generated"
        menu_item["change_date"] = str(date.today())
-       print("writing to %s"%doc_root_menu_defs + moddir + '.json')
+       print(("writing to %s"%doc_root_menu_defs + moddir + '.json'))
        with open(doc_root_menu_defs + moddir + '.json', 'w') as fp:
           json.dump(menu_item, fp, indent=2)
        menu_item['has_live_menudef'] = True
