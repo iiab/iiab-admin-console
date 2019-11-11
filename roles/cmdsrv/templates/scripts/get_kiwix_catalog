@@ -15,8 +15,8 @@ if len(sys.argv) > 1:
     if sys.argv[1] in ('-v'):
         verbose = True
 
-WWROOT = "/library/www/html"
-jsonPath = "/etc/iiab"
+WWROOT = "{{ doc_root }}"
+jsonPath = "{{ iiab_config_dir }}"
 
 # for testing
 #WWROOT = "/library/www/html"
