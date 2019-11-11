@@ -1,19 +1,31 @@
 #- name: include stuff that ought to be somewhere else
 #  include: packages.yml
 
-- name: Install packages for cmdsrv
+- name: Install packages for cmdsrv on python 3
   package: name={{ item }}
            state=present
   with_items:
-    - libzmq3-dev
-    - python-cracklib
-    - pkg-config
-    - sqlite3
-    - libapache2-mod-wsgi
-    - python-systemd
+    - python3-systemd
+    - python3-zmq
+    - python3-yaml
+    - python3-cracklib
   tags:
     - download
   when: is_debuntu
+
+#- name: Install packages for cmdsrv on python 2
+#  package: name={{ item }}
+#           state=present
+#  with_items:
+#    - libzmq3-dev
+#    - python-cracklib
+#    - pkg-config
+#    - sqlite3
+#    - libapache2-mod-wsgi
+#    - python-systemd
+#  tags:
+#    - download
+#  when: is_debuntu
 
 - name: Install ubuntu connector apache to php
   package: name=libapache2-mod-php
@@ -22,7 +34,7 @@
     - download
   when: is_ubuntu
 
-- name: Install packages for cmdsrv
+- name: Install packages for cmdsrv on python 2 - obsolete
   package: name={{ item }}
            state=present
   with_items:
@@ -34,6 +46,7 @@
     - download
   when: is_redhat
 
+# The following should be removed
 - name: Check the config_vars.yml file
   stat: path=/etc/iiab/config_vars.yml
   register: config_vars
