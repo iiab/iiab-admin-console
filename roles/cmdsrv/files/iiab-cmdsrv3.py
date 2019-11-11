@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 """
 
    Multi-threaded Polling Command server
@@ -26,9 +28,9 @@ import sqlite3
 import json
 import xml.etree.ElementTree as ET
 import yaml
-import configparser
+import ConfigParser
 import re
-import urllib.request, urllib.error, urllib.parse
+import urllib2
 import string
 import crypt
 import spwd
@@ -189,7 +191,7 @@ def main():
     clients = context.socket(zmq.ROUTER)
     clients.bind(client_url)
     os.chown(ipc_sock, owner.pw_uid, group.gr_gid)
-    os.chmod(ipc_sock, 0o770)
+    os.chmod(ipc_sock, 0770)
 
     # Socket to talk to workers
     workers_data = context.socket(zmq.DEALER)
@@ -218,27 +220,25 @@ def main():
         sockets = dict(poll.poll())
         if clients in sockets:
             ident, msg = clients.recv_multipart()
-            msg = msg.decode('utf8') # byte to str
-            #tprint(f'sending message server received from client to worker %s id %s' % (msg, ident))
-            tprint(f'sending message server received from client to worker {msg} id {ident}')
-            if msg == 'STOP':
+            tprint('sending message server received from client to worker %s id %s' % (msg, ident))
+            if msg == "STOP":
                 # Tell the worker threads to shut down
                 set_ready_flag("OFF")
                 tprint('sending control message server received from client to worker %s id %s' % (msg, ident))
-                workers_control.send(b'EXIT')
-                clients.send_multipart([ident, b'{"Status": "Stopping"}'])
+                workers_control.send("EXIT")
+                clients.send_multipart([ident, '{"Status": "Stopping"}'])
                 log(syslog.LOG_INFO, 'Stopping Command Server')
                 time.sleep(3)
                 server_run = False
             else:
-                # if in daemon mode report and init failed always return same error message
+                # if in daemon mode report and init failed alwasy return same error message
                 if daemon_mode == True and init_error == True:
                     msg = '{"Error": "IIAB-CMDSRV failed to initialize","Alert": "True"}'
-                    clients.send_multipart([ident, msg.encode('urf8')])
+                    clients.send_multipart([ident, msg])
                 else:
                     tprint('sending data message server received from client to worker %s id %s' % (msg, ident))
                     log(syslog.LOG_INFO, 'Received CMD Message %s.' % msg )
-                    workers_data.send_multipart([ident, msg.encode('utf8')])
+                    workers_data.send_multipart([ident, msg])
         if workers_data in sockets:
             ident, msg = workers_data.recv_multipart()
             tprint('Sending worker message to client %s id %s' % (msg[:60], ident))
@@ -283,7 +283,7 @@ def job_minder_thread(client_url, worker_control_url, context=None):
     context = context or zmq.Context.instance()
     control_socket = context.socket(zmq.SUB)
     control_socket.connect(worker_control_url)
-    control_socket.setsockopt_string(zmq.SUBSCRIBE,"")
+    control_socket.setsockopt(zmq.SUBSCRIBE,"")
 
     # Socket to send job status back to main
     resp_socket = context.socket(zmq.DEALER)
@@ -312,7 +312,7 @@ def job_minder_thread(client_url, worker_control_url, context=None):
     while thread_run == True:
         lock.acquire() # will block if lock is already held
         try:
-            jobs_requested_list = list(jobs_requested.keys()) # create copy of keys so we can update global dictionary in loop
+            jobs_requested_list = jobs_requested.keys() # create copy of keys so we can update global dictionary in loop
         finally:
             lock.release() # release lock, no matter what
 
@@ -440,7 +440,7 @@ def job_minder_thread(client_url, worker_control_url, context=None):
         #print 'starting socket poll'
         sockets = dict(poll.poll(1000))
         if control_socket in sockets:
-            ctl_msg = control_socket.recv_string()
+            ctl_msg = control_socket.recv()
             tprint('got ctl msg %s in monitor' % ctl_msg)
             if ctl_msg == "EXIT":
                 # stop loop in order to terminate thread
@@ -564,13 +564,13 @@ def end_job(job_id, job_info, status): # modify to use tail of job_output
 
     command = "tail " + output_file
     args = shlex.split(command)
-    job_output = subproc_check_output(args)
+    job_output = subprocess.check_output(args)
 
     # make html safe
     #job_output = escape_html(job_output)
 
     # remove non-printing chars as an alternative
-    job_output = [x for x in job_output if x in string.printable]
+    job_output = filter(lambda x: x in string.printable, job_output)
 
     jobs_running[job_id]['job_output'] = job_output
 
@@ -633,7 +633,7 @@ def cmd_proc_thread(worker_data_url, worker_control_url, context=None):
     # control signals from main thread
     control_socket = context.socket(zmq.SUB)
     control_socket.connect(worker_control_url)
-    control_socket.setsockopt_string(zmq.SUBSCRIBE,"")
+    control_socket.setsockopt(zmq.SUBSCRIBE,"")
 
     poll = zmq.Poller()
     poll.register(data_socket, zmq.POLLIN)
@@ -647,14 +647,13 @@ def cmd_proc_thread(worker_data_url, worker_control_url, context=None):
         # process command
         if data_socket in sockets:
             ident, cmd_msg = data_socket.recv_multipart()
-            cmd_msg = cmd_msg.decode("utf8")
             tprint('sending message server received from client to worker %s id %s' % (cmd_msg, ident))
             cmd_resp = cmd_handler(cmd_msg)
             #print cmd_resp
             # 8/23/2015 added .encode() to response as list_library was giving unicode errors
             data_socket.send_multipart([ident, cmd_resp.encode()])
         if control_socket in sockets:
-            ctl_msg = control_socket.recv_string()
+            ctl_msg = control_socket.recv()
             tprint('got ctl msg %s in worker' % ctl_msg)
             if ctl_msg == "EXIT":
                 # stop loop in order to terminate thread
@@ -729,7 +728,7 @@ def cmd_handler(cmd_msg):
         }
 
     # Check for Duplicate Command
-    dup_cmd = next((job_id for job_id, active_cmd_msg in list(active_commands.items()) if active_cmd_msg == cmd_msg), None)
+    dup_cmd = next((job_id for job_id, active_cmd_msg in active_commands.items() if active_cmd_msg == cmd_msg), None)
     if dup_cmd != None:
         strip_cmd_msg = cmd_msg.replace('\"','')
         log(syslog.LOG_ERR, "Error: %s duplicates an Active Command." % strip_cmd_msg)
@@ -806,7 +805,7 @@ def do_test(cmd_info):
 
     #resp = cmd_success("TEST")
     #return (resp)
-    outp = subproc_check_output(["scripts/test.sh"])
+    outp = subprocess.check_output(["scripts/test.sh"])
     json_outp = json_array("TEST",outp)
     return (json_outp)
 
@@ -937,18 +936,11 @@ def del_modules(cmd_info): # includes zims
 
 def subproc_cmd(cmdstr):
     args = shlex.split(cmdstr)
-    outp = subproc_check_output(args)
+    outp = subprocess.check_output(args)
     return (outp)
 
-def subproc_check_output(args, shell=False):
-    try:
-        outp = subprocess.check_output(args, shell=shell, universal_newlines=True, encoding='utf8')
-    except:
-        raise
-    return outp
-
 def get_ansible_version():
-    outp = subproc_check_output(ansible_program + " --version | head -n1 | cut -f2 -d' '",shell=True)
+    outp = subprocess.check_output(ansible_program + " --version | head -n1 | cut -f2 -d' '",shell=True)
     return outp
 
 def wget_file(cmd_info):
@@ -987,7 +979,7 @@ def get_iiab_ini(cmd_info):
     return (resp)
 
 def get_mem_info(cmd_info):
-    outp = subproc_check_output(["/usr/bin/free", "-h"])
+    outp = subprocess.check_output(["/usr/bin/free", "-h"])
     json_outp = json_array("system_memory", outp)
     return (json_outp)
 
@@ -998,7 +990,7 @@ def get_space_avail(cmd_info):
     #cmd = df_program + " -m" get size info in K not M
     cmd = df_program
     cmd_args = shlex.split(cmd)
-    outp = subproc_check_output(cmd_args)
+    outp = subprocess.check_output(cmd_args)
     dev_arr = outp.split('\n')
     for dev_str in dev_arr[1:-1]:
        dev_attr = dev_str.split()
@@ -1014,13 +1006,13 @@ def get_space_avail(cmd_info):
     return (resp)
 
 def get_storage_info_lite(cmd_info):
-    outp = subproc_check_output([df_program, "-lh"])
+    outp = subprocess.check_output([df_program, "-lh"])
     json_outp = json_array("system_fs", outp)
     return (json_outp)
 
 def get_external_device_info(cmd_info):
     extdev_info = {}
-    outp = subproc_check_output("scripts/get_ext_devs.sh")
+    outp = subprocess.check_output("scripts/get_ext_devs.sh")
     dev_arr = outp.split('\n')
 
     # dev_arr gets a dummy element due to final \n
@@ -1126,10 +1118,10 @@ def calc_network_info():
 def run_command(command):
     args = shlex.split(command)
     try:
-        outp = subproc_check_output(args)
+        outp = subprocess.check_output(args)
     except: #skip things that don't work
         outp = ''
-    outp = [_f for _f in outp.split('\n') if _f]
+    outp = filter(None, outp.split('\n'))
     if len(outp) == 0:
         outp = ['']
     return outp
@@ -1194,7 +1186,7 @@ def set_wpa_credentials (cmd_info):
         resp = cmd_error(cmd=cmd_info['cmd'], msg='Only supported on Raspberry Pi.')
         return (resp)
 
-    print(cmd_info)
+    print cmd_info
     if 'cmd_args' in cmd_info:
         connect_wifi_ssid = cmd_info['cmd_args']['connect_wifi_ssid']
         connect_wifi_password = cmd_info['cmd_args']['connect_wifi_password']
@@ -1212,7 +1204,7 @@ def set_wpa_credentials (cmd_info):
     # else set to static array
     # write lines
 
-    print(wpa_txt)
+    print wpa_txt
     if connect_wifi_ssid in wpa_txt:
         ssid_loc = wpa_txt.index(connect_wifi_ssid)
         network_start = wpa_txt.rindex("network={",0,ssid_loc)
@@ -1225,8 +1217,8 @@ def set_wpa_credentials (cmd_info):
         network_lines = run_command("/usr/bin/wpa_passphrase '" + connect_wifi_ssid + "' " + connect_wifi_password)
     else:
         network_lines = ['network={', '\tssid="' + connect_wifi_ssid + '"', '\tkey_mgmt=NONE', '}']
-    print(wpa_lines)
-    print(network_lines)
+    print wpa_lines
+    print network_lines
 
     wpa_lines.extend(network_lines)
     with open('/etc/wpa_supplicant/wpa_supplicant.conf', 'w') as f:
@@ -1297,7 +1289,7 @@ def get_ext_zim_catalog(dev_name):
     command = "/usr/bin/iiab-make-kiwix-lib.py --no_tmp --device " + dev_name
     args = shlex.split(command)
     try:
-        outp = subproc_check_output(args)
+        outp = subprocess.check_output(args)
     except: #skip things that don't work
         pass
     usb_catalog = read_library_xml(kiwix_library_xml_tmp)
@@ -1329,7 +1321,7 @@ def get_ext_zim_catalog2(dev_name): # keeping for the moment, but not used
                 #print command
                 args = shlex.split(command)
                 try:
-                    outp = subproc_check_output(args)
+                    outp = subprocess.check_output(args)
                 except: #skip things that don't work
                     #print 'skipping ' + filename
                     pass
@@ -1383,7 +1375,7 @@ def get_storage_info(cmd_info):
     system_storage = []
     cmd = "lsblk -aP -o NAME,FSTYPE,TYPE,SIZE,MOUNTPOINT,LABEL,UUID,PARTLABEL,PARTUUID,MODEL"
     cmd_args = shlex.split(cmd)
-    outp = subproc_check_output(cmd_args)
+    outp = subprocess.check_output(cmd_args)
     dev_arr = outp.split('\n')
     system_storage_idx = -1
     for item in dev_arr:
@@ -1421,7 +1413,7 @@ def get_storage_info_str2dict(str):
 def get_storage_info_parted(dev):
     dev_info = {'device':dev, 'desc':'', 'log_sect_size':'', 'part_tbl':'', 'phys_sect_size':'', 'size':'', 'type':'', 'blocks':[]}
     try:
-        parts = subproc_check_output(["parted", dev, "-ms", "print", "free"])
+        parts = subprocess.check_output(["parted", dev, "-ms", "print", "free"])
     except subprocess.CalledProcessError as e:
         #skip devices that cause problems
         pass
@@ -1480,7 +1472,7 @@ def get_storage_info_parted(dev):
 
 def get_storage_info_df(part_dev):
     part_prop = {}
-    outp = subproc_check_output([df_program, part_dev, "-m"])
+    outp = subprocess.check_output([df_program, part_dev, "-m"])
     str_array = outp.split('\n')
     part_prop = parse_df_str(str_array[1])
     #print part_prop
@@ -1502,12 +1494,12 @@ def parse_df_str(df_str, size_unit="megs"):
     return (dev_attr)
 
 def get_inet_speed(cmd_info):
-    outp = subproc_check_output(["scripts/get_inet_speed"])
+    outp = subprocess.check_output(["scripts/get_inet_speed"])
     json_outp = json_array("internet_speed", outp)
     return (json_outp)
 
 def get_inet_speed2(cmd_info):
-    outp = subproc_check_output(["/usr/bin/speedtest-cli","--simple"])
+    outp = subprocess.check_output(["/usr/bin/speedtest-cli","--simple"])
     json_outp = json_array("internet_speed", outp)
     return (json_outp)
 
@@ -1525,7 +1517,7 @@ def get_white_list(cmd_info):
 
 def set_white_list(cmd_info):
     whlist = cmd_info['cmd_args']['iiab_whitelist']
-    whlist = [_f for _f in whlist if _f] # remove blank lines
+    whlist = filter(None, whlist) # remove blank lines
     resp = cmd_success(cmd_info['cmd'])
     try:
         stream =  open(squid_whitelist, 'w')
@@ -1538,7 +1530,7 @@ def set_white_list(cmd_info):
     return (resp)
 
 def get_kiwix_catalog(cmd_info):
-    outp = subproc_check_output(["scripts/get_kiwix_catalog"])
+    outp = subprocess.check_output(["scripts/get_kiwix_catalog"])
     if outp == "SUCCESS":
         read_kiwix_catalog()
         resp = cmd_success("GET-KIWIX-CAT")
@@ -1586,7 +1578,7 @@ def get_oer2go_catalog(cmd_info):
     "99":"Syntax Error"
     }
     try:
-        outp = subproc_check_output(["scripts/get_oer2go_catalog"])
+        outp = subprocess.check_output(["scripts/get_oer2go_catalog"])
     except subprocess.CalledProcessError as e:
         resp = cmd_error(cmd='GET-OER2GO-CAT', msg=err_msg[str(e.returncode)])
         return resp
@@ -1706,11 +1698,11 @@ def install_zims(cmd_info):
             return resp
 
         downloadSrcFile = kiwix_catalog[zimId]['download_url']
-        print(downloadSrcFile)
+        print downloadSrcFile
         try:
-            rc = urllib.request.urlopen(downloadSrcFile)
+            rc = urllib2.urlopen(downloadSrcFile)
             rc.close()
-        except (urllib.error.URLError) as exc:
+        except (urllib2.URLError) as exc:
             errmsg = str("Zim File " + zimFileRef + " not found in Cmd")
             resp = cmd_error(cmd='INST-ZIMS', msg=errmsg)
             return resp
@@ -1964,9 +1956,9 @@ def install_rachel(cmd_info):
     rachel_version = iiab_ini['rachel']['rachel_version']
 
     try:
-        rc = urllib.request.urlopen(downloadSrcFile)
+        rc = urllib2.urlopen(downloadSrcFile)
         rc.close()
-    except (urllib.error.URLError) as exc:
+    except (urllib2.URLError) as exc:
         errmsg = str("Can't access " + downloadSrcFile + " Cmd")
         resp = cmd_error(cmd='INST-RACHEL', msg=errmsg)
         return resp
@@ -2098,7 +2090,7 @@ def save_menu_item_def(cmd_info):
     return (resp)
 
 def sync_menu_item_defs(cmd_info):
-    outp = subproc_check_output(["scripts/sync_menu_defs.py"])
+    outp = subprocess.check_output(["scripts/sync_menu_defs.py"])
     json_outp = json_array("sync_menu_item_defs", outp)
     return (json_outp)
 
@@ -2133,7 +2125,7 @@ def remote_admin_ctl(cmd_info):
         return cmd_malformed(cmd_info['cmd'])
 
 def get_remote_admin_status(cmd_info):
-    outp = subproc_check_output(["scripts/get_remote_admin_status.sh"])
+    outp = subprocess.check_output(["scripts/get_remote_admin_status.sh"])
     #resp = json_array("remote",outp)
     return (outp.strip())
 
@@ -2208,7 +2200,7 @@ def isStrongPassword(password):
 
     try:
         cracklib.VeryFascistCheck(password)
-    except ValueError as e:
+    except ValueError, e:
         is_valid = False
         message = e.message
 
@@ -2301,7 +2293,7 @@ def get_last_jobs_stat(cmd_info):
         cur = conn.execute ("SELECT jobs.rowid, job_command, job_output, job_status, strftime('%m-%d %H:%M', jobs.create_datetime), strftime('%s', jobs.create_datetime), strftime('%s',last_update_datetime), strftime('%s','now', 'localtime'), cmd_msg FROM jobs, commands where cmd_rowid = commands.rowid ORDER BY jobs.rowid DESC LIMIT 30")
         status_jobs = cur.fetchall()
         conn.close()
-    except sqlite3.Error as e:
+    except sqlite3.Error, e:
         tprint ("Error %s:" % e.args[0])
         log(syslog.LOG_ERR, "Sql Lite3 Error %s:" % e.args[0])
     finally:
@@ -2337,7 +2329,7 @@ def get_last_jobs_stat(cmd_info):
 
                 command = "tail " + output_file
                 args = shlex.split(command)
-                job_output = subproc_check_output(args)
+                job_output = subprocess.check_output(args)
                 status_job['job_output'] = job_output
 
                 #print "job output" + job_output
@@ -2352,7 +2344,7 @@ def get_jobs_running(cmd_info): # Not used
     today = str(date.today())
     job_stat = {}
     cur_jobs = {}
-    for job, job_info in jobs_running.items():
+    for job, job_info in jobs_running.iteritems():
         if today in job_info['status_datetime'] or jobinfo['status'] in ['SCHEDULED','STARTED']:
             job_stat['status'] = job_info['status']
             job_stat['job_command'] = job_info['job_command']
@@ -2369,7 +2361,7 @@ def json_array(name, str):
         str_array = str.split('\n')
         str_json = json.dumps(str_array)
         json_resp = '{ "' + name + '":' + str_json + '}'
-    except Exception:
+    except StandardError:
         json_resp = cmd_error()
     return (json_resp)
 
@@ -2433,7 +2425,7 @@ def insert_command(cmd_msg):
         conn.execute ("INSERT INTO commands (rowid, cmd_msg, create_datetime) VALUES (?,?,?)", (cmd_id, cmd_msg, now))
         conn.commit()
         conn.close()
-    except sqlite3.Error as e:
+    except sqlite3.Error, e:
         tprint ("Error %s:" % e.args[0])
         log(syslog.LOG_ERR, "Sql Lite3 Error %s:" % e.args[0])
     finally:
@@ -2458,7 +2450,7 @@ def insert_job(job_id, cmd_rowid, job_command, cmd_step_no, depend_on_job_id, ha
 
         conn.commit()
         conn.close()
-    except sqlite3.Error as e:
+    except sqlite3.Error, e:
         tprint ("Error %s:" % e.args[0])
         log(syslog.LOG_ERR, "Sql Lite3 Error %s:" % e.args[0])
     finally:
@@ -2475,7 +2467,7 @@ def upd_job_started(job_id, job_pid, job_status="STARTED"):
         conn.execute ("UPDATE jobs SET job_pid = ?, job_status = ?, last_update_datetime = ? WHERE rowid = ?", (job_pid, job_status, now, job_id))
         conn.commit()
         conn.close()
-    except sqlite3.Error as e:
+    except sqlite3.Error, e:
         tprint ("Error %s:" % e.args[0])
         log(syslog.LOG_ERR, "Sql Lite3 Error %s:" % e.args[0])
     finally:
@@ -2492,7 +2484,7 @@ def upd_job_finished(job_id, job_output, job_status="FINISHED"):
         conn.execute ("UPDATE jobs SET job_status = ?, job_output = ?, last_update_datetime = ? WHERE rowid = ?", (job_status, job_output, now, job_id))
         conn.commit()
         conn.close()
-    except sqlite3.Error as e:
+    except sqlite3.Error, e:
         tprint ("Error %s:" % e.args[0])
         log(syslog.LOG_ERR, "Sql Lite3 Error %s:" % e.args[0])
     finally:
@@ -2509,7 +2501,7 @@ def upd_job_cancelled(job_id, job_status="CANCELLED"):
         conn.execute ("UPDATE jobs SET job_status = ?, last_update_datetime = ? WHERE rowid = ?", (job_status, now, job_id))
         conn.commit()
         conn.close()
-    except sqlite3.Error as e:
+    except sqlite3.Error, e:
         tprint ("Error %s:" % e.args[0])
         log(syslog.LOG_ERR, "Sql Lite3 Error %s:" % e.args[0])
     finally:
@@ -2532,9 +2524,9 @@ def get_job_id():
 def escape_html(text):
     """escape strings for display in HTML"""
     return cgi.escape(text, quote=True).\
-           replace('\n', '<br />').\
-           replace('\t', '&emsp;').\
-           replace('  ', ' &nbsp;')
+           replace(u'\n', u'<br />').\
+           replace(u'\t', u'&emsp;').\
+           replace(u'  ', u' &nbsp;')
 
 def init():
     global last_command_rowid
@@ -2600,7 +2592,7 @@ def read_iiab_ini_file():
     global iiab_ini
     iiab_ini_tmp = {}
 
-    config = configparser.ConfigParser()
+    config = ConfigParser.ConfigParser()
     config.read(iiab_ini_file)
     for section in config.sections():
         iiab_ini_sec = {}
@@ -2670,7 +2662,7 @@ def write_iiab_local_vars(config_vars): # from George Hunt
         m = re.match(' *([a-zA-Z0-9_]*) *: *([a-zA-Z0-9\'\"\.]*) *(#.*)*',line)
         if m and m.group(1) in config_vars:
             if config_vars[m.group(1)] != m.group(2):
-                if isinstance(config_vars[m.group(1)], str) and config_vars[m.group(1)].find(" ") != -1:
+                if isinstance(config_vars[m.group(1)], unicode) and config_vars[m.group(1)].find(" ") != -1:
                     vardec = m.group(1) + ": \"" + str(config_vars[m.group(1)]) + "\"\n"
                 else:
                     vardec = m.group(1) + ": " + str(config_vars[m.group(1)]) + "\n"
@@ -2681,7 +2673,7 @@ def write_iiab_local_vars(config_vars): # from George Hunt
                 outstr += line
             found_vars.append(m.group(1))
         else:
-            print(("no match for: %s"%line))
+            print("no match for: %s"%line)
             outstr += line
 
     # put any variables not already found in local_vars.yml
@@ -2794,7 +2786,7 @@ def get_ansible_facts():
 
     command = ansible_program + " localhost -i " + iiab_repo + "/ansible_hosts  -m setup -o  --connection=local"
     args = shlex.split(command)
-    outp = subproc_check_output(args)
+    outp = subprocess.check_output(args)
     if (get_ansible_version() < '2'):
         splitter = 'success >> '
     else:
@@ -2815,7 +2807,7 @@ def get_ansible_tags():
 
     args = shlex.split(command)
     try:
-        outp = subproc_check_output(args)
+        outp = subprocess.check_output(args)
     except subprocess.CalledProcessError as e:
         outp = e.output
 
@@ -3095,7 +3087,7 @@ def set_ready_flag(on_off):
             ready_file.write( "ready" );
             ready_file.write( "\n" );
             ready_file.close();
-        except OSError as e:
+        except OSError, e:
             syslog.openlog( 'iiab_cmdsrv', 0, syslog.LOG_USER )
             syslog.syslog( syslog.LOG_ALERT, "Writing Ready file: %s [%d]" % (e.strerror, e.errno) )
             syslog.closelog()
@@ -3103,7 +3095,7 @@ def set_ready_flag(on_off):
     else:
         try:
             os.remove(cmdsrv_ready_file)
-        except OSError as e:
+        except OSError, e:
             syslog.openlog( 'iiab_cmdsrv', 0, syslog.LOG_USER )
             syslog.syslog( syslog.LOG_ALERT, "Removing Ready file: %s [%d]" % (e.strerror, e.errno) )
             syslog.closelog()
@@ -3129,7 +3121,7 @@ def createDaemon(pidfilename):
                 pidfile.write( str( pid ) );
                 pidfile.write( "\n" );
                 pidfile.close();
-            except OSError as e:
+            except OSError, e:
                 syslog.openlog( 'iiab_cmdsrv', 0, syslog.LOG_USER )
                 syslog.syslog( syslog.LOG_ALERT, "Writing PID file: %s [%d]" % (e.strerror, e.errno) )
                 syslog.closelog()
@@ -3186,7 +3178,7 @@ if __name__ == "__main__":
             pidfile.write( str( 0 ) );
             pidfile.write( "\n" );
             pidfile.close();
-        except OSError as e:
+        except OSError, e:
             syslog.openlog( 'iiab_cmdsrv', 0, syslog.LOG_USER )
             syslog.syslog( syslog.LOG_ALERT, "Writing PID file: %s [%d]" % (e.strerror, e.errno) )
             syslog.closelog()
