@@ -1,0 +1,11 @@
+{
+    "intended_use": "zim",
+    "lang": "en",
+    "logo_url": "220px-Wikipedia-logo-v2.svg.png",
+    "zim_name": "wikipedia_en_top_maxi",
+    "title": "Best of Wikipedia, in English",
+    "description": "50,000 articles from the world's largest encyclopedia, created, moderated, and edited by users for users.",
+    "extra_description": "Can be searched using any word(s) that appear in article titles (this is fast!)<p>Or, do a deep search using any keyword(s) that appear further down in the articles themselves (have patience, this takes time!)",
+    "extra_html": "",
+    "footnote": "Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Date: ##zim_date##"
+}
