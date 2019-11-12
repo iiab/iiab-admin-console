@@ -9,7 +9,42 @@ if [ -f /etc/iiab/iiab.env ]; then
   source /etc/iiab/iiab.env
 fi
 
-MENUDIR=$WWWROOT/js-menu/
+MENU_DEF_DIR=$WWWROOT/js-menu/menu-defs
+
+# Install menu files from repo if this is the first time
+
+if [ -z "$(ls -A $MENU_DEF_DIR)" ]; then
+   echo "Empty"
+else
+   echo "Not Empty"
+fi
+
+# actions
+wget //github.com/tim-moody/js-menu-files/archive/master.zip (or actual repo)
+or just clone iiab-share/js-menu-files
+git clone https://github.com/tim-moody/js-menu-files --depth 1
+
+unzip -d dir (creates dir/js-menu-files-master/
+rsync images and menu-defs
+run install_menu_defs
+
+
+if [ -z "$(ls -A /library/www/html/js-menu)" ]; then
+   echo "Empty"
+else
+   echo "Not Empty"
+fi
+
+
+
+if [ ! -d $MENUDIR/menu-defs.lst ]; then
+  # record timestamp and size of changed set of files
+  TZ=utc ls -l --time-style=full-iso $MENUDIR/menu-files/menu-defs/*.{json,html} |awk '{print $5" "$6":"$7" "$9}' >$MENUDIR/changed-menu-defs.lst
+  TZ=utc ls -l --time-style=full-iso $MENUDIR/menu-files/html/*.html |awk '{print $5" "$6":"$7" "$9}' >$MENUDIR/changed-html.lst
+  ./bu-local $MENUDIR
+fi
+
+
 
 mkdir -p $MENUDIR/local/menu-defs
 mkdir -p $MENUDIR/local/html

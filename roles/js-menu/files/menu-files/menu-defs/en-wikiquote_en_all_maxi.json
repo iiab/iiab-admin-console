@@ -1,0 +1,11 @@
+{
+  "name": "en-wikiquote_en_all_maxi",
+  "lang": "en",
+  "intended_use": "zim",
+  "zim_name": "wikiquote_en_all_maxi",
+  "title": "Wikiquote",
+  "logo_url": "Ncwikiquote2.png",
+  "description": "Wikiquote is a vast reference of sourced quotations from notable people, books, films, proverbs, and creative works in every language -- translated where possible.",
+  "extra_html": "",
+  "footnote": "Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Date: ##zim_date##"
+}

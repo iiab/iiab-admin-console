@@ -9,8 +9,49 @@
   with_items:
     - "{{ js_menu_dir }}"
     - "{{ js_menu_dir }}menu-files"
+    - "{{ js_menu_dir }}menu-files/css"
+    - "{{ js_menu_dir }}menu-files/js"
+    - "{{ js_menu_dir }}menu-files/html"
+    - "{{ js_menu_dir }}menu-files/services"
     - "{{ js_menu_dir }}sample-menus"
     - "{{ doc_root }}/modules/en-test_mod"
+
+- name: Copy js-menu css files
+  copy: src={{ item }}
+        dest="{{ js_menu_dir }}menu-files/css"
+        mode=0644
+        owner=root
+        group=root
+  with_fileglob:
+        - menu-files/css/*.css
+
+- name: Copy js-menu html files
+  copy: src={{ item }}
+        dest="{{ js_menu_dir }}menu-files/html"
+        mode=0644
+        owner=root
+        group=root
+  with_fileglob:
+        - menu-files/html/*
+
+- name: Copy js-menu javascript files
+  copy: src={{ item }}
+        dest="{{ js_menu_dir }}menu-files/js"
+        mode=0644
+        owner=root
+        group=root
+  with_fileglob:
+        - menu-files/js/*
+
+- name: Copy js-menu services files
+  copy: src={{ item }}
+        dest="{{ js_menu_dir }}menu-files/services"
+        mode=0644
+        owner=root
+        group=root
+  with_fileglob:
+        - menu-files/services/*
+
 
 - name: Copy a dummy module for oob menu
   copy: src=en-test_mod/index.html
@@ -19,13 +60,6 @@
         group=root
         mode=0644
         force=no
-
-# need to merge locally edited menu-defs
-# continue to use cp-menu until we have forms-based menu-def editing
-#- name: Synchronize/Copy menu-files
-#  synchronize:
-#    src: files/menu-files
-#    dest: "{{ js_menu_dir }}/menu-files"
 
 - name: Synchronize/Copy menu-files
   synchronize:
@@ -54,8 +88,18 @@
         mode=0644
         force=no
 
-- name: Copy Menu Files and Create Feedback Database
-  shell: ./cp-menus
+- name: Does "{{ js_menu_dir }}menu-files/menu-defs" directory exist?
+  stat:
+        path: "{{ js_menu_dir }}menu-files/menu-defs"
+  register: menu_defs_dir
+
+- name: Include copying of menu defs
+  include: install_menu_defs.yml
+  when: not menu_defs_dir.stat.exists
+
+- name: Otherwise sync local menu defs with repo
+  shell: "{{ cmdsrv_dir }}/scripts/sync_menu_defs.py"
+  when: menu_defs_dir.stat.exists
 
 - name: Make web server user owner of images after copying
   file: path="{{ js_menu_dir }}menu-files/images/"

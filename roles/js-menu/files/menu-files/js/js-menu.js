@@ -1,5 +1,5 @@
-// iiab-menu.js
-// copyright 2018 Tim Moody
+// js-menu.js
+// copyright 2019 Tim Moody
 
 var menuConfig = {};
 
@@ -34,6 +34,7 @@ var selectedLangs = []; // languages selected by gui for display of content
 
 var host = 'http://' + window.location.hostname;
 var isMobile = detectMob();
+var toggleDisplay = false; // if true display opposite - desktop on mobile and vice versa
 var showFullDisplay = true; // leave for now in case we want to toggle
 // var showFullDisplay = true; // show full display if not mobile device or if force Full Display
 // if (isMobile && !forceFullDisplay)
@@ -230,11 +231,18 @@ function procMenu() {
   	    updateServerTime();
   }
 
-	calcItemVerbosity();
 	//resizeHandler (); // if a mobile device set font-size for portrait or landscape
+	drawMenu();
+}
+
+function drawMenu() {
+	calcItemVerbosity();
 	for (var i = 0; i < menuItems.length; i++) {
 		consoleLog(menuItems[i]);
-		getMenuDef(menuItems[i])
+		if (menuDefs[menuItems[i]].hasOwnProperty('menu_item_name')) // already loaded
+		  procMenuItem(menuDefs[menuItems[i]]);
+		else
+			getMenuDef(menuItems[i]);
 	}
 }
 
@@ -243,7 +251,10 @@ function calcItemVerbosity () {
 	showExtraDescription = false;
   showExtraHtml = false;
   showFootnote = false;
-	if (isMobile){
+  var showMobile = isMobile;
+  if (toggleDisplay)
+    showMobile = !showMobile;
+	if (showMobile){
 		if (menuParams.mobile_incl_description)
 		  showDescription = true
 		if (menuParams.mobile_incl_extra_description)
@@ -263,6 +274,13 @@ function calcItemVerbosity () {
 	  if (menuParams.desktop_incl_footnote)
 		  showFootnote = true
 	}
+}
+
+function setDisplayToggle() {
+	toggleDisplay = !toggleDisplay;
+	drawMenu();
+	setLocalStore();
+	//activateButtons();
 }
 
 function getMenuDef(menuItem) {
@@ -700,6 +718,10 @@ function activateButtons(){
     $('#langCodeSelector').modal('show');
  	  closeSlideMenu();
   });
+  $('#btn-toggleDisplay').off().on('click', function(){
+ 	  setDisplayToggle();
+ 	  closeSlideMenu();
+  });
   $('#btn-custom').click(function(){
  	  $('#customMenuModal').modal({backdrop: 'static', keyboard: false});
  	  $('#customMenuModal').modal('show');
@@ -723,7 +745,7 @@ function openSlideMenu() {
 
 	if (isMobile){ // separate search icon in mobile
 		slideMenuSearch.style.display = "none";
-		slideMenu.style.height = "200px";
+		slideMenu.style.height = "250px";
 		slideMenu.style.width = "120px";
 	}
 	else {
@@ -733,7 +755,7 @@ function openSlideMenu() {
 		}
 		else {
 			slideMenuSearch.style.display = "none";
-			slideMenu.style.height = "200px";
+			slideMenu.style.height = "250px";
 			slideMenu.style.width = "120px";
 		}
 	}
@@ -766,6 +788,11 @@ function getLocalStore() {
 	if (arrayStr && arrayStr != "")
     //arrayStr = "";
 	  selectedLangs = arrayStr.split(',');
+	var toggleDisplayFlag = localStorage.getItem("toggleDisplay");
+	if (toggleDisplayFlag === null || toggleDisplayFlag == "false")
+	  toggleDisplay = false;
+	else
+		toggleDisplay = true;
 }
 
 function setLocalStore() {
@@ -773,6 +800,7 @@ function setLocalStore() {
 	  localStorage.setItem("selected_langs", selectedLangs.toLocaleString());
 	else
 		localStorage.setItem("selected_langs", "");
+	localStorage.setItem("toggleDisplay", toggleDisplay);
 }
 
 function genLangSelector() {

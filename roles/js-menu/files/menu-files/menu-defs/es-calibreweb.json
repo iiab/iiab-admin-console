@@ -1,0 +1,15 @@
+{
+    "lang": "es",
+    "intended_use": "webroot",
+    "title": "Calibre-Web",
+    "start_url": "books",
+    "COMMENTED_OUT_intended_use": "calibre",
+    "COMMENTED_OUT_start_url": "",
+    "menu_item_name": "en-calibreweb",
+    "logo_url": "calibreweb.png",
+    "moddir": "",
+    "description": "Libros electrónicos para tu comunidad.",
+    "extra_description": "Maestros y bibliotecarios puede agregar nuevos libros, organizar colecciones, y borrar libros si el servidor de Internet-in-a-Box se empieza a llenar.",
+    "extra_html": "",
+    "footnote": ""
+}

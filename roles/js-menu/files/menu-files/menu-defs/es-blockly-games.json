@@ -3,7 +3,6 @@
     "lang": "es",
     "age_range": "children,young adult",
     "rating": "4.0",
-    "description": "Juegos para los programadores del futuro",
     "intended_use": "html",
     "prereq_note": "",
     "zip_http_url": null,
@@ -19,5 +18,8 @@
     "rsync_url": "rsync://dev.worldpossible.org/rachelmods/es-blockly_games",
     "moddir": "es-blockly-games",
     "start_url": "blockly-games/es/index.html",
-    "extra_html": "es-blockly-games.html"
+    "description": "Juegos para los programadores del futuro.",
+    "extra_description": "",
+    "extra_html": "",
+    "footnote": "Tamaño: 4.4M, Fecha: agosto 2017"
 }

@@ -1,0 +1,209 @@
+import os, sys, syslog
+from glob import glob
+import requests
+import json
+import subprocess
+import shlex
+from datetime import date
+import base64
+
+menu_def_base_url = "{{ menu_def_base_url }}"
+menu_def_path = "{{ menu_def_path }}"
+menu_def_icon_path = "{{ menu_def_icon_path }}"
+# add ?ref=xxx for branch
+iiab_pat_url = "{{ iiab_pat_url }}"
+iiab_users_name = "{{ iiab_users_name }}"
+iiab_users_email = "{{ iiab_users_email }}"
+
+js_menu_dir = "{{ js_menu_dir }}"
+
+headers = {}
+
+def get_repo_menu_item_defs():
+    menu_item_defs = {}
+    response = requests.get(menu_def_base_url + 'contents/' + menu_def_path, headers=headers)
+    menu_item_def_list = json.loads(response._content)
+    for item in menu_item_def_list:
+        if item['type'] == 'file':
+            if '.json' in item['name']:
+                menu_item_def_name =  item['name'].split('.json')[0] # trim .json
+                menu_item_defs[menu_item_def_name] = item
+    return (menu_item_defs)
+
+def get_local_menu_item_defs():
+    menu_item_defs = {}
+    menu_item_list = glob(js_menu_dir + 'menu-files/menu-defs/*.json')
+    for item in menu_item_list:
+        #print item
+        try:
+            with open(item,"r") as f:
+                menu_item_def = json.load(f)
+            menu_item_def_name =  item.split('/')[-1].split('.')[0] # trim full path and .json
+            menu_item_defs[menu_item_def_name] = menu_item_def
+        except:
+            print("Skipping corrupt " + item)
+            pass
+    return (menu_item_defs)
+
+def get_menu_item_def_from_repo_by_name(menu_item_name):
+    file_bytes, sha = get_github_file_by_name(menu_def_base_url, menu_def_path + menu_item_name + '.json')
+    # of course we already had the sha
+    menu_item_def = json.loads(file_bytes)
+    menu_item_def['edit_status'] = 'repo'
+    menu_item_def['commit_sha'] = sha
+    return (menu_item_def)
+
+def write_menu_item_def(menu_item_def_name, menu_item_def):
+    # write menu def to file system
+    print("Downloading Menu Item Definition - " + menu_item_def_name)
+
+    target_file = js_menu_dir + 'menu-files/menu-defs/' + menu_item_def_name + '.json'
+    menu_item_def['change_ref'] = 'copy from repo'
+    menu_item_def['change_date'] = str(date.today())
+    write_json_file(menu_item_def, target_file)
+
+def format_menu_item_def(menu_item_def_name, menu_item_def):
+    # list to reorder fields in future
+    menu_def_field_order = [
+        'lang',
+        'intended_use',
+        'zim_name',
+        'moddir',
+        'start_url',
+        'title',
+        'logo_url',
+        'description',
+        'extra_description',
+        'extra_html',
+        'footnote',
+        'edit_status',
+        'commit_sha',
+        'previous_commit_sha',
+        'change_ref',
+        'change_date'
+        ]
+    formatted_menu_item_def = {}
+    #formatted_menu_item_def = menu_item_def # future copy fields in above order
+    formatted_menu_item_def['name'] = menu_item_def_name
+    for field in menu_def_field_order:
+        if field in menu_item_def:
+            formatted_menu_item_def[field] = menu_item_def[field]
+    return formatted_menu_item_def
+
+def write_other_menu_item_def_files(menu_item_def):
+    # download any extra_html and icon to file system
+    # icon file (logo)
+    if 'logo_url' in menu_item_def and menu_item_def['logo_url'] != '':
+        icon_file = menu_item_def['logo_url']
+        response_dict = get_github_file_data_by_name(menu_def_base_url, menu_def_icon_path + icon_file)
+        if not response_dict:
+            print("Icon File - " + icon_file + " not in repo")
+        else:
+           wget_menu_item_def_file_from_repo(response_dict['download_url'], js_menu_dir + 'menu-files/images/' + icon_file)
+    # submenu file (extra_html)
+    if 'extra_html' in menu_item_def and menu_item_def['extra_html'] != '':
+        extra_html_file = menu_item_def['extra_html']
+        response_dict = get_github_file_data_by_name(menu_def_base_url, menu_def_path + extra_html_file)
+        if not response_dict:
+            print("Extra Html File - " + extra_html_file + " not in repo")
+        else:
+           wget_menu_item_def_file_from_repo(response_dict['download_url'], js_menu_dir + 'menu-files/menu-defs/' + extra_html_file)
+
+def wget_menu_item_def_file_from_repo(src_url, dest):
+    cmd = "/usr/bin/wget -c " + src_url + " -O " + dest
+    print(cmd)
+    args = shlex.split(cmd)
+    outp = subprocess.check_output(cmd,shell=True)
+    # still need logo and extra html
+
+#def calc_menu_item_def_state(menu_item_def_name):
+
+
+def put_menu_item_def(menu_item_def_name, menu_item_def, sha=None):
+    # Upload any icon
+    if 'logo_url' in menu_item_def and menu_item_def['logo_url'] != '':
+        put_icon_file(menu_item_def['logo_url'])
+
+    # Upload any extra_html
+    if 'extra_html' in menu_item_def and menu_item_def['extra_html'] != '':
+        put_extra_html_file(menu_item_def['extra_html'])
+
+    # Now do menu item def
+    if 'commit_sha' in menu_item_def:
+        menu_item_def['previous_commit_sha'] = menu_item_def['commit_sha']
+    menu_item_def['commit_sha'] = None
+    menu_item_def = format_menu_item_def(menu_item_def_name, menu_item_def)
+    json_str = json.dumps(menu_item_def, ensure_ascii=False, indent=2)
+    json_byte = json_str.encode('utf-8')
+    path = menu_def_path + menu_item_def_name + '.json'
+    response = put_github_file(menu_def_base_url, path, json_byte, sha)
+    return response
+
+def put_icon_file(icon_file):
+    with open(js_menu_dir + 'menu-files/images/' + icon_file, "rb") as f:
+        byte_blob = f.read()
+    path = menu_def_icon_path + icon_file
+    response = put_github_file(menu_def_base_url, path, byte_blob)
+    return response
+
+def put_extra_html_file(extra_html_file):
+    with open(js_menu_dir + 'menu-files/menu-defss/' + extra_html_file, "rb") as f:
+        byte_blob = f.read()
+    path = menu_def_path + extra_html_file
+    response = put_github_file(menu_def_base_url, path, byte_blob)
+    return response
+
+
+def get_github_file_by_name(menu_def_base_url, path):
+    response_dict = get_github_file_data_by_name(menu_def_base_url, path)
+    if response_dict:
+        byte_content = str.encode(response_dict['content'])
+        file_bytes = base64.b64decode(byte_content)
+        #file_str = base64.decodestring(response_dict['content'])
+        return file_bytes, response_dict['sha']
+    else:
+        return (None, None)
+
+
+def get_github_file_data_by_name(menu_def_base_url, path):
+    response = requests.get(menu_def_base_url + 'contents/' + path, headers=headers)
+    if response.status_code != 200: # returns 404 if not found
+        print(response.status_code)
+        return (None)
+    response_dict = json.loads(response._content)
+    return response_dict
+
+def put_github_file(menu_def_base_url, path, byte_blob, sha=None):
+    file_content = base64.b64encode(byte_blob)
+    file_content_str = file_content.decode("utf-8")
+    commit_msg = path + " uploaded automatically"
+    payload = {
+        "message": commit_msg,
+        "committer": {
+            "name": iiab_users_name,
+            "email": iiab_users_email
+        },
+        "content": file_content_str
+        }
+    if sha:
+        payload['sha'] = sha
+    payload_json = json.dumps(payload)
+    response = requests.put(menu_def_base_url + 'contents/' + path, data=payload_json, headers=headers)
+    return response
+
+def pcgvtd9():
+    global headers
+    response = requests.get(iiab_pat_url)
+    dict = json.loads(response._content)
+    headers={'Content-Type':'application/json',
+             'Authorization': 'token ' + dict['pat']}
+
+# duplicates cmdsrv - but now revised
+
+def write_json_file(dict, target_file, sort_keys=False):
+    try:
+        with open(target_file, 'w', encoding='utf8') as json_file:
+            json.dump(dict, json_file, ensure_ascii=False, indent=2, sort_keys=sort_keys)
+            json_file.write("\n")  # Add newline cause Py JSON does not
+    except OSError as e:
+        raise

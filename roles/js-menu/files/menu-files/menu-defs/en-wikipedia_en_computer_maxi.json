@@ -1,0 +1,10 @@
+{
+  "name": "en-wikipedia_en_computer_maxi",
+  "lang": "en",
+  "intended_use": "zim",
+  "zim_name": "wikipedia_en_wikipedia_en_computer_maxi",
+  "title": "Wikipedia Technology Topics",
+  "logo_url": "220px-Wikipedia-logo-v2.svg.png",
+  "description": "A broad but computing-focused subset of Wikipedia for California's Code.7370 prison coding initiative.",
+  "extra_html": "en-wikipedia_en_computer_novid.html"
+}

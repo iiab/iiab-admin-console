@@ -1,0 +1,10 @@
+{
+  "name": "es-wikipedia_es_medicine_maxi",
+  "lang": "es",
+  "intended_use": "zim",
+  "zim_name": "wikipedia_es_medicine_maxi",
+  "title": "Enciclopedia Médica Offline de Wikipedia",
+  "logo_url": "medwiki.png",
+  "description": "Se trata de una colección completa de todos los temas de Wikipedia sobre los cuidados relacionados con la salud, la anatomía y la medicación, en un formato que no necesita conexión a Internet.",
+  "extra_html": ""
+}

@@ -3,7 +3,9 @@
     "lang": "es",
     "logo_url": "Ncwikiquote2.png",
     "zim_name": "wikiquote_es_all_novid",
-    "title": "Wikiquote en Español",
+    "title": "Wikiquote",
     "description": "La colección de citas donde tú puedes colaborar.",
-    "extra_html": ""
+    "extra_description": "",
+    "extra_html": "",
+    "footnote": "Tamaño: ##SIZE##, Artículos: ##ARTICLE_COUNT##, Medios: ##MEDIA_COUNT##, Fecha: ##zim_date##"
 }

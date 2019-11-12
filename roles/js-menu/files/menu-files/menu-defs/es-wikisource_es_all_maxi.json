@@ -1,0 +1,10 @@
+{
+  "name": "es-wikisource_es_all_maxi",
+  "lang": "es",
+  "intended_use": "zim",
+  "zim_name": "wikisource_es_all_maxi",
+  "title": "Wikisource en Español",
+  "logo_url": "es-wikisource.png",
+  "description": "Una biblioteca gratuita de textos de origen - los documentos que son enciclopedias hecha de - disponibles para su consulta. Este módulo es proporcionado por Kiwix.",
+  "extra_html": ""
+}

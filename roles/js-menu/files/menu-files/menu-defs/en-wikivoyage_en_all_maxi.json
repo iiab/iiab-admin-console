@@ -1,0 +1,15 @@
+{
+  "name": "en-wikivoyage_en_all_maxi",
+  "lang": "en",
+  "intended_use": "zim",
+  "zim_name": "wikivoyage_en_all_maxi",
+  "start_url": "",
+  "title": "Wikivoyage",
+  "logo_url": "en-wikivoyage.png",
+  "description": "The \"Wikipedia of travel guides\" for travel destinations and travel topics, written by volunteer authors.",
+  "extra_description": "",
+  "extra_html": "",
+  "footnote": "Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Date: ##zim_date##",
+  "change_ref": "generated",
+  "change_date": "2019-07-12"
+}
