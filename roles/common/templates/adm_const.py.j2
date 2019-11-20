@@ -9,53 +9,26 @@ iiab_users_name = "{{ iiab_users_name }}"
 iiab_users_email = "{{ iiab_users_email }}"
 
 js_menu_dir = "{{ js_menu_dir }}"
+common_assets_path = {{ doc_root }}/common/assets/"
+zim_version_idx_dir = common_assets_path
+zim_version_idx_file = "zim_version_idx.json"
+iiab_menu_files = "{{ js_menu_dir }}/menu-files/"
+menu_def_dir = "{{ iiab_menu_files }}/menu-defs/"
+doc_root_menu_defs = menu_def_dir
+menu_image_dir = "{{ iiab_menu_files }}/images/"
+menu_json_file = "{{ doc_root }}/home/menu.json"
+js_menu_assets = '{{ js_menu_assets }}'
 
-# add ansible variables and uncomment
+# for oer2go_cat - WIP
+oer2go_cat_url = '{{ oer2go_cat_url }}'
+rachel_mods_url = '{{ rachel_mods_url }}'
+iiab_cat_url = '{{ iiab_cat_url }}'
 
-#zim_version_idx_dir = doc_root + "/common/assets/"
-#zim_version_idx_file = "zim_version_idx.json"
-#menu_def_dir = doc_root + "/js-menu/menu-files/menu-defs/"
-#menu_image_dir = doc_root + "/js-menu/menu-files/images/"
-#menu_json_file = doc_root + "/home/menu.json"
+oer2go_catalog_file = js_menu_assets + "oer2go_catalog.json"
+iiab_catalog_file = js_menu_assets + "iiab_catalog.json"
 
-# for oer2go_cat
-oer2go_cat_url = 'http://dev.worldpossible.org/cgi/json_api_v1.pl'
-rachel_mods_url = "rsync://dev.worldpossible.org/rachelmods/"
-iiab_cat_url = "http://med.iiab.me/catalog/iiab_catalog.json"
-
-oer2go_catalog_file = jsonPath + "oer2go_catalog.json"
-iiab_catalog_file = jsonPath + "iiab_catalog.json"
-# soft code these
-#iiab_root_dir = "/library/www/html/"
-#iiab_modules_dir = iiab_root_dir + "modules/"
-iiab_menu_repo_dir = "/opt/iiab/iiab-admin-console/roles/js-menu/files/"
-
+iiab_menu_repo_dir = "{{ iiab_base }}/iiab-admin-console/roles/js-menu/files/"
 iiab_modules_dir = "{{ iiab_modules_dir }}"
 
-
-iiab_menu_files = js_menu_dir + "menu-files/"
-iiab_menu_download_dir = iiab_menu_dir + "local/unedited/"
-doc_root_menu_defs = iiab_menu_dir  + 'menu-files/menu-defs/'
-
-#iiab_menu_repo_dir = "{{ iiab_base }}/iiab-admin-console/roles/js-menu/files/"
-working_dir = "/library/working/rachel/" + str(uuid.uuid4()) + "/"
-# remove all below after to ansible
-menu_def_base_url = "https://api.github.com/repos/iiab-users/js-menu-files/"
-menu_def_path = "menu-defs/"
-menu_def_icon_path = "images/"
-# add ?ref=xxx for branch
-iiab_pat_url = "http://medbox.iiab.me/catalog/pcgvtd9.php"
-iiab_users_name = "IIAB Users"
-iiab_users_email = "iiab.users@gmail.com"
-
-js_menu_dir = "/library/www/html/js-menu/"
-
-
-doc_root = '/library/www/html'
-zim_path = '/library/zims'
-zim_version_idx_dir = doc_root + "/common/assets/"
-zim_version_idx_file = "zim_version_idx.json"
-#zim_version_idx_file = "zim_version_idx_test.json"
-menu_def_dir = doc_root + "/js-menu/menu-files/menu-defs/"
-menu_image_dir = doc_root + "/js-menu/menu-files/images/"
-menu_json_file = doc_root + "/home/menu.json"
+iiab_menu_download_dir = js_menu_dir + "local/unedited/"
+#working_dir = "/library/working/rachel/" + str(uuid.uuid4()) + "/"

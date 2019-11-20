@@ -12,11 +12,13 @@ service_filelist : "{{ iiab_config_dir }}/iiab.ini"
 iiab_config_file : "{{ iiab_config_dir }}/iiab.env"
 phplib_dir : '{{ ansible_local["local_facts"]["phplib_dir"] }}'
 oer2go_cat_url : http://dev.worldpossible.org/cgi/json_api_v1.pl
+iiab_cat_url : http://med.iiab.me/catalog/iiab_catalog.json
 rachel_mods_url : rsync://dev.worldpossible.org/rachelmods/
 oer2go_mods_url : "{{ rachel_mods_url }}"
 iiab_map_url : http://download.iiab.io/content/OSM/vector-tiles/maplist/hidden
 iiab_modules_dir : "{{ doc_root }}/modules/"
 js_menu_dir : "{{ doc_root }}/js-menu/"
+js_menu_assets : "{{ doc_root }}/common/assets/"
 menu_files_repo : iiab-share/js-menu-files/
 menu_def_base_url : 'https://api.github.com/repos/{{ menu_files_repo }}'
 menu_def_path : 'menu-defs/'
