@@ -117,8 +117,8 @@
     - "{{ cmdsrv_dir }}/scripts"
 
 - name: Install Command Server Executable
-  copy: src=iiab-cmdsrv
-        dest="{{ cmdsrv_dir }}/iiab-cmdsrv"
+  copy: src=iiab-cmdsrv3.py
+        dest="{{ cmdsrv_dir }}/iiab-cmdsrv3.py"
         mode=0700
         owner=root
         group=root
