@@ -13,9 +13,9 @@ common_assets_path = {{ doc_root }}/common/assets/"
 zim_version_idx_dir = common_assets_path
 zim_version_idx_file = "zim_version_idx.json"
 iiab_menu_files = "{{ js_menu_dir }}/menu-files/"
-menu_def_dir = "{{ iiab_menu_files }}/menu-defs/"
+menu_def_dir = iiab_menu_files + "menu-defs/"
 doc_root_menu_defs = menu_def_dir
-menu_image_dir = "{{ iiab_menu_files }}/images/"
+menu_image_dir = iiab_menu_files + images/"
 menu_json_file = "{{ doc_root }}/home/menu.json"
 js_menu_assets = '{{ js_menu_assets }}'
 
