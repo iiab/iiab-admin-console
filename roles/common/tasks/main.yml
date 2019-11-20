@@ -21,6 +21,17 @@
             owner=root
             group=root
 
+- name: Install admin lib files
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - { src: 'adm_const.py.j2', dest: '{{ py3_dist_path }}/iiab/adm_const.py' }
+    - { src: 'adm_lib.py', dest: '{{ py3_dist_path }}/iiab/adm_lib.py' }
+
 # Duplicate iiab test for internet
 - name: Test for Internet access ({{ iiab_download_url }}/heart-beat.txt)
   get_url:
