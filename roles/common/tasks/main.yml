@@ -7,20 +7,6 @@
   with_items:
     - "{{ admin_install_base }}"
 
-- name: Create python lib directory
-  file: path='{{ iiab_python_lib }}/iiab'
-        mode=0644
-        owner=root
-        group=root
-        state=directory
-
-- name: Copy adm_lib library
-  template: src=adm_lib.py.j2
-            dest='{{ iiab_python_lib }}/iiab/adm_lib.py'
-            mode=0644
-            owner=root
-            group=root
-
 - name: Install admin lib files
   template:
     src: "{{ item.src }}"
