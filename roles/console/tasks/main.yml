@@ -131,7 +131,7 @@
   when: adm_cons_force_ssl and is_debuntu
 
 - name: Install admin-console service
-  template: src=cmd-service.wsgi.j2
+  template: src=cmd-service3.wsgi.j2
             dest="{{ admin_console_dir }}/cmd-service.wsgi"
             owner=root
             group=root
