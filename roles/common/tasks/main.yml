@@ -1,3 +1,11 @@
+# Stop if nginx not enabled
+- block:
+    - name: "End Installation if nginx not enabled"
+      debug:
+        msg: "Ending Admin Console Installation - Please make sure nginx is installed and enabled."
+    - meta: end_play
+  when: not nginx_enabled
+
 - name: Create admin directory
   file: path={{ item }}
         mode=0755
