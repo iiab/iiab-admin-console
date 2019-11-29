@@ -152,11 +152,24 @@
             group=root
   with_items:
             - scripts/get_kiwix_catalog
-            - scripts/get_oer2go_catalog
+            # scripts/get_oer2go_catalog
             - scripts/constants.sh
-            - scripts/iiab_update_menus.py
+            #- scripts/iiab_update_menus.py
             - scripts/install_menu_defs.py
             - scripts/sync_menu_defs.py
+
+- name: Copy and rename templated scripts
+  template: backup=yes
+            src={{ item.src }}
+            dest={{ item.dest }}
+            owner=root
+            group=root
+            mode=0755
+  with_items:
+    - { src: 'scripts/get_oer2go_catalog3.py', dest: '{{ cmdsrv_dir }}/scripts/get_oer2go_catalog'}
+    - { src: 'scripts/giiab_update_menus3.py', dest: '{{ cmdsrv_dir }}/scripts/iiab_update_menus.py'}
+    - { src: 'scripts/iiab-update-map3.py', dest: '{{ cmdsrv_dir }}/scripts/iiab-update-map.py'}
+
 
 - name: Allow running iiab_update_menus from the command line
   file: src="{{ cmdsrv_dir }}/scripts/iiab_update_menus.py"
