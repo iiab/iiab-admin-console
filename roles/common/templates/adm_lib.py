@@ -451,7 +451,7 @@ def put_kiwix_enabled_into_menu_json():
     zim_files, zim_versions = iiab.get_zim_list(iiab.CONST.zim_path)
     write_zim_versions_idx(zim_versions, iiab.CONST.kiwix_library_xml, CONST.zim_version_idx_dir)
     # use that data
-    zim_idx = CONST.zim_version_idx_file
+    zim_idx = zim_version_idx_dir + CONST.zim_version_idx_file
     if os.path.isfile(zim_idx):
         with open(zim_idx,"r") as zim_fp:
             zim_versions_info = json.loads(zim_fp.read())
