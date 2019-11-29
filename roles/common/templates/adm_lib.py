@@ -11,10 +11,13 @@ import shlex
 from datetime import date
 import base64
 import fnmatch
-import iiab.adm_const as cons
+import re
+
 import iiab.iiab_lib as iiab
+import iiab.adm_const as CONST
 
 headers = {}
+map_catalog = {}
 
 # ZIM functions
 
@@ -39,7 +42,7 @@ def write_zim_versions_idx(zim_versions, kiwix_library_xml, zim_version_idx_dir)
 
     # Write Version Map
     if os.path.isdir(zim_version_idx_dir):
-        with open(zim_version_idx_dir + cons.zim_version_idx_file, 'w') as fp:
+        with open(zim_version_idx_dir + CONST.zim_version_idx_file, 'w') as fp:
             fp.write(json.dumps(zim_versions,indent=2 ))
             fp.close()
     else:
@@ -47,12 +50,12 @@ def write_zim_versions_idx(zim_versions, kiwix_library_xml, zim_version_idx_dir)
 
 def get_zim_menu_defs():
     zim_menu_defs = {}
-    for filename in os.listdir(cons.menu_def_dir):
+    for filename in os.listdir(CONST.menu_def_dir):
         if fnmatch.fnmatch(filename, '*.json'):
             #print (filename)
             menu_def = {}
             try:
-                with open(cons.menu_def_dir + filename,'r') as json_file:
+                with open(CONST.menu_def_dir + filename,'r') as json_file:
                     readstr = json_file.read()
                 menu_def = json.loads(readstr)
             except:
@@ -88,7 +91,7 @@ def get_substitution_data(perma_ref, zim_versions, zims_installed, path_to_id_ma
 
 def get_repo_menu_item_defs():
     menu_item_defs = {}
-    response = requests.get(cons.menu_def_base_url + 'contents/' + cons.menu_def_path, headers=headers)
+    response = requests.get(CONST.menu_def_base_url + 'contents/' + CONST.menu_def_path, headers=headers)
     menu_item_def_list = json.loads(response._content)
     for item in menu_item_def_list:
         if item['type'] == 'file':
@@ -99,7 +102,7 @@ def get_repo_menu_item_defs():
 
 def get_local_menu_item_defs():
     menu_item_defs = {}
-    menu_item_list = glob(cons.js_menu_dir + 'menu-files/menu-defs/*.json')
+    menu_item_list = glob(CONST.js_menu_dir + 'menu-files/menu-defs/*.json')
     for item in menu_item_list:
         #print item
         try:
@@ -113,7 +116,7 @@ def get_local_menu_item_defs():
     return (menu_item_defs)
 
 def get_menu_item_def_from_repo_by_name(menu_item_name):
-    file_bytes, sha = get_github_file_by_name(cons.menu_def_base_url, cons.menu_def_path + menu_item_name + '.json')
+    file_bytes, sha = get_github_file_by_name(CONST.menu_def_base_url, CONST.menu_def_path + menu_item_name + '.json')
     # of course we already had the sha
     menu_item_def = json.loads(file_bytes)
     menu_item_def['edit_status'] = 'repo'
@@ -124,7 +127,7 @@ def write_menu_item_def(menu_item_def_name, menu_item_def):
     # write menu def to file system
     #print("Downloading Menu Item Definition - " + menu_item_def_name)
 
-    target_file = cons.js_menu_dir + 'menu-files/menu-defs/' + menu_item_def_name + '.json'
+    target_file = CONST.js_menu_dir + 'menu-files/menu-defs/' + menu_item_def_name + '.json'
     menu_item_def['change_ref'] = 'copy from repo'
     menu_item_def['change_date'] = str(date.today())
     write_json_file(menu_item_def, target_file)
@@ -162,19 +165,19 @@ def write_other_menu_item_def_files(menu_item_def):
     # icon file (logo)
     if 'logo_url' in menu_item_def and menu_item_def['logo_url'] != '':
         icon_file = menu_item_def['logo_url']
-        response_dict = get_github_file_data_by_name(cons.menu_def_base_url, cons.menu_def_icon_path + icon_file)
+        response_dict = get_github_file_data_by_name(CONST.menu_def_base_url, CONST.menu_def_icon_path + icon_file)
         if not response_dict:
             print("Icon File - " + icon_file + " not in repo")
         else:
-            wget_menu_item_def_file_from_repo(response_dict['download_url'], cons.js_menu_dir + 'menu-files/images/' + icon_file)
+            wget_menu_item_def_file_from_repo(response_dict['download_url'], CONST.js_menu_dir + 'menu-files/images/' + icon_file)
     # submenu file (extra_html)
     if 'extra_html' in menu_item_def and menu_item_def['extra_html'] != '':
         extra_html_file = menu_item_def['extra_html']
-        response_dict = get_github_file_data_by_name(cons.menu_def_base_url, cons.menu_def_path + extra_html_file)
+        response_dict = get_github_file_data_by_name(CONST.menu_def_base_url, CONST.menu_def_path + extra_html_file)
         if not response_dict:
             print("Extra Html File - " + extra_html_file + " not in repo")
         else:
-            wget_menu_item_def_file_from_repo(response_dict['download_url'], cons.js_menu_dir + 'menu-files/menu-defs/' + extra_html_file)
+            wget_menu_item_def_file_from_repo(response_dict['download_url'], CONST.js_menu_dir + 'menu-files/menu-defs/' + extra_html_file)
 
 def wget_menu_item_def_file_from_repo(src_url, dest):
     cmd = "/usr/bin/wget -c " + src_url + " -O " + dest
@@ -199,22 +202,22 @@ def put_menu_item_def(menu_item_def_name, menu_item_def, sha=None):
     menu_item_def = format_menu_item_def(menu_item_def_name, menu_item_def)
     json_str = json.dumps(menu_item_def, ensure_ascii=False, indent=2)
     json_byte = json_str.encode('utf-8')
-    path = cons.menu_def_path + menu_item_def_name + '.json'
-    response = put_github_file(cons.menu_def_base_url, path, json_byte, sha)
+    path = CONST.menu_def_path + menu_item_def_name + '.json'
+    response = put_github_file(CONST.menu_def_base_url, path, json_byte, sha)
     return response
 
 def put_icon_file(icon_file):
-    with open(cons.js_menu_dir + 'menu-files/images/' + icon_file, "rb") as f:
+    with open(CONST.js_menu_dir + 'menu-files/images/' + icon_file, "rb") as f:
         byte_blob = f.read()
-    path = cons.menu_def_icon_path + icon_file
-    response = put_github_file(cons.menu_def_base_url, path, byte_blob)
+    path = CONST.menu_def_icon_path + icon_file
+    response = put_github_file(CONST.menu_def_base_url, path, byte_blob)
     return response
 
 def put_extra_html_file(extra_html_file):
-    with open(cons.js_menu_dir + 'menu-files/menu-defs/' + extra_html_file, "rb") as f:
+    with open(CONST.js_menu_dir + 'menu-files/menu-defs/' + extra_html_file, "rb") as f:
         byte_blob = f.read()
-    path = cons.menu_def_path + extra_html_file
-    response = put_github_file(cons.menu_def_base_url, path, byte_blob)
+    path = CONST.menu_def_path + extra_html_file
+    response = put_github_file(CONST.menu_def_base_url, path, byte_blob)
     return response
 
 
@@ -244,8 +247,8 @@ def put_github_file(menu_def_base_url, path, byte_blob, sha=None):
     payload = {
         "message": commit_msg,
         "committer": {
-            "name": cons.iiab_users_name,
-            "email": cons.iiab_users_email
+            "name": CONST.iiab_users_name,
+            "email": CONST.iiab_users_email
         },
         "content": file_content_str
         }
@@ -265,7 +268,7 @@ def put_github_file(menu_def_base_url, path, byte_blob, sha=None):
 # create oer2go_catalog.json, mark downloaded with flag, mark blacklisted duplicates
 # need to track which version of content was downloaded - new version attribute added 6/9/2017
 
-def get_status (item):
+def get_status (item, verbose = False):
     msg = ''
     id = item['module_id']
     item['module_downloaded'] = False
@@ -276,7 +279,7 @@ def get_status (item):
     moddir = item['moddir']
 
     # check if module downloaded
-    if os.path.exists(iiab_modules_dir + moddir):
+    if os.path.exists(CONST.iiab_modules_dir + moddir):
         item['module_downloaded'] = True
         msg = "Found download. Checking menudef for"
         gen_new_menudef = True
@@ -288,7 +291,7 @@ def get_status (item):
         print("%s %s %s" % (msg, id, moddir))
 
     # check if menu def exists
-    if os.path.exists(doc_root_menu_defs + moddir + '.json'):
+    if os.path.exists(CONST.doc_root_menu_defs + moddir + '.json'):
         msg = "Found menudef for"
         item['has_live_menudef'] = True
         gen_new_menudef = False
@@ -399,14 +402,344 @@ def proc_module (module):
 
     return menu_item
 
+# Menu Update Functions
+
+def put_iiab_enabled_into_menu_json():
+    cmd = "cat " + iiab.CONST.iiab_ini_file + " | grep True | grep _enabled | cut -d_ -f1"
+    try:
+        outp = subproc_check_output(cmd, shell=True)
+    except subprocess.CalledProcessError as e:
+        print((str(e)))
+        sys.exit(1)
+    for iiab_option in outp.split('\n'):
+        if iiab_option == 'kiwix': continue
+        if iiab_option in CONST.iiab_menu_items:
+            update_menu_json(CONST.iiab_menu_items[iiab_option])
+
+def update_menu_json(new_item):
+    with open(CONST.menu_json_path,"r") as menu_fp:
+        reads = menu_fp.read()
+        #print("menu.json:%s"%reads)
+        data = json.loads(reads)
+        autoupdate_menu = data.get('autoupdate_menu', False)
+        if not autoupdate_menu: # only update if allowed
+            return
+
+        for item in data['menu_items_1']:
+            if item == new_item:
+                return
+        # new_item does not exist in list
+        last_item = data['menu_items_1'].pop()
+        # always keep credits last
+        if last_item.find('credits') == -1:
+            data['menu_items_1'].append(last_item)
+            data['menu_items_1'].append(new_item)
+        else:
+            data['menu_items_1'].append(new_item)
+            data['menu_items_1'].append(last_item)
+    with open(CONST.menu_json_path,"w") as menu_fp:
+        menu_fp.write(json.dumps(data, indent=2))
+
+def put_kiwix_enabled_into_menu_json():
+    # steps:
+    #   1. Make sure all downloaded zims are in zim_verion_idx
+    #   2. Look for a back link to perma_ref in menu_defs_dir
+    #   3. If back link exist update, otherwise create new menuDef
+
+    # check for un-indexed zims in zims/content/,write to zim_versions_idx.json
+    iiab.read_lang_codes()
+    zim_files, zim_versions = iiab.get_zim_list(iiab.CONST.zim_path)
+    write_zim_versions_idx(zim_versions, iiab.CONST.kiwix_library_xml, CONST.zim_version_idx_dir)
+    # use that data
+    zim_idx = CONST.zim_version_idx_file
+    if os.path.isfile(zim_idx):
+        with open(zim_idx,"r") as zim_fp:
+            zim_versions_info = json.loads(zim_fp.read())
+            for perma_ref in zim_versions_info:
+                # if other zims exist, do not add test zim
+                if len(zim_versions_info) > 1 and perma_ref == 'tes':
+                    continue
+                # create the canonical menu_item name
+                lang = zim_versions_info[perma_ref].get('language','en')
+                default_name = lang + '-' + perma_ref + '.json'
+                print(default_name, zim_versions_info[perma_ref])
+
+                # check if menuDef exists for this perma_ref
+                menu_item = iiab.find_menuitem_from_zimname(perma_ref)
+                if menu_item == '':
+                    # no menuDef points to this perma_ref
+                    menu_item = create_zim_menu_def(perma_ref, default_name)
+                    if menu_item == '': continue
+                update_menu_json(menu_item)
+
+                # make the menu_item reflect any name changes due to collision
+                zim_versions_info[perma_ref]['menu_item'] = menu_item
+        # write the updated menu_item links
+        with open(zim_idx,"w") as zim_fp:
+            zim_fp.write(json.dumps(zim_versions_info,indent=2))
+
+def create_zim_menu_def(perma_ref,default_name,intended_use='zim'):
+    # this looks only to be used by zims
+    # do not generate a menuDef for the test zim
+    if perma_ref == 'tes': return ""
+    # check for collision
+    collision = False
+    if os.path.isfile(menu_defs_dir + default_name):
+        with open(menu_defs_dir + default_name,"r") as menu_fp:
+            try:
+                menu_dict = json.loads(menu_fp.read())
+                if menu_dict['intended_use'] != intended_use:
+                    collision = True
+            except Exception as e:
+                print((str(e)))
+    if collision == True:
+        default_name = default_name[:-5] + '-' + intended_use + '.json'
+    # the following fixes menu_defs_dir with embeddded '.' in file name
+    if default_name.find('.') > -1:
+        default_name = default_name[:-5].replace('.','_') + '.json'
+    item = iiab.get_kiwix_catalog_item(perma_ref)
+    zim_lang = item['language']
+    menu_def_lang = iiab.kiwix_lang_to_iso2(zim_lang)
+    filename = menu_def_lang + '-' + perma_ref + '.json'
+    # create a stub for this zim
+    menuDef = {}
+    default_logo = get_default_logo(perma_ref,menu_def_lang)
+    menuDef["intended_use"] = "zim"
+    menuDef["lang"] = menu_def_lang
+    menuDef["logo_url"] = default_logo
+    menuitem = menu_def_lang + '-' + perma_ref
+    menuDef["menu_item_name"] = default_name[:-5]
+    menuDef["title"] = item.get('title','')
+    menuDef["zim_name"] = perma_ref
+    menuDef["start_url"] = ''
+    menuDef["description"] = item.get('description','')
+    menuDef["extra_description"] = ""
+    menuDef["extra_html"] = ""
+    menuDef["footnote"] = 'Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Date: ##zim_date##'
+
+    menuDef["change_ref"] = "generated"
+    menuDef['change_date'] = str(date.today())
+
+    if not os.path.isfile(menu_defs_dir + default_name): # logic to here can still overwrite existing menu def
+        print(("creating %s"%menu_defs_dir + default_name))
+        with open(menu_defs_dir + default_name,'w') as menufile:
+            menufile.write(json.dumps(menuDef,indent=2))
+    return default_name[:-5]
+
+# def generate_zim_menu_def(perma_ref,default_name,intended_use='zim'): # at some point separate menu def generation
+
+def update_href_in_menu_def(menu_def,perma_ref):
+    with open(menu_defs_dir + menu_def + '.json','r') as md_file:
+        menu_def_dict = json.reads(md_file.read())
+        menu_def_dict['file_name'] = file_name
+    with open(menu_defs_dir + menu_def + '.json','w') as md_file:
+        md_file.write(json.dumps(menu_def_dict))
+
+def get_default_logo(logo_selector,lang):
+    #  Select the first part of the selector
+    short_selector = logo_selector[:logo_selector.find('_')]
+    # give preference to language if present
+    rtn = check_everything(short_selector)
+    if rtn == '':
+        # try for a match without language prefix
+        nolang_selector = short_selector[3:]
+        rtn = check_everything(nolang_selector)
+        if rtn == '':
+            # Maybe logo is present in en-- check for en-<selector>
+            en_default = "en-" + short_selector
+            rtn = check_everything(en_default)
+            if rtn == '':
+                # add more checks here
+                return ''
+            else:
+                return rtn
+        else:
+            return rtn
+    else:
+        return rtn
+
+def check_everything(selector):
+    rtn = check_default_logos(selector)
+    if rtn == '':
+        return check_jpg_png(selector)
+    else:
+        return rtn
+
+def check_default_logos(selector):
+    default_logos = {
+       "wiktionary":"en-wiktionary.png",
+       "wikivoyage":"en-wikivoyage.png",
+       "wikinews":"wikinews-logo.png",
+       "wiktionary":"en-wiktionary.png",
+       "wikipedia":"en-wikipedia.png",
+       "phet_en":"phet-logo-48x48.png",
+       "wikem":"WikEM-Logo-m.png"
+    }
+    for logo in default_logos:
+        #print("logo: %s  selector: %s"%(logo,selector))
+        if logo.startswith(selector):
+            return default_logos[logo]
+    if selector.find('stackexchange') > -1:
+        return "stackexchange.png"
+    return ''
+
+def check_jpg_png(selector):
+    # check for a png or jpg with same selector
+    if os.path.isfile(menu_images_dir + selector + '.jpg'):
+        return selector + '.jpg'
+    if os.path.isfile(menu_images_dir + selector.lower() + '.jpg'):
+        return selector.lower() + '.jpg'
+    if os.path.isfile(menu_images_dir + selector + '.png'):
+        return selector + '.png'
+    if os.path.isfile(menu_images_dir + selector.lower() + '.png'):
+        return selector.lower()+ '.png'
+    return ''
+
+# Update Map Functions
+
+def get_map_catalog():
+    global map_catalog
+    input_json = CONST.map_doc_root + '/maplist/assets/regions.json'
+    with open(input_json,'r') as regions:
+        reg_str = regions.read()
+        map_catalog = json.loads(reg_str)
+    #print(json.dumps(map_catalog,indent=2))
+
+def get_map_menu_defs(intended_use='map'):
+    menu_def_list =[]
+    os.chdir(CONST.menu_def_dir)
+    for filename in os.listdir('.'):
+        if fnmatch.fnmatch(filename, '*.json'):
+            try:
+                with open(filename,'r') as json_file:
+                    readstr = json_file.read()
+                    data = json.loads(readstr)
+            except:
+                print(("failed to parse %s"%filename))
+                print(readstr)
+            if data.get('intended_use','') != intended_use:
+                continue
+            map_name = data.get('map_name','')
+            if map_name != '':
+                menu_def_list.append(map_name)
+    return menu_def_list
+
+def get_installed_regions():
+    installed = []
+    os.chdir(CONST.map_doc_root)
+    for filename in os.listdir('.'):
+        if fnmatch.fnmatch(filename, '??-osm-omt*'):
+            region = re.sub(r'^..-osm-..._(.*)',r'\1',filename)
+            installed.append(region)
+    # add the splash page if no other maps are present
+    if len(installed) == 0:
+        installed.append('maplist')
+    return installed
+
+def read_vector_map_idx():
+    global previous_idx
+    try: # will fail first time
+        previous_idx = read_json(CONST.vector_map_idx_dir + '/vector-map-idx.json')
+        return previous_idx
+    except:
+        pass
+        return {}
+
+def write_vector_map_idx(installed_maps):
+    map_dict ={}
+    idx_dict = {}
+    for fname in installed_maps:
+        region = extract_region_from_filename(fname)
+        if map == 'maplist': continue # not a real region
+        map_dict = map_catalog['regions'].get(region,'')
+        if map_dict == '': continue
+
+        # Create the idx file in format required bo js-menu system
+        item = map_dict['perma_ref']
+        idx_dict[item] = {}
+        idx_dict[item]['file_name'] = os.path.basename(map_dict['url'][:-4])
+        idx_dict[item]['menu_item'] = map_dict['perma_ref']
+        idx_dict[item]['size'] = map_dict['size']
+        idx_dict[item]['date'] = map_dict['date']
+        idx_dict[item]['region'] = region
+        idx_dict[item]['language'] = map_dict['perma_ref'][:2]
+
+    with open(CONST.vector_map_idx_dir + '/vector-map-idx.json','w') as idx:
+        idx.write(json.dumps(idx_dict,indent=2))
+
+def create_map_menu_def(region,default_name,intended_use='map'):
+    item = map_catalog['regions'][region]
+    if len(item.get('language','')) > 2:
+        lang = item['language'][:2]
+    else: # default to english
+        lang = 'en'
+    filename = lang + '-' + item['perma_ref'] + '.json'
+    # create a stub for this zim
+    menuDef = {}
+    default_logo = 'osm.jpg'
+    menuDef["intended_use"] = "map"
+    menuDef["lang"] = lang
+    menuDef["logo_url"] = default_logo
+    menuitem = lang + '-' + item['perma_ref']
+    menuDef["menu_item_name"] = default_name
+
+    if item.get('title','ERROR') == "World":
+        fancyTitle = "Planet Earth"
+    elif item.get('title','ERROR') == "Central America":
+        fancyTitle = "Central America-Caribbean"
+    else:
+        fancyTitle = item.get('title','ERROR')
+
+    if fancyTitle == "Planet Earth":
+        menuDef["title"] = "OpenStreetMap: " + fancyTitle
+    else:
+        menuDef["title"] = "OpenStreetMap: " + fancyTitle + " & Earth"
+
+    menuDef["map_name"] = item['perma_ref']
+    # the following is in the idx json
+    #menuDef["file_name"] = lang + '-osm-omt_' + region + '_' + os.path.basename(item['url'])[:-4]
+    menuDef["description"] = '19 levels of zoom (~1 m details) for ' + fancyTitle + ', illustrating human geography.<p>10 levels of zoom (~1 km details) for satellite photos, covering the whole world.'
+    menuDef["extra_description"] = 'Search for cities/towns with more than 1000 people.  There are about 127,654 worldwide.'
+    menuDef["extra_html"] = ""
+    #menuDef["automatically_generated"] = "true"
+    menuDef["change_ref"] = "generated"
+    menuDef["change_date"] = str(date.today())
+    if not os.path.isfile(menu_defs_dir + default_name): # logic to here can still overwrite existing menu def
+        print(("creating %s"%menu_defs_dir + default_name))
+        with open(menu_defs_dir + default_name,'w') as menufile:
+            menufile.write(json.dumps(menuDef,indent=4))
+    return default_name[:-5]
+
+def extract_region_from_filename(fname):
+    # find the index of the date
+    nibble = re.search(r"\d{4}-\d{2}-\d{2}",fname)
+    if nibble:
+        fname = fname[:nibble.start()-1]
+        return fname
+    else:
+        return("maplist")
+
 # Misc
 
 def pcgvtd9():
     global headers
-    response = requests.get(cons.iiab_pat_url)
+    response = requests.get(CONST.iiab_pat_url)
     dict = json.loads(response._content)
     headers={'Content-Type':'application/json',
              'Authorization': 'token ' + dict['pat']}
+
+def fetch_menu_json_value(key):
+    menu_json = read_json(CONST.menu_json_file)
+    return menu_json.get(key,'')
+
+def read_json(file_path):
+    try:
+        with open(file_path,'r') as json_file:
+            readstr = json_file.read()
+            json_dict = json.loads(readstr)
+        return json_dict
+    except OSError as e:
+        raise
 
 # duplicates cmdsrv - but now revised
 
@@ -417,3 +750,11 @@ def write_json_file(dict, target_file, sort_keys=False):
             json_file.write("\n")  # Add newline cause Py JSON does not
     except OSError as e:
         raise
+
+# duplicates cmdsrv
+def subproc_check_output(args, shell=False):
+    try:
+        outp = subprocess.check_output(args, shell=shell, universal_newlines=True, encoding='utf8')
+    except:
+        raise
+    return outp
