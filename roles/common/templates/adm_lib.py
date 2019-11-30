@@ -21,9 +21,8 @@ map_catalog = {}
 
 # ZIM functions
 
-def write_zim_versions_idx(zim_versions, kiwix_library_xml, zim_version_idx_dir):
+def write_zim_versions_idx(zim_versions, kiwix_library_xml, zim_version_idx_dir, zim_menu_defs):
     zims_installed, path_to_id_map = iiab.read_library_xml(kiwix_library_xml)
-    zim_menu_defs = get_zim_menu_defs()
 
     # drives off of zim_versions which is what is in file system
 
@@ -123,12 +122,12 @@ def get_menu_item_def_from_repo_by_name(menu_item_name):
     menu_item_def['commit_sha'] = sha
     return (menu_item_def)
 
-def write_menu_item_def(menu_item_def_name, menu_item_def):
+def write_menu_item_def(menu_item_def_name, menu_item_def, change_ref = 'copy from repo'):
     # write menu def to file system
     #print("Downloading Menu Item Definition - " + menu_item_def_name)
 
     target_file = CONST.js_menu_dir + 'menu-files/menu-defs/' + menu_item_def_name + '.json'
-    menu_item_def['change_ref'] = 'copy from repo'
+    menu_item_def['change_ref'] = change_ref
     menu_item_def['change_date'] = str(date.today())
     write_json_file(menu_item_def, target_file)
 
@@ -447,86 +446,82 @@ def put_kiwix_enabled_into_menu_json():
     #   3. If back link exist update, otherwise create new menuDef
 
     # check for un-indexed zims in zims/content/,write to zim_versions_idx.json
-    iiab.read_lang_codes()
+    iiab.read_lang_codes() # initialize
+    zim_menu_defs = get_zim_menu_defs() # read all menu defs
     zim_files, zim_versions = iiab.get_zim_list(iiab.CONST.zim_path)
-    write_zim_versions_idx(zim_versions, iiab.CONST.kiwix_library_xml, CONST.zim_version_idx_dir)
+    write_zim_versions_idx(zim_versions, iiab.CONST.kiwix_library_xml, CONST.zim_version_idx_dir, zim_menu_defs)
+    zims_installed, path_to_id_map  = iiab.read_library_xml(iiab.CONST.kiwix_library_xml)
+
     # use that data
     zim_idx = CONST.zim_version_idx_dir + CONST.zim_version_idx_file
     if os.path.isfile(zim_idx):
         with open(zim_idx,"r") as zim_fp:
             zim_versions_info = json.loads(zim_fp.read())
             for perma_ref in zim_versions_info:
+                print(perma_ref)
                 # if other zims exist, do not add test zim
                 if len(zim_versions_info) > 1 and perma_ref == 'tes':
                     continue
-                # create the canonical menu_item name
-                lang = zim_versions_info[perma_ref].get('language','en')
-                default_name = lang + '-' + perma_ref + '.json'
-                print(default_name, zim_versions_info[perma_ref])
+                # check if menu def exists for this perma_ref
+                menu_item_name = zim_menu_defs.get(perma_ref, {}).get('name')
+                if menu_item_name == None: # no menu def points to this perma_ref
+                    # create the canonical menu_item name
+                    lang = zim_versions_info[perma_ref].get('language','en')
+                    new_def_name = lang + '-' + perma_ref
+                    new_def_name = new_def_name.replace('.','_') # handle embedded '.'
+                    if new_def_name in zim_menu_defs: # name already taken
+                        new_def_name += '1' # OK this could exist too, but really
 
-                # check if menuDef exists for this perma_ref
-                menu_item = iiab.find_menuitem_from_zimname(perma_ref)
-                if menu_item == '':
-                    # no menuDef points to this perma_ref
-                    menu_item = create_zim_menu_def(perma_ref, default_name)
-                    if menu_item == '': continue
-                update_menu_json(menu_item)
+                    path = zim_versions[perma_ref].get('file_name') + '.zim'
+                    id = path_to_id_map['content/' + path]
+                    zim_info = zims_installed[id]
+                    new_menu_def = generate_zim_menu_def(perma_ref, new_def_name, zim_info)
+                    new_menu_def = format_menu_item_def(new_def_name, new_menu_def)
+                    print("creating %s"%new_def_name)
+                    write_menu_item_def(new_def_name, new_menu_def, change_ref = 'generated')
+                    menu_item_name = new_def_name
+                update_menu_json(menu_item_name) # add to menu
 
                 # make the menu_item reflect any name changes due to collision
-                zim_versions_info[perma_ref]['menu_item'] = menu_item
+                # this could only happen if there is a bug
+                # zim_versions_info[perma_ref]['menu_item'] = new_menu_def
         # write the updated menu_item links
-        with open(zim_idx,"w") as zim_fp:
-            zim_fp.write(json.dumps(zim_versions_info,indent=2))
+        #write_json_file(zim_versions_info, zim_idx)
+        #with open(zim_idx,"w") as zim_fp:
+        #    zim_fp.write(json.dumps(zim_versions_info,indent=2))
 
-def create_zim_menu_def(perma_ref,default_name,intended_use='zim'):
+def generate_zim_menu_def(perma_ref, menu_def_name, zim_info):
     # this looks only to be used by zims
     # do not generate a menuDef for the test zim
     if perma_ref == 'tes': return ""
-    # check for collision
-    collision = False
-    if os.path.isfile(menu_defs_dir + default_name):
-        with open(menu_defs_dir + default_name,"r") as menu_fp:
-            try:
-                menu_dict = json.loads(menu_fp.read())
-                if menu_dict['intended_use'] != intended_use:
-                    collision = True
-            except Exception as e:
-                print((str(e)))
-    if collision == True:
-        default_name = default_name[:-5] + '-' + intended_use + '.json'
-    # the following fixes menu_defs_dir with embeddded '.' in file name
-    if default_name.find('.') > -1:
-        default_name = default_name[:-5].replace('.','_') + '.json'
-    item = iiab.get_kiwix_catalog_item(perma_ref)
-    zim_lang = item['language']
+
+    zim_lang = zim_info['language']
     menu_def_lang = iiab.kiwix_lang_to_iso2(zim_lang)
-    filename = menu_def_lang + '-' + perma_ref + '.json'
+    #filename = menu_def_lang + '-' + perma_ref + '.json'
     # create a stub for this zim
-    menuDef = {}
+    menu_def = {}
     default_logo = get_default_logo(perma_ref,menu_def_lang)
-    menuDef["intended_use"] = "zim"
-    menuDef["lang"] = menu_def_lang
-    menuDef["logo_url"] = default_logo
-    menuitem = menu_def_lang + '-' + perma_ref
-    menuDef["menu_item_name"] = default_name[:-5]
-    menuDef["title"] = item.get('title','')
-    menuDef["zim_name"] = perma_ref
-    menuDef["start_url"] = ''
-    menuDef["description"] = item.get('description','')
-    menuDef["extra_description"] = ""
-    menuDef["extra_html"] = ""
-    menuDef["footnote"] = 'Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Date: ##zim_date##'
+    menu_def["intended_use"] = "zim"
+    menu_def["lang"] = menu_def_lang
+    menu_def["logo_url"] = default_logo
+    #menuitem = menu_def_lang + '-' + perma_ref
+    menu_def["menu_item_name"] = menu_def_name
+    menu_def["title"] = zim_info.get('title','')
+    menu_def["zim_name"] = perma_ref
+    menu_def["start_url"] = ''
+    menu_def["description"] = zim_info.get('description','')
+    menu_def["extra_description"] = ""
+    menu_def["extra_html"] = ""
+    menu_def["footnote"] = 'Size: ##SIZE##, Articles: ##ARTICLE_COUNT##, Media: ##MEDIA_COUNT##, Date: ##zim_date##'
 
-    menuDef["change_ref"] = "generated"
-    menuDef['change_date'] = str(date.today())
+    menu_def["edit_status"] = "generated"
 
-    if not os.path.isfile(menu_defs_dir + default_name): # logic to here can still overwrite existing menu def
-        print(("creating %s"%menu_defs_dir + default_name))
-        with open(menu_defs_dir + default_name,'w') as menufile:
-            menufile.write(json.dumps(menuDef,indent=2))
-    return default_name[:-5]
+    #if not os.path.isfile(menu_defs_dir + default_name): # logic to here can still overwrite existing menu def
+    #    print(("creating %s"%menu_defs_dir + default_name))
+    #    with open(menu_defs_dir + default_name,'w') as menufile:
+    #        menufile.write(json.dumps(menuDef,indent=2))
 
-# def generate_zim_menu_def(perma_ref,default_name,intended_use='zim'): # at some point separate menu def generation
+    return menu_def
 
 def update_href_in_menu_def(menu_def,perma_ref):
     with open(menu_defs_dir + menu_def + '.json','r') as md_file:
@@ -536,6 +531,7 @@ def update_href_in_menu_def(menu_def,perma_ref):
         md_file.write(json.dumps(menu_def_dict))
 
 def get_default_logo(logo_selector,lang):
+    # Note we could also get the logo for a zim out of the catalog
     #  Select the first part of the selector
     short_selector = logo_selector[:logo_selector.find('_')]
     # give preference to language if present
@@ -581,10 +577,12 @@ def check_default_logos(selector):
             return default_logos[logo]
     if selector.find('stackexchange') > -1:
         return "stackexchange.png"
-    return ''
+    return 'content.jpg'
+    #return 'spiffygif_60x60.gif'
 
 def check_jpg_png(selector):
     # check for a png or jpg with same selector
+    menu_images_dir = CONST.menu_images_dir
     if os.path.isfile(menu_images_dir + selector + '.jpg'):
         return selector + '.jpg'
     if os.path.isfile(menu_images_dir + selector.lower() + '.jpg'):
