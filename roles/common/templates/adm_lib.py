@@ -1,6 +1,7 @@
 # adm_lib.py
 # common functions for Admin Console
 # IIAB functions are in iiab_lib.py
+# import iiab.adm_lib as adm
 
 import os, sys, syslog
 from glob import glob
@@ -59,7 +60,7 @@ def get_zim_menu_defs():
                 menu_def = json.loads(readstr)
             except:
                 print("failed to parse %s"%filename)
-                print(readstr)
+                #print(readstr)
                 pass
             #print(menu_def)
             if menu_def.get('intended_use','') != 'zim':
@@ -68,6 +69,22 @@ def get_zim_menu_defs():
             if perma_ref != '':
                 zim_menu_defs[perma_ref] = menu_def
     return zim_menu_defs
+
+def get_all_menu_defs():
+    all_menu_defs = {}
+    for filename in os.listdir(CONST.menu_def_dir):
+        if fnmatch.fnmatch(filename, '*.json'):
+            #print (filename)
+            menu_def = {}
+            try:
+                menu_def = read_json(CONST.menu_def_dir + filename)
+            except:
+                print("failed to parse %s"%filename)
+                continue
+            #print(menu_def)
+            menu_item_name = filename[:-5] # strip .json
+            all_menu_defs[menu_item_name] = menu_def
+    return all_menu_defs
 
 def get_substitution_data(perma_ref, zim_versions, zims_installed, path_to_id_map):
     #reconstruct the path in the id map
@@ -138,6 +155,7 @@ def format_menu_item_def(menu_item_def_name, menu_item_def):
         'intended_use',
         'zim_name',
         'moddir',
+        'map_name',
         'start_url',
         'title',
         'logo_url',
@@ -394,7 +412,7 @@ def proc_module (module):
         menu_item['extra_html'] = ''
         menu_item["change_ref"] = "generated"
         menu_item["change_date"] = str(date.today())
-        print(("writing to %s"%doc_root_menu_defs + moddir + '.json'))
+        print("writing to %s"%doc_root_menu_defs + moddir + '.json')
         with open(doc_root_menu_defs + moddir + '.json', 'w') as fp:
             json.dump(menu_item, fp, indent=2)
         menu_item['has_live_menudef'] = True
@@ -404,30 +422,35 @@ def proc_module (module):
 # Menu Update Functions
 
 def put_iiab_enabled_into_menu_json():
+    # this could use /etc/iiab/iiab_state.yml
     cmd = "cat " + iiab.CONST.iiab_ini_file + " | grep True | grep _enabled | cut -d_ -f1"
     try:
         outp = subproc_check_output(cmd, shell=True)
     except subprocess.CalledProcessError as e:
         print((str(e)))
         sys.exit(1)
+
     for iiab_option in outp.split('\n'):
         if iiab_option == 'kiwix': continue
         if iiab_option in CONST.iiab_menu_items:
-            update_menu_json(CONST.iiab_menu_items[iiab_option])
+            update_menu_json(CONST.iiab_menu_items[iiab_option], relaxed = True) # accept same item in a different language
 
-def update_menu_json(new_item):
+def update_menu_json(new_item, relaxed = False):
     with open(CONST.menu_json_path,"r") as menu_fp:
         reads = menu_fp.read()
-        #print("menu.json:%s"%reads)
         data = json.loads(reads)
         autoupdate_menu = data.get('autoupdate_menu', False)
         if not autoupdate_menu: # only update if allowed
             return
 
         for item in data['menu_items_1']:
-            if item == new_item:
+            if item == new_item: # already there
                 return
+            if relaxed:
+                if new_item[3:] in item:
+                    return # accept same item in a different language
         # new_item does not exist in list
+        print ("Adding %s to Menu"%new_item)
         last_item = data['menu_items_1'].pop()
         # always keep credits last
         if last_item.find('credits') == -1:
@@ -458,7 +481,7 @@ def put_kiwix_enabled_into_menu_json():
         with open(zim_idx,"r") as zim_fp:
             zim_versions_info = json.loads(zim_fp.read())
             for perma_ref in zim_versions_info:
-                print(perma_ref)
+                #print(perma_ref)
                 # if other zims exist, do not add test zim
                 if len(zim_versions_info) > 1 and perma_ref == 'tes':
                     continue
@@ -477,7 +500,7 @@ def put_kiwix_enabled_into_menu_json():
                     zim_info = zims_installed[id]
                     new_menu_def = generate_zim_menu_def(perma_ref, new_def_name, zim_info)
                     new_menu_def = format_menu_item_def(new_def_name, new_menu_def)
-                    print("creating %s"%new_def_name)
+                    print("Creating %s"%new_def_name)
                     write_menu_item_def(new_def_name, new_menu_def, change_ref = 'generated')
                     menu_item_name = new_def_name
                 update_menu_json(menu_item_name) # add to menu
@@ -524,10 +547,10 @@ def generate_zim_menu_def(perma_ref, menu_def_name, zim_info):
     return menu_def
 
 def update_href_in_menu_def(menu_def,perma_ref):
-    with open(menu_defs_dir + menu_def + '.json','r') as md_file:
+    with open(CONST.menu_defs_dir + menu_def + '.json','r') as md_file:
         menu_def_dict = json.reads(md_file.read())
         menu_def_dict['file_name'] = file_name
-    with open(menu_defs_dir + menu_def + '.json','w') as md_file:
+    with open(CONST.menu_defs_dir + menu_def + '.json','w') as md_file:
         md_file.write(json.dumps(menu_def_dict))
 
 def get_default_logo(logo_selector,lang):
@@ -613,7 +636,7 @@ def get_map_menu_defs(intended_use='map'):
                     readstr = json_file.read()
                     data = json.loads(readstr)
             except:
-                print(("failed to parse %s"%filename))
+                print(("Failed to parse %s"%filename))
                 print(readstr)
             if data.get('intended_use','') != intended_use:
                 continue
@@ -665,48 +688,47 @@ def write_vector_map_idx(installed_maps):
     with open(CONST.vector_map_idx_dir + '/vector-map-idx.json','w') as idx:
         idx.write(json.dumps(idx_dict,indent=2))
 
-def create_map_menu_def(region,default_name,intended_use='map'):
-    item = map_catalog['regions'][region]
-    if len(item.get('language','')) > 2:
-        lang = item['language'][:2]
+def create_map_menu_def(region, menu_item_name, map_item, intended_use='map'):
+    print ('in create_map_menu_def')
+    print (region, menu_item_name, map_item)
+    if len(map_item.get('language','')) > 2:
+        lang = map_item['language'][:2]
     else: # default to english
         lang = 'en'
-    filename = lang + '-' + item['perma_ref'] + '.json'
-    # create a stub for this zim
-    menuDef = {}
-    default_logo = 'osm.jpg'
-    menuDef["intended_use"] = "map"
-    menuDef["lang"] = lang
-    menuDef["logo_url"] = default_logo
-    menuitem = lang + '-' + item['perma_ref']
-    menuDef["menu_item_name"] = default_name
+    filename = menu_item_name + '.json'
 
-    if item.get('title','ERROR') == "World":
+    # create a stub for this map
+    menu_def = {}
+    default_logo = 'osm.jpg'
+    menu_def["intended_use"] = "map"
+    menu_def["lang"] = lang
+    menu_def["logo_url"] = default_logo
+    #menuitem = lang + '-' + item['perma_ref']
+    print (menu_def)
+    #menu_def["menu_item_name"] = default_name
+
+    if map_item.get('title','ERROR') == "World":
         fancyTitle = "Planet Earth"
-    elif item.get('title','ERROR') == "Central America":
+    elif map_item.get('title','ERROR') == "Central America":
         fancyTitle = "Central America-Caribbean"
     else:
-        fancyTitle = item.get('title','ERROR')
+        fancyTitle = map_item.get('title','ERROR')
 
     if fancyTitle == "Planet Earth":
-        menuDef["title"] = "OpenStreetMap: " + fancyTitle
+        menu_def["title"] = "OpenStreetMap: " + fancyTitle
     else:
-        menuDef["title"] = "OpenStreetMap: " + fancyTitle + " & Earth"
+        menu_def["title"] = "OpenStreetMap: " + fancyTitle + " & Earth"
 
-    menuDef["map_name"] = item['perma_ref']
+    menu_def["map_name"] = map_item['perma_ref']
     # the following is in the idx json
     #menuDef["file_name"] = lang + '-osm-omt_' + region + '_' + os.path.basename(item['url'])[:-4]
-    menuDef["description"] = '19 levels of zoom (~1 m details) for ' + fancyTitle + ', illustrating human geography.<p>10 levels of zoom (~1 km details) for satellite photos, covering the whole world.'
-    menuDef["extra_description"] = 'Search for cities/towns with more than 1000 people.  There are about 127,654 worldwide.'
-    menuDef["extra_html"] = ""
-    #menuDef["automatically_generated"] = "true"
-    menuDef["change_ref"] = "generated"
-    menuDef["change_date"] = str(date.today())
-    if not os.path.isfile(menu_defs_dir + default_name): # logic to here can still overwrite existing menu def
-        print(("creating %s"%menu_defs_dir + default_name))
-        with open(menu_defs_dir + default_name,'w') as menufile:
-            menufile.write(json.dumps(menuDef,indent=4))
-    return default_name[:-5]
+    menu_def["description"] = '19 levels of zoom (~1 m details) for ' + fancyTitle + ', illustrating human geography.<p>10 levels of zoom (~1 km details) for satellite photos, covering the whole world.'
+    menu_def["extra_description"] = 'Search for cities/towns with more than 1000 people.  There are about 127,654 worldwide.'
+    menu_def["extra_html"] = ""
+    menu_def["edit_status"] = "generated"
+
+    menu_def = format_menu_item_def(menu_item_name, menu_def)
+    write_menu_item_def(menu_item_name, menu_def, change_ref = 'generated')
 
 def extract_region_from_filename(fname):
     # find the index of the date
