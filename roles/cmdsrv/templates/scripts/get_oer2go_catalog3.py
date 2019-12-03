@@ -55,13 +55,7 @@ def main ():
 
     # make sure we have menu js_menu_dir if args.menu true
     if args.menu:
-        '''
-        if args.no_download:
-            sys.stdout.write("GET-OER2GO-CAT ERROR - --no_download and --menu options are incompatible\n")
-            sys.stdout.flush()
-            sys.exit(99)
-        '''
-        if not os.path.isdir(js_menu_dir):
+        if not os.path.isdir(adm.CONST.js_menu_dir):
             sys.stdout.write("GET-OER2GO-CAT ERROR - iiab-menu not installed and --menu option given\n")
             sys.stdout.flush()
             sys.exit(99)
@@ -104,7 +98,7 @@ def main ():
             iiab_oer2go_catalog[moddir] = module
 
     else:
-        local_oer2go_catalog = read_json(adm.CONST.oer2go_catalog_file)
+        local_oer2go_catalog = adm.read_json(adm.CONST.oer2go_catalog_file)
         oer2go_catalog = local_oer2go_catalog['modules']
 
     working_dir = adm.CONST.rachel_working_dir + str(uuid.uuid4()) + "/"
@@ -115,39 +109,40 @@ def main ():
         if args.no_download: # local
             moddir = item
             module = oer2go_catalog[moddir]
-            id = module['module_id']
+            module_id = module['module_id']
         else: # remote
             moddir = item['moddir']
-            id = item['module_id']
+            module_id = item['module_id']
             module = item
 
         if moddir is None: # skip items with no moddir
-            break
+            continue
 
-        if id not in dup_list:
-            module, gen_new_menudef = adm.get_status (module, verbose)
-            if gen_new_menudef and args.menu:
-                adm.proc_module(module) # process menu item
-                msg = "Generating menu files"
-                if verbose:
-                    print(("%s %s %s" % (msg, id, moddir)))
-            if module['has_live_menudef'] and module['module_downloaded']:
-                print(('Updating /home/menu.json with %s'%moddir))
-                adm.update_menu_json(moddir)
+        menu_item_name = moddir
+        if module_id not in dup_list:
+            is_downloaded, has_menu_def = adm.get_module_status (module)
+            if args.menu and is_downloaded:
+                if not has_menu_def:
+                    menu_item_name = adm.create_module_menu_def(module, working_dir, incl_extra_html = False)
+                    msg = "Generating menu files"
+                    if verbose:
+                        print("%s %s %s" % (msg, module_id, moddir))
+                adm.update_menu_json(menu_item_name) # only adds if not already in menu
         else:
             msg = "Skipping module not needed by Internet in a Box"
             if verbose:
-                print(("%s %s %s" % (msg, id, moddir)))
+                print("%s %s %s" % (msg, module_id, moddir))
             continue
-
         iiab_oer2go_catalog[moddir] = module
 
-    dated_oer2go_cat = {}
-    dated_oer2go_cat['download_date'] = time.strftime("%Y-%m-%d.%H:%M:%S")
-    dated_oer2go_cat['modules'] = iiab_oer2go_catalog
+    # no need to write catalog if not downloaded as we don't need wip and other extra menu def fields
+    if not args.no_download:
+        dated_oer2go_cat = {}
+        dated_oer2go_cat['download_date'] = time.strftime("%Y-%m-%d.%H:%M:%S")
+        dated_oer2go_cat['modules'] = iiab_oer2go_catalog
 
-    with open(adm.CONST.oer2go_catalog_file, 'w') as outfile:
-        json.dump(dated_oer2go_cat, outfile, indent=2)
+        with open(adm.CONST.oer2go_catalog_file, 'w') as outfile:
+            json.dump(dated_oer2go_cat, outfile, indent=2)
 
     shutil.rmtree(working_dir)
 
