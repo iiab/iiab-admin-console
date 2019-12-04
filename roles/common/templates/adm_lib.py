@@ -337,7 +337,7 @@ def generate_module_menu_def(module):
     menu_def["lang"] = module['lang']
     menu_def["title"] = module['title']
     menu_def["start_url"] = ''
-    menu_def['menu_item_name'] = moddir
+    menu_def['moddir'] = moddir
     menu_def['description'] = module.get('description', '')
     menu_def['extra_description'] = ''
 
