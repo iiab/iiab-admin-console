@@ -42,7 +42,7 @@ def main():
                 adm.create_map_menu_def(region, menu_item_name, map_item)
         # if autoupdate allowed and this is a new region then add to home menu
         if adm.fetch_menu_json_value('autoupdate_menu') and menu_item_name not in previous_idx:
-            print('Autoudate of menu items is enabled:%s. Adding %s'%region)
+            print('Auto-update of menu items is enabled. Adding %s'%region)
             adm.update_menu_json(menu_item_name)
             # redirect from box/maps to an installed map rather than test page
             with open(adm.CONST.map_doc_root + '/index.html','w') as fp:
