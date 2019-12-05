@@ -758,7 +758,34 @@ def write_json_file(dict, target_file, sort_keys=False):
     except OSError as e:
         raise
 
-# duplicates cmdsrv
+# subproc functions duplicate and will supercede cmdsrv
+# This is preferred
+
+def subproc_run(cmdstr, shell=False, check=False):
+    args = shlex.split(cmdstr)
+    try:
+        compl_proc = subprocess.run(args, shell=shell, check=check,
+                                    universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except:
+        raise
+    return compl_proc
+
+def run_command(command):
+    args = shlex.split(command)
+    try:
+        outp = subproc_check_output(args)
+    except: #skip things that don't work
+        outp = ''
+    outp = [_f for _f in outp.split('\n') if _f]
+    if len(outp) == 0:
+        outp = ['']
+    return outp
+
+def subproc_cmd(cmdstr):
+    args = shlex.split(cmdstr)
+    outp = subproc_check_output(args)
+    return (outp)
+
 def subproc_check_output(args, shell=False):
     try:
         outp = subprocess.check_output(args, shell=shell, universal_newlines=True, encoding='utf8')
