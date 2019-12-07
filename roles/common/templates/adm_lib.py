@@ -20,6 +20,7 @@ import iiab.iiab_lib as iiab
 import iiab.adm_const as CONST
 
 headers = {}
+git_committer_handle = ''
 map_catalog = {}
 
 # ZIM functions
@@ -262,7 +263,7 @@ def get_github_file_data_by_name(menu_def_base_url, path):
 def put_github_file(menu_def_base_url, path, byte_blob, sha=None):
     file_content = base64.b64encode(byte_blob)
     file_content_str = file_content.decode("utf-8")
-    commit_msg = path + " uploaded automatically"
+    commit_msg = path + " uploaded automatically from " + git_committer_handle
     payload = {
         "message": commit_msg,
         "committer": {
@@ -275,6 +276,20 @@ def put_github_file(menu_def_base_url, path, byte_blob, sha=None):
         payload['sha'] = sha
     payload_json = json.dumps(payload)
     response = requests.put(menu_def_base_url + 'contents/' + path, data=payload_json, headers=headers)
+    return response
+
+def del_github_file(url, sha):
+    commit_msg = url + " automatically deleted from " + git_committer_handle"
+    payload = {
+        "message": commit_msg,
+        "committer": {
+            "name": CONST.iiab_users_name,
+            "email": CONST.iiab_users_email
+        },
+        "sha": sha
+        }
+    payload_json = json.dumps(payload)
+    response = requests.delete(url, data=payload_json, headers=headers)
     return response
 
 # OER3Go functions
@@ -730,10 +745,12 @@ def extract_region_from_filename(fname):
 
 def pcgvtd9():
     global headers
+    global git_committer_handle
     response = requests.get(CONST.iiab_pat_url)
     data = json.loads(response._content)
     headers = {'Content-Type':'application/json',
                'Authorization': 'token ' + data['pat']}
+    git_committer_handle = data['iiab_user_ip']
 
 def fetch_menu_json_value(key):
     menu_json = read_json(CONST.menu_json_file)
