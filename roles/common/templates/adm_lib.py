@@ -279,7 +279,7 @@ def put_github_file(menu_def_base_url, path, byte_blob, sha=None):
     return response
 
 def del_github_file(url, sha):
-    commit_msg = url + " automatically deleted from " + git_committer_handle"
+    commit_msg = url + " automatically deleted from " + git_committer_handle
     payload = {
         "message": commit_msg,
         "committer": {
