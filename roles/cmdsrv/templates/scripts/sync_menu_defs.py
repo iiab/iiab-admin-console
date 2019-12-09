@@ -10,31 +10,31 @@ import subprocess
 import shlex
 from datetime import date
 import base64
-from iiab.adm_lib import *
+import iiab.adm_lib as adm
 
 try:
-    pcgvtd9()
+    adm.pcgvtd9()
 except:
     print("Unable to contact Server")
     sys.exit(1)
 
-local_menu_item_defs = get_local_menu_item_defs() # returns dict
-repo_menu_item_defs = get_repo_menu_item_defs() # returns dict
+local_menu_item_defs = adm.get_local_menu_item_defs() # returns dict
+repo_menu_item_defs = adm.get_repo_menu_item_defs() # returns dict
 changes_made = False
 
 # download menu item defs from repo that are not present
 for menu_item_def_name in repo_menu_item_defs:
     if menu_item_def_name not in local_menu_item_defs:
-        menu_item_def = get_menu_item_def_from_repo_by_name(menu_item_def_name)
-        write_other_menu_item_def_files(menu_item_def)
-        write_menu_item_def(menu_item_def_name, menu_item_def)
+        menu_item_def = adm.get_menu_item_def_from_repo_by_name(menu_item_def_name)
+        adm.write_other_menu_item_def_files(menu_item_def)
+        adm.write_menu_item_def(menu_item_def_name, menu_item_def)
         print ('Downloading new remote menu item definition ' + menu_item_def_name)
         changes_made = True
 # upload new and changed local menu item defs to repo
 for menu_item_def_name in local_menu_item_defs:
     menu_item_def = local_menu_item_defs[menu_item_def_name]
     if menu_item_def_name not in repo_menu_item_defs: # new
-        put_menu_item_def(menu_item_def_name, menu_item_def)
+        adm.put_menu_item_def(menu_item_def_name, menu_item_def)
         print ('Uploading new local menu item definition ' + menu_item_def_name)
         changes_made = True
     else: # existing - try to determine whether local or repo should prevail
@@ -61,15 +61,15 @@ for menu_item_def_name in local_menu_item_defs:
             elif edit_status == 'repo' and local_sha != repo_sha: # repo is newer, pull it
                 print ('Downloading newer version  of ' + menu_item_def_name)
                 changes_made = True
-                menu_item_def = get_menu_item_def_from_repo_by_name(menu_item_def_name)
-                write_other_menu_item_def_files(menu_item_def)
-                write_menu_item_def(menu_item_def_name, menu_item_def)
+                menu_item_def = adm.get_menu_item_def_from_repo_by_name(menu_item_def_name)
+                adm.write_other_menu_item_def_files(menu_item_def)
+                adm.write_menu_item_def(menu_item_def_name, menu_item_def)
             elif edit_status == 'local_change' and local_sha == repo_sha:
                 print ('Uploading changed version  of ' + menu_item_def_name)
                 changes_made = True
-                put_menu_item_def(menu_item_def_name, menu_item_def, repo_sha) # push local
-                menu_item_def = get_menu_item_def_from_repo_by_name(menu_item_def_name) # get the actual stored values including commit
-                write_menu_item_def(menu_item_def_name, menu_item_def) # write it to local files so we have the new commit sha
+                adm.put_menu_item_def(menu_item_def_name, menu_item_def, repo_sha) # push local
+                menu_item_def = adm.get_menu_item_def_from_repo_by_name(menu_item_def_name) # get the actual stored values including commit
+                adm.write_menu_item_def(menu_item_def_name, menu_item_def) # write it to local files so we have the new commit sha
             elif edit_status == 'local_change' and local_sha != repo_sha:
                 print('Conflict between local and repo versions of ' + menu_item_def_name)
                 changes_made = True

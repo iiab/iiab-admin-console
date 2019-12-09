@@ -1,3 +1,11 @@
+# Stop if nginx not enabled
+- block:
+    - name: "End Installation if nginx not enabled"
+      debug:
+        msg: "Ending Admin Console Installation - Please make sure nginx is installed and enabled."
+    - meta: end_play
+  when: not nginx_enabled
+
 - name: Create admin directory
   file: path={{ item }}
         mode=0755
@@ -7,19 +15,16 @@
   with_items:
     - "{{ admin_install_base }}"
 
-- name: Create python lib directory
-  file: path='{{ iiab_python_lib }}/iiab'
-        mode=0644
-        owner=root
-        group=root
-        state=directory
-
-- name: Copy adm_lib library
-  template: src=adm_lib.py.j2
-            dest='{{ iiab_python_lib }}/iiab/adm_lib.py'
-            mode=0644
-            owner=root
-            group=root
+- name: Install admin lib files
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - { src: 'adm_const.py.j2', dest: '{{ py3_dist_path }}/iiab/adm_const.py' }
+    - { src: 'adm_lib.py', dest: '{{ py3_dist_path }}/iiab/adm_lib.py' }
 
 # Duplicate iiab test for internet
 - name: Test for Internet access ({{ iiab_download_url }}/heart-beat.txt)

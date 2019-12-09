@@ -5,7 +5,7 @@
 */
 // phpinfo();
 
-exec("pgrep iiab-cmdsrv", $pids);
+exec("pgrep -f iiab-cmdsrv", $pids);
 if(empty($pids))
   $cmdsrv_running = "FALSE";
 else

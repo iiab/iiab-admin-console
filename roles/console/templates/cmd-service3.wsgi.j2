@@ -1,0 +1,96 @@
+import zmq
+import os.path
+import time
+import urllib.request, urllib.error, urllib.parse
+
+cmdsrv_pid_file = "{{ cmdsrv_pid_file }}"
+cmdsrv_ready_file = "{{ cmdsrv_ready_file }}"
+
+alert_param = ',"Alert": "True"}'
+
+def application(environ, start_response):
+    #print("in cmd-serve.wsgi")
+    start_ms = time.time()
+
+    if environ['REQUEST_METHOD'] == 'POST':
+        try:
+            request_body_size = int(environ.get('CONTENT_LENGTH', 0))
+        except (ValueError):
+            request_body_size = 0
+
+        request_body = environ['wsgi.input'].read(request_body_size).decode('utf8')
+        # request_body holds command=<text of cmd>
+        # it is byte so we convert to string for easier manipulation
+
+        if os.path.exists(cmdsrv_pid_file):
+            if os.path.exists(cmdsrv_ready_file):
+                # unpack cmd, urldecode, and substitute space for %20
+                #print(request_body)
+                #print(type(request_body))
+                cmd = urllib.parse.unquote(request_body.split('=')[1])
+                cmd = cmd.replace('%20', ' ')
+
+                response_body = send_command(cmd, start_ms)
+            else:
+                response_body = '{"Error": "CMDSRV has started but is not ready."' + alert_param
+        else:
+            response_body = '{"Error": "CMDSRV is not running."' + alert_param
+
+        response_headers = [('Content-type', 'application/json'), ('Content-Length', str(len(response_body)))]
+
+    else: # not a POST
+        response_body = dump(environ)
+        response_headers = [('Content-type', 'text/plain')]
+    #print(response_headers)
+    status = '200 OK'
+    start_response(status, response_headers)
+    # convert string response back to bytes
+    return [response_body.encode()]
+
+def dump(environ):
+    #print("in dump")
+    response_body = ['%s: %s' % (key, value) for key, value in sorted(environ.items())]
+    response_body = '\n'.join(response_body)
+    return response_body
+
+def send_command(cmd, start_ms):
+
+    REQUEST_TIMEOUT = 30000
+    send_msg = cmd
+
+    ipc_sock = "/run/cmdsrv_sock"
+
+    try:
+        context = zmq.Context()
+        #print "Connecting to server..."
+        socket = context.socket(zmq.DEALER)
+        socket.connect ("ipc://%s" % ipc_sock)
+        try:
+            # socket.setsockopt(zmq.SOCKOPT_LINGER, 0) this should be the default for close() and is not in python binding
+            poll = zmq.Poller()
+            poll.register(socket, zmq.POLLIN)
+
+            socket.send_string (send_msg)
+            socks = dict(poll.poll(REQUEST_TIMEOUT))
+
+            if socket in socks and socks[socket] == zmq.POLLIN:
+                reply_msg = socket.recv_string()
+                if '"Error":' not in reply_msg:
+                    cur_ms = time.time()
+                    elapsed_ms = cur_ms - start_ms
+                    reply_msg = '{"Data": ' + reply_msg + ',"Resp_time": "' + str(elapsed_ms) + '"}'
+            else:
+                reply_msg = '{"Error": "No Response from CMDSRV in ' + str(REQUEST_TIMEOUT) + ' milliseconds"' + alert_param
+
+            socket.setsockopt(zmq.LINGER, 0)
+        finally:
+            socket.close()
+            try:
+                poll.unregister(socket)
+            except Exception:
+                pass
+
+    except Exception as e:
+        reply_msg = '{"Error": "' + str(e) + '"' + alert_param
+
+    return reply_msg

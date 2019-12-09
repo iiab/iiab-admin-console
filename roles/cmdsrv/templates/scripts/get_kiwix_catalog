@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import xml.etree.ElementTree as ET
 import json
@@ -7,7 +7,7 @@ import operator
 import base64
 import os.path
 import sys
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import time
 
 verbose = False
@@ -47,7 +47,7 @@ zimKiwixPrefix = "kiwix-0.9+"
 kiwix_catalog = jsonPath + "/kiwix_catalog.json"
 
 if verbose:
-    print "Starting xml download from Kiwix"
+    print("Starting xml download from Kiwix")
 
 # As of 9/26/2018 we stop using zims from http://download.kiwix.org/portable/ as Kiwix intends to remove it
 #try:
@@ -64,14 +64,14 @@ if verbose:
 #    sys.exit(1)
 
 try:
-    xmlsrc = urllib2.urlopen(kiwixZimLibUrl)
+    xmlsrc = urllib.request.urlopen(kiwixZimLibUrl)
     zim_tree = ET.parse(xmlsrc)
     xmlsrc.close()
     if verbose:
-        print "library_zim.xml received from Kiwix"
-except (urllib2.URLError) as exc:
+        print("library_zim.xml received from Kiwix")
+except (urllib.error.URLError) as exc:
     if verbose:
-        print "Error getting library_zim.xml from Kiwix"
+        print("Error getting library_zim.xml from Kiwix")
     sys.stdout.write("GET-KIWIX-CAT ERROR - " + str(exc.reason))
     sys.stdout.flush()
     sys.exit(1)
@@ -79,7 +79,7 @@ except (urllib2.URLError) as exc:
 #tree = ET.parse("assets/test.xml")
 
 if verbose:
-    print "Parsing xml downloads from Kiwix"
+    print("Parsing xml downloads from Kiwix")
 
 portable_list = []
 zimCount = 0
@@ -92,7 +92,7 @@ def main():
     #portable_dict = xml_to_dict(portable_tree.getroot())
 
     if verbose:
-        print "Starting of processing xml download from Kiwix to " + kiwix_catalog
+        print("Starting of processing xml download from Kiwix to " + kiwix_catalog)
 
     # go through zims in zim directory and change url to portable if no ftindex
     zim_dict = {}
@@ -106,13 +106,13 @@ def main():
     zimCat['zims'] = zim_dict
 
     if verbose:
-        print "Ready to write " + kiwix_catalog
+        print("Ready to write " + kiwix_catalog)
 
     with open(kiwix_catalog, 'w') as fp:
         json.dump(zimCat, fp)
 
     if verbose:
-        print "Finished writing to " + kiwix_catalog
+        print("Finished writing to " + kiwix_catalog)
 
     sys.stdout.write("SUCCESS")
     sys.stdout.flush()

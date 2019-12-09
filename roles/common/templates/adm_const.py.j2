@@ -1,0 +1,70 @@
+# Admin Console constants
+import iiab.iiab_const as IIAB_CONST
+
+menu_def_base_url = "{{ menu_def_base_url }}"
+menu_def_path = "{{ menu_def_path }}" # in repo not file system
+menu_def_icon_path = "{{ menu_def_icon_path }}"
+# add ?ref=xxx for branch
+iiab_pat_url = "{{ iiab_pat_url }}"
+iiab_users_name = "{{ iiab_users_name }}"
+iiab_users_email = "{{ iiab_users_email }}"
+
+js_menu_dir = "{{ js_menu_dir }}"
+common_assets_path = "{{ doc_root }}/common/assets/"
+zim_version_idx_dir = common_assets_path
+zim_version_idx_file = "zim_version_idx.json"
+iiab_menu_files = "{{ js_menu_dir }}menu-files/"
+menu_def_dir = iiab_menu_files + "menu-defs/"
+doc_root_menu_defs = menu_def_dir
+menu_image_dir = iiab_menu_files + "images/"
+menu_json_file = "{{ doc_root }}/home/menu.json"
+js_menu_assets = '{{ js_menu_assets }}'
+
+# for oer2go_cat
+
+oer2go_cat_url = '{{ oer2go_cat_url }}'
+rachel_mods_url = '{{ rachel_mods_url }}'
+iiab_cat_url = '{{ iiab_cat_url }}'
+
+oer2go_catalog_file = js_menu_assets + "oer2go_catalog.json"
+iiab_catalog_file = js_menu_assets + "iiab_catalog.json"
+
+iiab_menu_repo_dir = "{{ iiab_base }}/iiab-admin-console/roles/js-menu/files/"
+iiab_modules_dir = "{{ iiab_modules_dir }}"
+
+iiab_menu_download_dir = js_menu_dir + "local/unedited/"
+rachel_working_dir = "/library/working/rachel/"
+
+# update menus
+
+menu_defs_dir = IIAB_CONST.doc_root + "/js-menu/menu-files/menu-defs/"
+menu_images_dir = IIAB_CONST.doc_root + "/js-menu/menu-files/images/"
+menu_json_path = IIAB_CONST.doc_root + "/home/menu.json"
+rachel_path = IIAB_CONST.doc_root + 'modules'
+default_logos = {
+   "wiktionary":"wiktionary.png",
+}
+iiab_menu_items={
+     "calibre":"en-calibre",\
+     "calibreweb":"en-calibreweb",\
+     "cups":"en-cups",\
+     "elgg":"en-elgg",\
+     "kalite":"en-kalite",\
+     "kiwix":"en-test_zim",\
+     "kolibri":"en-kolibri",\
+     "lokole":"en-lokole",\
+     "mediawiki":"en-mediawiki",\
+     "moodle":"en-moodle",\
+     "nextcloud":"en-nextcloud",\
+     "nodered":"en-nodered",\
+     "internetarchive":"en-internetarchive",\
+     "sugarizer":"en-sugarizer",\
+     #"teamviewer":"en-teamviewer",\
+     "wordpress":"en-wordpress"
+}
+
+# for maps
+
+vector_map_idx_dir = IIAB_CONST.doc_root + "/common/assets"
+map_doc_root = '{{ vector_map_path }}'    # /library/www/osm-vector-maps
+
