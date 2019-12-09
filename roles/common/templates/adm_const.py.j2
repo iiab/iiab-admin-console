@@ -26,8 +26,8 @@ oer2go_cat_url = '{{ oer2go_cat_url }}'
 rachel_mods_url = '{{ rachel_mods_url }}'
 iiab_cat_url = '{{ iiab_cat_url }}'
 
-oer2go_catalog_file = js_menu_assets + "oer2go_catalog.json"
-iiab_catalog_file = js_menu_assets + "iiab_catalog.json"
+oer2go_catalog_file = '{{ iiab_etc_path }}/oer2go_catalog.json'
+iiab_catalog_file = '{{ iiab_etc_path }}/iiab_catalog.json'
 
 iiab_menu_repo_dir = "{{ iiab_base }}/iiab-admin-console/roles/js-menu/files/"
 iiab_modules_dir = "{{ iiab_modules_dir }}"
@@ -41,9 +41,7 @@ menu_defs_dir = IIAB_CONST.doc_root + "/js-menu/menu-files/menu-defs/"
 menu_images_dir = IIAB_CONST.doc_root + "/js-menu/menu-files/images/"
 menu_json_path = IIAB_CONST.doc_root + "/home/menu.json"
 rachel_path = IIAB_CONST.doc_root + 'modules'
-default_logos = {
-   "wiktionary":"wiktionary.png",
-}
+
 iiab_menu_items={
      "calibre":"en-calibre",\
      "calibreweb":"en-calibreweb",\

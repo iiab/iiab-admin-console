@@ -39,7 +39,7 @@ import socket
 import iiab.adm_lib as adm
 
 
-# import cgi keep to escape html in future
+# import cgi # keep to escape html in future
 
 # cmdsrv config file
 # if run standalone is in current directory
@@ -238,7 +238,7 @@ def main():
                 # if in daemon mode report and init failed always return same error message
                 if daemon_mode == True and init_error == True:
                     msg = '{"Error": "IIAB-CMDSRV failed to initialize","Alert": "True"}'
-                    clients.send_multipart([ident, msg.encode('urf8')])
+                    clients.send_multipart([ident, msg.encode('utf8')])
                 else:
                     tprint('sending data message server received from client to worker %s id %s' % (msg, ident))
                     log(syslog.LOG_INFO, 'Received CMD Message %s.' % msg )
@@ -941,10 +941,30 @@ def del_modules(cmd_info): # includes zims
 
     return (resp)
 
+def run_command(command):
+    args = shlex.split(command)
+    try:
+        outp = subproc_check_output(args)
+    except: #skip things that don't work
+        outp = ''
+    outp = [_f for _f in outp.split('\n') if _f]
+    if len(outp) == 0:
+        outp = ['']
+    return outp
+
 def subproc_cmd(cmdstr):
     args = shlex.split(cmdstr)
     outp = subproc_check_output(args)
     return (outp)
+
+def subproc_run(cmdstr, shell=False, check=False):
+    args = shlex.split(cmdstr)
+    try:
+        compl_proc = subprocess.run(args, shell=shell, check=check,
+                                    universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except:
+        raise
+    return compl_proc
 
 def subproc_check_output(args, shell=False):
     try:
@@ -973,19 +993,13 @@ def get_ans_tags(cmd_info):
 
 def get_install_vars(cmd_info):
     # assumes default vars already read
-    resp = read_iiab_local_vars()
-    if resp == None: # no error
-        resp = json.dumps(effective_vars)
+    read_iiab_local_vars() # any errors are raised and caught above
+    resp = json.dumps(effective_vars)
     return (resp)
 
 def get_install_vars_init():
     # assumes default vars already read
-
-    resp = read_iiab_local_vars()
-    if resp != None: # error
-        tprint(resp)
-        log(syslog.LOG_INFO, "Init - " + resp)
-        raise
+    read_iiab_local_vars() # any errors are raised
 
 def get_iiab_ini(cmd_info):
     read_iiab_ini_file()
@@ -1128,17 +1142,6 @@ def calc_network_info():
     net_stat["openvpn_handle"] = run_command("/bin/cat /etc/iiab/openvpn_handle")[0]
 
     return (net_stat)
-
-def run_command(command):
-    args = shlex.split(command)
-    try:
-        outp = subproc_check_output(args)
-    except: #skip things that don't work
-        outp = ''
-    outp = [_f for _f in outp.split('\n') if _f]
-    if len(outp) == 0:
-        outp = ['']
-    return outp
 
 def check_systemd_service_active(service):
     rc = systemctl_wrapper('status', service)
@@ -1592,17 +1595,18 @@ def get_oer2go_catalog(cmd_info):
     "99":"Syntax Error"
     }
     try:
-        outp = subproc_check_output(["scripts/get_oer2go_catalog"])
+        compl_proc = adm.subproc_run("scripts/get_oer2go_catalog")
+        if compl_proc.returncode !=0:
+            resp = cmd_error(cmd='GET-OER2GO-CAT', msg=err_msg[compl_proc.returncode])
+            return resp
     except subprocess.CalledProcessError as e:
-        resp = cmd_error(cmd='GET-OER2GO-CAT', msg=err_msg[str(e.returncode)])
+        resp = cmd_error(cmd='GET-OER2GO-CAT', msg='Failed to read OER2go Catalog.')
         return resp
 
-    if outp == "SUCCESS":
-        read_oer2go_catalog()
-        resp = cmd_success("GET-OER2GO-CAT")
-        return (resp)
-    else:
-        return ('{"Error": "' + outp + '."}')
+    # No Error
+    read_oer2go_catalog()
+    resp = cmd_success("GET-OER2GO-CAT")
+    return (resp)
 
 def get_config_vars(cmd_info):
     read_config_vars()
@@ -2218,7 +2222,7 @@ def isStrongPassword(password):
         cracklib.VeryFascistCheck(password)
     except ValueError as e:
         is_valid = False
-        message = e.message
+        message = str(e)
 
     return is_valid, message
 
@@ -2709,20 +2713,18 @@ def write_iiab_local_vars(config_vars): # from George Hunt
 
 def read_iiab_local_vars():
     global local_vars
-    local_vars_error = None
 
     try:
         with open(iiab_local_vars_file) as f:
             local_vars = yaml.load(f)
+            merge_effective_vars()
     except Exception as e:
         local_vars_error = "Error in " + iiab_local_vars_file
         if hasattr(e, 'problem_mark'):
             mark = e.problem_mark
-            local_vars_error += " on line %s"%str(mark.line+1)
-
-    if local_vars_error == None: # no error
-        merge_effective_vars()
-    return local_vars_error
+            local_vars_error = "Error " + mark
+        log(syslog.LOG_INFO, local_vars_error)
+        raise
 
 def merge_effective_vars():
     # combine vars with local taking precedence
@@ -3152,6 +3154,8 @@ def createDaemon(pidfilename):
     #
     import resource     # Resource usage information.
     maxfd = resource.getrlimit(resource.RLIMIT_NOFILE)[1]
+
+    # This is a bug, but no idea what the value of MAXFD should be
     if (maxfd == resource.RLIM_INFINITY):
         maxfd = MAXFD
 
