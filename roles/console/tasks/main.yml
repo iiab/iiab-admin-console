@@ -4,7 +4,6 @@
   with_items:
     - libapache2-mod-authnz-external
     - pwauth
-    - python-geojson
   when: is_debuntu
   tags:
     - download
