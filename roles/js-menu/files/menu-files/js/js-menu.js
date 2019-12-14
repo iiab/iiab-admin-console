@@ -139,7 +139,11 @@ function jsMenuMain (menuDiv) {
   genRegEx(); // regular expressions for subtitution
 
   if (dynamicHtml){
-  	getLocalStore();
+  	if (hasLocalStorage() ){
+         getLocalStore();
+   } else {
+	  toggleDisplay = false;
+   }
     $.when(getMenuJson, getZimVersions, getConfigJson).always(procMenu); // ignore errors like kiwix not installed
     // create scaffolding for menu items - duplicates getMenuJson
     //var html = "";
@@ -944,4 +948,14 @@ function consoleLog (msg)
 function gEBI(elementId){
 	var element = document.getElementById(elementId);
 	return element;
+}
+function hasLocalStorage(){
+    var test = 'test';
+    try {
+        localStorage.setItem(test, test);
+        localStorage.removeItem(test);
+        return true;
+    } catch(e) {
+        return false;
+    }
 }
