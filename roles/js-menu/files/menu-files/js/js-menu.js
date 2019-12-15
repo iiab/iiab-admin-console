@@ -283,7 +283,9 @@ function calcItemVerbosity () {
 function setDisplayToggle() {
 	toggleDisplay = !toggleDisplay;
 	drawMenu();
-	setLocalStore();
+  	if (hasLocalStorage() ){
+	   setLocalStore();
+   }
 	//activateButtons();
 }
 
@@ -852,7 +854,9 @@ function filterContent() {
       selectedLangs.push(this.name);
     }
   });
-  setLocalStore(); // save them
+  if (hasLocalStorage() ){
+      setLocalStore(); // save them
+  }
   procMenu(); // redraw menu
 }
 
