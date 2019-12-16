@@ -1,6 +1,9 @@
 # Admin Console constants
 import iiab.iiab_const as IIAB_CONST
 
+admin_install_base = "{{ admin_install_base }}"
+admin_scripts_dir = admin_install_base + "/cmdsrv/scripts"
+
 menu_def_base_url = "{{ menu_def_base_url }}"
 menu_def_path = "{{ menu_def_path }}" # in repo not file system
 menu_def_icon_path = "{{ menu_def_icon_path }}"
@@ -41,6 +44,7 @@ menu_defs_dir = IIAB_CONST.doc_root + "/js-menu/menu-files/menu-defs/"
 menu_images_dir = IIAB_CONST.doc_root + "/js-menu/menu-files/images/"
 menu_json_path = IIAB_CONST.doc_root + "/home/menu.json"
 rachel_path = IIAB_CONST.doc_root + 'modules'
+obsolete_menu_defs = admin_scripts_dir + '/obsolete-menu-defs.json'
 
 iiab_menu_items={
      "calibre":"en-calibre",\

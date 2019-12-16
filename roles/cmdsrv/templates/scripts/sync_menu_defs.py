@@ -20,11 +20,15 @@ except:
 
 local_menu_item_defs = adm.get_local_menu_item_defs() # returns dict
 repo_menu_item_defs = adm.get_repo_menu_item_defs() # returns dict
+obsolete_menu_item_defs = adm.read_json(adm.CONST.obsolete_menu_defs)
 changes_made = False
 
 # download menu item defs from repo that are not present
 for menu_item_def_name in repo_menu_item_defs:
     if menu_item_def_name not in local_menu_item_defs:
+        if menu_item_def_name in obsolete_menu_item_defs:
+            print('Skipping obsolete menu definition ' + menu_item_def_name)
+            continue # don't download obsolete
         menu_item_def = adm.get_menu_item_def_from_repo_by_name(menu_item_def_name)
         adm.write_other_menu_item_def_files(menu_item_def)
         adm.write_menu_item_def(menu_item_def_name, menu_item_def)
@@ -32,6 +36,9 @@ for menu_item_def_name in repo_menu_item_defs:
         changes_made = True
 # upload new and changed local menu item defs to repo
 for menu_item_def_name in local_menu_item_defs:
+    if menu_item_def_name in obsolete_menu_item_defs:
+            print('Skipping obsolete menu definition ' + menu_item_def_name)
+            continue # don't upload obsolete
     menu_item_def = local_menu_item_defs[menu_item_def_name]
     if menu_item_def_name not in repo_menu_item_defs: # new
         adm.put_menu_item_def(menu_item_def_name, menu_item_def)
