@@ -139,7 +139,11 @@ function jsMenuMain (menuDiv) {
   genRegEx(); // regular expressions for subtitution
 
   if (dynamicHtml){
-  	getLocalStore();
+  	if (hasLocalStorage() ){
+         getLocalStore();
+   } else {
+	  toggleDisplay = false;
+   }
     $.when(getMenuJson, getZimVersions, getConfigJson).always(procMenu); // ignore errors like kiwix not installed
     // create scaffolding for menu items - duplicates getMenuJson
     //var html = "";
@@ -279,7 +283,9 @@ function calcItemVerbosity () {
 function setDisplayToggle() {
 	toggleDisplay = !toggleDisplay;
 	drawMenu();
-	setLocalStore();
+  	if (hasLocalStorage() ){
+	   setLocalStore();
+   }
 	//activateButtons();
 }
 
@@ -848,7 +854,9 @@ function filterContent() {
       selectedLangs.push(this.name);
     }
   });
-  setLocalStore(); // save them
+  if (hasLocalStorage() ){
+      setLocalStore(); // save them
+  }
   procMenu(); // redraw menu
 }
 
@@ -944,4 +952,14 @@ function consoleLog (msg)
 function gEBI(elementId){
 	var element = document.getElementById(elementId);
 	return element;
+}
+function hasLocalStorage(){
+    var test = 'test';
+    try {
+        localStorage.setItem(test, test);
+        localStorage.removeItem(test);
+        return true;
+    } catch(e) {
+        return false;
+    }
 }
