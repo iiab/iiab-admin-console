@@ -126,6 +126,9 @@
     state: absent
   when: not apache_allow_sudo
 
+- name: Create Feedback Database
+  shell: ./setup-feedback
+
 # For Osm Vector Maps
 # If not enabled install empty files
 # Otherwise run /usr/bin/iiab-update-map
