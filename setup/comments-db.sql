@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS `comments` (
   `email` VARCHAR(40),
   `about_you` VARCHAR(2000),
   `rating` DECIMAL(3,2),
-  `comments` VARCHAR(40000),
+  `comments` TEXT(40000),
   `datetime_created` DATETIME,
   PRIMARY KEY (`id`),
   KEY `session_id` (`session_id`)
