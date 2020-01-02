@@ -793,3 +793,14 @@ def subproc_run(cmdstr, shell=False, check=False):
         raise
     return compl_proc
 
+def subproc_cmd(cmdstr):
+    args = shlex.split(cmdstr)
+    outp = subproc_check_output(args)
+    return (outp)
+
+def subproc_check_output(args, shell=False):
+    try:
+        outp = subprocess.check_output(args, shell=shell, universal_newlines=True, encoding='utf8')
+    except:
+        raise
+    return outp

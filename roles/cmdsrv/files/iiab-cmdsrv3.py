@@ -951,14 +951,13 @@ def run_command(command):
         outp = ['']
     return outp
 
+# wrappers for adm_lib
 def subproc_cmd(cmdstr):
-    args = shlex.split(cmdstr)
-    outp = subproc_check_output(args)
-    return (outp)
+    return (adm.subproc_cmd(cmdstr))
 
 def subproc_check_output(args, shell=False):
     try:
-        outp = subprocess.check_output(args, shell=shell, universal_newlines=True, encoding='utf8')
+        outp = adm.subproc_check_output(args, shell)
     except:
         raise
     return outp
