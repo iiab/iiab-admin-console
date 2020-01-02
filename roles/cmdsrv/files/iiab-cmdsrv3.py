@@ -686,7 +686,6 @@ def cmd_handler(cmd_msg):
         "GET-ANS-TAGS": {"funct": get_ans_tags, "inet_req": False},
         "GET-VARS": {"funct": get_install_vars, "inet_req": False},
         "GET-IIAB-INI": {"funct": get_iiab_ini, "inet_req": False},
-        "GET-CONF": {"funct": get_config_vars, "inet_req": False},
         "SET-CONF": {"funct": set_config_vars, "inet_req": False},
         "GET-MEM-INFO": {"funct": get_mem_info, "inet_req": False},
         "GET-SPACE-AVAIL": {"funct": get_space_avail, "inet_req": False},
@@ -956,15 +955,6 @@ def subproc_cmd(cmdstr):
     args = shlex.split(cmdstr)
     outp = subproc_check_output(args)
     return (outp)
-
-def subproc_run(cmdstr, shell=False, check=False):
-    args = shlex.split(cmdstr)
-    try:
-        compl_proc = subprocess.run(args, shell=shell, check=check,
-                                    universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    except:
-        raise
-    return compl_proc
 
 def subproc_check_output(args, shell=False):
     try:
@@ -1606,11 +1596,6 @@ def get_oer2go_catalog(cmd_info):
     # No Error
     read_oer2go_catalog()
     resp = cmd_success("GET-OER2GO-CAT")
-    return (resp)
-
-def get_config_vars(cmd_info):
-    read_config_vars()
-    resp = json.dumps(config_vars)
     return (resp)
 
 def set_config_vars(cmd_info):
@@ -2599,15 +2584,6 @@ def init():
 
         get_incomplete_jobs()
 
-def read_config_vars():
-    global config_vars
-
-    stream = open(config_vars_file, 'r')
-    config_vars = yaml.load(stream)
-    stream.close()
-    if config_vars == None:
-        config_vars = {} # try to make the ajax call happy
-
 def read_iiab_ini_file():
     global iiab_ini
     iiab_ini_tmp = {}
@@ -2623,26 +2599,6 @@ def read_iiab_ini_file():
         iiab_ini_tmp[section] = iiab_ini_sec
 
     iiab_ini = iiab_ini_tmp
-
-def write_config_vars():
-    global config_vars
-
-    lock.acquire() # will block if lock is already held
-
-    try:
-        stream =  open(config_vars_file, 'w')
-        stream.write('# DO NOT MODIFY THIS FILE.\n')
-        stream.write('# IT IS AUTOMATICALLY GENERATED.\n')
-        for key in config_vars:
-             if isinstance(config_vars[key], (int, float)): # boolean is int
-                 value = str(config_vars[key])
-             else:
-                 value = '"' + config_vars[key] + '"'
-             entry = key + ': ' + value
-             stream.write(entry + '\n')
-        stream.close()
-    finally:
-        lock.release() # release lock, no matter what
 
 def write_iiab_local_vars(config_vars): # from George Hunt
     local_vars_lines = []
@@ -2708,6 +2664,7 @@ def write_iiab_local_vars(config_vars): # from George Hunt
             else:
                 outstr += variable_name + ": \"" + str(config_vars[variable_name]) + "\"\n"
 
+    # supposed to be blocking
     with open(iiab_local_vars_file, "w") as f:
         f.write(outstr)
 
