@@ -201,11 +201,11 @@ def write_other_menu_item_def_files(menu_item_def):
             wget_menu_item_def_file_from_repo(response_dict['download_url'], CONST.js_menu_dir + 'menu-files/menu-defs/' + extra_html_file)
 
 def wget_menu_item_def_file_from_repo(src_url, dest):
+    # such as logo and extra html
     cmd = "/usr/bin/wget -c " + src_url + " -O " + dest
     print(cmd)
     args = shlex.split(cmd)
     outp = subprocess.check_output(cmd, shell=True)
-    # still need logo and extra html
 
 def put_menu_item_def(menu_item_def_name, menu_item_def, sha=None):
     # Upload any icon
