@@ -168,7 +168,6 @@ def format_menu_item_def(menu_item_def_name, menu_item_def):
         'extra_html',
         'footnote',
         'edit_status',
-        'upload_flag',
         'commit_sha',
         'previous_commit_sha',
         'change_ref',
