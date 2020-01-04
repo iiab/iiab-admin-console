@@ -168,6 +168,7 @@ def format_menu_item_def(menu_item_def_name, menu_item_def):
         'extra_html',
         'footnote',
         'edit_status',
+        'upload_flag',
         'commit_sha',
         'previous_commit_sha',
         'change_ref',
@@ -204,7 +205,6 @@ def wget_menu_item_def_file_from_repo(src_url, dest):
     # such as logo and extra html
     cmd = "/usr/bin/wget -c " + src_url + " -O " + dest
     print(cmd)
-    args = shlex.split(cmd)
     outp = subprocess.check_output(cmd, shell=True)
 
 def put_menu_item_def(menu_item_def_name, menu_item_def, sha=None):

@@ -40,6 +40,14 @@ for menu_item_def_name in local_menu_item_defs:
             print('Skipping obsolete menu definition ' + menu_item_def_name)
             continue # don't upload obsolete
     menu_item_def = local_menu_item_defs[menu_item_def_name]
+
+    # only upload if user explicitly want to share
+    # as of Jan 3, 2020 this can only be set manually
+
+    upload_flag = False
+    if 'upload_flag' in menu_item_def:
+        upload_flag = menu_item_def['upload_flag']
+
     if menu_item_def_name not in repo_menu_item_defs: # new
         adm.put_menu_item_def(menu_item_def_name, menu_item_def)
         print ('Uploading new local menu item definition ' + menu_item_def_name)
@@ -51,7 +59,7 @@ for menu_item_def_name in local_menu_item_defs:
         # edit_status == 'local_change' and local sha != repo - requires merge, but no merge in batch only report
 
         try:
-            repo_sha = repo_menu_item_defs[menu_item_def_name]['sha']
+            repo_sha = repo_menu_item_defs[menu_item_def_name]['commit_sha']
             if 'edit_status' in menu_item_def:
                 edit_status = menu_item_def['edit_status']
             else:
@@ -65,18 +73,19 @@ for menu_item_def_name in local_menu_item_defs:
             if edit_status == 'repo' and local_sha == repo_sha:
                 #print ('No change to ' + menu_item_def_name)
                 continue # nothing to do
-            elif edit_status == 'repo' and local_sha != repo_sha: # repo is newer, pull it
+            elif edit_status == 'repo' and local_sha != repo_sha: # repo is newer and not locally changed, pull it
                 print ('Downloading newer version  of ' + menu_item_def_name)
                 changes_made = True
                 menu_item_def = adm.get_menu_item_def_from_repo_by_name(menu_item_def_name)
                 adm.write_other_menu_item_def_files(menu_item_def)
                 adm.write_menu_item_def(menu_item_def_name, menu_item_def)
             elif edit_status == 'local_change' and local_sha == repo_sha:
-                print ('Uploading changed version  of ' + menu_item_def_name)
-                changes_made = True
-                adm.put_menu_item_def(menu_item_def_name, menu_item_def, repo_sha) # push local
-                menu_item_def = adm.get_menu_item_def_from_repo_by_name(menu_item_def_name) # get the actual stored values including commit
-                adm.write_menu_item_def(menu_item_def_name, menu_item_def) # write it to local files so we have the new commit sha
+                if upload_flag:
+                    print ('Uploading changed version  of ' + menu_item_def_name)
+                    changes_made = True
+                    adm.put_menu_item_def(menu_item_def_name, menu_item_def, repo_sha) # push local
+                    menu_item_def = adm.get_menu_item_def_from_repo_by_name(menu_item_def_name) # get the actual stored values including commit
+                    adm.write_menu_item_def(menu_item_def_name, menu_item_def) # write it to local files so we have the new commit sha
             elif edit_status == 'local_change' and local_sha != repo_sha:
                 print('Conflict between local and repo versions of ' + menu_item_def_name)
                 changes_made = True
