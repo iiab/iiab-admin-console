@@ -143,13 +143,17 @@ def get_menu_item_def_from_repo_by_name(menu_item_name):
     menu_item_def['commit_sha'] = sha
     return menu_item_def
 
-def write_menu_item_def(menu_item_def_name, menu_item_def, change_ref='copy from repo'):
+def write_menu_item_def(menu_item_def_name, menu_item_def, change_ref='copy from repo', upload_flag=False, download_flag=True):
     # write menu def to file system
+    # for generated menu defs upload is false and download true
     #print("Downloading Menu Item Definition - " + menu_item_def_name)
 
     target_file = CONST.js_menu_dir + 'menu-files/menu-defs/' + menu_item_def_name + '.json'
     menu_item_def['change_ref'] = change_ref
     menu_item_def['change_date'] = str(date.today())
+    menu_item_def['upload_flag'] = upload_flag
+    menu_item_def['download_flag'] = download_flag
+
     write_json_file(menu_item_def, target_file)
 
 def format_menu_item_def(menu_item_def_name, menu_item_def):
@@ -219,6 +223,8 @@ def put_menu_item_def(menu_item_def_name, menu_item_def, sha=None):
     if 'commit_sha' in menu_item_def:
         menu_item_def['previous_commit_sha'] = menu_item_def['commit_sha']
     menu_item_def['commit_sha'] = None
+
+    # this will order fields and remove ones not wanted in repo
     menu_item_def = format_menu_item_def(menu_item_def_name, menu_item_def)
     json_str = json.dumps(menu_item_def, ensure_ascii=False, indent=2)
     json_byte = json_str.encode('utf-8')
@@ -767,10 +773,10 @@ def read_json(file_path):
 
 # duplicates cmdsrv - but now revised
 
-def write_json_file(dict, target_file, sort_keys=False):
+def write_json_file(src_dict, target_file, sort_keys=False):
     try:
         with open(target_file, 'w', encoding='utf8') as json_file:
-            json.dump(dict, json_file, ensure_ascii=False, indent=2, sort_keys=sort_keys)
+            json.dump(src_dict, json_file, ensure_ascii=False, indent=2, sort_keys=sort_keys)
             json_file.write("\n")  # Add newline cause Py JSON does not
     except OSError as e:
         raise
