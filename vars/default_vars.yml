@@ -23,6 +23,6 @@ menu_files_repo : iiab-share/js-menu-files/
 menu_def_base_url : 'https://api.github.com/repos/{{ menu_files_repo }}'
 menu_def_path : 'menu-defs/'
 menu_def_icon_path : 'images/'
-iiab_pat_url : 'http://medbox.iiab.me/catalog/pcgvtd9.php'
+iiab_pat_url : 'http://medbox.iiab.me/catalog/pcgvtd9-20-3-1.php'
 iiab_users_name : 'IIAB Users'
 iiab_users_email : 'iiab.users@gmail.com'
