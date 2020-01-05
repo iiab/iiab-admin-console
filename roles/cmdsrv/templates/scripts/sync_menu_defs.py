@@ -62,10 +62,11 @@ for menu_item_def_name in local_menu_item_defs:
     if 'download_flag' in menu_item_def:
         download_flag = menu_item_def['download_flag']
 
-    if menu_item_def_name not in repo_menu_item_defs and upload_flag: # new and upload allowed
-        adm.put_menu_item_def(menu_item_def_name, menu_item_def)
-        print ('Uploading new local menu item definition ' + menu_item_def_name)
-        changes_made = True
+    if menu_item_def_name not in repo_menu_item_defs: # new and upload allowed
+        if upload_flag:
+            adm.put_menu_item_def(menu_item_def_name, menu_item_def)
+            print ('Uploading new local menu item definition ' + menu_item_def_name)
+            changes_made = True
     else: # existing - try to determine whether local or repo should prevail
         # edit_status == 'repo' and local sha == repo - should be unchanged, do nothing
         # edit_status == 'repo' and local sha != repo - repo is newer, pull it if download_flag
