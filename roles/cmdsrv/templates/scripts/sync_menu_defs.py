@@ -65,6 +65,9 @@ for menu_item_def_name in local_menu_item_defs:
     if menu_item_def_name not in repo_menu_item_defs: # new and upload allowed
         if upload_flag:
             adm.put_menu_item_def(menu_item_def_name, menu_item_def)
+            menu_item_def = adm.get_menu_item_def_from_repo_by_name(menu_item_def_name) # get the actual stored values including commit
+            # write it to local files so we have the new commit sha and preserve flags
+            adm.write_menu_item_def(menu_item_def_name, menu_item_def, upload_flag=upload_flag, download_flag=download_flag)
             print ('Uploading new local menu item definition ' + menu_item_def_name)
             changes_made = True
     else: # existing - try to determine whether local or repo should prevail
