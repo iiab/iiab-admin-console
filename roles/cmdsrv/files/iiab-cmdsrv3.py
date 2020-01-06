@@ -2679,9 +2679,8 @@ def read_iiab_local_vars():
     global local_vars
 
     try:
-        with open(iiab_local_vars_file) as f:
-            local_vars = yaml.load(f)
-            merge_effective_vars()
+        local_vars = adm.read_yaml(iiab_local_vars_file)
+        merge_effective_vars()
     except Exception as e:
         local_vars_error = "Error in " + iiab_local_vars_file
         if hasattr(e, 'problem_mark'):
@@ -2723,23 +2722,15 @@ def merge_config_vars(config_vars):
 
 def read_iiab_default_vars():
     global default_vars
-
-    stream = open(iiab_repo + "/vars/default_vars.yml", 'r')
-    default_vars = yaml.load(stream)
-    stream.close()
+    default_vars = adm.read_yaml(iiab_repo + "/vars/default_vars.yml")
 
 def read_iiab_vars():
     global default_vars
     global local_vars
     global effective_vars
 
-    stream = open(iiab_repo + "/vars/default_vars.yml", 'r')
-    default_vars = yaml.load(stream)
-    stream.close()
-
-    stream = open(iiab_local_vars_file, 'r')
-    local_vars = yaml.load(stream)
-    stream.close()
+    default_vars = adm.read_yaml(iiab_repo + "/vars/default_vars.yml")
+    local_vars = adm.read_yaml(iiab_local_vars_file)
 
     if local_vars == None:
         local_vars = {}
