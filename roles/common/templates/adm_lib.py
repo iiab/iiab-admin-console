@@ -15,6 +15,7 @@ import fnmatch
 import re
 import shutil
 import requests
+import yaml
 
 import iiab.iiab_lib as iiab
 import iiab.adm_const as CONST
@@ -142,13 +143,17 @@ def get_menu_item_def_from_repo_by_name(menu_item_name):
     menu_item_def['commit_sha'] = sha
     return menu_item_def
 
-def write_menu_item_def(menu_item_def_name, menu_item_def, change_ref='copy from repo'):
+def write_menu_item_def(menu_item_def_name, menu_item_def, change_ref='copy from repo', upload_flag=False, download_flag=True):
     # write menu def to file system
+    # for generated menu defs upload is false and download true
     #print("Downloading Menu Item Definition - " + menu_item_def_name)
 
     target_file = CONST.js_menu_dir + 'menu-files/menu-defs/' + menu_item_def_name + '.json'
     menu_item_def['change_ref'] = change_ref
     menu_item_def['change_date'] = str(date.today())
+    menu_item_def['upload_flag'] = upload_flag
+    menu_item_def['download_flag'] = download_flag
+
     write_json_file(menu_item_def, target_file)
 
 def format_menu_item_def(menu_item_def_name, menu_item_def):
@@ -200,11 +205,10 @@ def write_other_menu_item_def_files(menu_item_def):
             wget_menu_item_def_file_from_repo(response_dict['download_url'], CONST.js_menu_dir + 'menu-files/menu-defs/' + extra_html_file)
 
 def wget_menu_item_def_file_from_repo(src_url, dest):
+    # such as logo and extra html
     cmd = "/usr/bin/wget -c " + src_url + " -O " + dest
     print(cmd)
-    args = shlex.split(cmd)
     outp = subprocess.check_output(cmd, shell=True)
-    # still need logo and extra html
 
 def put_menu_item_def(menu_item_def_name, menu_item_def, sha=None):
     # Upload any icon
@@ -219,6 +223,8 @@ def put_menu_item_def(menu_item_def_name, menu_item_def, sha=None):
     if 'commit_sha' in menu_item_def:
         menu_item_def['previous_commit_sha'] = menu_item_def['commit_sha']
     menu_item_def['commit_sha'] = None
+
+    # this will order fields and remove ones not wanted in repo
     menu_item_def = format_menu_item_def(menu_item_def_name, menu_item_def)
     json_str = json.dumps(menu_item_def, ensure_ascii=False, indent=2)
     json_byte = json_str.encode('utf-8')
@@ -767,16 +773,21 @@ def read_json(file_path):
 
 # duplicates cmdsrv - but now revised
 
-def write_json_file(dict, target_file, sort_keys=False):
+def write_json_file(src_dict, target_file, sort_keys=False):
     try:
         with open(target_file, 'w', encoding='utf8') as json_file:
-            json.dump(dict, json_file, ensure_ascii=False, indent=2, sort_keys=sort_keys)
+            json.dump(src_dict, json_file, ensure_ascii=False, indent=2, sort_keys=sort_keys)
             json_file.write("\n")  # Add newline cause Py JSON does not
     except OSError as e:
         raise
 
-# subproc functions duplicate and will supercede cmdsrv
-# This is preferred
+def read_yaml(file_name, loader=yaml.SafeLoader):
+    try:
+        with open(file_name, 'r') as f:
+            y = yaml.load(f, Loader=loader)
+            return y
+    except:
+        raise
 
 def subproc_run(cmdstr, shell=False, check=False):
     args = shlex.split(cmdstr)
@@ -786,17 +797,6 @@ def subproc_run(cmdstr, shell=False, check=False):
     except:
         raise
     return compl_proc
-
-def run_command(command):
-    args = shlex.split(command)
-    try:
-        outp = subproc_check_output(args)
-    except: #skip things that don't work
-        outp = ''
-    outp = [_f for _f in outp.split('\n') if _f]
-    if len(outp) == 0:
-        outp = ['']
-    return outp
 
 def subproc_cmd(cmdstr):
     args = shlex.split(cmdstr)
