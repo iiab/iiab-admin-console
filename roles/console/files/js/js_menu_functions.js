@@ -614,7 +614,13 @@ function setEditMenuItemTopFormValues (menuItem, menuDef){
 
 function setEditMenuItemBottomFormValues (menuItem, menuDef){
 	if (typeof(menuDef) === 'undefined')
-	  var menuDef = menuItemDefs[menuItem];
+    var menuDef = menuItemDefs[menuItem];
+
+  // set flag defaults for first edit not to share
+  if (menuDef.edit_status != 'local_change')  {
+    menuDef.upload_flag = false;
+    menuDef.download_flag = false;
+  }
 
   setEditMenuItemFormValue (menuDef, 'title', screenName='menu_item_title');
   setEditMenuItemFormValue (menuDef, 'logo_url', screenName='menu_item_icon_name');
@@ -623,6 +629,8 @@ function setEditMenuItemBottomFormValues (menuItem, menuDef){
   setEditMenuItemFormValue (menuDef, 'extra_description', screenName='menu_item_extra_description');
   setEditMenuItemFormValue (menuDef, 'extra_html', screenName='menu_item_extra_html');
   setEditMenuItemFormValue (menuDef, 'footnote', screenName='menu_item_footnote');
+  setEditMenuItemFormChecked (menuDef, 'upload_flag', screenName='menu_item_upload_flag');
+  setEditMenuItemFormChecked (menuDef, 'download_flag', screenName='menu_item_download_flag');
 }
 
 function setEditMenuItemFormValue (menuDef, fieldName, screenName='') {
@@ -634,6 +642,17 @@ function setEditMenuItemFormValue (menuDef, fieldName, screenName='') {
 	if (menuDef.hasOwnProperty(fieldName))
 	  fieldValue = menuDef[fieldName];
   setFormValue (fieldName, fieldValue, screenName)
+}
+
+function setEditMenuItemFormChecked (menuDef, fieldName, screenName='') {
+  var fieldValue = "";
+  console.log(fieldName)
+  console.log(menuDef)
+  if (screenName == '')
+	  screenName = fieldName;
+	if (menuDef.hasOwnProperty(fieldName))
+	  fieldValue = menuDef[fieldName];
+  setFormChecked (fieldName, fieldValue, screenName)
 }
 
 function getEditMenuItemFormValues (){
@@ -664,6 +683,8 @@ function getEditMenuItemFormValues (){
   menuDef['extra_description'] = getEscapedFormValue ('extra_description', screenName='menu_item_extra_description');
   menuDef['extra_html'] = getFormValue ('extra_html', screenName='menu_item_extra_html');
   menuDef['footnote'] = getEscapedFormValue ('footnote', screenName='menu_item_footnote');
+  menuDef['upload_flag'] = getFormChecked ('upload_flag', screenName='menu_item_upload_flag');
+  menuDef['download_flag'] = getFormChecked ('download_flag', screenName='menu_item_download_flag');
 
   // calc menu item def name
 
@@ -681,38 +702,6 @@ function getEditMenuItemFormValues (){
   return menuDefArgs;
 }
 
-function valEditMenuItemFormValues (screenName){
-	var fieldValue = getFormValue (screenName);
-
-	// ************* WTF
-
-	switch (screenName) {
-    case 'menu_item_icon_name':
-      console.log('Oranges are $0.59 a pound.');
-      break;
-    case 'menu_item_extra_html':
-
-    default:
-      console.log('Sorry, we are out of ' + expr + '.');
-  }
-	var menuDef = {};
-
-	var menuItem = getFormValue ('menu_item_name');
-	var suffix = getFormValue ('menu_item_name_suffix');
-	var content_target = getFormValue ('menu_item_content_target');
-
-  menuDef['intended_use'] = getFormValue ('intended_use', screenName='menu_item_type');
-  menuDef['lang'] = getFormValue ('lang', screenName='lang');
-
-  menuDef['title'] = getEscapedFormValue ('title', screenName='menu_item_title');
-  menuDef['logo_url'] = getFormValue ('logo_url', screenName='menu_item_icon_name');
-  menuDef['start_url'] = getFormValue ('start_url', screenName='menu_item_start_url');
-  menuDef['description'] = getEscapedFormValue ('description', screenName='menu_item_description');
-  menuDef['extra_description'] = getEscapedFormValue ('extra_description', screenName='menu_item_extra_description');
-  menuDef['extra_html'] = getFormValue ('extra_html', screenName='menu_item_extra_html');
-  menuDef['footnote'] = getEscapedFormValue ('footnote', screenName='menu_item_footnote');
-}
-
 function setFormValue (fieldName, fieldValue, screenName='') {
   if (screenName == '')
 	  screenName = fieldName;
@@ -722,7 +711,7 @@ function setFormValue (fieldName, fieldValue, screenName='') {
 function setFormChecked (fieldName, fieldValue, screenName='') {
 	if (screenName == '')
 	  screenName = fieldName;
-  gEBI(fieldName).checked = fieldValue;
+  gEBI(screenName).checked = fieldValue;
 }
 
 function getFormValue (fieldName, screenName='') {

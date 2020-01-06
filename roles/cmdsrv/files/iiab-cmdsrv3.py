@@ -2082,7 +2082,15 @@ def save_menu_item_def(cmd_info):
     menu_item_def = cmd_info['cmd_args']['menu_item_def']
     menu_item_def['change_ref'] = 'admin_console - ' + cmd_info['cmd_args']['mode']
     menu_item_def['edit_status'] = 'local_change'
+
+    # save values that format removes
+    upload_flag = menu_item_def['upload_flag']
+    download_flag = menu_item_def['download_flag']
+
     menu_item_def = adm.format_menu_item_def(menu_item_def_name, menu_item_def)
+
+    menu_item_def['upload_flag'] = upload_flag
+    menu_item_def['download_flag'] = download_flag
 
     try:
         adm.write_json_file(menu_item_def, target_file)
