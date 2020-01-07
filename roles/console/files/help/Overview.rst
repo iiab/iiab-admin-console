@@ -44,7 +44,7 @@ Content Menus
 -------------
 
 * Edit Content Menus
-* Edit Menu Items - Future
+* Edit Menu Items
 
 Utilities
 ---------
