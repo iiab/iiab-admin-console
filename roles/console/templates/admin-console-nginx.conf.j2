@@ -25,4 +25,9 @@ location /cmd-service {
    uwsgi_pass unix:///tmp/admin-console.sock;
 }
 
+# we need a list of images for adm cons
+location /js-menu/menu-files/images/ {
+    autoindex on;
+}
+
 
