@@ -1586,7 +1586,7 @@ def get_oer2go_catalog(cmd_info):
     try:
         compl_proc = adm.subproc_run("scripts/get_oer2go_catalog")
         if compl_proc.returncode !=0:
-            resp = cmd_error(cmd='GET-OER2GO-CAT', msg=err_msg[compl_proc.returncode])
+            resp = cmd_error(cmd='GET-OER2GO-CAT', msg=err_msg[str(compl_proc.returncode)])
             return resp
     except subprocess.CalledProcessError as e:
         resp = cmd_error(cmd='GET-OER2GO-CAT', msg='Failed to read OER2go Catalog.')
