@@ -260,8 +260,10 @@
                                 <button id="SELECT-MENU-ITEM-ICON" type="button" class="btn btn-primary" data-toggle="modal" data-target="#menuIconsModal">
                                   Select Icon
                                 </button>
-                                <label class="btn btn-primary">Upload Icon<input type="file" style="display: none;" id="UPLOAD-MENU-ITEM-ICON" onchange="javascript:uploadMenuItemIcon();"></label>
-                                <!-- Modal -->
+                                <button id="UPLOAD-MENU-ITEM-ICON" type="button" class="btn btn-primary" onclick='window.open("/admin/icon_uploader.php", "_blank");'>
+                                  Upload Icon
+                                </button>
+                                <!-- Modal for Icon File Selection-->
                                 <div class="modal fade" hasLoaded="false" id="menuIconsModal" tabindex="-1" role="dialog" aria-labelledby="menuIconsModalTitle" aria-hidden="true">
                                   <div class="modal-dialog modal-dialog-centered" role="document">
                                     <div class="modal-content">
@@ -275,7 +277,7 @@
                                       </div>
                                     </div>
                                   </div>
-                                </div> <!-- End Modal -->
+                                </div> <!-- End Modal for Icon File Selection -->
                               </div>
                             </div>
                           </div>

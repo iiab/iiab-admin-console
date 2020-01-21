@@ -815,9 +815,10 @@ function setMenuItemIconName(e) {
   $('#menuIconsModal').modal('hide')
 }
 
+// leave this for future, but doesn't work with nginx (unlike with apache)
 function uploadMenuItemIcon() {
 	var formData = new FormData();
-  var files = $('#UPLOAD-MENU-ITEM-ICON')[0].files[0];
+  var files = $('#menuIconsUploadFileName')[0].files[0];
   formData.append('file',files);
 
 	$.ajax({
