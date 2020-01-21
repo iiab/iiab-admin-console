@@ -166,7 +166,7 @@
             mode=0644
 
 - name: Install icon upload service
-  template: src=upload-image.php
+  template: src=icon_uploader.php
             dest="{{ admin_console_dir }}/icon_uploader.php"
             owner=root
             group=root
