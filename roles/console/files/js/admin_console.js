@@ -423,9 +423,9 @@ function contentMenuButtonsEvents() {
   $("#SELECT-MENU-ITEM-ICON").one("click", function(){
     selectMenuItemIcon();
   });
-  $("#UPLOAD-MENU-ITEM-ICON").one("click", function(){
-    uploadMenuItemIcon();
-  });
+  //$("#UPLOAD-MENU-ITEM-ICON").one("click", function(){
+  //  uploadMenuItemIcon();
+  //});
   attachMenuItemDefNameCalc(); // attach events to fields
 }
 
