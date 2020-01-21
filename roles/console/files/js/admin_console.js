@@ -423,7 +423,8 @@ function contentMenuButtonsEvents() {
   $("#SELECT-MENU-ITEM-ICON").one("click", function(){
     selectMenuItemIcon();
   });
-  //$("#UPLOAD-MENU-ITEM-ICON").one("click", function(){
+  //  doesn't work with nginx
+  //$("#UPLOAD-MENU-ITEM-ICON-SUBMIT").on("click", function(){
   //  uploadMenuItemIcon();
   //});
   attachMenuItemDefNameCalc(); // attach events to fields

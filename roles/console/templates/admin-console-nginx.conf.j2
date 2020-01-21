@@ -8,6 +8,9 @@ location /admin {
 
 location ~ /admin/(.*)\.php$ {
     alias {{ admin_console_dir }}/$1.php;
+    auth_pam                "Secure zone";
+    auth_pam_service_name   "pwauth";
+
     proxy_set_header X-Real-IP  $remote_addr;
     proxy_set_header X-Forwarded-For $remote_addr;
     proxy_set_header Host $host;
@@ -28,6 +31,15 @@ location /cmd-service {
 # we need a list of images for adm cons
 location /js-menu/menu-files/images/ {
     autoindex on;
+    # block scripts
+    location ~ .*\.(php)?$
+    {
+      deny all;
+    }
+    location ~ .*\.(py)?$
+    {
+      deny all;
+    }
 }
 
 
