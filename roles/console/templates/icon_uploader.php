@@ -15,17 +15,22 @@
     </form>
     <?php
       if (!empty($_FILES['fileToUpload']['name']) && !empty($_FILES['fileToUpload']['tmp_name'])) {
-        $upload_image = $_FILES['fileToUpload']['name'];
-        $move_src = $_FILES['fileToUpload']['tmp_name'];
-        $dest = '/library/www/html/js-menu/menu-files/images/' . $upload_image;
-        $rc = move_uploaded_file($move_src, $dest);
-        echo $rc . "<BR>";
-        if ($rc){
-          echo "<BR><strong>" . $upload_image . " uploaded.</strong><BR>";
+        $image_types_parts = explode("/", $_FILES['fileToUpload']['type']);
+        if ($image_types_parts[0] != 'image') {
+          echo "<BR><strong>Only images may be uploaded.</strong><BR>";
         } else {
-          echo "<BR><strong>" . $upload_image . " failed to upload.</strong><BR>";
+          $upload_image = $_FILES['fileToUpload']['name'];
+          $move_src = $_FILES['fileToUpload']['tmp_name'];
+          $dest = '/library/www/html/js-menu/menu-files/images/' . $upload_image;
+          $rc = move_uploaded_file($move_src, $dest);
+          echo $rc . "<BR>";
+          if ($rc){
+            echo "<BR><strong>" . $upload_image . " uploaded.</strong><BR>";
+          } else {
+            echo "<BR><strong>" . $upload_image . " failed to upload.</strong><BR>";
+          }
+          $_FILES['fileToUpload']['name'] = "";
         }
-        $_FILES['fileToUpload']['name'] = "";
       } else {
         echo "<BR><strong>Select a file to upload.</strong><BR>";
       }
