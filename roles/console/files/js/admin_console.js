@@ -2007,7 +2007,7 @@ function sumMapWip(){
    var region = get_region_from_url(url);
   	totalSpace += parseInt(mapCatalog[region].osm_size) + parseInt(mapCatalog[region].sat_size);
   }
-  return totalSpace;
+  return totalSpace/1000;
 }
 
 function calcLibraryDiskSpace(){
