@@ -1690,8 +1690,9 @@ function procJobStat(data)
     //var job_info = {};
 
     //job_info['job_no'] = entry[0];
-    html += "<td>" + statusJob.job_id + "<BR>"; // job number
-    html +=  '<input type="checkbox" id="' + statusJob.job_id + '">';
+    html += "<td>";
+    html += '<input type="checkbox" id="' + statusJob.job_id + '">';
+    html += '<span style="vertical-align: text-bottom;">&nbsp;&nbsp;' + statusJob.job_id + '</span>';
     html += "</td>";
     html += '<td style="overflow: hidden; text-overflow: ellipsis">' + statusJob.job_command + "</td>";
 
