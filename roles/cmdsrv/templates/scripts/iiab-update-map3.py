@@ -10,10 +10,16 @@ try:
     adm_cons_installed = True
 except:
     adm_cons_installed = False
-    pass
+    print("Admin Console is not installed. Exiting.")
+    sys.exit(1)
 
 def main():
-    adm.get_map_catalog()
+    try:
+        adm.get_map_catalog()
+    except:
+        print("OSM Vector Maps are not installed. Exiting.")
+        sys.exit(1)
+
     map_menu_def_list = adm.get_map_menu_defs()
     previous_idx = adm.read_vector_map_idx()
 
