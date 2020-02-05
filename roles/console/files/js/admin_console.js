@@ -2002,9 +2002,10 @@ function sumOer2goWip(){
 function sumMapWip(){
   var totalSpace = 0;
 
-  for (var url in mapWip){
+  for (var idx in mapWip){
+   var url =  mapWip[idx];
    var region = get_region_from_url(url);
-  	totalSpace += parseInt(mapCatalog[region].size);
+  	totalSpace += parseInt(mapCatalog[region].osm_size) + parseInt(mapCatalog[region].sat_size);
   }
   return totalSpace;
 }
