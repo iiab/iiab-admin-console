@@ -687,7 +687,7 @@ def write_vector_map_idx(installed_maps):
         item = map_dict['perma_ref']
         idx_dict[item] = {}
         idx_dict[item]['file_name'] = os.path.basename(map_dict['url'][:-4])
-        idx_dict[item]['menu_item'] = map_dict['perma_ref']
+        idx_dict[item]['menu_item_name'] = map_dict['perma_ref']
         idx_dict[item]['size'] = map_dict['size']
         idx_dict[item]['date'] = map_dict['date']
         idx_dict[item]['region'] = region

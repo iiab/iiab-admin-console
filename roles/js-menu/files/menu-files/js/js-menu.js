@@ -129,7 +129,7 @@ function jsMenuMain(menuDiv) {
         } else {
             toggleDisplay = false;
         }
-        $.when(getMenuJson, getZimVersions, getConfigJson).always(procPage); // ignore errors like kiwix not installed		
+        $.when(getMenuJson, getZimVersions, getConfigJson).always(procPage); // ignore errors like kiwix not installed
     }
     else {
         $.when(getConfigJson).then(procStatic);
@@ -470,9 +470,9 @@ function calcInternetArchiveLink(module) {
 function calcMapLink(module) {
     var href = 'osm-vector-maps/';
 
-    if (osmVersions.hasOwnProperty(module.menu_item_name) &&
-        typeof osmVersions[module.menu_item_name].file_name != 'undefined') {
-        href = host + ':/' + href + osmVersions[module.menu_item_name].file_name + '/';
+    if (osmVersions.hasOwnProperty(module.map_name) &&
+        typeof osmVersions[module.map_name].file_name != 'undefined') {
+        href = host + ':/' + href + osmVersions[module.map_name].file_name + '/';
     } else {
         href = host + ':/' + href;
     }
