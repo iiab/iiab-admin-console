@@ -1690,8 +1690,9 @@ function procJobStat(data)
     //var job_info = {};
 
     //job_info['job_no'] = entry[0];
-    html += "<td>" + statusJob.job_id + "<BR>"; // job number
-    html +=  '<input type="checkbox" id="' + statusJob.job_id + '">';
+    html += "<td>";
+    html += '<input type="checkbox" id="' + statusJob.job_id + '">';
+    html += '<span style="vertical-align: text-bottom;">&nbsp;&nbsp;' + statusJob.job_id + '</span>';
     html += "</td>";
     html += '<td style="overflow: hidden; text-overflow: ellipsis">' + statusJob.job_command + "</td>";
 
@@ -2001,11 +2002,12 @@ function sumOer2goWip(){
 function sumMapWip(){
   var totalSpace = 0;
 
-  for (var url in mapWip){
+  for (var idx in mapWip){
+   var url =  mapWip[idx];
    var region = get_region_from_url(url);
-  	totalSpace += parseInt(mapCatalog[region].size);
+  	totalSpace += parseInt(mapCatalog[region].osm_size) + parseInt(mapCatalog[region].sat_size);
   }
-  return totalSpace;
+  return totalSpace/1000;
 }
 
 function calcLibraryDiskSpace(){
