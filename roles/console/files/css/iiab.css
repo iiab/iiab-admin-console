@@ -1,5 +1,26 @@
 @charset "UTF-8";
 
+/* Override Bootstrap 3 */
+
+.adm-cons-page-header {
+  font-size: 30px;
+  padding-top: 10px;
+  background:#E5CF87;
+}
+
+.h1, .h2, .h3, h1, h2, h3 {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.h1, h1 {
+  font-size: 30px;
+}
+
+.h2, h2 {
+  font-size: 24px;
+}
+
 #iiab-top-nav {
   background: #E5CF87;
 }
