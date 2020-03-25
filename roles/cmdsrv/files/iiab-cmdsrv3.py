@@ -726,6 +726,7 @@ def cmd_handler(cmd_msg):
         "SAVE-MENU-DEF": {"funct": save_menu_def, "inet_req": False},
         "SAVE-MENU-ITEM-DEF": {"funct": save_menu_item_def, "inet_req": False},
         "SYNC-MENU-ITEM-DEFS": {"funct": sync_menu_item_defs, "inet_req": True},
+        "COPY-DEV-IMAGE": {"funct": copy_dev_image, "inet_req": False},
         "REBOOT": {"funct": reboot_server, "inet_req": False},
         "POWEROFF": {"funct": poweroff_server, "inet_req": False},
         #"REMOTE-ADMIN-CTL": {"funct": remote_admin_ctl, "inet_req": True}, #true/false
@@ -1043,6 +1044,7 @@ def get_external_device_info(cmd_info):
             continue
         dev_name = dev_info[5]
         extdev_info[dev_name] = {}
+        extdev_info[dev_name]['device'] = dev_info[0]
         extdev_info[dev_name]['dev_size_k'] = dev_info[1]
         extdev_info[dev_name]['dev_used_k'] = dev_info[2]
         extdev_info[dev_name]['dev_sp_avail_k'] = dev_info[3]
@@ -2105,6 +2107,22 @@ def sync_menu_item_defs(cmd_info):
     outp = subproc_check_output(["scripts/sync_menu_defs.py"])
     json_outp = json_array("sync_menu_item_defs", outp)
     return (json_outp)
+
+def copy_dev_image(cmd_info):
+    dev_arch = ansible_facts['ansible_architecture']
+    if dev_arch not in ['armv7l', 'aarch64']:
+        resp = cmd_error(cmd_info['cmd'], msg='Image copy only supported on Raspberry Pi at this time.')
+        return (resp)
+
+    dest_dev = cmd_info['cmd_args']['dest_dev']
+    comp_proc = adm.subproc_run('ls ' + dest_dev)
+    if comp_proc.returncode != 0:
+        resp = cmd_error(cmd_info['cmd'], msg='Device ' + dest_dev + ' not found.')
+        return (resp)
+
+    job_command = "/usr/bin/piclone_cmd " + dest_dev
+    resp = request_job(cmd_info, job_command)
+    return (resp)
 
 # Control Commands
 

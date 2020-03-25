@@ -118,7 +118,8 @@ function navButtonsEvents() {
       console.log(' no call-after');
   });
   // Special Cases
-  if (ansibleFacts.ansible_local.local_facts.os == "raspbian"){
+  var platform = ansibleFacts.ansible_machine;
+  if (platform == "armv7l" || platform == "aarch64"){
     $("#controlWifiLink").show();
     $("#controlBluetoothLink").show();
     $("#controlVPNLink").show();
@@ -392,6 +393,18 @@ function instContentButtonsEvents() {
       removeUsb();
     else
     	alert ("No USB is attached.");
+  });
+
+  $("#COPY-DEV-IMAGE").click(function(){
+  	// assume that we can only get here if there are both internal and external devices
+    make_button_disabled("#COPY-DEV-IMAGE", true);
+    // need usb dev
+    // check for empty
+    if (selectedUsb != null)
+  	  copyDevImage();
+  	// clean up - empty arrays, sum, and redraw input
+    alert ("Server image will be copied.\n\nPlease view Utilities->Display Job Status to see the results.");
+    make_button_disabled("#COPY-DEV-IMAGE", false);
   });
 
 }
@@ -1665,6 +1678,41 @@ function removeUsb(){
   cmd = "REMOVE-USB " + JSON.stringify(cmd_args);
   $.when(sendCmdSrvCmd(cmd, genericCmdHandler))
   .done(getExternalDevInfo);
+  return true;
+}
+
+function copyDevImage(){
+  if (selectedUsb == null){
+    alert("No USB Device Selected.")
+    return;
+  }
+  var destDev = externalDeviceContents[selectedUsb].device;
+  destDev = destDev.substr(0, 8); // remove partition
+  var destDevInK = 0;
+
+  Object.keys(externalDeviceContents).forEach(function(key) {
+    if (key.indexOf(destDev))
+      destDevInK += externalDeviceContents[key].size_in_k;
+    });
+
+  var imageSizeInK = sysStorage.root.size_in_k - sysStorage.root.avail_in_k;
+  imageSizeInK += 262144; // add for boot
+
+  if (imageSizeInK > destDevInK){
+    alert('USB Device is not large enough for ' + str(imageSizeInK) + 'K image.')
+    return;
+  }
+
+  var r = confirm("This will overwrite the target USB. Press OK to Continue.");
+    if (r != true)
+      return;
+
+  var cmd = ""
+  var cmd_args = {}
+
+  cmd_args['dest_dev'] = destDev;
+  cmd = "COPY-DEV-IMAGE " + JSON.stringify(cmd_args);
+  sendCmdSrvCmd(cmd, genericCmdHandler);
   return true;
 }
 
