@@ -2577,6 +2577,10 @@ def init():
     read_oer2go_catalog()
     read_maps_catalog()
 
+    # record sdcard params for rpi
+    if ansible_facts['ansible_architecture'] in ['armv7l', 'aarch64']:
+        write_sdcard_params()
+
     # Compute variables derived from all of the above
     compute_vars()
 
@@ -2608,6 +2612,10 @@ def init():
         conn.close()
 
         get_incomplete_jobs()
+
+def write_sdcard_params():
+    cmd = 'scripts/wr-sdcard-params.sh'
+    adm.subproc_cmd(cmd)
 
 def read_iiab_ini_file():
     global iiab_ini
