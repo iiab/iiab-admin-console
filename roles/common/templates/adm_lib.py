@@ -798,9 +798,9 @@ def subproc_run(cmdstr, shell=False, check=False):
         raise
     return compl_proc
 
-def subproc_cmd(cmdstr):
+def subproc_cmd(cmdstr, shell=False):
     args = shlex.split(cmdstr)
-    outp = subproc_check_output(args)
+    outp = subproc_check_output(args, shell=shell)
     return (outp)
 
 def subproc_check_output(args, shell=False):

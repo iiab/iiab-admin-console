@@ -691,6 +691,7 @@ def cmd_handler(cmd_msg):
         "GET-SPACE-AVAIL": {"funct": get_space_avail, "inet_req": False},
         "GET-STORAGE-INFO": {"funct": get_storage_info_lite, "inet_req": False},
         "GET-EXTDEV-INFO": {"funct": get_external_device_info, "inet_req": False},
+        "GET-REM-DEV-LIST": {"funct": get_rem_dev_list, "inet_req": False},
         "GET-SYSTEM-INFO": {"funct": get_system_info, "inet_req": False},
         "GET-NETWORK-INFO": {"funct": get_network_info, "inet_req": False},
         "CTL-WIFI": {"funct": ctl_wifi, "inet_req": False},
@@ -1062,6 +1063,20 @@ def get_external_device_info(cmd_info):
             # put local_content here
 
     resp = json.dumps(extdev_info)
+    return (resp)
+
+def get_rem_dev_list(cmd_info):
+    dev_list = {}
+    cmdstr = "lsblk -a -n -r -b -o 'NAME,TYPE,RM,SIZE'"
+    outp = adm.subproc_cmd(cmdstr)
+    dev_arr = outp.split('\n')
+    for dev in dev_arr[:-1]:
+        dev_parts = dev.split()
+        # if disk and removable
+        if dev_parts[1] == 'disk':
+            if dev_parts[2] == '1':
+                dev_list[dev_parts[0]] = dev_parts[3]
+    resp = json.dumps(dev_list)
     return (resp)
 
 def get_system_info(cmd_info):
