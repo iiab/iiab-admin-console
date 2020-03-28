@@ -107,6 +107,13 @@
   pip: name=speedtest-cli
        extra_args="--no-index --find-links=file://{{ pip_packages_dir }}"
 
+- name: Download piclone_cmd to /usr/sbin
+  get_url:
+    url: "{{ iiab_download_url }}/piclone_cmd_{{ ansible_architecture }}"
+    dest: "/usr/sbin/piclone_cmd"
+    mode: '0700'
+  when: ansible_architecture == "armv7l" or ansible_architecture == "aarch64"
+
 - name: Create cmdsrv directory
   file: path={{ item }}
         mode=0700

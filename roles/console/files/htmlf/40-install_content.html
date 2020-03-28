@@ -15,6 +15,7 @@
         <li><a href="#instOsmRegion" call-after="renderMap">Get Map Region</a></li>
         <li><a href="#instConKAlite">Download Khan Academy Videos</a></li>
         <li><a href="#instManageContent" call-after="manageContentInit">Manage Content</a></li>
+        <li id="instConCloneLink" style="display:none"><a href="#instCloneServer" call-after="getIiabCloneStats">Clone IIAB</a></li>
         <!-- <li><a href="#instRemoveContent" call-after="refreshAllInstalledList">Remove Content</a></li> -->
         <!-- <li><a href="#">Services Enabled</a></li> -->
       </ul> <!-- End XXX Sub Level Menu -->
@@ -181,6 +182,28 @@
             </div>
           </div>
         </div> <!--  End instManageContent Submenu Option Pane -->
+        <div class="tab-pane" id="instCloneServer"> <!-- Start instCloneServer Submenu Option Pane -->
+          <h2>Clone IIAB Server</h2>
+          <p>You can make a duplicate copy of your running IIAB Server.</p>
+          <p><b>WARNING:</b> Everything on the target USB will be <b>OVERWRITTEN</b></p>
+          <p>Insert an sdcard with a usb adapter, select it, and click copy.</p>
+
+          <p><b>Image Size:</b>&nbsp;<span id="cloneImageSize">1234567</span></p>
+
+          <table>
+            <thead>
+              <tr>
+                <th style="width:5%; text-align: left;"></th>
+                <th style="width:35%; text-align: left;">Device</th>
+                <th style="width:60%; text-align: right">Size</th>
+              </tr>
+            </thead>
+            <tbody id="instCloneServerDevices"></tbody>
+          </table>
+          <BR>
+          <button id="FIND-REM-DEV" type="button" class="btn btn-lg btn-primary">Find USB Device</button>
+          <button id="COPY-DEV-IMAGE" type="button" class="btn btn-lg btn-danger">Clone IIAB</button>
+        </div> <!--  End instCloneServer Submenu Option Pane -->
       </div> <!-- End Container for Sub Menu Options Panes -->
     </div> <!-- right column -->
   </div> <!-- End containing row -->

@@ -691,6 +691,7 @@ def cmd_handler(cmd_msg):
         "GET-SPACE-AVAIL": {"funct": get_space_avail, "inet_req": False},
         "GET-STORAGE-INFO": {"funct": get_storage_info_lite, "inet_req": False},
         "GET-EXTDEV-INFO": {"funct": get_external_device_info, "inet_req": False},
+        "GET-REM-DEV-LIST": {"funct": get_rem_dev_list, "inet_req": False},
         "GET-SYSTEM-INFO": {"funct": get_system_info, "inet_req": False},
         "GET-NETWORK-INFO": {"funct": get_network_info, "inet_req": False},
         "CTL-WIFI": {"funct": ctl_wifi, "inet_req": False},
@@ -726,6 +727,7 @@ def cmd_handler(cmd_msg):
         "SAVE-MENU-DEF": {"funct": save_menu_def, "inet_req": False},
         "SAVE-MENU-ITEM-DEF": {"funct": save_menu_item_def, "inet_req": False},
         "SYNC-MENU-ITEM-DEFS": {"funct": sync_menu_item_defs, "inet_req": True},
+        "COPY-DEV-IMAGE": {"funct": copy_dev_image, "inet_req": False},
         "REBOOT": {"funct": reboot_server, "inet_req": False},
         "POWEROFF": {"funct": poweroff_server, "inet_req": False},
         #"REMOTE-ADMIN-CTL": {"funct": remote_admin_ctl, "inet_req": True}, #true/false
@@ -1043,6 +1045,7 @@ def get_external_device_info(cmd_info):
             continue
         dev_name = dev_info[5]
         extdev_info[dev_name] = {}
+        extdev_info[dev_name]['device'] = dev_info[0]
         extdev_info[dev_name]['dev_size_k'] = dev_info[1]
         extdev_info[dev_name]['dev_used_k'] = dev_info[2]
         extdev_info[dev_name]['dev_sp_avail_k'] = dev_info[3]
@@ -1060,6 +1063,21 @@ def get_external_device_info(cmd_info):
             # put local_content here
 
     resp = json.dumps(extdev_info)
+    return (resp)
+
+def get_rem_dev_list(cmd_info):
+    dev_list = {}
+    cmdstr = "lsblk -a -n -r -b -o 'PATH,TYPE,RM,SIZE,MOUNTPOINT'"
+    # ToDo check for iiab on partition of removable devices
+    outp = adm.subproc_cmd(cmdstr)
+    dev_arr = outp.split('\n')
+    for dev in dev_arr[:-1]:
+        dev_parts = dev.split()
+        # if disk and removable
+        if dev_parts[1] == 'disk':
+            if dev_parts[2] == '1':
+                dev_list[dev_parts[0]] = dev_parts[3]
+    resp = json.dumps(dev_list)
     return (resp)
 
 def get_system_info(cmd_info):
@@ -2106,6 +2124,22 @@ def sync_menu_item_defs(cmd_info):
     json_outp = json_array("sync_menu_item_defs", outp)
     return (json_outp)
 
+def copy_dev_image(cmd_info):
+    dev_arch = ansible_facts['ansible_architecture']
+    if dev_arch not in ['armv7l', 'aarch64']:
+        resp = cmd_error(cmd_info['cmd'], msg='Image copy only supported on Raspberry Pi at this time.')
+        return (resp)
+
+    dest_dev = cmd_info['cmd_args']['dest_dev']
+    comp_proc = adm.subproc_run('ls ' + dest_dev)
+    if comp_proc.returncode != 0:
+        resp = cmd_error(cmd_info['cmd'], msg='Device ' + dest_dev + ' not found.')
+        return (resp)
+
+    job_command = "/usr/Sbin/piclone_cmd " + dest_dev
+    resp = request_job(cmd_info, job_command)
+    return (resp)
+
 # Control Commands
 
 def restart_kiwix(cmd_info):
@@ -2559,6 +2593,10 @@ def init():
     read_oer2go_catalog()
     read_maps_catalog()
 
+    # record sdcard params for rpi
+    if ansible_facts['ansible_architecture'] in ['armv7l', 'aarch64']:
+        write_sdcard_params()
+
     # Compute variables derived from all of the above
     compute_vars()
 
@@ -2590,6 +2628,10 @@ def init():
         conn.close()
 
         get_incomplete_jobs()
+
+def write_sdcard_params():
+    cmd = 'scripts/wr-sdcard-params.sh'
+    adm.subproc_cmd(cmd)
 
 def read_iiab_ini_file():
     global iiab_ini
