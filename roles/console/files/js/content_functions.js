@@ -552,6 +552,10 @@ function removeUsb(){
 
 // Clone IIAB Image
 
+function getIiabCloneStats(){
+  getSpaceAvail ();
+  getRemovableDevList();
+}
 function getRemovableDevList(){
   var command = "GET-REM-DEV-LIST";
     return sendCmdSrvCmd(command, procRemovableDevList, "FIND-REM-DEV");
@@ -559,9 +563,10 @@ function getRemovableDevList(){
 
 function procRemovableDevList(data){
   var html = "";
-  $("#cloneImageSize").html(readableSize(sysStorage.root.size_in_k));
+  removableDevices = {};
   var checked = 'checked';
   $.each(Object.keys(data).sort(), function(index, dev) {
+    removableDevices[dev] = data[dev];
     html += instCloneServerDevicesHtml(dev, data[dev], checked);
     checked = '';
     });
@@ -571,33 +576,26 @@ function procRemovableDevList(data){
 function instCloneServerDevicesHtml(dev, devSize, checked){
   var html = "";
   html += '<tr>';
-  html += '<td><input type="radio" name="selRemDevice" value="/dev/' + dev + '"' + checked + '></td>';
+  html += '<td><input type="radio" name="selRemDevice" value="' + dev + '"' + checked + '></td>';
   html += "<td>" + dev + "</td>";
-  html += '<td style="text-align:right">' + readableSize(devSize) + "</td>";
+  html += '<td style="text-align:right">' + readableSize(devSize/1024) + "</td>";
 
   html +=  '</tr>';
   return(html);
 }
 
 function copyDevImage(){
-  if (selectedUsb == null){
+  var selectedDevice = $('input[name="selRemDevice"]:checked').val();
+
+  if (selectedDevice == null){
     alert("No USB Device Selected.")
     return;
   }
-  var destDev = externalDeviceContents[selectedUsb].device;
-  destDev = destDev.substr(0, 8); // remove partition
-  var destDevInK = 0;
 
-  Object.keys(externalDeviceContents).forEach(function(key) {
-    if (key.indexOf(destDev))
-      destDevInK += externalDeviceContents[key].size_in_k;
-    });
+  var destDevInK = removableDevices[selectedDevice]/1024;
 
-  var imageSizeInK = sysStorage.root.size_in_k - sysStorage.root.avail_in_k;
-  imageSizeInK += 262144; // add for boot
-
-  if (imageSizeInK > destDevInK){
-    alert('USB Device is not large enough for ' + str(imageSizeInK) + 'K image.')
+  if (sysStorage.imageSizeInK > destDevInK){
+    alert('USB Device is not large enough for a ' + readableSize(sysStorage.imageSizeInK) + ' image.')
     return;
   }
 
@@ -608,8 +606,9 @@ function copyDevImage(){
   var cmd = ""
   var cmd_args = {}
 
-  cmd_args['dest_dev'] = destDev;
+  cmd_args['dest_dev'] = selectedDevice;
   cmd = "COPY-DEV-IMAGE " + JSON.stringify(cmd_args);
   sendCmdSrvCmd(cmd, genericCmdHandler);
+  alert ("Server image will be copied.\n\nPlease view Utilities->Display Job Status to see the results.");
   return true;
 }

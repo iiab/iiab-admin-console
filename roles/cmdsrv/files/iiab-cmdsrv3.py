@@ -1067,7 +1067,8 @@ def get_external_device_info(cmd_info):
 
 def get_rem_dev_list(cmd_info):
     dev_list = {}
-    cmdstr = "lsblk -a -n -r -b -o 'NAME,TYPE,RM,SIZE'"
+    cmdstr = "lsblk -a -n -r -b -o 'PATH,TYPE,RM,SIZE,MOUNTPOINT'"
+    # ToDo check for iiab on partition of removable devices
     outp = adm.subproc_cmd(cmdstr)
     dev_arr = outp.split('\n')
     for dev in dev_arr[:-1]:

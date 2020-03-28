@@ -54,6 +54,7 @@ var selectedOer2goItems = [];
 var selectedMapItems = [];
 var manContSelections = {};
 var selectedUsb = null;
+var removableDevices = {};
 
 var sysStorage = {};
 sysStorage.root = {};
@@ -397,18 +398,13 @@ function instContentButtonsEvents() {
   });
 
   $("#FIND-REM-DEV").click(function(){
-  	getRemovableDevList();
+  	getIiabCloneStats();
   });
 
   $("#COPY-DEV-IMAGE").click(function(){
-  	// assume that we can only get here if there are both internal and external devices
+    // clone iiab server
     make_button_disabled("#COPY-DEV-IMAGE", true);
-    // need usb dev
-    // check for empty
-    if (selectedUsb != null)
-  	  copyDevImage();
-  	// clean up - empty arrays, sum, and redraw input
-    alert ("Server image will be copied.\n\nPlease view Utilities->Display Job Status to see the results.");
+  	copyDevImage();
     make_button_disabled("#COPY-DEV-IMAGE", false);
   });
 
@@ -1331,9 +1327,13 @@ function getSpaceAvail (){
 
 function procSpaceAvail (data){
   sysStorage.library_on_root = data.library_on_root; // separate library partition (T/F)
-	sysStorage.root = data.root;
-	if (! sysStorage.library_on_root)
+  sysStorage.root = data.root;
+  sysStorage.imageSizeInK = data.root.size_in_k - data.root.avail_in_k + 262144;
+	if (! sysStorage.library_on_root){
     sysStorage.library = data.library;
+    sysStorage.imageSizeInK += data.library.size_in_k - data.library.avail_in_k;
+  }
+  $("#cloneImageSize").html(readableSize(sysStorage.imageSizeInK));
 }
 
 function displaySpaceAvail(){
