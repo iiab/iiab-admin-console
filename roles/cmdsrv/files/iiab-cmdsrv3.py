@@ -2136,7 +2136,7 @@ def copy_dev_image(cmd_info):
         resp = cmd_error(cmd_info['cmd'], msg='Device ' + dest_dev + ' not found.')
         return (resp)
 
-    job_command = "/usr/Sbin/piclone_cmd " + dest_dev
+    job_command = "/usr/sbin/piclone_cmd " + dest_dev
     resp = request_job(cmd_info, job_command)
     return (resp)
 
