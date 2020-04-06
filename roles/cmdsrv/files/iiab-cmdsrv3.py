@@ -1384,10 +1384,20 @@ def umount_usb(cmd_info):
         resp = cmd_error(cmd="REMOVE-USB", msg="Device " + device + " has open files.")
         return resp
 
+    try:
+        os.remove(device + '/usb' + device[-1]) # remove bogus symlink
+    except OSError:
+        pass
     rc = subprocess.call(umount, shell=True) # 32 means not mounted
     if rc == 32:
         resp = cmd_error(cmd="REMOVE-USB", msg="Device " + device + " is not mounted.")
         return resp
+
+    # remove mount points for local content
+    try:
+        os.remove(adm.iiab.CONST.doc_root + '/local_content/USB' + device[-1])
+    except OSError:
+        pass
 
     resp = cmd_success(cmd_info['cmd'])
     return resp
