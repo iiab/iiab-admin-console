@@ -193,6 +193,8 @@ def parse_attr(attributes):
     for key in attributes:
         if key not in ['id','favicon','faviconMimeType']:
             zimAttr[key] = attributes[key]
+    if 'description' in zimAttr:
+        zimAttr['description'] = zimAttr['description'].replace('"', '&quot;') # replace quotes that break parsing
     zimAttr['download_url'] = downloadUrl
     zimAttr['file_ref'] = fileRef
     zimAttr['perma_ref'] = permaRef
