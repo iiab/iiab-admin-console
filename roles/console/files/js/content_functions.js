@@ -546,7 +546,7 @@ function removeUsb(){
   cmd_args['device'] = selectedUsb;
   cmd = "REMOVE-USB " + JSON.stringify(cmd_args);
   $.when(sendCmdSrvCmd(cmd, genericCmdHandler))
-  .done(getExternalDevInfo);
+  .done(refreshAllContentPanels); // this is overkill, but hopefully not too heavy
   return true;
 }
 
