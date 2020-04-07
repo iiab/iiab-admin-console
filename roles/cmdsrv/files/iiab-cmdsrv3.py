@@ -97,7 +97,7 @@ maps_catalog_url = None
 maps_catalog_file = None
 vector_map_path = None
 modules_dir = None
-small_device_size = 250000
+small_device_size = 525000 # bigger than anticipated boot partition
 js_menu_dir = None
 
 # Global Variables
