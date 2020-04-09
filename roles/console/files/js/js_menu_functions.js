@@ -553,7 +553,12 @@ function menuItemAddDnDHandlers(elem) {
 function saveContentMenuItemDef() {
     var command = "SAVE-MENU-ITEM-DEF";
     var cmdArgs = getEditMenuItemFormValues();
-    //var callbackFunction = genContentMenuItemDefCallback(command, cmdArgs);
+
+    // warn if will overwrite central repo
+    if (cmdArgs.menu_item_def.upload_flag)
+      if (!confirm("These changes will be uploaded for everyone to use.\nAre you certain you want this?"))
+        return false;
+
     var callbackFunction = genSendCmdSrvCmdCallback(command, cmdArgs, 'updateContentMenuItemDef');
 
     cmd = command + " " + JSON.stringify(cmdArgs);
