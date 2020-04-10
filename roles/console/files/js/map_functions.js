@@ -126,7 +126,7 @@ function get_region_from_url(url){
   }
   return null
 }
-  
+
 function instMapItem(map_url) {
   var command = "INST-OSM-VECT-SET";
   var cmd_args = {};
@@ -170,10 +170,14 @@ function updateMapSpaceUtil(region, checked){
 }
 
 function renderMap(){
-   console.log('in renderMap');
-   window.map.setTarget($("#map-container")[0]);
-   window.map.render();
-   renderRegionList(true);
+   //console.log('in renderMap');
+   if (Object.keys(mapCatalog).length === 0)
+     $("#map-container").html('<BR><BR><center><span style="font-size: 30px;"><B>MAPS NOT INSTALLED<B></span></center>');
+   else{
+     window.map.setTarget($("#map-container")[0]);
+     window.map.render();
+     renderRegionList(true);
+  }
 }
 function initMap(){
    var url =  mapAssetsDir + 'regions.json';
