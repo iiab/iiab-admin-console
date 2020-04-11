@@ -164,6 +164,7 @@ def format_menu_item_def(menu_item_def_name, menu_item_def):
         'zim_name',
         'moddir',
         'map_name',
+        'kolibri_channel_id',
         'start_url',
         'title',
         'logo_url',

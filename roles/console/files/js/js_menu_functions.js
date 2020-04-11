@@ -20,7 +20,7 @@ var jsMenuTypeTargets =
     "html" : "moddir",
     //"webroot" : "moddir",
     //"kalite"  : "",
-    //"kolibri"  : "",
+    "kolibri"  : "kolibri_channel_id",
     //"cups"  : "",
     //"nodered"  : "",
     //"calibre"  : "",
