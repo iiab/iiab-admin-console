@@ -748,6 +748,10 @@ function procNetworkInfo(data){
 }
 
 function procSystemInfo(data){
+  // This will only be called if we have an rpi
+  // So device names are for now hard coded
+  // We will revisit after ap0 is merged and ubuntu 20.04 released
+
   var systemInfo = data;
   Object.keys(systemInfo).forEach(function(key) {
   	serverInfo[key] = systemInfo[key];
@@ -781,7 +785,10 @@ function procSystemInfo(data){
   html += '<div class="col-sm-4">';
   html += '<div>' + serverInfo.bt_pan_status + '</div>';
   html += '<div>' + serverInfo.openvpn_status + '</div>';
-  html += '<div>' + serverInfo.eth0.addr + '</div>';
+  if (serverInfo.hasOwnProperty('eth0'))
+    html += '<div>' + serverInfo.eth0.addr + '</div>';
+  else
+    html+= '<div>null </div>';
   html += '<div>' + serverInfo.wlan0.addr + '</div>';
   html += '<div>' + serverInfo.internet_access + '</div>';
   html += '<div>' + serverInfo.gateway_addr + '</div>';
