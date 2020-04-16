@@ -299,6 +299,22 @@ def del_github_file(url, sha):
     response = requests.delete(url, data=payload_json, headers=headers)
     return response
 
+def get_github_file_commits(path, menu_def_base_url=CONST.menu_def_base_url):
+    response = requests.get(menu_def_base_url + 'commits?path=' + path + '&page=1&per_page=1', headers=headers)
+    if response.status_code != 200: # returns 404 if not found
+        print(response.status_code)
+        return None
+    response_dict = json.loads(response._content)
+    return response_dict[0]
+
+def get_github_all_commits(menu_def_base_url=CONST.menu_def_base_url):
+    response = requests.get(menu_def_base_url + 'commits', headers=headers)
+    if response.status_code != 200: # returns 404 if not found
+        print(response.status_code)
+        return None
+    response_dict = json.loads(response._content)
+    return response_dict
+
 # OER3Go functions
 
 # find missing menu defs
