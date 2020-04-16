@@ -2825,7 +2825,6 @@ def get_ansible_facts():
     ans_str = outp.split(splitter)
     ans = json.loads(ans_str[1])
     ansible_facts = ans['ansible_facts']
-    if ansible_facts['ansible_local']['local_facts']['rpi_model'] != 'none':
 
 def get_ansible_tags():
     global ansible_tags
