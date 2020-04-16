@@ -154,6 +154,7 @@ iiab_ini = {}
 kiwix_catalog = {}
 oer2go_catalog = {}
 maps_catalog = {}
+is_rpi = False
 
 # vars set by admin-console
 # config_vars = {} no longer distinct from local vars
@@ -2135,8 +2136,7 @@ def sync_menu_item_defs(cmd_info):
     return (json_outp)
 
 def copy_dev_image(cmd_info):
-    dev_arch = ansible_facts['ansible_architecture']
-    if dev_arch not in ['armv7l', 'aarch64']:
+    if is_rpi:
         resp = cmd_error(cmd_info['cmd'], msg='Image copy only supported on Raspberry Pi at this time.')
         return (resp)
 
@@ -2587,6 +2587,7 @@ def escape_html(text):
 def init():
     global last_command_rowid
     global last_job_rowid
+    global is_rpi
 
     # Read application variables from config files
     app_config()
@@ -2603,8 +2604,13 @@ def init():
     read_oer2go_catalog()
     read_maps_catalog()
 
+    if ansible_facts['ansible_local']['local_facts']['rpi_model'] != 'none':
+        is_rpi = True # convenience
+    else:
+        is_rpi = False
+
     # record sdcard params for rpi
-    if ansible_facts['ansible_architecture'] in ['armv7l', 'aarch64']:
+    if is_rpi:
         write_sdcard_params()
 
     # Compute variables derived from all of the above
@@ -2819,6 +2825,7 @@ def get_ansible_facts():
     ans_str = outp.split(splitter)
     ans = json.loads(ans_str[1])
     ansible_facts = ans['ansible_facts']
+    if ansible_facts['ansible_local']['local_facts']['rpi_model'] != 'none':
 
 def get_ansible_tags():
     global ansible_tags

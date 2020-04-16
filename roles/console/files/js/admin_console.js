@@ -67,6 +67,7 @@ sysStorage.library.partition = false; // no separate library partition
 
 // defaults for ip addr of server and other info returned from server-info.php
 var serverInfo = {"iiab_server_ip":"","iiab_client_ip":"","iiab_server_found":"TRUE","iiab_cmdsrv_running":"FALSE"};
+var is_rpi = false;
 var initStat = {};
 var cmdsrvWorkingModalCount = 0;
 
@@ -119,11 +120,13 @@ function navButtonsEvents() {
       console.log(' no call-after');
   });
   // Special Cases
-  var platform = ansibleFacts.ansible_machine;
-  if (platform == "armv7l" || platform == "aarch64"){
+  if (is_rpi){
     $("#controlWifiLink").show();
     $("#controlBluetoothLink").show();
     $("#controlVPNLink").show();
+  }
+  var platform = ansibleFacts.ansible_machine;
+  if (platform == "armv7l" || platform == "aarch64"){ // not on W
     $("#instConCloneLink").show();
   }
 }
@@ -694,6 +697,12 @@ function getAnsibleFacts (data)
   var jstr = JSON.stringify(ansibleFacts, undefined, 2);
   var html = jstr.replace(/\n/g, "<br>").replace(/[ ]/g, "&nbsp;");
   $( "#ansibleFacts" ).html(html);
+  // set convenience variable
+  if (ansibleFacts.ansible_local.local_facts.rpi_model != 'none')
+    is_rpi = true;
+  else
+  is_rpi = false;
+
   //consoleLog(jqXHR);
   return true;
 }
