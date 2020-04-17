@@ -1,8 +1,12 @@
 #!/bin/bash
-NAME=`cat /sys/devices/platform/soc/*.emmc2/mmc_host/mmc0/mmc0*/name`
-SERIAL=`cat /sys/devices/platform/soc/*.emmc2/mmc_host/mmc0/mmc0*/serial`
-CSD=`cat /sys/devices/platform/soc/*.emmc2/mmc_host/mmc0/mmc0*/csd`
-CID=`cat /sys/devices/platform/soc/*.emmc2/mmc_host/mmc0/mmc0*/cid`
+
+CSD_PATH=`find /sys/devices/platform/soc/*/mmc_host -name csd`
+BASE_DIR=`dirname "$CSD_PATH"`
+
+CSD=`cat $CSD_PATH`
+NAME=`cat $BASE_DIR/name`
+SERIAL=`cat  $BASE_DIR/serial`
+CID=`cat $BASE_DIR/cid`
 
 echo name: $NAME > /etc/iiab/sdcard-params
 echo serial: $SERIAL >> /etc/iiab/sdcard-params
