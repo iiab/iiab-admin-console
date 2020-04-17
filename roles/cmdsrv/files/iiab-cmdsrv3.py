@@ -1077,7 +1077,8 @@ def get_rem_dev_list(cmd_info):
         # if disk and removable
         if dev_parts[1] == 'disk':
             if dev_parts[2] == '1':
-                dev_list[dev_parts[0]] = dev_parts[3]
+                if len(dev_parts) > 3: # some devices seem not to return size so skip them
+                    dev_list[dev_parts[0]] = dev_parts[3]
     resp = json.dumps(dev_list)
     return (resp)
 
