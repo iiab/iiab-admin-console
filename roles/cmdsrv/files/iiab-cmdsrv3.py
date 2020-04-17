@@ -2137,7 +2137,7 @@ def sync_menu_item_defs(cmd_info):
     return (json_outp)
 
 def copy_dev_image(cmd_info):
-    if is_rpi:
+    if not is_rpi:
         resp = cmd_error(cmd_info['cmd'], msg='Image copy only supported on Raspberry Pi at this time.')
         return (resp)
 
