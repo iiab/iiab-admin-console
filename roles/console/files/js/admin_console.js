@@ -701,7 +701,7 @@ function getAnsibleFacts (data)
   if (ansibleFacts.ansible_local.local_facts.rpi_model != 'none')
     is_rpi = true;
   else
-  is_rpi = false;
+    is_rpi = false;
 
   //consoleLog(jqXHR);
   return true;
