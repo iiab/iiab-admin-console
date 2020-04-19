@@ -135,31 +135,30 @@
 
 - name: Copy Osm Vector Maps dummy files
   copy:
-    src: map/{{ item }}
-    dest: "{{ doc_root }}/common/assets/{{ item }}"
+    src: map/vector-map-idx.json
+    dest: "{{ doc_root }}/common/assets/vector-map-idx.json"
     owner: root
     group: root
     mode: 0644
     force: yes
-
-  with_items:
-    - regions.json
-    - vector-map-idx.json
   when: not osm_vector_maps_enabled
 
-- name: Remove region.json dummy file if osm_vector_maps_enabled
-  file:
-    path: "{{ doc_root }}/common/assets/regions.json"
-    state: absent
-  when: osm_vector_maps_enabled
+- name: Copy Osm Vector Maps dummy files
+  copy:
+    src: map/regions.json
+    dest: "{{ iiab_etc_path }}/regions.json"
+    owner: root
+    group: root
+    mode: 0644
+    force: yes
+  when: not osm_vector_maps_enabled
 
 - name: Create a link to osm catalog in /common/assets
   file:
-    src: "{{ vector_map_path }}/maplist/assets/regions.json"
+    src: "{{ iiab_etc_path }}/regions.json"
     dest: "{{ doc_root }}/common/assets/regions.json"
     state: link
-  when: osm_vector_maps_enabled
 
-- name: Add any MAPS that are installed to home/menu.js
+- name: Add any MAPS that are installed to home/menu.json
   shell: /usr/bin/iiab-update-map
   when: osm_vector_maps_enabled
