@@ -794,7 +794,8 @@ def cmd_handler(cmd_msg):
 
 # Helper functions
 def is_internet_avail():
-    return is_url_avail("www.google.com")
+    #return is_url_avail("www.google.com")
+    return is_url_avail("neverssl.com") # in case captive portal traps www.google.com
 
 def is_url_avail(url):
     try:
