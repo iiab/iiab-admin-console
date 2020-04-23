@@ -758,7 +758,6 @@ function procSystemInfo(data){
   });
   // hostapd
   $("#hotspotState").html(serverInfo.hostapd_status);
-  // this button has been removed for now
   $("#WIFI-CTL").html('Turn Hotspot Access ON');
   make_button_disabled('#WIFI-CTL', true); // disable
 
