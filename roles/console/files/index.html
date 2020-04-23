@@ -84,14 +84,18 @@
 											<h4>Hotspot is <b><span id="hotspotState">OFF</span></b></h4>
 											<div class="form-group row">
 											  <div class="col-xs-4">
-                          <label for="connect_wifi_ssid">Wifi Connection Hotspot</label>
-                          <input type="text" name="connect_wifi_ssid" class="form-control" id="connect_wifi_ssid">
-                          <label for="connect_wifi_password">Wifi Connection Password</label>
-                          <input type="text" name="connect_wifi_password" class="form-control" id="connect_wifi_password">
-                        </div>
-                      </div>
+												<label for="connect_wifi_ssid">Wifi Connection Hotspot</label>
+												<input type="text" name="connect_wifi_ssid" class="form-control" id="connect_wifi_ssid">
+												<label for="connect_wifi_password">Wifi Connection Password</label>
+												<input type="text" name="connect_wifi_password" class="form-control" id="connect_wifi_password">
+											  </div>
+											</div>
 											<button id="WIFI-CREDENTIALS" type="button" class="btn btn-lg btn-primary">Set Connection Credentials</button>
-											<span class="btn-lg">Requires a Reboot the First Time you Connect.</span>
+											<button id="WIFI-CTL" type="button" class="btn btn-lg btn-primary" style="opacity:0.5" disabled>Change Hotspot</button>
+											<!-- The following will be applied when ap0 is merged
+											    after button id="WIFI-CREDENTIALS add
+												<span class="btn-lg">Requires a Reboot the First Time you Connect.</span>
+												and comment out --->
 											<!--<button id="WIFI-CTL" type="button" class="btn btn-lg btn-primary" style="opacity:0.5" disabled>Change Hotspot</button> -->
 										</div> <!--  End controlWifi Submenu Option Pane -->
 										<div class="tab-pane" id="controlBluetooth"> <!-- Start controlBluetooth Submenu Option Pane -->
