@@ -109,6 +109,30 @@ def get_substitution_data(perma_ref, zim_versions, zims_installed, path_to_id_ma
 
 # Menu Def functions
 
+def get_menu_def_repo_data():
+    repo_data = {}
+    repo_data['defs'] = {}
+    repo_data['html'] = {}
+    repo_data ['icons']= {}
+
+    response = requests.get(CONST.menu_def_base_url + 'contents/' + CONST.menu_def_path, headers=headers)
+    file_list = json.loads(response._content)
+    for item in file_list:
+        if item['type'] == 'file':
+            if item['name'].endswith('.json'):
+                menu_item_def_name = item['name'].split('.json')[0] # trim .json
+                repo_data['defs'][menu_item_def_name] = item
+            elif item['name'].endswith('.html'):
+                repo_data['html'][item['name']] = item
+
+    response = requests.get(CONST.menu_def_base_url + 'contents/' + CONST.menu_def_icon_path, headers=headers)
+    file_list = json.loads(response._content)
+    for item in file_list:
+        if item['type'] == 'file':
+            repo_data['icons'][item['name']] = item
+
+    return repo_data
+
 def get_repo_menu_item_defs():
     menu_item_defs = {}
     response = requests.get(CONST.menu_def_base_url + 'contents/' + CONST.menu_def_path, headers=headers)
@@ -212,15 +236,6 @@ def wget_menu_item_def_file_from_repo(src_url, dest):
     outp = subprocess.check_output(cmd, shell=True)
 
 def put_menu_item_def(menu_item_def_name, menu_item_def, sha=None):
-    # Upload any icon
-    if 'logo_url' in menu_item_def and menu_item_def['logo_url'] != '':
-        put_icon_file(menu_item_def['logo_url'])
-
-    # Upload any extra_html
-    if 'extra_html' in menu_item_def and menu_item_def['extra_html'] != '':
-        put_extra_html_file(menu_item_def['extra_html'])
-
-    # Now do menu item def
     if 'commit_sha' in menu_item_def:
         menu_item_def['previous_commit_sha'] = menu_item_def['commit_sha']
     menu_item_def['commit_sha'] = None
@@ -233,18 +248,18 @@ def put_menu_item_def(menu_item_def_name, menu_item_def, sha=None):
     response = put_github_file(CONST.menu_def_base_url, path, json_byte, sha)
     return response
 
-def put_icon_file(icon_file):
+def put_icon_file(icon_file, sha=None):
     with open(CONST.js_menu_dir + 'menu-files/images/' + icon_file, "rb") as f:
         byte_blob = f.read()
     path = CONST.menu_def_icon_path + icon_file
-    response = put_github_file(CONST.menu_def_base_url, path, byte_blob)
+    response = put_github_file(CONST.menu_def_base_url, path, byte_blob, sha=sha)
     return response
 
-def put_extra_html_file(extra_html_file):
+def put_extra_html_file(extra_html_file, sha=None):
     with open(CONST.js_menu_dir + 'menu-files/menu-defs/' + extra_html_file, "rb") as f:
         byte_blob = f.read()
     path = CONST.menu_def_path + extra_html_file
-    response = put_github_file(CONST.menu_def_base_url, path, byte_blob)
+    response = put_github_file(CONST.menu_def_base_url, path, byte_blob, sha=sha)
     return response
 
 
@@ -257,7 +272,6 @@ def get_github_file_by_name(menu_def_base_url, path):
         return file_bytes, response_dict['sha']
     else:
         return (None, None)
-
 
 def get_github_file_data_by_name(menu_def_base_url, path):
     response = requests.get(menu_def_base_url + 'contents/' + path, headers=headers)
@@ -298,6 +312,22 @@ def del_github_file(url, sha):
     payload_json = json.dumps(payload)
     response = requests.delete(url, data=payload_json, headers=headers)
     return response
+
+def get_github_file_commits(path, repo_base_url=CONST.menu_def_base_url):
+    response = requests.get(repo_base_url + 'commits?path=' + path + '&page=1&per_page=1', headers=headers)
+    if response.status_code != 200: # returns 404 if not found
+        print(response.status_code)
+        return None
+    response_dict = json.loads(response._content)
+    return response_dict[0]
+
+def get_github_all_commits(repo_base_url=CONST.menu_def_base_url):
+    response = requests.get(repo_base_url + 'commits', headers=headers)
+    if response.status_code != 200: # returns 404 if not found
+        print(response.status_code)
+        return None
+    response_dict = json.loads(response._content)
+    return response_dict
 
 # OER3Go functions
 

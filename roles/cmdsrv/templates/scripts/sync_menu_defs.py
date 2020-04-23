@@ -23,7 +23,8 @@ except:
 iiab.read_lang_codes()
 
 local_menu_item_defs = adm.get_local_menu_item_defs() # returns dict
-repo_menu_item_defs = adm.get_repo_menu_item_defs() # returns dict
+menu_def_repo_data = adm.get_menu_def_repo_data() # returns dict
+repo_menu_item_defs = menu_def_repo_data['defs']
 obsolete_menu_item_defs = adm.read_json(adm.CONST.obsolete_menu_defs)
 changes_made = False
 
@@ -100,8 +101,22 @@ for menu_item_def_name in local_menu_item_defs:
                     adm.write_menu_item_def(menu_item_def_name, menu_item_def, upload_flag=upload_flag, download_flag=download_flag)
             elif edit_status == 'local_change' and local_sha == repo_sha:
                 if upload_flag:
-                    print ('Uploading changed version  of ' + menu_item_def_name)
+                    print ('Uploading changed version of ' + menu_item_def_name)
                     changes_made = True
+
+                    # Upload any icon
+                    if 'logo_url' in menu_item_def and menu_item_def['logo_url'] != '':
+                        logo_url_file = menu_item_def['logo_url']
+                        logo_sha = menu_def_repo_data['icons'][logo_url_file].get('sha', None)
+                        adm.put_icon_file(logo_url_file, sha=logo_sha)
+
+                    # Upload any extra_html
+                    if 'extra_html' in menu_item_def and menu_item_def['extra_html'] != '':
+                        extra_html_file = menu_item_def['extra_html']
+                        extra_html_sha = menu_def_repo_data['html'][extra_html_file].get('sha', None)
+                        adm.put_extra_html_file(extra_html_file, sha=extra_html_sha)
+
+                    # Now do menu item def
                     adm.put_menu_item_def(menu_item_def_name, menu_item_def, repo_sha) # push local
                     menu_item_def = adm.get_menu_item_def_from_repo_by_name(menu_item_def_name) # get the actual stored values including commit
                     # write it to local files so we have the new commit sha and preserve flags
