@@ -1256,7 +1256,7 @@ def set_wpa_credentials (cmd_info):
     return resp
 
 def ctl_bluetooth(cmd_info):
-    if ansible_facts['ansible_local']['local_facts']['os'] != 'raspbian':
+    if ansible_facts['ansible_local']['local_facts']['rpi_model'] != 'none':
         resp = cmd_error(cmd=cmd_info['cmd'], msg='Only supported on Raspberry Pi.')
         return (resp)
 
