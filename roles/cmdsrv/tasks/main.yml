@@ -200,7 +200,7 @@
     state: link
 
 - name: Add any MAPS that are installed to home/menu.json
-  shell: scripts/iiab-update-map.py
+  shell: "{{ cmdsrv_dir }}/scripts/iiab-update-map.py"
   when: osm_vector_maps_enabled
 
 # setup cmdsrv
