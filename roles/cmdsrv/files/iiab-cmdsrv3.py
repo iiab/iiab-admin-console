@@ -2129,6 +2129,21 @@ def save_menu_item_def(cmd_info):
         resp = cmd_error(cmd_info['cmd'], msg='Error writing to Menu Item Definition File.')
         return (resp)
 
+    # this is a stub
+    if upload_flag:
+        try:
+            # get sha of file
+            # curl https://api.github.com/repos/iiab-share/js-menu-files-test/commits?path=menu-defs/es-kolibri_khan_es.json gets proper commitsha
+            # response = requests.get(menu_def_base_url + 'commits?path=' + path, headers=headers)
+            sha = '?'
+            # adm.put_menu_item_def(menu_item_def_name, menu_item_def, sha=sha)
+            # do we really want to send icon and extra html?
+        except :
+            resp = cmd_error(cmd_info['cmd'], msg='Error Uploading Menu Item Definition.')
+            return (resp)
+
+    # what if download_flag, retrieve; should the frontend load the new values?
+
     resp = cmd_success(cmd_info['cmd'])
     return (resp)
 
