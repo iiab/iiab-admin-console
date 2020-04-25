@@ -1,0 +1,6 @@
+# Finish install by creating any data and restarting cmdsrv (which should not yet be running)
+
+- name: Enable and start iiab-cmdsrv service
+  service: name=iiab-cmdsrv
+           enabled=yes
+           state=restarted

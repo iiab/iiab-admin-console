@@ -275,7 +275,5 @@
 - name: Ask systemd to reread the unit files, picks up changes done
   shell: systemctl daemon-reload
 
-- name: Enable iiab-cmdsrv service
-  service: name=iiab-cmdsrv
-           enabled=yes
-           state=restarted
+# Enable and restart iiab-cmdsrv service deferred until the final role
+# Allows cmdsrv to pick up any data computed during the install process
