@@ -18,6 +18,7 @@ import requests
 import yaml
 
 import iiab.iiab_lib as iiab
+import iiab.iiab_const as IIAB_CONST
 import iiab.adm_const as CONST
 
 headers = {}
@@ -801,6 +802,91 @@ def read_json(file_path):
         return json_dict
     except OSError as e:
         raise
+
+def write_iiab_local_vars(delta_vars, strip_comments=False, strip_defaults=False):
+    output_lines = merge_local_vars(IIAB_CONST.iiab_local_vars_file, delta_vars, strip_comments=strip_comments, strip_defaults=strip_defaults)
+    with open(IIAB_CONST.iiab_local_vars_file, 'w') as f:
+        for line in output_lines:
+            f.write(line)
+
+def merge_local_vars(target_vars_file, delta_vars, strip_comments=False, strip_defaults=False):
+    default_vars_file = IIAB_CONST.iiab_repo_dir + '/vars/default_vars.yml'
+    local_vars_lines = []
+    output_lines = []
+    local_vars = {}
+    default_vars = {}
+    defined = {}
+    undefined = {}
+    remove_defaults = []
+    separator_found = False
+
+    local_vars = read_yaml(target_vars_file)
+    with open(target_vars_file) as f:
+        local_vars_lines = f.readlines()
+
+    default_vars = read_yaml(default_vars_file)
+    if strip_defaults:
+        for key in local_vars:
+            if local_vars[key] == default_vars.get(key, None):
+                remove_defaults.append(key)
+
+    for key in delta_vars:
+        if strip_defaults: # remove any keys that have default value
+            if delta_vars[key] == default_vars.get(key, None):
+                continue
+        if key in local_vars:
+           defined[key] = delta_vars[key]
+        else:
+           undefined[key] = delta_vars[key]
+
+    for line in local_vars_lines:
+        hash_pos = line.find('#')
+        if hash_pos == 0:
+            if not strip_comments:
+                output_lines.append(line)
+            if line.startswith("# IIAB -- following variables"):
+                separator_found = True
+            continue
+
+        for key in defined:
+            key_pos = line.find(key)
+            if key_pos < 0:
+                continue
+            else:
+                if hash_pos != -1 and hash_pos < key_pos: # key is commented
+                    continue
+                else: # substitute delta value
+                    line = line.replace(str(local_vars[key]), str(defined[key]))
+        # at this point substitutions are done
+
+        copy_line = True
+        if strip_comments and line == '\n':
+            copy_line = False
+        if strip_comments and hash_pos > 0 and line[:hash_pos].isspace(): # indented comment line
+            copy_line = False
+        if copy_line: # still not rid of this line?
+            for key in remove_defaults: # skip keys marked for removal
+                key_pos = line.find(key)
+                if key_pos < 0:
+                    continue
+                else:
+                    copy_line = False
+                    break
+
+        if copy_line:
+            output_lines.append(line)
+
+    if not separator_found:
+        output_lines.append("\n\n############################################################################\n")
+        output_lines.append("# IIAB -- following variables are first set by browser via the Admin Console\n")
+        output_lines.append("#  They may be changed via text editor, or by the Admin Console.\n\n")
+
+    for key in undefined:
+        line = str(key) + ': ' + str(undefined[key])
+        line += '\n'
+        output_lines.append(line)
+
+    return output_lines
 
 # duplicates cmdsrv - but now revised
 
