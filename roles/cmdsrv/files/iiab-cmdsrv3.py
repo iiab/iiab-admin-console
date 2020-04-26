@@ -1169,7 +1169,7 @@ def systemctl_wrapper(verb, service):
     return rc
 
 def ctl_wifi(cmd_info):
-    if ansible_facts['ansible_local']['local_facts']['os'] != 'raspbian':
+    if is_rpi:
         resp = cmd_error(cmd=cmd_info['cmd'], msg='Only supported on Raspberry Pi.')
         return (resp)
 
@@ -1209,7 +1209,7 @@ def ctl_wifi(cmd_info):
     return resp
 
 def set_wpa_credentials (cmd_info):
-    if ansible_facts['ansible_local']['local_facts']['os'] != 'raspbian':
+    if is_rpi:
         resp = cmd_error(cmd=cmd_info['cmd'], msg='Only supported on Raspberry Pi.')
         return (resp)
 
@@ -1256,7 +1256,7 @@ def set_wpa_credentials (cmd_info):
     return resp
 
 def ctl_bluetooth(cmd_info):
-    if ansible_facts['ansible_local']['local_facts']['os'] != 'raspbian':
+    if is_rpi:
         resp = cmd_error(cmd=cmd_info['cmd'], msg='Only supported on Raspberry Pi.')
         return (resp)
 
@@ -1630,7 +1630,7 @@ def get_oer2go_catalog(cmd_info):
 
 def set_config_vars(cmd_info):
     config_vars = cmd_info['cmd_args']['config_vars']
-    write_iiab_local_vars(config_vars)
+    adm.write_iiab_local_vars(config_vars)
     #print config_vars
     resp = cmd_success(cmd_info['cmd'])
     return (resp)
@@ -2681,74 +2681,6 @@ def read_iiab_ini_file():
         iiab_ini_tmp[section] = iiab_ini_sec
 
     iiab_ini = iiab_ini_tmp
-
-def write_iiab_local_vars(config_vars): # from George Hunt
-    local_vars_lines = []
-    found_vars = []
-    separator_found = False
-
-    with open(iiab_local_vars_file) as f:
-        local_vars_lines = f.readlines()
-
-    # accumulate new local_vars.yml into outstr
-    outstr = ""
-    for line in local_vars_lines:
-        # copy blank lines
-        if line.strip() == "":
-            outstr += line
-            continue
-
-        # if commented out, check for disagreement in value
-        hash = line.find("#")
-        if hash == 0:
-            m = re.match('# *([a-zA-Z0-9_]*) *: *([a-zA-Z0-9\'\"\.]*) *(#.*)*',line)
-            if m:
-                if m.group(1) in config_vars:
-                    if m.group(1) not in default_vars or config_vars[m.group(1)] != default_vars[m.group(1)]:
-                        vardec = m.group(1) + ": " + str(config_vars[m.group(1)]) + "  \n"
-                        if m.group(3):
-                            vardec =  vardec.strip() + "   " + m.group(3) + "\n"
-                        outstr += vardec
-                    found_vars.append(m.group(1))
-            else:
-                outstr += line
-            if line.startswith("# IIAB"):
-                separator_found = True
-            continue
-
-        # change value if there is disagreement, trailing comments are unchanged
-        m = re.match(' *([a-zA-Z0-9_]*) *: *([a-zA-Z0-9\'\"\.]*) *(#.*)*',line)
-        if m and m.group(1) in config_vars:
-            if config_vars[m.group(1)] != m.group(2):
-                if isinstance(config_vars[m.group(1)], str) and config_vars[m.group(1)].find(" ") != -1:
-                    vardec = m.group(1) + ": \"" + str(config_vars[m.group(1)]) + "\"\n"
-                else:
-                    vardec = m.group(1) + ": " + str(config_vars[m.group(1)]) + "\n"
-                    if m.group(3):
-                        vardec = vardec.strip() + "   " + m.group(3) + "\n"
-                outstr += vardec
-            else:
-                outstr += line
-            found_vars.append(m.group(1))
-        else:
-            print(("no match for: %s"%line))
-            outstr += line
-
-    # put any variables not already found in local_vars.yml
-    if not separator_found:
-        outstr +="\n\n############################################################################\n"
-        outstr +="# IIAB -- following variables are first set by browser via the Admin Console\n"
-        outstr +="#  They may be changed via text editor, or by the Admin Console.\n\n"
-    for variable_name in config_vars:
-        if variable_name not in found_vars:
-            if str(config_vars[variable_name]).find(" ") == -1:
-                outstr += variable_name + ": " + str(config_vars[variable_name]) + "\n"
-            else:
-                outstr += variable_name + ": \"" + str(config_vars[variable_name]) + "\"\n"
-
-    # supposed to be blocking
-    with open(iiab_local_vars_file, "w") as f:
-        f.write(outstr)
 
 def read_iiab_local_vars():
     global local_vars
