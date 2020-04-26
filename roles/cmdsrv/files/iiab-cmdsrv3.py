@@ -1169,7 +1169,7 @@ def systemctl_wrapper(verb, service):
     return rc
 
 def ctl_wifi(cmd_info):
-    if is_rpi:
+    if not is_rpi:
         resp = cmd_error(cmd=cmd_info['cmd'], msg='Only supported on Raspberry Pi.')
         return (resp)
 
@@ -1209,7 +1209,7 @@ def ctl_wifi(cmd_info):
     return resp
 
 def set_wpa_credentials (cmd_info):
-    if is_rpi:
+    if not is_rpi:
         resp = cmd_error(cmd=cmd_info['cmd'], msg='Only supported on Raspberry Pi.')
         return (resp)
 
@@ -1256,7 +1256,7 @@ def set_wpa_credentials (cmd_info):
     return resp
 
 def ctl_bluetooth(cmd_info):
-    if is_rpi:
+    if not is_rpi:
         resp = cmd_error(cmd=cmd_info['cmd'], msg='Only supported on Raspberry Pi.')
         return (resp)
 
