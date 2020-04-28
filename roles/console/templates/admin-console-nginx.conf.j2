@@ -1,14 +1,13 @@
 location /admin {
-#  proxy_pass http://127.0.0.1:{{ apache_port }}/admin;
    alias {{ admin_console_dir }};
-   auth_pam                "Secure zone";
+   auth_pam                "IIAB Admin Zone";
    auth_pam_service_name   "pwauth";
 
 }
 
 location ~ /admin/(.*)\.php$ {
     alias {{ admin_console_dir }}/$1.php;
-    auth_pam                "Secure zone";
+    auth_pam                "IIAB Admin Zone";
     auth_pam_service_name   "pwauth";
 
     proxy_set_header X-Real-IP  $remote_addr;
@@ -23,7 +22,8 @@ location ~ /admin/(.*)\.php$ {
 }
 
 location /cmd-service {
-#  proxy_pass http://127.0.0.1:{{ apache_port }}/cmd-service;
+   auth_pam                "IIAB Admin Zone";
+   auth_pam_service_name   "pwauth";
    include uwsgi_params;
    uwsgi_pass unix:///tmp/admin-console.sock;
 }
