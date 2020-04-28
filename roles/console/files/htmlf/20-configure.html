@@ -126,7 +126,7 @@
 						</div>
 						<div class="checkbox">
 							<label>
-								<input type="checkbox" name="dokuwiki_enabled" id="dokuwiki_enabled">Check to Enable DokuWiki.
+								<input type="checkbox" name="mediawiki_enabled" id="mediawiki_enabled">Check to Enable MediaWiki.
 							</label>
 						</div>
 						<h3>Select Server Home Page</h3>
@@ -142,6 +142,13 @@
 						<div class="radio">
 							<label><input type="radio" name="gui_desired_home_url" id="gui_desired_home_url-wiki" value="wiki">/wiki</label>
 						</div>
+						<h3>Captive Portal</h3>
+						<div class="checkbox">
+							<label>
+							  <input type="checkbox" name="captiveportal_enabled" id="captiveportal_enabled">Check to Enable Captive Portal
+						  </label>
+						</div>
+
 					</form>
 				</div> <!--  Configure Server Portal pane -->
 				<div class="tab-pane" id="confServices"> <!--  Start Configure Services Pane -->
@@ -178,9 +185,24 @@
 								<input type="checkbox" name="kalite_cron_enabled" id="kalite_cron_enabled">The KA Lite Downloader.  You can turn this off if you don't plan to download videos.
 							</label>
 						</div>
-						<div class="checkbox osm_service">
+						<div class="checkbox kolibri_service">
 							<label>
-								<input type="checkbox" name="osm_enabled" id="osm_enabled">OpenStreetMap from the original Internet-in-a-Box.  You must also install content.
+							  <input type="checkbox" name="kolibri_enabled" id="kolibri_enabled">Kolibri, which provides offline access to a wide range of quality, openly licensed educational content.
+						  </label>
+						</div>
+						<div class="checkbox internetarchive_service">
+							<label>
+							  <input type="checkbox" name="internetarchive_enabled" id="internetarchive_enabled">Internet Archive Decentralized Web that helps you create your own offline digital library e.g. from http://dweb.archive.org
+						  </label>
+						</div>
+						<div class="checkbox osm_vector_maps_service">
+							<label>
+								<input type="checkbox" name="osm_vector_maps_enabled" id="osm_vector_maps_enabled">IIAB vector maps are based upon OpenStreetMap Data.  You must also install content.
+							</label>
+						</div>
+						<div class="checkbox calibreweb_service">
+							<label>
+								<input type="checkbox" name="calibreweb_enabled" id="calibreweb_enabled">Calibre Web, a browser based version of Calibre, an E-Book Platform. You must also install content.
 							</label>
 						</div>
 						<div class="checkbox calibre_service">
@@ -197,6 +219,11 @@
 							<label>
 								<input type="checkbox" name="sugarizer_enabled" id="sugarizer_enabled">Sugarizer provides Sugar Labs activities directly on the server.
 							</label>
+						</div>
+						<div class="checkbox minetest_service">
+							<label>
+							  <input type="checkbox" name="minetest_enabled" id="minetest_enabled">Minetest, an open source, educational computer game.
+						  </label>
 						</div>
 						<h3>Media Sharing and Printing</h3>
 						<div class="checkbox elgg_service">
@@ -222,6 +249,43 @@
 						<div class="checkbox cups_service">
 							<label>
 								<input type="checkbox" name="cups_enabled" id="cups_enabled">CUPS provides support for printers.
+							</label>
+						</div>
+						<div class="checkbox usb_lib_service">
+							<label>
+							  <input type="checkbox" name="usb_lib_enabled" id="usb_lib_enabled">USB based content libraries.
+						  </label>
+						</div>
+						<div class="checkbox exFAT_service">
+							<label>
+							  <input type="checkbox" name="exFAT_enabled" id="exFAT_enabled">exFat formated USB drives.
+						  </label>
+						</div>
+
+						<h3>Communications and Computer Lab</h3>
+						<div class="checkbox azuracast_service">
+							<label>
+							  <input type="checkbox" name="azuracast_enabled" id="azuracast_enabled">AzuraCase,a self-hosted web radio management suite.
+						  </label>
+						</div>
+						<div class="checkbox lokole_service">
+							<label>
+							  <input type="checkbox" name="lokole_enabled" id="lokole_enabled">Lokole Email, Offline email that can transmit (and receive) a local community's emails every night.
+						  </label>
+						</div>
+						<div class="checkbox pbx_service">
+							<label>
+							  <input type="checkbox" name="pbx_enabled" id="pbx_enabled">PBX a network base local phone system.
+						  </label>
+						</div>
+						<div class="checkbox gitea_service">
+							<label>
+								<input type="checkbox" name="gitea_enabled" id="gitea_enabled">Gitea is a local git repository server.
+							</label>
+						</div>
+						<div class="checkbox nodered_service">
+							<label>
+								<input type="checkbox" name="nodered_enabled" id="nodered_enabled">Node-RED enables electronics projects with a flow-based development tool for visual programming.
 							</label>
 						</div>
 
