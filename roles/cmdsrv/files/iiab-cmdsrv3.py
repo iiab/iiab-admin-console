@@ -2255,6 +2255,7 @@ def change_password(cmd_info):
     # create new password hash
     newhash = crypt.crypt(newpasswd, salt)
     pwinput = user + ':' + newhash + '\n'
+    pwinput = pwinput.encode() # convert to byte
 
     # finally change password
     p = subprocess.Popen(['chpasswd', '-e'], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
