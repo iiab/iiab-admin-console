@@ -1020,33 +1020,41 @@ function initStaticWanVars() {
   }
 }
 
-function setConfigVars ()
-{
-  var cmd_args = {}
+function setConfigVars () {
   //alert ("in setConfigVars");
-  config_vars = {} // reset data then read fields
+  var cmd_args = {};
+  var changed_vars = {} // now we only send deltas to back end
+  var thisVar = '';
   $('#Configure input').each( function(){
-    if (this.type == "checkbox") {
-      if (this.checked)
-      config_vars[this.name] = true; // must be true not True
-      else
-        config_vars[this.name] = false;
+    if ($('#'+ this.name).is(":visible")){ // install false and undefined are not visible
+      if (this.type == "checkbox") {
+        if (this.checked)
+          thisVar = true; // must be true not True
+        else
+          thisVar = false;
       }
+
       if (this.type == "text")
-      config_vars[this.name] = $(this).val();
+        thisVar = $(this).val();
+
       if (this.type == "radio"){
-        fieldName = this.name;
-        fieldName = "input[name=" + this.name + "]:checked"
-        //consoleLog(fieldName);
-        config_vars[this.name] = $(fieldName).val();
+          fieldName = this.name;
+          fieldName = "input[name=" + this.name + "]:checked"
+          //consoleLog(fieldName);
+          thisVar = $(fieldName).val();
       }
-    });
-    cmd_args['config_vars'] = config_vars;
-    var cmd = "SET-CONF " + JSON.stringify(cmd_args);
-    sendCmdSrvCmd(cmd, genericCmdHandler);
-    alert ("Saving Configuration.");
-    return true;
-  }
+      if (thisVar != config_vars[this.name]){
+        config_vars[this.name] = thisVar;
+        changed_vars[this.name] = thisVar;
+      }
+    }
+  });
+  cmd_args['config_vars'] = changed_vars;
+  var cmd = "SET-CONF " + JSON.stringify(cmd_args);
+  sendCmdSrvCmd(cmd, genericCmdHandler);
+  alert ("Saving Configuration.");
+  return true;
+}
 
 function changePassword ()
 {
