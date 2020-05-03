@@ -1,5 +1,5 @@
 // admin_console.js
-// copyright 2019 Tim Moody
+// copyright 2020 Tim Moody
 
 var today = new Date();
 var dayInMs = 1000*60*60*24;
@@ -121,6 +121,10 @@ function navButtonsEvents() {
   });
   // Special Cases
   if (is_rpi){
+    if (!config_vars.wifi_up_down){ //wifi_up_down is false or undefined
+      $("#controlWifiUpDown").hide();
+      $("#controlWifiNotUpDown").show();
+    }
     $("#controlWifiLink").show();
     $("#controlBluetoothLink").show();
     $("#controlVPNLink").show();
@@ -141,6 +145,9 @@ function controlButtonsEvents() {
   });
 
 	$("#WIFI-CREDENTIALS").click(function(){
+    setWpaCredentials();
+  });
+  $("#WIFI-CREDENTIALS-UD").click(function(){
     setWpaCredentials();
   });
 
@@ -757,16 +764,17 @@ function procSystemInfo(data){
   	serverInfo[key] = systemInfo[key];
   });
   // hostapd
+  $("#hotspotStateUD").html(serverInfo.hostapd_status);
   $("#hotspotState").html(serverInfo.hostapd_status);
-  $("#WIFI-CTL").html('Turn Hotspot Access ON');
-  make_button_disabled('#WIFI-CTL', true); // disable
+  //$("#WIFI-CTL").html('Turn Hotspot Access ON');
+  // make_button_disabled('#WIFI-CTL', true); // disable
 
   if (serverInfo.hostapd_status == 'ON'){
-    $("#WIFI-CTL").html('Use Wifi to Connect');
+    $("#WIFI-CTL").html('Switch Wifi to Connect to Router');
     make_button_disabled('#WIFI-CTL', false); // enable
   }
   else if (serverInfo.hostapd_status == 'OFF'){
-  	$("#WIFI-CTL").html('Turn Hotspot Access ON');
+  	$("#WIFI-CTL").html('Switch Wifi to IIAB Hotspot');
     make_button_disabled('#WIFI-CTL', false); // enable
   }
 
@@ -797,6 +805,7 @@ function procSystemInfo(data){
   html += '<div>' + serverInfo.admin_passwd_known + '</div>';
   html += '</div>';
 
+  $("#currentNetworkStateUD").html(html);
   $("#currentNetworkState").html(html);
 
   // bluetooth
@@ -847,8 +856,13 @@ function controlWifi(){
 function setWpaCredentials(){
   var cmd_args = {};
 
-  cmd_args['connect_wifi_ssid'] = gEBI('connect_wifi_ssid').value;
-  cmd_args['connect_wifi_password'] = gEBI('connect_wifi_password').value;
+  if (config_vars.wifi_up_down){
+    cmd_args['connect_wifi_ssid'] = gEBI('connect_wifi_ssid_UD').value;
+    cmd_args['connect_wifi_password'] = gEBI('connect_wifi_password_UD').value;
+  } else {
+    cmd_args['connect_wifi_ssid'] = gEBI('connect_wifi_ssid').value;
+    cmd_args['connect_wifi_password'] = gEBI('connect_wifi_password').value;
+  }
   var len = cmd_args['connect_wifi_password'].length
 
   if (len != 0 && (len < 8 || len > 63)){

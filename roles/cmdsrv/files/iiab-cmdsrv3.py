@@ -1137,6 +1137,8 @@ def calc_network_info():
     outp = run_command("/sbin/brctl show")
     bridge_devs = []
     for line in outp:
+        if line == '':
+            continue
         bridge_props = line.split()
         if bridge_props[0] == 'bridge':
             continue # skip header
