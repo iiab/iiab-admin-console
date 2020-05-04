@@ -1224,7 +1224,8 @@ def set_wpa_credentials (cmd_info):
 
     # this works for raspbian but maybe not for ubuntu
     # may need to add file /etc/netplan/99-iiab-admin-access-points.yaml
-    write_wpa_supplicant_file(connect_wifi_ssid, connect_wifi_password)
+    if ansible_facts['ansible_local']['local_facts']['os'] == 'raspbian':
+        write_wpa_supplicant_file(connect_wifi_ssid, connect_wifi_password)
 
     resp = cmd_success(cmd_info['cmd'])
     return resp
