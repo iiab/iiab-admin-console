@@ -1222,6 +1222,14 @@ def set_wpa_credentials (cmd_info):
     else:
         return cmd_malformed(cmd_info['cmd'])
 
+    # this works for raspbian but maybe not for ubuntu
+    # may need to add file /etc/netplan/99-iiab-admin-access-points.yaml
+    write_wpa_supplicant_file(connect_wifi_ssid, connect_wifi_password)
+
+    resp = cmd_success(cmd_info['cmd'])
+    return resp
+
+def write_wpa_supplicant_file(connect_wifi_ssid, connect_wifi_password):
     try:
         with open('/etc/wpa_supplicant/wpa_supplicant.conf', 'r') as f:
             wpa_txt = f.read()
@@ -1254,8 +1262,7 @@ def set_wpa_credentials (cmd_info):
         for l in wpa_lines:
             if l != '':
                 f.write(l + '\n')
-    resp = cmd_success(cmd_info['cmd'])
-    return resp
+
 
 def ctl_bluetooth(cmd_info):
     if not is_rpi:
