@@ -1224,8 +1224,12 @@ def set_wpa_credentials (cmd_info):
 
     # this works for raspbian but maybe not for ubuntu
     # may need to add file /etc/netplan/99-iiab-admin-access-points.yaml
+    # to make life easier when removing these access points from images
+
     if ansible_facts['ansible_local']['local_facts']['os'] == 'raspbian':
         write_wpa_supplicant_file(connect_wifi_ssid, connect_wifi_password)
+    if ansible_facts['ansible_local']['local_facts']['os'] == 'ubuntu':
+        write_netplan_wpa_file(connect_wifi_ssid, connect_wifi_password)
 
     resp = cmd_success(cmd_info['cmd'])
     return resp
@@ -1264,6 +1268,37 @@ def write_wpa_supplicant_file(connect_wifi_ssid, connect_wifi_password):
             if l != '':
                 f.write(l + '\n')
 
+def write_netplan_wpa_file(connect_wifi_ssid, connect_wifi_password):
+    # This will get changed a lot, so just hard code here
+    netplan_wpa_yaml_file = '/etc/netplan/02-iiab-config.yaml'
+
+    netplan_wpa_yaml = {
+        'network':
+        {'version': '2',
+        'wifis':
+            {'wlan0':
+                {'dhcp4': True,
+                'access-points':
+                    {}
+                }
+            }
+        }
+    }
+
+    netplan_config = adm.read_yaml(netplan_wpa_yaml_file)
+
+    if 'wifis' not in netplan_config['network']:
+        netplan_config['network']['wifis'] = netplan_wpa_yaml['network']['wifis']
+    elif 'wlan0' not in netplan_config['network']['wifis']:
+        netplan_config['network']['wifis']['wlan0'] = netplan_wpa_yaml['network']['wifis']['wlan0']
+    elif 'access-points' not in netplan_config['network']['wifis']['wlan0']:
+        netplan_config['network']['wifis']['wlan0']['access-points'] = netplan_wpa_yaml['network']['wifis']['wlan0']['access-points']
+
+    netplan_config['network']['wifis']['wlan0']['access-points'][connect_wifi_ssid] = {}
+    netplan_config['network']['wifis']['wlan0']['access-points'][connect_wifi_ssid]['password'] = connect_wifi_password
+
+    with open(netplan_wpa_yaml_file, 'w') as f:
+        documents = yaml.dump(netplan_config, f)
 
 def ctl_bluetooth(cmd_info):
     if not is_rpi:
