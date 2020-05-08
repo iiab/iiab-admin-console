@@ -2630,7 +2630,7 @@ def init():
         is_rpi = False
 
     # record sdcard params for rpi
-    # take it out until when need it and have a better algorithm
+    # take it out until we need it and have a better algorithm
     #if is_rpi:
     #    write_sdcard_params()
 
