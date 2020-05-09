@@ -2673,8 +2673,9 @@ def init():
         is_rpi = False
 
     # record sdcard params for rpi
-    if is_rpi:
-        write_sdcard_params()
+    # take it out until we need it and have a better algorithm
+    # or maybe later add a config switch
+    #    write_sdcard_params()
 
     # Compute variables derived from all of the above
     compute_vars()
