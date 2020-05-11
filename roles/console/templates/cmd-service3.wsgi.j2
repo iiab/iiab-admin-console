@@ -2,50 +2,86 @@ import zmq
 import os.path
 import time
 import urllib.request, urllib.error, urllib.parse
+import nacl.utils
+from nacl.public import PrivateKey, Box
+from nacl.encoding import Base64Encoder
 
-cmdsrv_pid_file = "{{ cmdsrv_pid_file }}"
-cmdsrv_ready_file = "{{ cmdsrv_ready_file }}"
+#cmdsrv_pid_file = "{{ cmdsrv_pid_file }}"
+#cmdsrv_ready_file = "{{ cmdsrv_ready_file }}"
+#iiab-cmd-service = " {{ iiab_cmd_service_url }}"
+
+cmdsrv_pid_file = "/run/iiab-cmdsrv.pid"
+cmdsrv_ready_file = "/run/iiab-cmdsrv-ready"
+iiab_cmd_service = '/iiab-cmd-service'
+
+server_key_pair = None
+server_public_key64 = None
+nonces = []
+# calc_keys() at bottom
 
 alert_param = ',"Alert": "True"}'
 
 def application(environ, start_response):
-    #print("in cmd-serve.wsgi")
+    req_method = environ['REQUEST_METHOD']
+    req_uri = environ['REQUEST_URI']
+    print(req_method, req_uri)
+
+    if req_method == 'GET':
+        response_headers = [('Content-type', 'text/plain')]
+        #print(response_headers)
+        status = '200 OK'
+        start_response(status, response_headers)
+
+        if req_uri == iiab_cmd_service + '/auth/get_pubkey':
+            print('pubkey')
+            return server_public_key64
+        elif req_uri == iiab_cmd_service + '/auth/get_nonce':
+            nonce = nacl.utils.random(Box.NONCE_SIZE)
+            print('nonce')
+            return nonce
+        else:
+            response_body = dump(environ)
+            # convert string response back to bytes
+            return [response_body.encode()]
+
+    elif req_method == 'POST':
+        if req_uri == iiab_cmd_service + '/cmd':
+            response_body = handle_cmd(req_uri, environ)
+            status = '200 OK'
+            response_headers = [('Content-type', 'application/json'), ('Content-Length', str(len(response_body)))]
+            start_response(status, response_headers)
+            # convert string response back to bytes
+            return [response_body.encode()]
+
+def handle_cmd(req_uri, environ):
+
+    print("in cmd-serve.wsgi")
     start_ms = time.time()
 
-    if environ['REQUEST_METHOD'] == 'POST':
-        try:
-            request_body_size = int(environ.get('CONTENT_LENGTH', 0))
-        except (ValueError):
-            request_body_size = 0
+    try:
+        request_body_size = int(environ.get('CONTENT_LENGTH', 0))
+    except (ValueError):
+        request_body_size = 0
 
-        request_body = environ['wsgi.input'].read(request_body_size).decode('utf8')
-        # request_body holds command=<text of cmd>
-        # it is byte so we convert to string for easier manipulation
+    request_body = environ['wsgi.input'].read(request_body_size).decode('utf8')
+    # request_body holds command=<text of cmd>
+    # it is byte so we convert to string for easier manipulation
 
-        if os.path.exists(cmdsrv_pid_file):
-            if os.path.exists(cmdsrv_ready_file):
-                # unpack cmd, urldecode, and substitute space for %20
-                #print(request_body)
-                #print(type(request_body))
-                cmd = urllib.parse.unquote(request_body.split('=')[1])
-                cmd = cmd.replace('%20', ' ')
+    if os.path.exists(cmdsrv_pid_file):
+        if os.path.exists(cmdsrv_ready_file):
+            # unpack cmd, urldecode, and substitute space for %20
+            print(request_body)
+            #print(type(request_body))
+            cmd = urllib.parse.unquote(request_body.split('=')[1])
+            cmd = cmd.replace('%20', ' ')
 
-                response_body = send_command(cmd, start_ms)
-            else:
-                response_body = '{"Error": "CMDSRV has started but is not ready."' + alert_param
+            response_body = send_command(cmd, start_ms)
         else:
-            response_body = '{"Error": "CMDSRV is not running."' + alert_param
+            response_body = '{"Error": "CMDSRV has started but is not ready."' + alert_param
+    else:
+        response_body = '{"Error": "CMDSRV is not running."' + alert_param
 
-        response_headers = [('Content-type', 'application/json'), ('Content-Length', str(len(response_body)))]
-
-    else: # not a POST
-        response_body = dump(environ)
-        response_headers = [('Content-type', 'text/plain')]
-    #print(response_headers)
-    status = '200 OK'
-    start_response(status, response_headers)
-    # convert string response back to bytes
-    return [response_body.encode()]
+    return response_body
 
 def dump(environ):
     #print("in dump")
@@ -94,3 +130,13 @@ def send_command(cmd, start_ms):
         reply_msg = '{"Error": "' + str(e) + '"' + alert_param
 
     return reply_msg
+
+def calc_keys():
+    global server_key_pair
+    global server_public_key64
+    server_key_pair = PrivateKey.generate() # nacl
+    public_key = server_key_pair.public_key # nacl
+    public_key_bytes = public_key.encode(Base64Encoder) # nacl
+    server_public_key64 = public_key_bytes.decode()
+
+calc_keys()
