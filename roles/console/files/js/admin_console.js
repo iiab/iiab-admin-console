@@ -6,7 +6,7 @@ var dayInMs = 1000*60*60*24;
 
 var iiabContrDir = "/etc/iiab/";
 var consoleJsonDir = "/common/assets/";
-var iiabCmdService = "/cmd-service";
+var iiabCmdService = "/iiab-cmd-service/cmd";
 var ansibleFacts = {};
 var ansibleTagsStr = "";
 var effective_vars = {};

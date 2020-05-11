@@ -1,15 +1,9 @@
 location /admin {
    alias {{ admin_console_dir }};
-   auth_pam                "IIAB Admin Zone";
-   auth_pam_service_name   "pwauth";
-
 }
 
 location ~ /admin/(.*)\.php$ {
     alias {{ admin_console_dir }}/$1.php;
-    auth_pam                "IIAB Admin Zone";
-    auth_pam_service_name   "pwauth";
-
     proxy_set_header X-Real-IP  $remote_addr;
     proxy_set_header X-Forwarded-For $remote_addr;
     proxy_set_header Host $host;
@@ -21,9 +15,7 @@ location ~ /admin/(.*)\.php$ {
     include fastcgi_params;
 }
 
-location /cmd-service {
-   auth_pam                "IIAB Admin Zone";
-   auth_pam_service_name   "pwauth";
+location /iiab-cmd-service {
    include uwsgi_params;
    uwsgi_pass unix:///tmp/admin-console.sock;
 }
@@ -41,5 +33,3 @@ location /js-menu/menu-files/images/ {
       deny all;
     }
 }
-
-
