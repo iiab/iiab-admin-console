@@ -618,13 +618,26 @@ function setEditMenuItemTopFormValues (menuItem, menuDef){
 }
 
 function setEditMenuItemBottomFormValues (menuItem, menuDef){
-	if (typeof(menuDef) === 'undefined')
+  var noUploadDefs = ['en-sample', 'en-oob', 'en-credits'] // protected menu defs
+
+  if (typeof(menuDef) === 'undefined')
     var menuDef = menuItemDefs[menuItem];
 
   // set flag defaults for first edit not to share
   if (menuDef.edit_status != 'local_change')  {
     menuDef.upload_flag = false;
     menuDef.download_flag = false;
+  }
+
+  if (noUploadDefs.includes(menuItem)) {
+    $('#menu_item_upload_flag').attr('disabled', true);
+    $('#menu_item_upload_flag_on').hide();
+    $('#menu_item_upload_flag_off').show();
+    menuDef.upload_flag = false;
+  } else {
+    $('#menu_item_upload_flag').attr('disabled', false);
+    $('#menu_item_upload_flag_on').show();
+    $('#menu_item_upload_flag_off').hide();
   }
 
   setEditMenuItemFormValue (menuDef, 'title', screenName='menu_item_title');
@@ -636,6 +649,7 @@ function setEditMenuItemBottomFormValues (menuItem, menuDef){
   setEditMenuItemFormValue (menuDef, 'footnote', screenName='menu_item_footnote');
   setEditMenuItemFormChecked (menuDef, 'upload_flag', screenName='menu_item_upload_flag');
   setEditMenuItemFormChecked (menuDef, 'download_flag', screenName='menu_item_download_flag');
+  // block certain menu defs from upload
 }
 
 function setEditMenuItemFormValue (menuDef, fieldName, screenName='') {
