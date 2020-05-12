@@ -15,15 +15,18 @@ cmdsrv_ready_file = "/run/iiab-cmdsrv-ready"
 iiab_cmd_service = '/iiab-cmd-service'
 
 server_key_pair = None
-server_public_key64 = None
+server_public_key64 = 'why is this not set' # use the next one
+public_key_bytes = None
+
 nonces = []
-# calc_keys() at bottom
+
+# init() at bottom
 
 alert_param = ',"Alert": "True"}'
 
 def application(environ, start_response):
     req_method = environ['REQUEST_METHOD']
-    req_uri = environ['REQUEST_URI']
+    req_uri = environ['REQUEST_URI'].split('?')[0] # remove any cache buster
     print(req_method, req_uri)
 
     if req_method == 'GET':
@@ -34,11 +37,16 @@ def application(environ, start_response):
 
         if req_uri == iiab_cmd_service + '/auth/get_pubkey':
             print('pubkey')
-            return server_public_key64
+            print(server_public_key64)
+            #return server_public_key64
+            return public_key_bytes
         elif req_uri == iiab_cmd_service + '/auth/get_nonce':
             nonce = nacl.utils.random(Box.NONCE_SIZE)
             print('nonce')
             return nonce
+        elif req_uri == iiab_cmd_service + '/auth/refresh':    # reload passwd cache
+            print('refresh')
+            return ''
         else:
             response_body = dump(environ)
             # convert string response back to bytes
@@ -134,9 +142,15 @@ def send_command(cmd, start_ms):
 def calc_keys():
     global server_key_pair
     global server_public_key64
+    global public_key_bytes
     server_key_pair = PrivateKey.generate() # nacl
     public_key = server_key_pair.public_key # nacl
     public_key_bytes = public_key.encode(Base64Encoder) # nacl
     server_public_key64 = public_key_bytes.decode()
+    print(server_public_key64)
+    print('keys generated')
 
-calc_keys()
+def init():
+    calc_keys()
+
+init()

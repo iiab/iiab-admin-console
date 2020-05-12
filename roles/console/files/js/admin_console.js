@@ -7,6 +7,7 @@ var dayInMs = 1000*60*60*24;
 var iiabContrDir = "/etc/iiab/";
 var consoleJsonDir = "/common/assets/";
 var iiabCmdService = "/iiab-cmd-service/cmd";
+var iiabAuthService = "/iiab-cmd-service/auth";
 var ansibleFacts = {};
 var ansibleTagsStr = "";
 var effective_vars = {};
@@ -67,6 +68,7 @@ sysStorage.library.partition = false; // no separate library partition
 
 // defaults for ip addr of server and other info returned from server-info.php
 var serverInfo = {"iiab_server_ip":"","iiab_client_ip":"","iiab_server_found":"TRUE","iiab_cmdsrv_running":"FALSE"};
+var authInfo = {};
 var is_rpi = false;
 var initStat = {};
 var cmdsrvWorkingModalCount = 0;
@@ -1068,6 +1070,91 @@ function setConfigVars () {
   sendCmdSrvCmd(cmd, genericCmdHandler);
   alert ("Saving Configuration.");
   return true;
+}
+
+function getServerPublicKey(){
+  $.get( iiabAuthService + '/get_pubkey', function( data ) {
+    nacl.util.decodeBase64(data.nacl_public_key);
+    consoleLog(data, typeof data);
+    authInfo['serverPKey'] = data;
+  });
+  return true;
+}
+
+function getServerNonce(){
+  $.get( iiabAuthService + '/get_nonce', function( data ) {
+    consoleLog(data, typeof data);
+    authInfo['serverNonce'] = data;
+  });
+  return true;
+}
+
+// the following are prototypes an probably not used
+
+function getServerPublicKeyDeferred(){
+  var resp = $.ajax({
+    type: 'GET',
+    cache: false,
+    global: false, // don't trigger global error handler
+    url: iiabAuthService + '/get_pubkey',
+    dataType: 'json'
+  })
+  .done(function( data ) {
+    consoleLog(data);
+  })
+  .fail(getServerInfoError);
+
+  return resp;
+}
+
+function procServerPublicKey(data){
+  consoleLog(data);
+  serverPublicKey = data.public_key;
+  // works with python cryptography and forge
+  serverPem = data.pem;
+  serverPublicKey = forge.pki.publicKeyFromPem(serverPem);
+  // for nacl
+  //serverNaclKey = data.nacl_public_key;
+  serverNaclKey = nacl.util.decodeBase64(data.nacl_public_key)
+
+}
+
+function encryptText(text){ // forge + cryptography
+  var rsa = forge.pki.rsa;
+  var pki = forge.pki;
+  var cmd_args = {}
+
+  var keypair = forge.pki.rsa.generateKeyPair({bits: 2048, e: 0x10001});
+  var privateKey = keypair.privateKey;
+  var publicKey = keypair.publicKey;
+  text ='a sample text';
+  //var encrypted = serverPublicKey.encrypt(text); # wrong for python
+  var encrypted = serverPublicKey.encrypt('a sample message', 'RSA-OAEP', {
+    md: forge.md.sha256.create(),
+    mgf1: {
+      md: forge.md.sha256.create()
+    }
+  });
+  cmd_args['encrypted'] = forge.util.encode64(encrypted);
+  var cmd = "AUTH-AUTHORIZE " + JSON.stringify(cmd_args);
+  return sendCmdSrvCmd(cmd, genericCmdHandler);
+
+}
+
+function naclEncryptText(text){ // nacl
+  var clientKeyPair = nacl.box.keyPair();
+  var message = nacl.util.decodeUTF8(text);
+  var nonce = nacl.randomBytes(24);
+  var box = nacl.box(message, nonce, serverNaclKey, clientKeyPair.secretKey);
+  var encrypted64 = nacl.util.encodeBase64(box);
+  var cmd_args = {}
+  cmd_args['encrypted64'] = encrypted64;
+  cmd_args['client_public_key64'] = nacl.util.encodeBase64(clientKeyPair.publicKey);
+  cmd_args['nonce64'] = nacl.util.encodeBase64(nonce);
+  consoleLog(cmd_args['client_public_key64'])
+  var cmd = "AUTH-AUTHORIZE " + JSON.stringify(cmd_args);
+  return sendCmdSrvCmd(cmd, genericCmdHandler);
+
 }
 
 function changePassword ()
