@@ -2,6 +2,10 @@ import zmq
 import os.path
 import time
 import urllib.request, urllib.error, urllib.parse
+import crypt
+import spwd
+import grp
+import uuid
 import nacl.utils
 from nacl.public import PrivateKey, Box
 from nacl.encoding import Base64Encoder
@@ -15,14 +19,15 @@ cmdsrv_ready_file = "/run/iiab-cmdsrv-ready"
 iiab_cmd_service = '/iiab-cmd-service'
 
 server_key_pair = None
-server_public_key64 = 'why is this not set' # use the next one
-public_key_bytes = None
+server_public_key64 = None # ? not needed
+server_public_key_bytes = None
 
-nonces = []
+valid_nonces = []
+valid_tokens = [] # could add expiry, ip addr
 
 # init() at bottom
 
-alert_param = ',"Alert": "True"}'
+alert_param = ',"Alert": "True"}' # global for cmd response
 
 def application(environ, start_response):
     req_method = environ['REQUEST_METHOD']
@@ -30,27 +35,42 @@ def application(environ, start_response):
     print(req_method, req_uri)
 
     if req_method == 'GET':
-        response_headers = [('Content-type', 'text/plain')]
-        #print(response_headers)
-        status = '200 OK'
-        start_response(status, response_headers)
+        if req_uri == iiab_cmd_service + '/auth/login':
+            response_headers = [('Content-type', 'text/plain'), ('Access-Control-Allow-Headers', '*')]
+            token = None
+            print(environ)
+            if 'HTTP_X_IIAB_CREDENTIALS' in environ:
+                credentials = environ['HTTP_X_IIAB_CREDENTIALS']
+                valid, status = auth_login(credentials)
+                if valid:
+                    token = str(uuid.uuid1()) # or os.urandom(32) which is bytes and not decodable
+            else:
+                status = '403 Invalid Login'
+            start_response(status, response_headers)
+            return token
 
-        if req_uri == iiab_cmd_service + '/auth/get_pubkey':
-            print('pubkey')
-            print(server_public_key64)
-            #return server_public_key64
-            return public_key_bytes
-        elif req_uri == iiab_cmd_service + '/auth/get_nonce':
-            nonce = nacl.utils.random(Box.NONCE_SIZE)
-            print('nonce')
-            return nonce
-        elif req_uri == iiab_cmd_service + '/auth/refresh':    # reload passwd cache
-            print('refresh')
-            return ''
-        else:
-            response_body = dump(environ)
-            # convert string response back to bytes
-            return [response_body.encode()]
+        else: # these are all gets
+            response_headers = [('Content-type', 'text/plain')]
+            #print(response_headers)
+            status = '200 OK'
+            start_response(status, response_headers)
+
+            if req_uri == iiab_cmd_service + '/auth/get_pubkey':
+                print('pubkey')
+                print(server_public_key64)
+                #return server_public_key64
+                return server_public_key_bytes
+            elif req_uri == iiab_cmd_service + '/auth/get_nonce':
+                nonce = nacl.utils.random(Box.NONCE_SIZE)
+                print('nonce')
+                return nonce
+            elif req_uri == iiab_cmd_service + '/auth/refresh':    # reload passwd cache. not for now as will use token
+                print('refresh')
+                return ''
+            else:
+                response_body = dump(environ)
+                # convert string response back to bytes
+                return [response_body.encode()]
 
     elif req_method == 'POST':
         if req_uri == iiab_cmd_service + '/cmd':
@@ -60,6 +80,41 @@ def application(environ, start_response):
             start_response(status, response_headers)
             # convert string response back to bytes
             return [response_body.encode()]
+
+def auth_login(credentials): # candidate for adm_lib
+    u_pw = credentials.split(':')
+    user = u_pw[0]
+    if len(u_pw) == 2:
+        password = u_pw[1]
+    else:
+        status = '403 Invalid Login'
+        return False, status
+
+    # see if user exists
+    try:
+        spwddb = spwd.getspnam(user)
+    except:
+        status = '403 Invalid Login'
+        return False, status
+
+    # must be in sudo group
+    grp = grp.getgrnam('sudo')
+    if user not in grp.gr_mem:
+        status = '403 Invalid Login'
+        return False, status
+
+    # check password - N.B. allows password guessing
+    readpasswd = spwddb[1]
+    pwparts = readpasswd.split('$')
+    salt = '$' + pwparts[1] + '$' +  pwparts[2] +'$'
+    calcpasswd = crypt.crypt(password, salt)
+
+    if calcpasswd != readpasswd:
+        status = '403 Invalid Login'
+        return False, status
+    else:
+        status = '200 OK'
+        return True, status
 
 def handle_cmd(req_uri, environ):
 
@@ -142,11 +197,11 @@ def send_command(cmd, start_ms):
 def calc_keys():
     global server_key_pair
     global server_public_key64
-    global public_key_bytes
+    global server_public_key_bytes
     server_key_pair = PrivateKey.generate() # nacl
     public_key = server_key_pair.public_key # nacl
-    public_key_bytes = public_key.encode(Base64Encoder) # nacl
-    server_public_key64 = public_key_bytes.decode()
+    server_public_key_bytes = public_key.encode(Base64Encoder) # nacl
+    server_public_key64 = server_public_key_bytes.decode()
     print(server_public_key64)
     print('keys generated')
 

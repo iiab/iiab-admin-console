@@ -1074,7 +1074,7 @@ function setConfigVars () {
 
 function getServerPublicKey(){
   $.get( iiabAuthService + '/get_pubkey', function( data ) {
-    nacl.util.decodeBase64(data.nacl_public_key);
+    nacl.util.decodeBase64(data);
     consoleLog(data, typeof data);
     authInfo['serverPKey'] = data;
   });
@@ -1089,6 +1089,28 @@ function getServerNonce(){
   return true;
 }
 
+function cmdServerLogin(credentials){
+  //credentials = "iiab-admin:g0adm1n";
+  // ? kill token
+  $.ajax({
+    type: 'GET',
+    cache: false,
+    global: false, // don't trigger global error handler
+    url: iiabAuthService + '/login',
+    headers: {"X-IIAB-Credentials": credentials}
+    //dataType: 'json'
+  })
+  .done(function( data ) {
+    consoleLog(data);
+    authInfo['token'] = data;
+
+  }).fail(function(data, textStatus, xhr) {
+    //This shows status code eg. 403
+    console.log("error", data.status);
+    //This shows status message eg. Forbidden
+    console.log("STATUS: "+xhr);
+  });
+}
 // the following are prototypes an probably not used
 
 function getServerPublicKeyDeferred(){
@@ -2055,6 +2077,8 @@ function init ()
   displayServerCommandStatus("Starting init");
 
   getServerInfo(); // see if we can connect
+  // generate client public/private keys
+  authInfo['clientKeyPair'] = nacl.box.keyPair();
 
   initVars();
 
