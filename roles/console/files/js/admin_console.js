@@ -1082,23 +1082,23 @@ function getServerPublicKey(){
 }
 
 function getServerNonce(){
-  //var resp = $.get( iiabAuthService + '/get_nonce', function( data ) {
-  $.get( iiabAuthService + '/get_nonce', function( data ) {
+  var resp = $.get( iiabAuthService + '/get_nonce', function( data ) {
+  //$.get( iiabAuthService + '/get_nonce', function( data ) {
     consoleLog(data, typeof data);
     var n64 = data;
     var nonce = nacl.util.decodeBase64(n64);
     consoleLog(nonce);
     authInfo['serverNonce'] = nonce;
   });
-  return true;
-  //return resp;
+  //return true;
+  return resp;
 }
 
 function cmdServerLogin(credentials){
   //credentials = "iiab-admin:g0adm1n";
   // ? kill token
 
-  $.when(getServerNonce).done(function() {
+  $.when(getServerNonce()).done(function() {
     encrypted64 = naclEncryptText(credentials);
     $.ajax({
       type: 'GET',
