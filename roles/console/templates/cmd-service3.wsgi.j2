@@ -6,8 +6,9 @@ import crypt
 import spwd
 import grp
 import uuid
+import base64
 import nacl.utils
-from nacl.public import PrivateKey, Box
+from nacl.public import PrivateKey, PublicKey, Box
 from nacl.encoding import Base64Encoder
 
 #cmdsrv_pid_file = "{{ cmdsrv_pid_file }}"
@@ -32,7 +33,7 @@ alert_param = ',"Alert": "True"}' # global for cmd response
 def application(environ, start_response):
     req_method = environ['REQUEST_METHOD']
     req_uri = environ['REQUEST_URI'].split('?')[0] # remove any cache buster
-    print(req_method, req_uri)
+    #print(req_method, req_uri)
 
     if req_method == 'GET':
         if req_uri == iiab_cmd_service + '/auth/login':
@@ -63,7 +64,11 @@ def application(environ, start_response):
             elif req_uri == iiab_cmd_service + '/auth/get_nonce':
                 nonce = nacl.utils.random(Box.NONCE_SIZE)
                 print('nonce')
-                return nonce
+                print (nonce)
+                n64 = base64.b64encode(nonce)
+                print(n64)
+                #return nonce.hex()
+                return n64
             elif req_uri == iiab_cmd_service + '/auth/refresh':    # reload passwd cache. not for now as will use token
                 print('refresh')
                 return ''

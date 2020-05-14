@@ -1074,41 +1074,52 @@ function setConfigVars () {
 
 function getServerPublicKey(){
   $.get( iiabAuthService + '/get_pubkey', function( data ) {
-    nacl.util.decodeBase64(data);
+    authInfo['serverPKey'] = nacl.util.decodeBase64(data);
     consoleLog(data, typeof data);
-    authInfo['serverPKey'] = data;
+    //authInfo['serverPKey'] = data;
   });
   return true;
 }
 
 function getServerNonce(){
+  //var resp = $.get( iiabAuthService + '/get_nonce', function( data ) {
   $.get( iiabAuthService + '/get_nonce', function( data ) {
     consoleLog(data, typeof data);
-    authInfo['serverNonce'] = data;
+    var n64 = data;
+    var nonce = nacl.util.decodeBase64(n64);
+    consoleLog(nonce);
+    authInfo['serverNonce'] = nonce;
   });
   return true;
+  //return resp;
 }
 
 function cmdServerLogin(credentials){
   //credentials = "iiab-admin:g0adm1n";
   // ? kill token
-  $.ajax({
-    type: 'GET',
-    cache: false,
-    global: false, // don't trigger global error handler
-    url: iiabAuthService + '/login',
-    headers: {"X-IIAB-Credentials": credentials}
-    //dataType: 'json'
-  })
-  .done(function( data ) {
-    consoleLog(data);
-    authInfo['token'] = data;
 
-  }).fail(function(data, textStatus, xhr) {
-    //This shows status code eg. 403
-    console.log("error", data.status);
-    //This shows status message eg. Forbidden
-    console.log("STATUS: "+xhr);
+  $.when(getServerNonce).done(function() {
+    encrypted64 = naclEncryptText(credentials);
+    $.ajax({
+      type: 'GET',
+      cache: false,
+      global: false, // don't trigger global error handler
+      url: iiabAuthService + '/login',
+      headers: {"X-IIAB-Credentials": encrypted64,
+                "X-IIAB-Nonce": authInfo.nonce,
+                "X-IIAB-ClientKey": authInfo.clientKeyPair.public_key}
+      //dataType: 'json'
+    })
+    .done(function( data ) {
+      consoleLog(data);
+      authInfo['token'] = data;
+
+    }).fail(function(data, textStatus, xhr) {
+      //This shows status code eg. 403
+      console.log("error", data.status);
+      //This shows status message eg. Forbidden
+      console.log("STATUS: "+xhr);
+    });
   });
 }
 // the following are prototypes an probably not used
@@ -1141,42 +1152,20 @@ function procServerPublicKey(data){
 
 }
 
-function encryptText(text){ // forge + cryptography
-  var rsa = forge.pki.rsa;
-  var pki = forge.pki;
-  var cmd_args = {}
-
-  var keypair = forge.pki.rsa.generateKeyPair({bits: 2048, e: 0x10001});
-  var privateKey = keypair.privateKey;
-  var publicKey = keypair.publicKey;
-  text ='a sample text';
-  //var encrypted = serverPublicKey.encrypt(text); # wrong for python
-  var encrypted = serverPublicKey.encrypt('a sample message', 'RSA-OAEP', {
-    md: forge.md.sha256.create(),
-    mgf1: {
-      md: forge.md.sha256.create()
-    }
-  });
-  cmd_args['encrypted'] = forge.util.encode64(encrypted);
-  var cmd = "AUTH-AUTHORIZE " + JSON.stringify(cmd_args);
-  return sendCmdSrvCmd(cmd, genericCmdHandler);
-
-}
-
 function naclEncryptText(text){ // nacl
   var clientKeyPair = nacl.box.keyPair();
   var message = nacl.util.decodeUTF8(text);
-  var nonce = nacl.randomBytes(24);
-  var box = nacl.box(message, nonce, serverNaclKey, clientKeyPair.secretKey);
+  //var nonce = nacl.util.decodeUTF8(authInfo.serverNonce);
+  //var serverPKey = nacl.util.decodeUTF8(authInfo.serverPKey);
+  var box = nacl.box(message, authInfo.serverNonce, authInfo.serverPKey, authInfo.clientKeyPair.secretKey);
   var encrypted64 = nacl.util.encodeBase64(box);
-  var cmd_args = {}
-  cmd_args['encrypted64'] = encrypted64;
-  cmd_args['client_public_key64'] = nacl.util.encodeBase64(clientKeyPair.publicKey);
-  cmd_args['nonce64'] = nacl.util.encodeBase64(nonce);
-  consoleLog(cmd_args['client_public_key64'])
-  var cmd = "AUTH-AUTHORIZE " + JSON.stringify(cmd_args);
-  return sendCmdSrvCmd(cmd, genericCmdHandler);
-
+  //var cmd_args = {}
+  //cmd_args['encrypted64'] = encrypted64;
+  //cmd_args['client_public_key64'] = nacl.util.encodeBase64(clientKeyPair.publicKey);
+  //cmd_args['nonce64'] = nacl.util.encodeBase64(nonce);
+  //consoleLog(cmd_args['client_public_key64'])
+  //var cmd = "AUTH-AUTHORIZE " + JSON.stringify(cmd_args);
+  return encrypted64;
 }
 
 function changePassword ()
