@@ -68,7 +68,7 @@ sysStorage.library.partition = false; // no separate library partition
 
 // defaults for ip addr of server and other info returned from server-info.php
 var serverInfo = {"iiab_server_ip":"","iiab_client_ip":"","iiab_server_found":"TRUE","iiab_cmdsrv_running":"FALSE"};
-var authInfo = {};
+var authData = {};
 var is_rpi = false;
 var initStat = {};
 var cmdsrvWorkingModalCount = 0;
@@ -1074,9 +1074,9 @@ function setConfigVars () {
 
 function getServerPublicKey(){
   $.get( iiabAuthService + '/get_pubkey', function( data ) {
-    authInfo['serverPKey'] = nacl.util.decodeBase64(data);
+    authData['serverPKey'] = nacl.util.decodeBase64(data);
     consoleLog(data, typeof data);
-    //authInfo['serverPKey'] = data;
+    //authData['serverPKey'] = data;
   });
   return true;
 }
@@ -1088,7 +1088,8 @@ function getServerNonce(){
     var n64 = data;
     var nonce = nacl.util.decodeBase64(n64);
     consoleLog(nonce);
-    authInfo['serverNonce'] = nonce;
+    authData['serverNonce64'] = n64;
+    authData['serverNonce'] = nonce;
   });
   //return true;
   return resp;
@@ -1098,6 +1099,8 @@ function cmdServerLogin(credentials){
   //credentials = "iiab-admin:g0adm1n";
   // ? kill token
 
+  // STORE BASE64 VERSIONS SO NO NEED TO CONVERT
+
   $.when(getServerNonce()).done(function() {
     encrypted64 = naclEncryptText(credentials);
     $.ajax({
@@ -1106,13 +1109,13 @@ function cmdServerLogin(credentials){
       global: false, // don't trigger global error handler
       url: iiabAuthService + '/login',
       headers: {"X-IIAB-Credentials": encrypted64,
-                "X-IIAB-Nonce": authInfo.nonce,
-                "X-IIAB-ClientKey": authInfo.clientKeyPair.public_key}
+                "X-IIAB-Nonce": authData.serverNonce64,
+                "X-IIAB-ClientKey": authData.clientPubKey64}
       //dataType: 'json'
     })
     .done(function( data ) {
       consoleLog(data);
-      authInfo['token'] = data;
+      authData['token'] = data;
 
     }).fail(function(data, textStatus, xhr) {
       //This shows status code eg. 403
@@ -1153,11 +1156,11 @@ function procServerPublicKey(data){
 }
 
 function naclEncryptText(text){ // nacl
-  var clientKeyPair = nacl.box.keyPair();
+  //var clientKeyPair = nacl.box.keyPair();
   var message = nacl.util.decodeUTF8(text);
-  //var nonce = nacl.util.decodeUTF8(authInfo.serverNonce);
-  //var serverPKey = nacl.util.decodeUTF8(authInfo.serverPKey);
-  var box = nacl.box(message, authInfo.serverNonce, authInfo.serverPKey, authInfo.clientKeyPair.secretKey);
+  //var nonce = nacl.util.decodeUTF8(authData.serverNonce);
+  //var serverPKey = nacl.util.decodeUTF8(authData.serverPKey);
+  var box = nacl.box(message, authData.serverNonce, authData.serverPKey, authData.clientKeyPair.secretKey);
   var encrypted64 = nacl.util.encodeBase64(box);
   //var cmd_args = {}
   //cmd_args['encrypted64'] = encrypted64;
@@ -2067,7 +2070,8 @@ function init ()
 
   getServerInfo(); // see if we can connect
   // generate client public/private keys
-  authInfo['clientKeyPair'] = nacl.box.keyPair();
+  authData['clientKeyPair'] = nacl.box.keyPair();
+  authData['clientPubKey64'] = nacl.util.encodeBase64(authData.clientKeyPair.publicKey);
 
   initVars();
 
