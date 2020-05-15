@@ -24,7 +24,7 @@ server_public_key64 = None # ? not needed
 server_public_key_bytes = None
 
 valid_nonces = []
-valid_tokens = [] # could add expiry, ip addr
+valid_tokens = [] # could add expiry, ip addr OR just alway use credentials
 
 # init() at bottom
 
@@ -40,9 +40,11 @@ def application(environ, start_response):
             response_headers = [('Content-type', 'text/plain'), ('Access-Control-Allow-Headers', '*')]
             token = None
             print(environ)
-            if 'HTTP_X_IIAB_CREDENTIALS' in environ:
-                credentials = environ['HTTP_X_IIAB_CREDENTIALS']
-                valid, status = auth_login(credentials)
+            if 'HTTP_X_IIAB_CREDENTIALS' in environ and 'HTTP_X_IIAB_CLIENTKEY' in environ and 'HTTP_X_IIAB_NONCE' in environ:
+                credentials64 = environ['HTTP_X_IIAB_CREDENTIALS']
+                client_public_key64 = environ['HTTP_X_IIAB_CLIENTKEY']
+                nonce64 = environ['HTTP_X_IIAB_NONCE']
+                valid, status = auth_login(credentials64, client_public_key64, nonce64)
                 if valid:
                     token = str(uuid.uuid1()) # or os.urandom(32) which is bytes and not decodable
             else:
@@ -86,7 +88,13 @@ def application(environ, start_response):
             # convert string response back to bytes
             return [response_body.encode()]
 
-def auth_login(credentials): # candidate for adm_lib
+def auth_login(credentials64, client_public_key64, nonce64): # candidate for adm_lib
+    print('Starting Authentication')
+    decrypt_success, credentials = nacl_decrpt(credentials64, client_public_key64, nonce64)
+    if not decrypt_success:
+        status = '403 Invalid Login'
+        return False, status
+
     u_pw = credentials.split(':')
     user = u_pw[0]
     if len(u_pw) == 2:
@@ -103,8 +111,8 @@ def auth_login(credentials): # candidate for adm_lib
         return False, status
 
     # must be in sudo group
-    grp = grp.getgrnam('sudo')
-    if user not in grp.gr_mem:
+    grplist = grp.getgrnam('sudo')
+    if user not in grplist.gr_mem:
         status = '403 Invalid Login'
         return False, status
 
@@ -120,6 +128,21 @@ def auth_login(credentials): # candidate for adm_lib
     else:
         status = '200 OK'
         return True, status
+
+def nacl_decrpt(message64, client_public_key64, nonce64):
+    decrypt_success = True
+    encrypted = base64.b64decode(message64)
+    nonce = base64.b64decode(nonce64)
+    client_public_key = nacl.public.PublicKey(client_public_key64, encoder = nacl.encoding.Base64Encoder) # works
+    box = Box(server_key_pair, client_public_key)
+    try:
+        plaintext = box.decrypt(encrypted, nonce) #works; base64 decoding can be done inside with encoder = nacl.encoding.Base64Encoder
+        print(plaintext)
+    except:
+        print('decryption faild')
+        plaintext = ''
+        decrypt_success = False
+    return decrypt_success, plaintext.decode()
 
 def handle_cmd(req_uri, environ):
 
@@ -200,6 +223,7 @@ def send_command(cmd, start_ms):
     return reply_msg
 
 def calc_keys():
+    print('Generating Server Key Pair')
     global server_key_pair
     global server_public_key64
     global server_public_key_bytes

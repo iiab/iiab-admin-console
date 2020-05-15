@@ -2072,9 +2072,10 @@ function init ()
   // generate client public/private keys
   authData['clientKeyPair'] = nacl.box.keyPair();
   authData['clientPubKey64'] = nacl.util.encodeBase64(authData.clientKeyPair.publicKey);
-
+  getServerPublicKey();
   initVars();
 
+  // this all becomes conditional on successful login
   $.when(
     //sendCmdSrvCmd("GET-ANS-TAGS", getAnsibleTags),
     sendCmdSrvCmd("GET-WHLIST", getWhitelist),
