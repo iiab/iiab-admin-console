@@ -34,7 +34,7 @@ def application(environ, start_response):
     req_method = environ['REQUEST_METHOD']
     req_uri = environ['REQUEST_URI'].split('?')[0] # remove any cache buster
     #print(req_method, req_uri)
-    print(environ)
+    #print(environ)
 
     if req_method == 'GET':
         if req_uri == iiab_cmd_service + '/auth/login':
@@ -64,9 +64,9 @@ def application(environ, start_response):
             elif req_uri == iiab_cmd_service + '/auth/get_nonce':
                 nonce = nacl.utils.random(Box.NONCE_SIZE)
                 print('Get Server Nonce')
-                print (nonce)
+                #print (nonce)
                 n64 = base64.b64encode(nonce)
-                print(n64)
+                #print(n64)
                 #return nonce.hex()
                 return n64
             elif req_uri == iiab_cmd_service + '/auth/refresh':    # reload passwd cache. not for now as will use token
@@ -106,7 +106,7 @@ def authenticate(environ):
 def auth_login(credentials64, client_public_key64, nonce64): # candidate for adm_lib
     print('Starting Authentication')
     decrypt_success, credentials = nacl_decrpt(credentials64, client_public_key64, nonce64)
-    print(credentials)
+    #print(credentials)
     if not decrypt_success:
         print('Decryption Failed')
         return False
@@ -152,11 +152,11 @@ def nacl_decrpt(message64, client_public_key64, nonce64):
     box = Box(server_key_pair, client_public_key)
     try:
         plaintext = box.decrypt(encrypted, nonce) #works; base64 decoding can be done inside with encoder = nacl.encoding.Base64Encoder
-        print(plaintext)
-        print('decryption succeeded')
+        #print(plaintext)
+        #print('Decryption succeeded')
     except:
-        print('decryption failed')
-        plaintext = ''
+        #print('decryption failed')
+        #plaintext = ''
         decrypt_success = False
     return decrypt_success, plaintext.decode()
 
@@ -188,6 +188,7 @@ def handle_cmd(req_uri, environ):
     else:
         response_body = '{"Error": "CMDSRV is not running."' + alert_param
 
+    print(response_body[0:80])
     return response_body
 
 def dump(environ):
@@ -247,8 +248,8 @@ def calc_keys():
     public_key = server_key_pair.public_key # nacl
     server_public_key_bytes = public_key.encode(Base64Encoder) # nacl
     server_public_key64 = server_public_key_bytes.decode()
-    print(server_public_key64)
-    print('keys generated')
+    #print(server_public_key64)
+    #print('keys generated')
 
 def init():
     calc_keys()

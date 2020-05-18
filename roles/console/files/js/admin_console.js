@@ -1002,6 +1002,9 @@ function initConfigVars()
       // || $.isEmptyObject(config_vars) is empty the first time
       ){
       consoleLog("initConfigVars found empty data");
+      consoleLog(ansibleFacts);
+      consoleLog(iiab_ini);
+      consoleLog(effective_vars);
       displayServerCommandStatus ("initConfigVars found empty data")
       return;
     }
@@ -1096,10 +1099,10 @@ function getServerPublicKey(){
 function getServerNonce(){
   var resp = $.get( iiabAuthService + '/get_nonce', function( data ) {
   //$.get( iiabAuthService + '/get_nonce', function( data ) {
-    consoleLog(data, typeof data);
+    //consoleLog(data, typeof data);
     var n64 = data;
     var nonce = nacl.util.decodeBase64(n64);
-    consoleLog(nonce);
+    //consoleLog(nonce);
     authData['serverNonce64'] = n64;
     authData['serverNonce'] = nonce;
   });
@@ -1961,6 +1964,7 @@ function sendAuthCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArg
   	}
   })
   .fail(async function(jqXHR, textStatus, errorThrown) {
+    consoleLog('in sendAuthCmdSrvCmd .fail');
     if (jqXHR.status == 403){ // not logged in
       $('#adminConsoleLoginModal').modal('show');
       await waitDeferred(1000);
@@ -2139,19 +2143,25 @@ function initPostLogin(){
   // invoke by login.done
 
   $.when(
-    //sendCmdSrvCmd("GET-ANS-TAGS", getAnsibleTags),
-    sendCmdSrvCmd("GET-WHLIST", getWhitelist),
-    $.when(sendCmdSrvCmd("GET-VARS", getInstallVars), sendCmdSrvCmd("GET-ANS", getAnsibleFacts),sendCmdSrvCmd("GET-IIAB-INI", procXsceIni)).done(initConfigVars),
-    $.when(getLangCodes(),readKiwixCatalog(),sendCmdSrvCmd("GET-ZIM-STAT", procZimStatInit)).done(procZimCatalog),
+    getLangCodes(),
+    readKiwixCatalog(),
+    sendCmdSrvCmd("GET-VARS", getInstallVars),
+    sendCmdSrvCmd("GET-ANS", getAnsibleFacts),
+    sendCmdSrvCmd("GET-IIAB-INI", procXsceIni),
+    sendCmdSrvCmd("GET-ZIM-STAT", procZimStatInit),
     getOer2goStat(),
     initMap(),
     getSpaceAvail(),
     getExternalDevInfo())
-    .done(initDone)
+    .then(initDone)
     .fail(function () {
     	displayServerCommandStatus('<span style="color:red">Init Failed</span>');
     	consoleLog("Init failed");
     	})
+}
+
+function kixixInitStatus(msg){
+  consoleLog(msg);
 }
 
 function initVars(){
@@ -2172,20 +2182,25 @@ function initManContSelections(dev, reset=false){
 }
 
 function initDone (){
-	if (initStat["error"] == false){
-	  consoleLog("Init Finished Successfully");
+	if (initStat.error == false){
+    consoleLog("starting initConfigVars");
+    initConfigVars();
+    consoleLog("starting procZimCatalog");
+    procZimCatalog();
 	  displayServerCommandStatus('<span style="color:green">Init Finished Successfully</span>');
 	  //selectedLangsDefaults(); // any installed or wip content plus default language
 	  displaySpaceAvail(); // display on various panels
 	  // now turn on navigation
     navButtonsEvents();
-	  //$('#initDataModal').modal('hide');
+    //$('#initDataModal').modal('hide');
+    consoleLog("Init Finished Successfully");
   } else {
     consoleLog("Init Failed");
     displayServerCommandStatus('<span style="color:red">Init Failed</span>');
     //$('#initDataModalResult').html("<b>There was an error on the Server.</b>");
   }
-  initStat["active"] = false;
+  initStat.complete = true;
+  initStat.active = false;
 }
 
 function waitDeferred(msec) {
