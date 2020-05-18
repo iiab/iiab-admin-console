@@ -85,7 +85,7 @@ function main() {
   //});
 
 // declare generic ajax error handler called by all .fail events
- $( document ).ajaxError(ajaxErrhandler);
+ //$( document ).ajaxError(ajaxErrhandler); 2020-05-18 took this out. Maybe was never needed?
 
 // get default help
   getHelp("Overview.rst");
@@ -142,7 +142,19 @@ function navButtonsEvents() {
 // Control Buttons
 
 function controlButtonsEvents() {
-	$("#WIFI-CTL").click(function(){
+	$('#ADMIN-CONSOLE-LOGIN').click(function(){
+    cmdServerLoginSubmit();
+  });
+
+  $('#iiabAdminLoginForm').keydown(function(e) {
+    var key = e.which;
+    if (key == 13) {
+    // As ASCII code for ENTER key is "13"
+    $('#ADMIN-CONSOLE-LOGIN').click();
+    }
+  });
+
+  $("#WIFI-CTL").click(function(){
     controlWifi();
   });
 
@@ -1095,6 +1107,19 @@ function getServerNonce(){
   return resp;
 }
 
+function launchcmdServerLoginForm(){
+  $('#adminConsoleLoginError').html('');
+  $('#adminConsoleLoginModal').modal('show');
+}
+
+function cmdServerLoginSubmit(){
+  var credentials = $('#iiabAdminUserName').val() + ':' + $('#iiabAdminUserPassword').val();
+  //$('#adminConsoleLoginModal').modal('hide');
+  authData['credentials'] = credentials;
+  cmdServerLogin(credentials);
+
+}
+
 function cmdServerLogin(credentials){
   //credentials = "iiab-admin:g0adm1n";
   // ? kill token
@@ -1102,13 +1127,13 @@ function cmdServerLogin(credentials){
   // STORE BASE64 VERSIONS SO NO NEED TO CONVERT
 
   $.when(getServerNonce()).done(function() {
-    encrypted64 = naclEncryptText(credentials);
+    authData['encryptedCredentials64'] = naclEncryptText(credentials);
     $.ajax({
       type: 'GET',
       cache: false,
       global: false, // don't trigger global error handler
       url: iiabAuthService + '/login',
-      headers: {"X-IIAB-Credentials": encrypted64,
+      headers: {"X-IIAB-Credentials": authData.encryptedCredentials64,
                 "X-IIAB-Nonce": authData.serverNonce64,
                 "X-IIAB-ClientKey": authData.clientPubKey64}
       //dataType: 'json'
@@ -1116,12 +1141,16 @@ function cmdServerLogin(credentials){
     .done(function( data ) {
       consoleLog(data);
       authData['token'] = data;
+      $('#adminConsoleLoginModal').modal('hide');
+      if (!initStat.complete)
+        initPostLogin();
 
     }).fail(function(data, textStatus, xhr) {
+      $('#adminConsoleLoginError').html('Invalid Login');
       //This shows status code eg. 403
       console.log("error", data.status);
       //This shows status message eg. Forbidden
-      console.log("STATUS: "+xhr);
+      console.log("STATUS: " + xhr);
     });
   });
 }
@@ -1218,8 +1247,12 @@ function changePasswordSuccess ()
     $( "#iiab_admin_user").val(iiab_ini['iiab-admin']['iiab_admin_user']);
     return true;
   }
-  function getWhitelist (data)
-  {
+
+  function getWhitelist (data)  {
+    sendCmdSrvCmd("GET-WHLIST", procWhitelist);
+  }
+
+  function procWhitelist (data)  {
     //alert ("in getWhitelist");
     //consoleLog(data);
     var whlist_array = data['iiab_whitelist'];
@@ -1854,9 +1887,14 @@ function formCommand(cmd_verb, args_name, args_obj)
   return command;
 }
 
-// monitor for awhile and use version if no problems present
-
 function sendCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArgs) {
+  $.when(getServerNonce()).done(function() {
+    authData['encryptedCredentials64'] = naclEncryptText(authData['credentials']);
+    sendAuthCmdSrvCmd(command, callback, buttonId, errCallback, cmdArgs);
+  });
+}
+
+function sendAuthCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArgs) {
   // takes following arguments:
   //   command - Command to send to cmdsrv
   //   callback - Function to call on success
@@ -1895,6 +1933,9 @@ function sendCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArgs) {
   var resp = $.ajax({
     type: 'POST',
     url: iiabCmdService,
+    headers: {"X-IIAB-Credentials": authData.encryptedCredentials64,
+            "X-IIAB-Nonce": authData.serverNonce64,
+            "X-IIAB-ClientKey": authData.clientPubKey64},
     data: {
       command: enCommand
     },
@@ -1919,7 +1960,15 @@ function sendCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArgs) {
   	  logServerCommands (cmdVerb, "succeeded", "", dataResp.Resp_time);
   	}
   })
-  .fail(jsonErrhandler)
+  .fail(async function(jqXHR, textStatus, errorThrown) {
+    if (jqXHR.status == 403){ // not logged in
+      $('#adminConsoleLoginModal').modal('show');
+      await waitDeferred(1000);
+      sendCmdSrvCmd(command, callback, buttonId, errCallback, cmdArgs);
+    } else {
+      jsonErrhandler(jqXHR, textStatus, errorThrown);
+    }
+    })
   .always(function() {
   	setCmdsrvWorkingModalOff();
   	if (this.buttonId != "")
@@ -2063,19 +2112,32 @@ function init ()
   //$('#initDataModal').modal('show');
 
   initStat["active"] = true;
+  initStat["complete"] = false;
   initStat["error"] = false;
   initStat["alerted"] = {};
 
   displayServerCommandStatus("Starting init");
 
   getServerInfo(); // see if we can connect
+
   // generate client public/private keys
   authData['clientKeyPair'] = nacl.box.keyPair();
   authData['clientPubKey64'] = nacl.util.encodeBase64(authData.clientKeyPair.publicKey);
+  authData['credentials'] = ':';
+  authData['encryptedCredentials64'] = '';
+
   getServerPublicKey();
   initVars();
 
-  // this all becomes conditional on successful login
+  launchcmdServerLoginForm() //force login
+  // on success will continue with initPostLogin()
+}
+
+function initPostLogin(){
+
+  // this is all conditional on successful login
+  // invoke by login.done
+
   $.when(
     //sendCmdSrvCmd("GET-ANS-TAGS", getAnsibleTags),
     sendCmdSrvCmd("GET-WHLIST", getWhitelist),
@@ -2109,8 +2171,7 @@ function initManContSelections(dev, reset=false){
   }
 }
 
-function initDone ()
-{
+function initDone (){
 	if (initStat["error"] == false){
 	  consoleLog("Init Finished Successfully");
 	  displayServerCommandStatus('<span style="color:green">Init Finished Successfully</span>');

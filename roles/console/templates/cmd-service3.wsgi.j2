@@ -34,21 +34,19 @@ def application(environ, start_response):
     req_method = environ['REQUEST_METHOD']
     req_uri = environ['REQUEST_URI'].split('?')[0] # remove any cache buster
     #print(req_method, req_uri)
+    print(environ)
 
     if req_method == 'GET':
         if req_uri == iiab_cmd_service + '/auth/login':
+            print('Starting Authentication')
             response_headers = [('Content-type', 'text/plain'), ('Access-Control-Allow-Headers', '*')]
             token = None
-            print(environ)
-            if 'HTTP_X_IIAB_CREDENTIALS' in environ and 'HTTP_X_IIAB_CLIENTKEY' in environ and 'HTTP_X_IIAB_NONCE' in environ:
-                credentials64 = environ['HTTP_X_IIAB_CREDENTIALS']
-                client_public_key64 = environ['HTTP_X_IIAB_CLIENTKEY']
-                nonce64 = environ['HTTP_X_IIAB_NONCE']
-                valid, status = auth_login(credentials64, client_public_key64, nonce64)
-                if valid:
-                    token = str(uuid.uuid1()) # or os.urandom(32) which is bytes and not decodable
-            else:
-                status = '403 Invalid Login'
+            status = '403 Invalid Login'
+            #print(environ)
+            if authenticate(environ):
+                token = str(uuid.uuid1()) # or os.urandom(32) which is bytes and not decodable
+                status = '200 OK'
+            print(status)
             start_response(status, response_headers)
             return token
 
@@ -59,13 +57,13 @@ def application(environ, start_response):
             start_response(status, response_headers)
 
             if req_uri == iiab_cmd_service + '/auth/get_pubkey':
-                print('pubkey')
-                print(server_public_key64)
+                print('Get Server Public Key')
+                #print(server_public_key64)
                 #return server_public_key64
                 return server_public_key_bytes
             elif req_uri == iiab_cmd_service + '/auth/get_nonce':
                 nonce = nacl.utils.random(Box.NONCE_SIZE)
-                print('nonce')
+                print('Get Server Nonce')
                 print (nonce)
                 n64 = base64.b64encode(nonce)
                 print(n64)
@@ -81,40 +79,58 @@ def application(environ, start_response):
 
     elif req_method == 'POST':
         if req_uri == iiab_cmd_service + '/cmd':
-            response_body = handle_cmd(req_uri, environ)
-            status = '200 OK'
-            response_headers = [('Content-type', 'application/json'), ('Content-Length', str(len(response_body)))]
-            start_response(status, response_headers)
-            # convert string response back to bytes
-            return [response_body.encode()]
+            if authenticate(environ):
+                response_body = handle_cmd(req_uri, environ)
+                status = '200 OK'
+                response_headers = [('Content-type', 'application/json'), ('Content-Length', str(len(response_body)))]
+                start_response(status, response_headers)
+                # convert string response back to bytes
+                return [response_body.encode()]
+            else:
+                status = '403 Invalid Login'
+                response_headers = [('Content-type', 'text/plain'), ('Access-Control-Allow-Headers', '*')]
+                start_response(status, response_headers)
+                return ''
+                #return ['{"Error": "Invalid login"}'.encode()]
+
+
+def authenticate(environ):
+    if 'HTTP_X_IIAB_CREDENTIALS' in environ and 'HTTP_X_IIAB_CLIENTKEY' in environ and 'HTTP_X_IIAB_NONCE' in environ:
+        credentials64 = environ['HTTP_X_IIAB_CREDENTIALS']
+        client_public_key64 = environ['HTTP_X_IIAB_CLIENTKEY']
+        nonce64 = environ['HTTP_X_IIAB_NONCE']
+        return auth_login(credentials64, client_public_key64, nonce64)
+    else:
+        return False
 
 def auth_login(credentials64, client_public_key64, nonce64): # candidate for adm_lib
     print('Starting Authentication')
     decrypt_success, credentials = nacl_decrpt(credentials64, client_public_key64, nonce64)
+    print(credentials)
     if not decrypt_success:
-        status = '403 Invalid Login'
-        return False, status
+        print('Decryption Failed')
+        return False
 
     u_pw = credentials.split(':')
     user = u_pw[0]
     if len(u_pw) == 2:
         password = u_pw[1]
     else:
-        status = '403 Invalid Login'
-        return False, status
+        print('User:Password Failed')
+        return False
 
     # see if user exists
     try:
         spwddb = spwd.getspnam(user)
     except:
-        status = '403 Invalid Login'
-        return False, status
+        print('Bad User')
+        return False
 
     # must be in sudo group
     grplist = grp.getgrnam('sudo')
     if user not in grplist.gr_mem:
-        status = '403 Invalid Login'
-        return False, status
+        print('Bad Group')
+        return False
 
     # check password - N.B. allows password guessing
     readpasswd = spwddb[1]
@@ -123,11 +139,10 @@ def auth_login(credentials64, client_public_key64, nonce64): # candidate for adm
     calcpasswd = crypt.crypt(password, salt)
 
     if calcpasswd != readpasswd:
-        status = '403 Invalid Login'
-        return False, status
+        return False
+        print('Bad Password')
     else:
-        status = '200 OK'
-        return True, status
+        return True
 
 def nacl_decrpt(message64, client_public_key64, nonce64):
     decrypt_success = True
@@ -138,15 +153,16 @@ def nacl_decrpt(message64, client_public_key64, nonce64):
     try:
         plaintext = box.decrypt(encrypted, nonce) #works; base64 decoding can be done inside with encoder = nacl.encoding.Base64Encoder
         print(plaintext)
+        print('decryption succeeded')
     except:
-        print('decryption faild')
+        print('decryption failed')
         plaintext = ''
         decrypt_success = False
     return decrypt_success, plaintext.decode()
 
 def handle_cmd(req_uri, environ):
 
-    print("in cmd-serve.wsgi")
+    print('Handling one command')
     start_ms = time.time()
 
     try:
