@@ -34,7 +34,7 @@ def application(environ, start_response):
     req_method = environ['REQUEST_METHOD']
     req_uri = environ['REQUEST_URI'].split('?')[0] # remove any cache buster
     #print(req_method, req_uri)
-    #print(environ)
+    print(environ)
 
     if req_method == 'GET':
         if req_uri == iiab_cmd_service + '/auth/login':
@@ -92,7 +92,6 @@ def application(environ, start_response):
                 start_response(status, response_headers)
                 return ''
                 #return ['{"Error": "Invalid login"}'.encode()]
-
 
 def authenticate(environ):
     if 'HTTP_X_IIAB_CREDENTIALS' in environ and 'HTTP_X_IIAB_CLIENTKEY' in environ and 'HTTP_X_IIAB_NONCE' in environ:
