@@ -70,6 +70,7 @@ sysStorage.library.partition = false; // no separate library partition
 var serverInfo = {"iiab_server_ip":"","iiab_client_ip":"","iiab_server_found":"TRUE","iiab_cmdsrv_running":"FALSE"};
 var authData = {};
 var is_rpi = false;
+var undef = undefined; // convenience variable
 var initStat = {};
 var cmdsrvWorkingModalCount = 0;
 
@@ -1157,35 +1158,6 @@ function cmdServerLogin(credentials){
     });
   });
 }
-// the following are prototypes an probably not used
-
-function getServerPublicKeyDeferred(){
-  var resp = $.ajax({
-    type: 'GET',
-    cache: false,
-    global: false, // don't trigger global error handler
-    url: iiabAuthService + '/get_pubkey',
-    dataType: 'json'
-  })
-  .done(function( data ) {
-    consoleLog(data);
-  })
-  .fail(getServerInfoError);
-
-  return resp;
-}
-
-function procServerPublicKey(data){
-  consoleLog(data);
-  serverPublicKey = data.public_key;
-  // works with python cryptography and forge
-  serverPem = data.pem;
-  serverPublicKey = forge.pki.publicKeyFromPem(serverPem);
-  // for nacl
-  //serverNaclKey = data.nacl_public_key;
-  serverNaclKey = nacl.util.decodeBase64(data.nacl_public_key)
-
-}
 
 function naclEncryptText(text){ // nacl
   //var clientKeyPair = nacl.box.keyPair();
@@ -1219,7 +1191,7 @@ function changePassword ()
   cmd_args['newpasswd'] = $("#iiab_admin_new_password").val();
 
   var cmd = "CHGPW " + JSON.stringify(cmd_args);
-  sendCmdSrvCmd(cmd, changePasswordSuccess, "CHGPW");
+  sendCmdSrvCmd(cmd, changePasswordSuccess, "CHGPW", undef, undef, encryptFlag = true);
   //alert ("Changing Password.");
   return true;
 }
@@ -1890,14 +1862,16 @@ function formCommand(cmd_verb, args_name, args_obj)
   return command;
 }
 
-function sendCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArgs) {
+function sendCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArgs, encryptFlag = false) {
+  //consoleLog ("encryptFlag: " + encryptFlag);
   $.when(getServerNonce()).done(function() {
     authData['encryptedCredentials64'] = naclEncryptText(authData['credentials']);
-    sendAuthCmdSrvCmd(command, callback, buttonId, errCallback, cmdArgs);
+    sendAuthCmdSrvCmd(command = command, callback = callback, buttonId = buttonId,
+                       errCallback = errCallback, cmdArgs = cmdArgs, encryptFlag = encryptFlag);
   });
 }
 
-function sendAuthCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArgs) {
+function sendAuthCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArgs, encryptFlag = false) {
   // takes following arguments:
   //   command - Command to send to cmdsrv
   //   callback - Function to call on success
@@ -1923,9 +1897,15 @@ function sendAuthCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArg
 
   // var enCommand = encodeURIComponent(command); - perhaps preferred in future if it can be made to work
   // var enCommand = command.replace(" ", "%20"); - only does the first one
-  var enCommand = command.replace(/ /g, "%20");
-  //consoleLog ("command: " + command);
+  var encodedCommand = command.replace(/ /g, "%20");
+  var encryptedCommand = null;
+  //coleonsLog ("command: " + command);
   //consoleLog ("enCommand: " + enCommand);
+  var payload = {command: encodedCommand};
+  if (encryptFlag){
+    encryptedCommand = naclEncryptText(encodedCommand);
+    payload = {encrypted_command: encryptedCommand};
+  }
 
   logServerCommands (cmdVerb, "sent");
 
@@ -1939,9 +1919,7 @@ function sendAuthCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArg
     headers: {"X-IIAB-Credentials": authData.encryptedCredentials64,
             "X-IIAB-Nonce": authData.serverNonce64,
             "X-IIAB-ClientKey": authData.clientPubKey64},
-    data: {
-      command: enCommand
-    },
+    data: payload,
     dataType: 'json',
     buttonId: buttonId
   })

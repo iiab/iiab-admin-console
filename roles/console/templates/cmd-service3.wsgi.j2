@@ -156,7 +156,7 @@ def nacl_decrpt(message64, client_public_key64, nonce64):
         #print('Decryption succeeded')
     except:
         #print('decryption failed')
-        #plaintext = ''
+        plaintext = b''
         decrypt_success = False
     return decrypt_success, plaintext.decode()
 
@@ -177,10 +177,20 @@ def handle_cmd(req_uri, environ):
     if os.path.exists(cmdsrv_pid_file):
         if os.path.exists(cmdsrv_ready_file):
             # unpack cmd, urldecode, and substitute space for %20
-            print(request_body)
+            #print(request_body)
             #print(type(request_body))
-            cmd = urllib.parse.unquote(request_body.split('=')[1])
+            payload = request_body.split('=')
+            cmd_type = payload[0]
+            cmd = payload[1]
+            cmd = urllib.parse.unquote(cmd)
+            if cmd_type == 'encrypted_command':
+                client_public_key64 = environ['HTTP_X_IIAB_CLIENTKEY']
+                nonce64 = environ['HTTP_X_IIAB_NONCE']
+                decrypt_success, cmd = nacl_decrpt(cmd, client_public_key64, nonce64)
+            #print(cmd)
+            #cmd = urllib.parse.unquote(cmd)
             cmd = cmd.replace('%20', ' ')
+            #print(cmd)
 
             response_body = send_command(cmd, start_ms)
         else:
