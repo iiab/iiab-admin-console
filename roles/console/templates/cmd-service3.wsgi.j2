@@ -23,8 +23,12 @@ server_key_pair = None
 server_public_key64 = None # ? not needed
 server_public_key_bytes = None
 
-valid_nonces = []
-valid_tokens = [] # could add expiry, ip addr OR just alway use credentials
+valid_nonces = [] # stored in base64 for convenience
+
+# not used
+# future guard against attack against already logged in machine
+# ould add expiry, ip addr OR just alway use credentials
+valid_tokens = []
 
 # init() at bottom
 
@@ -66,6 +70,7 @@ def application(environ, start_response):
                 print('Get Server Nonce')
                 #print (nonce)
                 n64 = base64.b64encode(nonce)
+                valid_nonces.append(n64)
                 #print(n64)
                 #return nonce.hex()
                 return n64
@@ -104,6 +109,11 @@ def authenticate(environ):
 
 def auth_login(credentials64, client_public_key64, nonce64): # candidate for adm_lib
     print('Starting Authentication')
+    if nonce64 not in valid_nonces:
+        print('Invalid nonce')
+        return False
+
+    valid_nonces.remove(nonce64) # enforce single use of nonce
     decrypt_success, credentials = nacl_decrpt(credentials64, client_public_key64, nonce64)
     #print(credentials)
     if not decrypt_success:
