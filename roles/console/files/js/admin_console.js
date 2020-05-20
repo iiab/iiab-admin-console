@@ -463,9 +463,9 @@ function contentMenuButtonsEvents() {
     selectMenuItemIcon();
   });
   //  doesn't work with nginx
-  //$("#UPLOAD-MENU-ITEM-ICON-SUBMIT").on("click", function(){
-  //  uploadMenuItemIcon();
-  //});
+  $("#UPLOAD-MENU-ITEM-ICON-SUBMIT").on("click", function(){
+    uploadMenuItemIcon();
+  });
   attachMenuItemDefNameCalc(); // attach events to fields
 }
 
@@ -1721,6 +1721,25 @@ function updateManContSelectedSpace(id, contType, catalog, dev, checked){
   displaySpaceAvail();
 }
 
+function uploadFiles(fileName, fileUse, filterArray=[]) {
+
+  var cmdArgs = {}
+  cmdArgs['file_name'] = fileName;
+  cmdArgs['file_use'] = fileUse;
+  cmdArgs['filter_array'] = filterArray;
+
+  var cmd = 'MOVE-UPLOADED-FILE ' + JSON.stringify(cmdArgs);
+  return sendCmdSrvCmd(cmd, uploadFilesSucceeded, '', uploadFilesFailed);
+}
+
+function uploadFilesSucceeded(){
+  alert ('Upload Succeeded');
+}
+
+function uploadFilesFailed(){
+  alert ('Upload Failed');
+}
+
 function getInetSpeed(){
   var command = "GET-INET-SPEED";
   sendCmdSrvCmd(command, procInetSpeed, "GET-INET-SPEED");
@@ -1944,9 +1963,9 @@ function sendAuthCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArg
   .fail(async function(jqXHR, textStatus, errorThrown) {
     consoleLog('in sendAuthCmdSrvCmd .fail');
     if (jqXHR.status == 403){ // not logged in
-      $('#adminConsoleLoginModal').modal('show');
-      await waitDeferred(1000);
-      sendCmdSrvCmd(command, callback, buttonId, errCallback, cmdArgs);
+      // probably need to reinitialize
+      init ();
+
     } else {
       jsonErrhandler(jqXHR, textStatus, errorThrown);
     }

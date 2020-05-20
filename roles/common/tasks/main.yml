@@ -23,7 +23,6 @@
     - "{{ content_base }}/working/zims"
     - "{{ content_base }}/working/maps"
     - "{{ content_base }}/working/rachel"    # STILL USED OR NOT?
-    - "{{ content_base }}/working/uploads"
     - "{{ iiab_zim_path }}/content"    # /library/zims
     - "{{ iiab_zim_path }}/index"
     - "{{ doc_root }}/local_content"    # /library/www/html
@@ -35,6 +34,16 @@
     - "{{ doc_root }}/common/images"
     - "{{ doc_root }}/common/assets"
     - "{{ doc_root }}/common/services"
+
+- name: Create required Directories Owned by web-server user
+  file:
+    path: "{{ item }}"
+    owner: {{ apache_user }}
+    group: {{ apache_user }}
+    mode: '0755'
+    state: directory
+  with_items:
+    - "{{ content_base }}/working/uploads"
 
 - name: File Layout - Symlink {{ doc_root }}/common/webfonts -> {{ doc_root }}/common/fonts
   file:

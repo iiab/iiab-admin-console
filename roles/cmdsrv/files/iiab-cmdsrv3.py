@@ -32,6 +32,7 @@ import configparser
 import re
 import urllib.request, urllib.error, urllib.parse
 import string
+import imghdr
 import crypt
 import spwd
 import cracklib
@@ -2202,13 +2203,17 @@ def move_uploaded_file(cmd_info):
     src_path = '/library/working/uploads/'
     dest_paths = {'icon' : '/library/www/html/js-menu/menu-files/images/'}
     file_name = cmd_info['cmd_args']['file_name']
-    file_type = cmd_info['cmd_args']['file_type']
-    if file_type not in dest_paths:
+    file_use = cmd_info['cmd_args']['file_use']
+    filter_array = cmd_info['cmd_args']['filter_array']
+    if file_use not in dest_paths:
         return cmd_malformed(cmd_info['cmd'])
     src = src_path + file_name
-    dst = dest_paths[file_type] + file_name
+    dst = dest_paths[file_use] + file_name
     print(src)
     print(dst)
+    if len(filter_array) > 0:
+        if imghdr.what(src) not in filter_array:
+            return cmd_error(cmd_info['cmd'], msg="File can not used as " + file_use + ".")
     try:
         shutil.copy(src, dst)
         os.chmod(dst, 420) # stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH

@@ -260,7 +260,7 @@
                                 <button id="SELECT-MENU-ITEM-ICON" type="button" class="btn btn-primary" data-toggle="modal" data-target="#menuIconsModal">
                                   Select Icon
                                 </button>
-                                <button id="UPLOAD-MENU-ITEM-ICON" type="button" class="btn btn-primary" onclick='window.open("/admin/icon_uploader.php", "_blank");'>
+                                <button id="UPLOAD-MENU-ITEM-ICON" type="button" class="btn btn-primary" data-toggle="modal" data-target="#menuIconsUploadModal">
                                   Upload Icon
                                 </button>
                                 <!-- Modal for Icon File Selection-->
@@ -268,7 +268,7 @@
                                   <div class="modal-dialog modal-dialog-centered" role="document">
                                     <div class="modal-content">
                                       <div class="modal-header">
-                                        <h5 class="modal-title" id="menuIconsModalTitle">Select Your Icon</h5>
+                                        <h5 class="modal-title-4" id="menuIconsModalTitle">Select Your Icon</h5>
                                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                           <span aria-hidden="true">&times;</span>
                                         </button>
@@ -278,6 +278,25 @@
                                     </div>
                                   </div>
                                 </div> <!-- End Modal for Icon File Selection -->
+                                <!-- Modal for Icon File Upload -->
+                                <div class="modal fade" hasLoaded="false" id="menuIconsUploadModal" tabindex="-1" role="dialog" aria-labelledby="menuIconsUploadModal" aria-hidden="true">
+                                  <div class="modal-dialog modal-dialog-centered" role="document">
+                                    <div class="modal-content">
+                                      <div class="modal-header">
+                                        <span class="modal-title-4" id="menuIconsUploadModalTitle">Select Menu Item Icon File to Upload</span>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                          <span aria-hidden="true">&times;</span>
+                                        </button>
+                                      </div>
+                                      <div class="modal-body">
+                                        <!-- <form name="icon_uploader" method="post" action="" enctype="multipart/form-data">  causes 405 error-->
+                                          <input type="file" name="menuIconsUploadFileName" id="menuIconsUploadFileName"><br><br>
+                                          <button id="UPLOAD-MENU-ITEM-ICON-SUBMIT" class="btn btn-primary">Upload Image</button>
+                                        <!-- </form> -->
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div> <!-- End Modal for Icon File Upload -->
                               </div>
                             </div>
                           </div>

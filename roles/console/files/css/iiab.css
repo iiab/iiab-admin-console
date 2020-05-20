@@ -98,6 +98,12 @@ border-radius: 8px 8px 0 0;
   overflow-y: auto;
 }
 
+/* for some reason h5 causes wrap on close button */
+.modal-title-4 {
+  font-size: 18px;
+  font-weight: 500;
+}
+
 #ZimDownload h2 {
 	font-size: 18px;
 	font-weight: 700;
