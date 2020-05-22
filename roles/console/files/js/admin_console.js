@@ -173,6 +173,10 @@ function controlButtonsEvents() {
     controlVpn();
   });
 
+  $("#LOGOUT").click(function(){
+    logOutUser();
+  });
+
   $("#REBOOT").click(function(){
     rebootServer();
   });
@@ -1130,7 +1134,6 @@ function cmdServerLoginSubmit(){
   //$('#adminConsoleLoginModal').modal('hide');
   authData['credentials'] = credentials;
   cmdServerLogin(credentials);
-
 }
 
 async function cmdServerLogin(credentials){
@@ -1155,6 +1158,7 @@ async function cmdServerLogin(credentials){
     consoleLog(data);
     authData['token'] = data;
     $('#adminConsoleLoginModal').modal('hide');
+    make_button_disabled("#LOGOUT", false);
     if (!initStat.complete)
       initPostLogin();
 
@@ -1787,6 +1791,13 @@ function procInetSpeed2(data){
   //consoleLog(jqXHR);
 }
 
+function logOutUser(){
+  authData.credentials = ':';
+  authData.token = ''; // possible future use
+  $('#iiabAdminUserName').val('');
+  $('#iiabAdminUserPassword').val('');
+  init();
+}
 
 function rebootServer()
 {
