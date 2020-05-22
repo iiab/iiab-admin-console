@@ -8,9 +8,9 @@
   tags:
     - download
 
-- name: Enable ssl
-  apache2_module: name=ssl
-  when: is_debuntu
+#- name: Enable ssl
+#  apache2_module: name=ssl
+#  when: is_debuntu
 
 - name: Create admin-console directory tree
   file: path={{ item }}
