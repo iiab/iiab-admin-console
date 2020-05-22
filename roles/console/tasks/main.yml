@@ -145,12 +145,12 @@
     - { src: "admin-console.ini.j2",dest: "/etc/uwsgi/apps-enabled/admin-console.ini" }
   when: nginx_enabled
 
-- name: Install admin-console service config file
-  template: src=cmd-service.conf.j2
-            dest=/etc/{{ apache_config_dir }}/cmd-service.conf
-            owner=root
-            group=root
-            mode=0644
+#- name: Install admin-console service config file
+#  template: src=cmd-service.conf.j2
+#            dest=/etc/{{ apache_config_dir }}/cmd-service.conf
+#            owner=root
+#            group=root
+#            mode=0644
 
 #- name: Make the admin-console service enabled in apache2
 #  file: state=link
