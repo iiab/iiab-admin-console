@@ -1091,8 +1091,7 @@ function setConfigVars () {
 function getServerPublicKey(){
   $.get( iiabAuthService + '/get_pubkey', function( data ) {
     authData['serverPKey'] = nacl.util.decodeBase64(data);
-    consoleLog(data, typeof data);
-    //authData['serverPKey'] = data;
+    //consoleLog(data, typeof data);
   });
   return true;
 }
@@ -1107,7 +1106,7 @@ async function getServerNonceAsync(){
   }
 }
 
-function getServerNonce(){
+function getServerNonce(){ // * NOT USED
   var resp = $.get( iiabAuthService + '/get_nonce', function( data ) {
   //$.get( iiabAuthService + '/get_nonce', function( data ) {
     //consoleLog(data, typeof data);
@@ -1889,7 +1888,7 @@ function formCommand(cmd_verb, args_name, args_obj)
 
   return command;
 }
-
+// * NOT USED
 function sendPreAuthCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArgs, encryptFlag = false) {
   //consoleLog ("encryptFlag: " + encryptFlag);
   $.when(getServerNonce()).done(function() {
@@ -2136,7 +2135,6 @@ function init ()
   authData['clientKeyPair'] = nacl.box.keyPair();
   authData['clientPubKey64'] = nacl.util.encodeBase64(authData.clientKeyPair.publicKey);
   authData['credentials'] = ':';
-  authData['encryptedCredentials64'] = '';
 
   getServerPublicKey();
   initVars();
