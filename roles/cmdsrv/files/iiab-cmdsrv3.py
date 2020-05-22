@@ -32,6 +32,7 @@ import configparser
 import re
 import urllib.request, urllib.error, urllib.parse
 import string
+import imghdr
 import crypt
 import spwd
 import cracklib
@@ -728,6 +729,7 @@ def cmd_handler(cmd_msg):
         "SAVE-MENU-DEF": {"funct": save_menu_def, "inet_req": False},
         "SAVE-MENU-ITEM-DEF": {"funct": save_menu_item_def, "inet_req": False},
         "SYNC-MENU-ITEM-DEFS": {"funct": sync_menu_item_defs, "inet_req": True},
+        "MOVE-UPLOADED-FILE": {"funct": move_uploaded_file, "inet_req": False},
         "COPY-DEV-IMAGE": {"funct": copy_dev_image, "inet_req": False},
         "REBOOT": {"funct": reboot_server, "inet_req": False},
         "POWEROFF": {"funct": poweroff_server, "inet_req": False},
@@ -2196,6 +2198,30 @@ def sync_menu_item_defs(cmd_info):
     outp = subproc_check_output(["scripts/sync_menu_defs.py"])
     json_outp = json_array("sync_menu_item_defs", outp)
     return (json_outp)
+
+def move_uploaded_file(cmd_info):
+    src_path = '/library/working/uploads/'
+    dest_paths = {'icon' : '/library/www/html/js-menu/menu-files/images/'}
+    file_name = cmd_info['cmd_args']['file_name']
+    file_use = cmd_info['cmd_args']['file_use']
+    filter_array = cmd_info['cmd_args']['filter_array']
+    if file_use not in dest_paths:
+        return cmd_malformed(cmd_info['cmd'])
+    src = src_path + file_name
+    dst = dest_paths[file_use] + file_name
+    print(src)
+    print(dst)
+    if len(filter_array) > 0:
+        if imghdr.what(src) not in filter_array:
+            return cmd_error(cmd_info['cmd'], msg="File can not used as " + file_use + ".")
+    try:
+        shutil.copy(src, dst)
+        os.chmod(dst, 420) # stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH
+        shutil.chown(dst, 'www-data','www-data')
+        os.remove(src)
+    except:
+        return cmd_error(cmd_info['cmd'], msg="File can not be moved.")
+    return cmd_success(cmd_info['cmd'])
 
 def copy_dev_image(cmd_info):
     if not is_rpi:

@@ -82,6 +82,7 @@
   }
 
   function procZimStatInit(data) {
+    consoleLog('in procZimStatInit')
     installedZimCatalog = data;
     addZimStatAttr('INSTALLED');
     // addZimStatAttr('WIP'); - not used
@@ -351,19 +352,21 @@ function zimListCompare(catalog) {
 }
 
 function readKiwixCatalog() { // Reads kiwix catalog from file system as json
-  //consoleLog ("in readKiwixCatalog");
+  consoleLog ("in readKiwixCatalog");
   //consoleLog ('ran sendCmdSrvCmd');
   //if (asyncFlag === undefined) asyncFlag = false;
 
   var resp = $.ajax({
     type: 'GET',
+    cache: false,
     url: consoleJsonDir + 'kiwix_catalog.json',
     dataType: 'json'
   })
   .done(function( data ) {
+    consoleLog ("in readKiwixCatalog results");
   	kiwixCatalogDate = Date.parse(data['download_date']);
   	kiwixCatalog = data['zims'];
-    //consoleLog(kiwixCatalog);
+    consoleLog(kiwixCatalog);
   })
   .fail(jsonErrhandler);
 

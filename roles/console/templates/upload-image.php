@@ -22,13 +22,14 @@ if (empty($_FILES['file']['name']) || empty($_FILES['file']['tmp_name'])) {
 
   $upload_image = $_FILES['file']['name'];
   $move_src = $_FILES['file']['tmp_name'];
-  $dest = '/library/www/html/js-menu/menu-files/images/' . $upload_image;
+  $dest = '/library/working/uploads/' . $upload_image;
+  // we will move from working to images in cmdsrv for security
   $rc = move_uploaded_file($move_src, $dest);
-  if (! $rc) {
-     $error_reply["Error"] = "Error moving " . $move_src . " to " . $dest;
-     exit(json_encode($error_reply));
+if (! $rc) {
+   $error_reply["Error"] = "Error moving " . $move_src . " to " . $dest;
+   exit(json_encode($error_reply));
 }
-  $reply["Success"] =  $_FILES['file']['name'] . "Uploaded Successfully.";
+$reply["Success"] =  $_FILES['file']['name'] . "Uploaded Successfully.";
 
 echo json_encode($reply);
 ?>

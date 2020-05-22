@@ -6,7 +6,8 @@ var dayInMs = 1000*60*60*24;
 
 var iiabContrDir = "/etc/iiab/";
 var consoleJsonDir = "/common/assets/";
-var iiabCmdService = "/cmd-service";
+var iiabCmdService = "/iiab-cmd-service/cmd";
+var iiabAuthService = "/iiab-cmd-service/auth";
 var ansibleFacts = {};
 var ansibleTagsStr = "";
 var effective_vars = {};
@@ -67,7 +68,9 @@ sysStorage.library.partition = false; // no separate library partition
 
 // defaults for ip addr of server and other info returned from server-info.php
 var serverInfo = {"iiab_server_ip":"","iiab_client_ip":"","iiab_server_found":"TRUE","iiab_cmdsrv_running":"FALSE"};
+var authData = {};
 var is_rpi = false;
+var undef = undefined; // convenience variable
 var initStat = {};
 var cmdsrvWorkingModalCount = 0;
 
@@ -83,7 +86,7 @@ function main() {
   //});
 
 // declare generic ajax error handler called by all .fail events
- $( document ).ajaxError(ajaxErrhandler);
+ //$( document ).ajaxError(ajaxErrhandler); 2020-05-18 took this out. Maybe was never needed?
 
 // get default help
   getHelp("Overview.rst");
@@ -140,7 +143,19 @@ function navButtonsEvents() {
 // Control Buttons
 
 function controlButtonsEvents() {
-	$("#WIFI-CTL").click(function(){
+	$('#ADMIN-CONSOLE-LOGIN').click(function(){
+    cmdServerLoginSubmit();
+  });
+
+  $('#iiabAdminLoginForm').keydown(function(e) {
+    var key = e.which;
+    if (key == 13) {
+    // As ASCII code for ENTER key is "13"
+    $('#ADMIN-CONSOLE-LOGIN').click();
+    }
+  });
+
+  $("#WIFI-CTL").click(function(){
     controlWifi();
   });
 
@@ -156,6 +171,10 @@ function controlButtonsEvents() {
   });
 	$("#VPN-CTL").click(function(){
     controlVpn();
+  });
+
+  $("#LOGOUT").click(function(){
+    logOutUser();
   });
 
   $("#REBOOT").click(function(){
@@ -448,9 +467,9 @@ function contentMenuButtonsEvents() {
     selectMenuItemIcon();
   });
   //  doesn't work with nginx
-  //$("#UPLOAD-MENU-ITEM-ICON-SUBMIT").on("click", function(){
-  //  uploadMenuItemIcon();
-  //});
+  $("#UPLOAD-MENU-ITEM-ICON-SUBMIT").on("click", function(){
+    uploadMenuItemIcon();
+  });
   attachMenuItemDefNameCalc(); // attach events to fields
 }
 
@@ -988,6 +1007,9 @@ function initConfigVars()
       // || $.isEmptyObject(config_vars) is empty the first time
       ){
       consoleLog("initConfigVars found empty data");
+      consoleLog(ansibleFacts);
+      consoleLog(iiab_ini);
+      consoleLog(effective_vars);
       displayServerCommandStatus ("initConfigVars found empty data")
       return;
     }
@@ -1070,6 +1092,101 @@ function setConfigVars () {
   return true;
 }
 
+function getServerPublicKey(){
+  $.get( iiabAuthService + '/get_pubkey', function( data ) {
+    authData['serverPKey'] = nacl.util.decodeBase64(data);
+    //consoleLog(data, typeof data);
+  });
+  return true;
+}
+
+async function getServerNonceAsync(){
+  try{
+    let response = await fetch(iiabAuthService + '/get_nonce');
+    return await response.text(); // should be base64
+  }catch(err){
+    console.error(err);
+    // Handle errors here
+  }
+}
+
+function getServerNonce(){ // * NOT USED
+  var resp = $.get( iiabAuthService + '/get_nonce', function( data ) {
+  //$.get( iiabAuthService + '/get_nonce', function( data ) {
+    //consoleLog(data, typeof data);
+    var n64 = data;
+    var nonce = nacl.util.decodeBase64(n64);
+    //consoleLog(nonce);
+    authData['serverNonce64'] = n64;
+    authData['serverNonce'] = nonce;
+  });
+  //return true;
+  return resp;
+}
+
+function launchcmdServerLoginForm(){
+  $('#adminConsoleLoginError').html('');
+  $('#adminConsoleLoginModal').modal('show');
+}
+
+function cmdServerLoginSubmit(){
+  var credentials = $('#iiabAdminUserName').val() + ':' + $('#iiabAdminUserPassword').val();
+  //$('#adminConsoleLoginModal').modal('hide');
+  authData['credentials'] = credentials;
+  cmdServerLogin(credentials);
+}
+
+async function cmdServerLogin(credentials){
+  //credentials = "iiab-admin:g0adm1n";
+  // ? kill token
+
+  // STORE BASE64 VERSIONS SO NO NEED TO CONVERT
+  var nonce64 = await getServerNonceAsync();
+  consoleLog(nonce64)
+  var encryptedCredentials64 = naclEncryptText(credentials, nonce64);
+  $.ajax({
+    type: 'GET',
+    cache: false,
+    global: false, // don't trigger global error handler
+    url: iiabAuthService + '/login',
+    headers: {"X-IIAB-Credentials": encryptedCredentials64,
+              "X-IIAB-Nonce": nonce64,
+              "X-IIAB-ClientKey": authData.clientPubKey64}
+    //dataType: 'json'
+  })
+  .done(function( data ) {
+    consoleLog(data);
+    authData['token'] = data;
+    $('#adminConsoleLoginModal').modal('hide');
+    make_button_disabled("#LOGOUT", false);
+    if (!initStat.complete)
+      initPostLogin();
+
+  }).fail(function(data, textStatus, xhr) {
+    $('#adminConsoleLoginError').html('Invalid Login');
+    //This shows status code eg. 403
+    console.log("error", data.status);
+    //This shows status message eg. Forbidden
+    console.log("STATUS: " + xhr);
+  });
+}
+
+function naclEncryptText(text, nonce64){ // nacl
+  //var clientKeyPair = nacl.box.keyPair();
+  var message = nacl.util.decodeUTF8(text);
+  var nonce = nacl.util.decodeBase64(nonce64);
+  //var serverPKey = nacl.util.decodeUTF8(authData.serverPKey);
+  var box = nacl.box(message, nonce, authData.serverPKey, authData.clientKeyPair.secretKey);
+  var encrypted64 = nacl.util.encodeBase64(box);
+  //var cmd_args = {}
+  //cmd_args['encrypted64'] = encrypted64;
+  //cmd_args['client_public_key64'] = nacl.util.encodeBase64(clientKeyPair.publicKey);
+  //cmd_args['nonce64'] = nacl.util.encodeBase64(nonce);
+  //consoleLog(cmd_args['client_public_key64'])
+  //var cmd = "AUTH-AUTHORIZE " + JSON.stringify(cmd_args);
+  return encrypted64;
+}
+
 function changePassword ()
 {
 	if ($("#iiab_admin_new_password").val() != $("#iiab_admin_new_password2").val()){
@@ -1086,7 +1203,7 @@ function changePassword ()
   cmd_args['newpasswd'] = $("#iiab_admin_new_password").val();
 
   var cmd = "CHGPW " + JSON.stringify(cmd_args);
-  sendCmdSrvCmd(cmd, changePasswordSuccess, "CHGPW");
+  sendCmdSrvCmd(cmd, changePasswordSuccess, "CHGPW", undef, undef, encryptFlag = true);
   //alert ("Changing Password.");
   return true;
 }
@@ -1117,8 +1234,12 @@ function changePasswordSuccess ()
     $( "#iiab_admin_user").val(iiab_ini['iiab-admin']['iiab_admin_user']);
     return true;
   }
-  function getWhitelist (data)
-  {
+
+  function getWhitelist (data)  {
+    sendCmdSrvCmd("GET-WHLIST", procWhitelist);
+  }
+
+  function procWhitelist (data)  {
     //alert ("in getWhitelist");
     //consoleLog(data);
     var whlist_array = data['iiab_whitelist'];
@@ -1612,6 +1733,25 @@ function updateManContSelectedSpace(id, contType, catalog, dev, checked){
   displaySpaceAvail();
 }
 
+function uploadFiles(fileName, fileUse, filterArray=[]) {
+
+  var cmdArgs = {}
+  cmdArgs['file_name'] = fileName;
+  cmdArgs['file_use'] = fileUse;
+  cmdArgs['filter_array'] = filterArray;
+
+  var cmd = 'MOVE-UPLOADED-FILE ' + JSON.stringify(cmdArgs);
+  return sendCmdSrvCmd(cmd, uploadFilesSucceeded, '', uploadFilesFailed);
+}
+
+function uploadFilesSucceeded(){
+  alert ('Upload Succeeded');
+}
+
+function uploadFilesFailed(){
+  alert ('Upload Failed');
+}
+
 function getInetSpeed(){
   var command = "GET-INET-SPEED";
   sendCmdSrvCmd(command, procInetSpeed, "GET-INET-SPEED");
@@ -1651,6 +1791,13 @@ function procInetSpeed2(data){
   //consoleLog(jqXHR);
 }
 
+function logOutUser(){
+  authData.credentials = ':';
+  authData.token = ''; // possible future use
+  $('#iiabAdminUserName').val('');
+  $('#iiabAdminUserPassword').val('');
+  init();
+}
 
 function rebootServer()
 {
@@ -1752,10 +1899,17 @@ function formCommand(cmd_verb, args_name, args_obj)
 
   return command;
 }
+// * NOT USED
+function sendPreAuthCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArgs, encryptFlag = false) {
+  //consoleLog ("encryptFlag: " + encryptFlag);
+  $.when(getServerNonce()).done(function() {
+    authData['encryptedCredentials64'] = naclEncryptText(authData['credentials']);
+    sendAuthCmdSrvCmd(command = command, callback = callback, buttonId = buttonId,
+                       errCallback = errCallback, cmdArgs = cmdArgs, encryptFlag = encryptFlag);
+  });
+}
 
-// monitor for awhile and use version if no problems present
-
-function sendCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArgs) {
+async function sendCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArgs, encryptFlag = false) {
   // takes following arguments:
   //   command - Command to send to cmdsrv
   //   callback - Function to call on success
@@ -1775,15 +1929,23 @@ function sendCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArgs) {
   //	return deferredObject.reject();
   //}
 
+  var nonce64 = await getServerNonceAsync();
+  var encryptedCredentials64 = naclEncryptText(authData.credentials, nonce64);
   var cmdVerb = command.split(" ")[0];
   // the ajax call escapes special characters, but converts space to plus sign
   // convert space to %20
 
   // var enCommand = encodeURIComponent(command); - perhaps preferred in future if it can be made to work
   // var enCommand = command.replace(" ", "%20"); - only does the first one
-  var enCommand = command.replace(/ /g, "%20");
-  //consoleLog ("command: " + command);
+  var encodedCommand = command.replace(/ /g, "%20");
+  var encryptedCommand = null;
+  //coleonsLog ("command: " + command);
   //consoleLog ("enCommand: " + enCommand);
+  var payload = {command: encodedCommand};
+  if (encryptFlag){
+    encryptedCommand = naclEncryptText(encodedCommand, nonce64);
+    payload = {encrypted_command: encryptedCommand};
+  }
 
   logServerCommands (cmdVerb, "sent");
 
@@ -1794,9 +1956,10 @@ function sendCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArgs) {
   var resp = $.ajax({
     type: 'POST',
     url: iiabCmdService,
-    data: {
-      command: enCommand
-    },
+    headers: {"X-IIAB-Credentials": encryptedCredentials64,
+            "X-IIAB-Nonce": nonce64,
+            "X-IIAB-ClientKey": authData.clientPubKey64},
+    data: payload,
     dataType: 'json',
     buttonId: buttonId
   })
@@ -1818,7 +1981,16 @@ function sendCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArgs) {
   	  logServerCommands (cmdVerb, "succeeded", "", dataResp.Resp_time);
   	}
   })
-  .fail(jsonErrhandler)
+  .fail(async function(jqXHR, textStatus, errorThrown) {
+    consoleLog('in sendAuthCmdSrvCmd .fail');
+    if (jqXHR.status == 403){ // not logged in
+      // probably need to reinitialize
+      //init ();
+
+    } else {
+      jsonErrhandler(jqXHR, textStatus, errorThrown);
+    }
+    })
   .always(function() {
   	setCmdsrvWorkingModalOff();
   	if (this.buttonId != "")
@@ -1962,6 +2134,7 @@ function init ()
   //$('#initDataModal').modal('show');
 
   initStat["active"] = true;
+  initStat["complete"] = false;
   initStat["error"] = false;
   initStat["alerted"] = {};
 
@@ -1969,22 +2142,43 @@ function init ()
 
   getServerInfo(); // see if we can connect
 
+  // generate client public/private keys
+  authData['clientKeyPair'] = nacl.box.keyPair();
+  authData['clientPubKey64'] = nacl.util.encodeBase64(authData.clientKeyPair.publicKey);
+  authData['credentials'] = ':';
+
+  getServerPublicKey();
   initVars();
 
+  launchcmdServerLoginForm() //force login
+  // on success will continue with initPostLogin()
+}
+
+function initPostLogin(){
+
+  // this is all conditional on successful login
+  // invoke by login.done
+
   $.when(
-    //sendCmdSrvCmd("GET-ANS-TAGS", getAnsibleTags),
-    sendCmdSrvCmd("GET-WHLIST", getWhitelist),
-    $.when(sendCmdSrvCmd("GET-VARS", getInstallVars), sendCmdSrvCmd("GET-ANS", getAnsibleFacts),sendCmdSrvCmd("GET-IIAB-INI", procXsceIni)).done(initConfigVars),
-    $.when(getLangCodes(),readKiwixCatalog(),sendCmdSrvCmd("GET-ZIM-STAT", procZimStatInit)).done(procZimCatalog),
+    getLangCodes(),
+    readKiwixCatalog(),
+    sendCmdSrvCmd("GET-VARS", getInstallVars),
+    sendCmdSrvCmd("GET-ANS", getAnsibleFacts),
+    sendCmdSrvCmd("GET-IIAB-INI", procXsceIni),
+    sendCmdSrvCmd("GET-ZIM-STAT", procZimStatInit),
     getOer2goStat(),
     initMap(),
     getSpaceAvail(),
     getExternalDevInfo())
-    .done(initDone)
+    .then(initDone)
     .fail(function () {
     	displayServerCommandStatus('<span style="color:red">Init Failed</span>');
     	consoleLog("Init failed");
     	})
+}
+
+function kixixInitStatus(msg){
+  consoleLog(msg);
 }
 
 function initVars(){
@@ -2004,22 +2198,26 @@ function initManContSelections(dev, reset=false){
   }
 }
 
-function initDone ()
-{
-	if (initStat["error"] == false){
-	  consoleLog("Init Finished Successfully");
+function initDone (){
+	if (initStat.error == false){
+    consoleLog("starting initConfigVars");
+    initConfigVars();
+    consoleLog("starting procZimCatalog");
+    procZimCatalog();
 	  displayServerCommandStatus('<span style="color:green">Init Finished Successfully</span>');
 	  //selectedLangsDefaults(); // any installed or wip content plus default language
 	  displaySpaceAvail(); // display on various panels
 	  // now turn on navigation
     navButtonsEvents();
-	  //$('#initDataModal').modal('hide');
+    //$('#initDataModal').modal('hide');
+    consoleLog("Init Finished Successfully");
   } else {
     consoleLog("Init Failed");
     displayServerCommandStatus('<span style="color:red">Init Failed</span>');
     //$('#initDataModalResult').html("<b>There was an error on the Server.</b>");
   }
-  initStat["active"] = false;
+  initStat.complete = true;
+  initStat.active = false;
 }
 
 function waitDeferred(msec) {
