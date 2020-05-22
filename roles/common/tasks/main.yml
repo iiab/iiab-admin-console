@@ -7,7 +7,7 @@
   when: not nginx_enabled
 
 # Duplicates IIAB, but we are never able to change that, and these are all used by Admin Console
-  - name: Create required Directories
+- name: Create required Directories
   file:
     path: "{{ item }}"
     # owner: root
