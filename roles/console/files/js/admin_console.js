@@ -1097,6 +1097,16 @@ function getServerPublicKey(){
   return true;
 }
 
+async function getServerNonceAsync(){
+  try{
+    let response = await fetch(iiabAuthService + '/get_nonce');
+    return await response.text(); // should be base64
+  }catch(err){
+    console.error(err);
+    // Handle errors here
+  }
+}
+
 function getServerNonce(){
   var resp = $.get( iiabAuthService + '/get_nonce', function( data ) {
   //$.get( iiabAuthService + '/get_nonce', function( data ) {
@@ -1124,47 +1134,46 @@ function cmdServerLoginSubmit(){
 
 }
 
-function cmdServerLogin(credentials){
+async function cmdServerLogin(credentials){
   //credentials = "iiab-admin:g0adm1n";
   // ? kill token
 
   // STORE BASE64 VERSIONS SO NO NEED TO CONVERT
+  var nonce64 = await getServerNonceAsync();
+  consoleLog(nonce64)
+  var encryptedCredentials64 = naclEncryptText(credentials, nonce64);
+  $.ajax({
+    type: 'GET',
+    cache: false,
+    global: false, // don't trigger global error handler
+    url: iiabAuthService + '/login',
+    headers: {"X-IIAB-Credentials": encryptedCredentials64,
+              "X-IIAB-Nonce": nonce64,
+              "X-IIAB-ClientKey": authData.clientPubKey64}
+    //dataType: 'json'
+  })
+  .done(function( data ) {
+    consoleLog(data);
+    authData['token'] = data;
+    $('#adminConsoleLoginModal').modal('hide');
+    if (!initStat.complete)
+      initPostLogin();
 
-  $.when(getServerNonce()).done(function() {
-    authData['encryptedCredentials64'] = naclEncryptText(credentials);
-    $.ajax({
-      type: 'GET',
-      cache: false,
-      global: false, // don't trigger global error handler
-      url: iiabAuthService + '/login',
-      headers: {"X-IIAB-Credentials": authData.encryptedCredentials64,
-                "X-IIAB-Nonce": authData.serverNonce64,
-                "X-IIAB-ClientKey": authData.clientPubKey64}
-      //dataType: 'json'
-    })
-    .done(function( data ) {
-      consoleLog(data);
-      authData['token'] = data;
-      $('#adminConsoleLoginModal').modal('hide');
-      if (!initStat.complete)
-        initPostLogin();
-
-    }).fail(function(data, textStatus, xhr) {
-      $('#adminConsoleLoginError').html('Invalid Login');
-      //This shows status code eg. 403
-      console.log("error", data.status);
-      //This shows status message eg. Forbidden
-      console.log("STATUS: " + xhr);
-    });
+  }).fail(function(data, textStatus, xhr) {
+    $('#adminConsoleLoginError').html('Invalid Login');
+    //This shows status code eg. 403
+    console.log("error", data.status);
+    //This shows status message eg. Forbidden
+    console.log("STATUS: " + xhr);
   });
 }
 
-function naclEncryptText(text){ // nacl
+function naclEncryptText(text, nonce64){ // nacl
   //var clientKeyPair = nacl.box.keyPair();
   var message = nacl.util.decodeUTF8(text);
-  //var nonce = nacl.util.decodeUTF8(authData.serverNonce);
+  var nonce = nacl.util.decodeBase64(nonce64);
   //var serverPKey = nacl.util.decodeUTF8(authData.serverPKey);
-  var box = nacl.box(message, authData.serverNonce, authData.serverPKey, authData.clientKeyPair.secretKey);
+  var box = nacl.box(message, nonce, authData.serverPKey, authData.clientKeyPair.secretKey);
   var encrypted64 = nacl.util.encodeBase64(box);
   //var cmd_args = {}
   //cmd_args['encrypted64'] = encrypted64;
@@ -1881,7 +1890,7 @@ function formCommand(cmd_verb, args_name, args_obj)
   return command;
 }
 
-function sendCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArgs, encryptFlag = false) {
+function sendPreAuthCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArgs, encryptFlag = false) {
   //consoleLog ("encryptFlag: " + encryptFlag);
   $.when(getServerNonce()).done(function() {
     authData['encryptedCredentials64'] = naclEncryptText(authData['credentials']);
@@ -1890,7 +1899,7 @@ function sendCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArgs, e
   });
 }
 
-function sendAuthCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArgs, encryptFlag = false) {
+async function sendCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArgs, encryptFlag = false) {
   // takes following arguments:
   //   command - Command to send to cmdsrv
   //   callback - Function to call on success
@@ -1910,6 +1919,8 @@ function sendAuthCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArg
   //	return deferredObject.reject();
   //}
 
+  var nonce64 = await getServerNonceAsync();
+  var encryptedCredentials64 = naclEncryptText(authData.credentials, nonce64);
   var cmdVerb = command.split(" ")[0];
   // the ajax call escapes special characters, but converts space to plus sign
   // convert space to %20
@@ -1922,7 +1933,7 @@ function sendAuthCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArg
   //consoleLog ("enCommand: " + enCommand);
   var payload = {command: encodedCommand};
   if (encryptFlag){
-    encryptedCommand = naclEncryptText(encodedCommand);
+    encryptedCommand = naclEncryptText(encodedCommand, nonce64);
     payload = {encrypted_command: encryptedCommand};
   }
 
@@ -1935,8 +1946,8 @@ function sendAuthCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArg
   var resp = $.ajax({
     type: 'POST',
     url: iiabCmdService,
-    headers: {"X-IIAB-Credentials": authData.encryptedCredentials64,
-            "X-IIAB-Nonce": authData.serverNonce64,
+    headers: {"X-IIAB-Credentials": encryptedCredentials64,
+            "X-IIAB-Nonce": nonce64,
             "X-IIAB-ClientKey": authData.clientPubKey64},
     data: payload,
     dataType: 'json',
@@ -1964,7 +1975,7 @@ function sendAuthCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArg
     consoleLog('in sendAuthCmdSrvCmd .fail');
     if (jqXHR.status == 403){ // not logged in
       // probably need to reinitialize
-      init ();
+      //init ();
 
     } else {
       jsonErrhandler(jqXHR, textStatus, errorThrown);

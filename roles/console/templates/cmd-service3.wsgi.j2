@@ -23,7 +23,10 @@ server_key_pair = None
 server_public_key64 = None # ? not needed
 server_public_key_bytes = None
 
-valid_nonces = [] # stored in base64 for convenience
+# Note that this does not work if uwsgi has > 1 worker
+# data global to threads but not to processes
+# stored in base64 bytes for convenience
+valid_nonces = []
 
 # not used
 # future guard against attack against already logged in machine
@@ -35,14 +38,15 @@ valid_tokens = []
 alert_param = ',"Alert": "True"}' # global for cmd response
 
 def application(environ, start_response):
+    global valid_nonces
     req_method = environ['REQUEST_METHOD']
     req_uri = environ['REQUEST_URI'].split('?')[0] # remove any cache buster
     #print(req_method, req_uri)
-    print(environ)
+    #print(environ)
 
     if req_method == 'GET':
         if req_uri == iiab_cmd_service + '/auth/login':
-            print('Starting Authentication')
+            #print('Starting Authentication')
             response_headers = [('Content-type', 'text/plain'), ('Access-Control-Allow-Headers', '*')]
             token = None
             status = '403 Invalid Login'
@@ -71,7 +75,9 @@ def application(environ, start_response):
                 #print (nonce)
                 n64 = base64.b64encode(nonce)
                 valid_nonces.append(n64)
-                #print(n64)
+                #valid_nonces.append(nonce)
+                print(n64)
+                print(valid_nonces)
                 #return nonce.hex()
                 return n64
             elif req_uri == iiab_cmd_service + '/auth/refresh':    # reload passwd cache. not for now as will use token
@@ -108,12 +114,19 @@ def authenticate(environ):
         return False
 
 def auth_login(credentials64, client_public_key64, nonce64): # candidate for adm_lib
+    global valid_nonces
     print('Starting Authentication')
-    if nonce64 not in valid_nonces:
+    print(valid_nonces)
+    #print(nonce64, type(nonce64))
+    nonce64_bytes = nonce64.encode()
+    print(nonce64_bytes)
+    #nonce = base64.b64decode(nonce64)
+
+    if nonce64_bytes not in valid_nonces:
         print('Invalid nonce')
         return False
 
-    valid_nonces.remove(nonce64) # enforce single use of nonce
+    valid_nonces.remove(nonce64_bytes) # enforce single use of nonce
     decrypt_success, credentials = nacl_decrpt(credentials64, client_public_key64, nonce64)
     #print(credentials)
     if not decrypt_success:
