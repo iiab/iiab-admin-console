@@ -38,8 +38,8 @@
 - name: Create required Directories Owned by web-server user
   file:
     path: "{{ item }}"
-    owner: {{ apache_user }}
-    group: {{ apache_user }}
+    owner: "{{ apache_user }}"
+    group: "{{ apache_user }}"
     mode: '0755'
     state: directory
   with_items:
