@@ -9,6 +9,7 @@
     - python3-zmq
     - python3-yaml
     - python3-cracklib
+    - python3-nacl
     - uuid
   tags:
     - download
