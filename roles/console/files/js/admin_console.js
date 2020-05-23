@@ -932,7 +932,9 @@ function getInstallVars (data)
   //consoleLog(jqXHR);
   return true;
 }
-function getConfigVars (data) // not used
+// NOT USED
+// retain for rewrite of loading vars including iiab_state
+function getConfigVars (data)
 {
   //alert ("in getConfigVars");
   consoleLog(data);
@@ -1108,20 +1110,6 @@ async function getServerNonceAsync(){
     console.error(err);
     // Handle errors here
   }
-}
-
-function getServerNonce(){ // * NOT USED
-  var resp = $.get( iiabAuthService + '/get_nonce', function( data ) {
-  //$.get( iiabAuthService + '/get_nonce', function( data ) {
-    //consoleLog(data, typeof data);
-    var n64 = data;
-    var nonce = nacl.util.decodeBase64(n64);
-    //consoleLog(nonce);
-    authData['serverNonce64'] = n64;
-    authData['serverNonce'] = nonce;
-  });
-  //return true;
-  return resp;
 }
 
 function launchcmdServerLoginForm(loginMsg){
@@ -1901,16 +1889,6 @@ function formCommand(cmd_verb, args_name, args_obj)
 
   return command;
 }
-// * NOT USED
-function sendPreAuthCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArgs, encryptFlag = false) {
-  //consoleLog ("encryptFlag: " + encryptFlag);
-  $.when(getServerNonce()).done(function() {
-    authData['encryptedCredentials64'] = naclEncryptText(authData['credentials']);
-    sendAuthCmdSrvCmd(command = command, callback = callback, buttonId = buttonId,
-                       errCallback = errCallback, cmdArgs = cmdArgs, encryptFlag = encryptFlag);
-  });
-}
-
 async function sendCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArgs, encryptFlag = false) {
   // takes following arguments:
   //   command - Command to send to cmdsrv
