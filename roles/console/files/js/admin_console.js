@@ -1124,8 +1124,8 @@ function getServerNonce(){ // * NOT USED
   return resp;
 }
 
-function launchcmdServerLoginForm(){
-  $('#adminConsoleLoginError').html('');
+function launchcmdServerLoginForm(loginMsg){
+  $('#adminConsoleLoginError').html(loginMsg);
   $('#adminConsoleLoginModal').modal('show');
 }
 
@@ -1140,7 +1140,6 @@ async function cmdServerLogin(credentials){
   //credentials = "iiab-admin:g0adm1n";
   // ? kill token
 
-  // STORE BASE64 VERSIONS SO NO NEED TO CONVERT
   var nonce64 = await getServerNonceAsync();
   consoleLog(nonce64)
   var encryptedCredentials64 = naclEncryptText(credentials, nonce64);
@@ -1210,7 +1209,10 @@ function changePassword ()
 
 function changePasswordSuccess ()
 {
-  alert ("Password Changed.");
+  $("#iiab_admin_new_password").val('');
+  $("#iiab_admin_new_password2").val('');
+  alert ("Password Changed. Please Sign in again.");
+  logOutUser();
   return true;
 }
   function getXsceIni ()
@@ -1985,7 +1987,7 @@ async function sendCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdA
     consoleLog('in sendAuthCmdSrvCmd .fail');
     if (jqXHR.status == 403){ // not logged in
       // probably need to reinitialize
-      //init ();
+      init ('Server Password Reset. Please Sign in Again');
 
     } else {
       jsonErrhandler(jqXHR, textStatus, errorThrown);
@@ -2129,7 +2131,7 @@ function displayServerCommandStatus (msg)
 
 // Init Functions
 
-function init ()
+function init (loginMsg='')
 {
   //$('#initDataModal').modal('show');
 
@@ -2150,7 +2152,7 @@ function init ()
   getServerPublicKey();
   initVars();
 
-  launchcmdServerLoginForm() //force login
+  launchcmdServerLoginForm(loginMsg) //force login
   // on success will continue with initPostLogin()
 }
 
