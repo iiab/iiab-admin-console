@@ -1098,8 +1098,18 @@ function getServerPublicKey(){
   $.get( iiabAuthService + '/get_pubkey', function( data ) {
     authData['serverPKey'] = nacl.util.decodeBase64(data);
     //consoleLog(data, typeof data);
-  });
+  })
+  .fail(getServerPublicKeyError);
   return true;
+}
+
+function getServerPublicKeyError (jqXHR, textStatus, errorThrown){
+  jsonErrhandler (jqXHR, textStatus, errorThrown); //check for json errors
+  authData['serverPKey'] = '';
+  consoleLog("Connection to Uwsgi Server failed.");
+  displayServerCommandStatus('Connection to Uwsgi Server <span style="color:red">FAILED</span>.');
+  alert ("Connection to Uwsgi Server failed.\n Please make sure your network settings are correct,\n that the server is turned on,\n and that the web server is running.");
+  init();
 }
 
 async function getServerNonceAsync(){
