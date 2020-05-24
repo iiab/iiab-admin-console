@@ -2200,8 +2200,8 @@ def sync_menu_item_defs(cmd_info):
     return (json_outp)
 
 def move_uploaded_file(cmd_info):
-    src_path = '/library/working/uploads/'
-    dest_paths = {'icon' : '/library/www/html/js-menu/menu-files/images/'}
+    src_path = content_base + '/working/uploads/'
+    dest_paths = {'icon' : content_base + '/www/html/js-menu/menu-files/images/'}
     file_name = cmd_info['cmd_args']['file_name']
     file_use = cmd_info['cmd_args']['file_use']
     filter_array = cmd_info['cmd_args']['filter_array']
@@ -2222,6 +2222,11 @@ def move_uploaded_file(cmd_info):
     except:
         return cmd_error(cmd_info['cmd'], msg="File can not be moved.")
     return cmd_success(cmd_info['cmd'])
+
+def remove_uploaded_files():
+    files = glob(content_base + '/working/uploads/*')
+    for f in files:
+        os.remove(f)
 
 def copy_dev_image(cmd_info):
     if not is_rpi:
@@ -2692,6 +2697,9 @@ def init():
     read_kiwix_catalog()
     read_oer2go_catalog()
     read_maps_catalog()
+
+    # Clean up any failed uploads
+    remove_uploaded_files()
 
     if ansible_facts['ansible_local']['local_facts']['rpi_model'] != 'none':
         is_rpi = True # convenience
