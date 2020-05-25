@@ -114,7 +114,7 @@ def auth_login(credentials64, client_public_key64, nonce64): # candidate for adm
     nonce64_bytes = nonce64.encode()
 
     if nonce64_bytes not in valid_nonces:
-        print('Invalid nonce')
+        print('Invalid Nonce')
         return False
 
     valid_nonces.remove(nonce64_bytes) # enforce single use of nonce
@@ -152,8 +152,8 @@ def auth_login(credentials64, client_public_key64, nonce64): # candidate for adm
     calcpasswd = crypt.crypt(password, salt)
 
     if calcpasswd != readpasswd:
-        return False
         print('Bad Password')
+        return False
     else:
         return True
 
