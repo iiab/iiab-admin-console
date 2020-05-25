@@ -1733,7 +1733,7 @@ function updateManContSelectedSpace(id, contType, catalog, dev, checked){
   displaySpaceAvail();
 }
 
-function uploadFiles(fileName, fileUse, filterArray=[]) {
+function moveUploadedFile(fileName, fileUse, filterArray=[]) {
 
   var cmdArgs = {}
   cmdArgs['file_name'] = fileName;
@@ -1741,14 +1741,14 @@ function uploadFiles(fileName, fileUse, filterArray=[]) {
   cmdArgs['filter_array'] = filterArray;
 
   var cmd = 'MOVE-UPLOADED-FILE ' + JSON.stringify(cmdArgs);
-  return sendCmdSrvCmd(cmd, uploadFilesSucceeded, '', uploadFilesFailed);
+  return sendCmdSrvCmd(cmd, moveUploadedFileSucceeded, '', moveUploadedFileFailed);
 }
 
-function uploadFilesSucceeded(){
+function moveUploadedFileSucceeded(){
   alert ('Upload Succeeded');
 }
 
-function uploadFilesFailed(){
+function moveUploadedFileFailed(){
   alert ('Upload Failed');
 }
 

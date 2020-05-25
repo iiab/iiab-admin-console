@@ -860,15 +860,11 @@ function uploadMenuItemIcon() {
   	else {
       $("#menu_item_icon_name").val(fileName);
       // try to move file to js-menu images
-      uploadFiles(fileName, 'icon', ['jpeg', 'gif', 'png]']);
+      moveUploadedFile(fileName, 'icon', ['jpeg', 'gif', 'png']);
   	}
   })
   .fail(function (jqXHR, textStatus, errorThrown){
-		if (errorThrown == 'Not Found'){
-		  alert ('Error uploading image file.');
-		}
-		else
-		  jsonErrhandler (jqXHR, textStatus, errorThrown); // probably a json error
+    alert ('Error uploading image file - ' + errorThrown);
 	});
 }
 

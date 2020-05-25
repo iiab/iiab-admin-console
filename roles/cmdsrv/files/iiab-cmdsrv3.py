@@ -2213,7 +2213,8 @@ def move_uploaded_file(cmd_info):
     print(dst)
     if len(filter_array) > 0:
         if imghdr.what(src) not in filter_array:
-            return cmd_error(cmd_info['cmd'], msg="File can not used as " + file_use + ".")
+            os.remove(src)
+            return cmd_error(cmd_info['cmd'], msg="File cannot be used as " + file_use + ".")
     try:
         shutil.copy(src, dst)
         os.chmod(dst, 420) # stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH
