@@ -5,7 +5,7 @@ import urllib.request, urllib.error, urllib.parse
 import crypt
 import spwd
 import grp
-import uuid
+import secrets
 import base64
 import nacl.utils
 from nacl.public import PrivateKey, PublicKey, Box
@@ -48,11 +48,11 @@ def application(environ, start_response):
     if req_method == 'GET':
         if req_uri == iiab_cmd_service + '/auth/login':
             response_headers = [('Content-type', 'text/plain'), ('Access-Control-Allow-Headers', '*')]
-            token = None
+            token = ''
             status = '403 Invalid Login'
             #print(environ)
             if authenticate(environ):
-                token = str(uuid.uuid1()) # or os.urandom(32) which is bytes and not decodable
+                token = secrets.token_urlsafe(32)
                 status = '200 OK'
             #print(status)
             start_response(status, response_headers)
