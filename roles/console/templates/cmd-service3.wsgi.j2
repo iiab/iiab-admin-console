@@ -148,7 +148,11 @@ def auth_login(credentials64, client_public_key64, nonce64): # candidate for adm
     # check password - N.B. allows password guessing
     readpasswd = spwddb[1]
     pwparts = readpasswd.split('$')
-    salt = '$' + pwparts[1] + '$' +  pwparts[2] +'$'
+    if len(pwparts) < 4:
+        salt = ''
+        print('No Password Salt')
+    else:
+        salt = '$' + pwparts[1] + '$' +  pwparts[2] +'$'
     calcpasswd = crypt.crypt(password, salt)
 
     if calcpasswd != readpasswd:
