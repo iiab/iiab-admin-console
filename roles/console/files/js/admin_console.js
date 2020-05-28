@@ -2146,6 +2146,7 @@ function init (loginMsg='')
   authData['clientKeyPair'] = nacl.box.keyPair();
   authData['clientPubKey64'] = nacl.util.encodeBase64(authData.clientKeyPair.publicKey);
   authData['credentials'] = ':';
+  authData.keepLogin = true;
 
   getServerPublicKey();
   initVars();
