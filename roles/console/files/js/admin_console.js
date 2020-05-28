@@ -69,6 +69,7 @@ sysStorage.library.partition = false; // no separate library partition
 // defaults for ip addr of server and other info returned from server-info.php
 var serverInfo = {"iiab_server_ip":"","iiab_client_ip":"","iiab_server_found":"TRUE","iiab_cmdsrv_running":"FALSE"};
 var authData = {};
+authData['keepLogin'] = true; // don't allow closing of login form
 var is_rpi = false;
 var undef = undefined; // convenience variable
 var initStat = {};
@@ -1123,8 +1124,16 @@ async function getServerNonceAsync(){
 }
 
 function launchcmdServerLoginForm(loginMsg){
+  authData.keepLogin = true; // prevent closing of form until logged in
+  $('#adminConsoleLoginModal').on('hide.bs.modal', onHideLoginModalEvent);
   $('#adminConsoleLoginError').html(loginMsg);
   $('#adminConsoleLoginModal').modal('show');
+}
+
+function onHideLoginModalEvent(e){
+  //consoleLog(authData.keepLogin)
+  if (authData.keepLogin == true) // uglier than I would prefer
+    e.preventDefault();
 }
 
 function cmdServerLoginSubmit(){
@@ -1154,6 +1163,7 @@ async function cmdServerLogin(credentials){
   .done(function( data ) {
     consoleLog(data);
     authData['token'] = data;
+    authData.keepLogin = false; // now allow form to close
     $('#adminConsoleLoginModal').modal('hide');
     make_button_disabled("#LOGOUT", false);
     if (!initStat.complete)

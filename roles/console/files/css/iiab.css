@@ -104,6 +104,17 @@ border-radius: 8px 8px 0 0;
   font-weight: 500;
 }
 
+.modal-background {
+  position: fixed;
+  top: 0;
+  /*left: 0; */
+  height: 100%;
+  width: 100%;
+  /*margin: auto;*/
+  background-color: rgba(0,0,0,0.6);
+  z-index: -1;
+}
+
 #ZimDownload h2 {
 	font-size: 18px;
 	font-weight: 700;
