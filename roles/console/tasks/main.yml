@@ -48,6 +48,12 @@
   with_fileglob:
         - htmlf/*
 
+# after this branch is merged into master, enable the following
+#- name: Fetch the javascript bundle with openlayers module
+#  get_url:
+#     url: "{{ iiab_map_url }}/admin-console/main.js"
+#     dest: "{{ admin_console_dir }}/map/main.js"
+
 # before the merge, use this version
 - name: Temporary webpack bundle which interfaces with new map directory
   copy:
