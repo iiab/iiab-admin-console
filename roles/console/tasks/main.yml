@@ -1,17 +1,3 @@
-#- name: Install packages for console
-#  package: name={{ item }}
-#           state=present
-#  with_items:
-#    - libapache2-mod-authnz-external
-#    - pwauth
-#  when: is_debuntu
-#  tags:
-#    - download
-
-#- name: Enable ssl
-#  apache2_module: name=ssl
-#  when: is_debuntu
-
 - name: Create admin-console directory tree
   file: path={{ item }}
         mode=0755
@@ -82,54 +68,6 @@
             mode=0644
   when: not adm_cons_force_ssl
 
-#- name: Delete admin-console config file
-#  file: path=/etc/{{ apache_config_dir }}/admin-console.conf
-#        state=absent
-#  when: adm_cons_force_ssl
-
-# ssl support for nginx not implemented
-#- name: Install admin-console ssl config file
-#  template: src=admin-console-ssl.conf.j2
-#            dest=/etc/{{ apache_config_dir }}/admin-console-ssl.conf
-#            owner=root
-#            group=root
-#            mode=0644
-#  when: adm_cons_force_ssl
-
-#- name: Delete admin-console ssl config file
-#  file: path=/etc/{{ apache_config_dir }}/admin-console-ssl.conf
-#        state=absent
-#  when: not adm_cons_force_ssl
-
-#- name: Remove the debian default config which gets in the way
-#  file: path=/etc/apache2/sites-enabled/000-default.conf
-#        state=absent
-#  when: is_debuntu
-
-# without ssl - not using apache
-#- name: Make the admin-console enabled in apache2
-#  file: state=link
-#        dest=/etc/apache2/sites-enabled/admin-console.conf
-#        src=/etc/{{ apache_config_dir }}/admin-console.conf
-#  when: is_debuntu and not adm_cons_force_ssl
-
-#- name: Make the admin-console ssl version disabled in apache2
-#  file: path=/etc/apache2/sites-enabled/admin-console-ssl.conf
-#        state=absent
-#  when: is_debuntu and not adm_cons_force_ssl
-
-# with ssl
-#- name: Add link for admin-console config file with ssl support
-#  file: path=/etc/apache2/sites-enabled/admin-console-ssl.conf
-#        src=/etc/{{ apache_config_dir }}/admin-console-ssl.conf
-#        state=link
-#  when: is_debuntu and adm_cons_force_ssl
-
-#- name: Remove link for admin-console config file with ssl support
-#  file: path=/etc/apache2/sites-enabled/admin-console.conf
-#        state=absent
-#  when: adm_cons_force_ssl and is_debuntu
-
 - name: Install admin-console wsgi service
   template: src=cmd-service3.wsgi.j2
             dest="{{ admin_console_dir }}/cmd-service3.wsgi"
@@ -144,19 +82,6 @@
   with_items:
     - { src: "admin-console.ini.j2",dest: "/etc/uwsgi/apps-enabled/admin-console.ini" }
   when: nginx_enabled
-
-#- name: Install admin-console service config file
-#  template: src=cmd-service.conf.j2
-#            dest=/etc/{{ apache_config_dir }}/cmd-service.conf
-#            owner=root
-#            group=root
-#            mode=0644
-
-#- name: Make the admin-console service enabled in apache2
-#  file: state=link
-#        dest=/etc/apache2/sites-enabled/cmd-service.conf
-#        src=/etc/{{ apache_config_dir }}/cmd-service.conf
-#  when: is_debuntu
 
 - name: Install admin-console server info service
   template: src=server-info.php
@@ -178,10 +103,6 @@
         owner=root
         group=root
         mode=0644
-
-#- name: Restart web server
-#  service: name={{ apache_service }}
-#           state=restarted
 
 - name: Restart nginx to pick up the config files installed
   systemd:
