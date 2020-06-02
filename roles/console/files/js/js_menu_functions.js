@@ -837,15 +837,19 @@ function setMenuItemIconName(e) {
 // leave this for future, but doesn't work with nginx (unlike with apache)
 function uploadMenuItemIcon() {
 	var formData = new FormData();
-  var files = $('#menuIconsUploadFileName')[0].files[0];
-  formData.append('file',files);
+  var file = $('#menuIconsUploadFileName')[0].files[0];
+  var fileName = file.name
+  formData.append('file',file);
 
 	$.ajax({
   url: "upload-image.php", // Url to which the request is send
+  //url: "icon_uploader.php",
+  //url: "/admin/upload2.php",
   type: "POST",            // Type of request to be send, called as method
   data: formData,          // Data sent to server, a set of key/value pairs (i.e. form fields and values)
   //dataType: "json",
   cache : false,
+  contentType: false,
   processData: false
   })
   .done(function(dataResp, textStatus, jqXHR) {
@@ -854,16 +858,13 @@ function uploadMenuItemIcon() {
   	  alert ("Error uploading image");
   	  }
   	else {
-  		$("#menu_item_icon_name").val(files['name']);
-  		alert ("File Uploaded");
+      $("#menu_item_icon_name").val(fileName);
+      // try to move file to js-menu images
+      moveUploadedFile(fileName, 'icon', ['jpeg', 'gif', 'png']);
   	}
   })
   .fail(function (jqXHR, textStatus, errorThrown){
-		if (errorThrown == 'Not Found'){
-		  alert ('Error uploading image file.');
-		}
-		else
-		  jsonErrhandler (jqXHR, textStatus, errorThrown); // probably a json error
+    alert ('Error uploading image file - ' + errorThrown);
 	});
 }
 

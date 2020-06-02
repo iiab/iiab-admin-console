@@ -8,6 +8,7 @@ cmdsrv_dbname : "cmdsrv.0.2.db"
 cmdsrv_rundir  : "/run"
 cmdsrv_pid_file : "{{ cmdsrv_rundir }}/iiab-cmdsrv.pid"
 cmdsrv_ready_file : "{{ cmdsrv_rundir }}/iiab-cmdsrv-ready"
+iiab_cmd_service_url : /iiab-cmd-service
 service_filelist : "{{ iiab_config_dir }}/iiab.ini"
 iiab_config_file : "{{ iiab_config_dir }}/iiab.env"
 phplib_dir : '{{ ansible_local["local_facts"]["phplib_dir"] }}'

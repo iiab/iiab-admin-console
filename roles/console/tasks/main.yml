@@ -1,12 +1,12 @@
-- name: Install packages for console
-  package: name={{ item }}
-           state=present
-  with_items:
-    - libapache2-mod-authnz-external
-    - pwauth
-  when: is_debuntu
-  tags:
-    - download
+#- name: Install packages for console
+#  package: name={{ item }}
+#           state=present
+#  with_items:
+#    - libapache2-mod-authnz-external
+#    - pwauth
+#  when: is_debuntu
+#  tags:
+#    - download
 
 #- name: Enable ssl
 #  apache2_module: name=ssl
@@ -165,9 +165,9 @@
             group=root
             mode=0644
 
-- name: Install icon upload service
-  template: src=icon_uploader.php
-            dest="{{ admin_console_dir }}/icon_uploader.php"
+- name: Install image upload service
+  template: src=upload-image.php
+            dest="{{ admin_console_dir }}/upload-image.php"
             owner=root
             group=root
             mode=0644
