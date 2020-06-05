@@ -4,6 +4,6 @@ SLEEP=`which sleep`
 SHUTDOWN=`which shutdown`
 
 $SLEEP 3
-$SHUTDOWN
+$SHUTDOWN -P now
 
 exit 0
