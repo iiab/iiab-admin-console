@@ -1,13 +1,9 @@
 #!/bin/bash
 
-. /etc/iiab/iiab.env
+SLEEP=`which sleep`
+SHUTDOWN=`which shutdown`
 
-if [ "$OS" = "Debian" ] || [ "$OS" = "raspbian" ]; then
-  /bin/sleep 3
-  /sbin/shutdown -P now
-else
-  /usr/bin/sleep 3
-  /usr/sbin/shutdown -P now
-fi
+$SLEEP 3
+$SHUTDOWN
 
 exit 0

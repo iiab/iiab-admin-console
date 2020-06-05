@@ -1,12 +1,9 @@
 #!/bin/bash
 
-. /etc/iiab/iiab.env
+SLEEP=`which sleep`
+REBOOT=`which reboot`
 
-if [ "$OS" = "Debian" ] || [ "$OS" = "raspbian" ]; then
-	/bin/sleep 3
-	/sbin/reboot
-else
-	/usr/bin/sleep 3
-	/usr/sbin/reboot
-fi
+$SLEEP 3
+$REBOOT
+
 exit 0
