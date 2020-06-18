@@ -2,7 +2,7 @@ location /admin {
    alias {{ admin_console_dir }};
 }
 
-location ~ /admin/(.*)\.php$ {
+location ~ ^/admin/(.*)\.php$ {
     alias {{ admin_console_dir }}/$1.php;
     proxy_set_header X-Real-IP  $remote_addr;
     proxy_set_header X-Forwarded-For $remote_addr;
