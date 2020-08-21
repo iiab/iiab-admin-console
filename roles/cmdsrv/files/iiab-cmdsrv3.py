@@ -1303,7 +1303,11 @@ def write_netplan_wpa_file(connect_wifi_ssid, connect_wifi_password):
         documents = yaml.dump(netplan_config, f)
 
 def ctl_bluetooth(cmd_info):
+<<<<<<< HEAD
     if not is_rpi:
+=======
+    if ansible_facts['ansible_local']['local_facts']['rpi_model'] != 'none':
+>>>>>>> f9e97d0ff0c61663c19826d1e91c91d403d5ac97
         resp = cmd_error(cmd=cmd_info['cmd'], msg='Only supported on Raspberry Pi.')
         return (resp)
 
