@@ -142,6 +142,6 @@
 - name: Create Feedback Database
   shell: ./setup-feedback
 
-- name: Add any MAPS that are installed to home/menu.json
-  shell: "{{ cmdsrv_dir }}/scripts/iiab-update-map.py"
-  when: osm_vector_maps_enabled
+#- name: Add any MAPS that are installed to home/menu.json
+#  shell: "{{ cmdsrv_dir }}/scripts/iiab-update-map.py"
+#  when: osm_vector_maps_enabled
