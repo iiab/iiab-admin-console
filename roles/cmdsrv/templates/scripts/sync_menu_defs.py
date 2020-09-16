@@ -68,7 +68,8 @@ for menu_item_def_name in local_menu_item_defs:
             adm.put_menu_item_def(menu_item_def_name, menu_item_def)
             menu_item_def = adm.get_menu_item_def_from_repo_by_name(menu_item_def_name) # get the actual stored values including commit
             # write it to local files so we have the new commit sha and preserve flags
-            adm.write_menu_item_def(menu_item_def_name, menu_item_def, upload_flag=upload_flag, download_flag=download_flag)
+            # reset upload flag
+            adm.write_menu_item_def(menu_item_def_name, menu_item_def, upload_flag=False, download_flag=download_flag)
             print ('Uploading new local menu item definition ' + menu_item_def_name)
             changes_made = True
     else: # existing - try to determine whether local or repo should prevail
@@ -98,7 +99,7 @@ for menu_item_def_name in local_menu_item_defs:
                     changes_made = True
                     menu_item_def = adm.get_menu_item_def_from_repo_by_name(menu_item_def_name)
                     adm.write_other_menu_item_def_files(menu_item_def)
-                    adm.write_menu_item_def(menu_item_def_name, menu_item_def, upload_flag=upload_flag, download_flag=download_flag)
+                    adm.write_menu_item_def(menu_item_def_name, menu_item_def, upload_flag=False, download_flag=download_flag)
             elif edit_status == 'local_change' and local_sha == repo_sha:
                 if upload_flag:
                     print ('Uploading changed version of ' + menu_item_def_name)
@@ -120,7 +121,7 @@ for menu_item_def_name in local_menu_item_defs:
                     adm.put_menu_item_def(menu_item_def_name, menu_item_def, repo_sha) # push local
                     menu_item_def = adm.get_menu_item_def_from_repo_by_name(menu_item_def_name) # get the actual stored values including commit
                     # write it to local files so we have the new commit sha and preserve flags
-                    adm.write_menu_item_def(menu_item_def_name, menu_item_def, upload_flag=upload_flag, download_flag=download_flag)
+                    adm.write_menu_item_def(menu_item_def_name, menu_item_def, upload_flag=False, download_flag=download_flag)
             elif edit_status == 'local_change' and local_sha != repo_sha:
                 print('Conflict between local and repo versions of ' + menu_item_def_name)
                 changes_made = True
