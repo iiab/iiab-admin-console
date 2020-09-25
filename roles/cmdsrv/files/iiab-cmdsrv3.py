@@ -96,7 +96,10 @@ maps_downloads_dir = None
 maps_working_dir = None
 maps_catalog_url = None
 maps_catalog_file = None
+maps_catalog_url_v2 = None
+maps_catalog_file_v2 = None
 vector_map_path = None
+osm_version = None
 modules_dir = None
 small_device_size = 525000 # bigger than anticipated boot partition
 js_menu_dir = None
@@ -2085,9 +2088,18 @@ def get_osm_vect_catalog(cmd_info):
     return cmd_malformed("DUMMY")
 
 def install_osm_vect_set(cmd_info):
+    if osm_version == 'V1':
+        return install_osm_vect_set_v1(cmd_info)
+    elif osm_version == 'V2':
+        return install_osm_vect_set_v2(cmd_info)
+    else:
+        resp = cmd_error(cmd='INST-OSM-VECT-SET', msg='OSM Vectors not installed or unknown version')
+        return resp
+
+
+def install_osm_vect_set_v1(cmd_info):
     global ansible_running_flag
     global jobs_requested
-
     if 'cmd_args' in cmd_info:
         map_id = cmd_info['cmd_args']['osm_vect_id']
         if map_id not in maps_catalog['regions']:
@@ -2095,8 +2107,6 @@ def install_osm_vect_set(cmd_info):
             return resp
     else:
         return cmd_malformed(cmd_info['cmd'])
-
-    # at this point we can create all the jobs
 
     download_url = maps_catalog['regions'][map_id]['url'] # https://archive.org/download/en-osm-omt_north_america_2017-07-03_v0.1/en-osm-omt_north_america_2017-07-03_v0.1.zip
     zip_name = download_url.split('/')[-1] # en-osm-omt_north_america_2017-07-03_v0.1.zip
@@ -2118,6 +2128,35 @@ def install_osm_vect_set(cmd_info):
     job_command +=  " " + unzipped_dir
     job_command +=  " " + vector_map_path
     job_command +=  " " + download_file
+
+    #print job_command
+    resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=3, depend_on_job_id=job_id, has_dependent="N")
+
+    return resp
+
+def install_osm_vect_set_v2(cmd_info):
+    global ansible_running_flag
+    global jobs_requested
+    if 'cmd_args' in cmd_info:
+        map_id = cmd_info['cmd_args']['osm_vect_id']
+        if map_id not in maps_catalog['maps']:
+            resp = cmd_error(cmd='INST-OSM-VECT-SET', msg='Map Tile Set is not in catalog in Command')
+            return resp
+    else:
+        return cmd_malformed(cmd_info['cmd'])
+
+    download_url = maps_catalog['maps'][map_id]['detail_url']
+    mbtiles_name = download_url.split('/')[-1] # osm_north_america_z11-z14_2019.mbtiles (not zipped)
+    download_file = maps_working_dir + mbtiles_name
+
+    # download mbtiles file
+    job_command = "/usr/bin/wget -c --progress=dot:giga " + download_url + " -O " + download_file
+    job_id = request_one_job(cmd_info, job_command, 1, -1, "Y")
+    #print job_command
+
+    # move to location and clean up
+    job_command = "scripts/osm-vect_v2_install_step3.sh"
+    job_command +=  " " + mbtiles_name
 
     #print job_command
     resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=3, depend_on_job_id=job_id, has_dependent="N")
@@ -2700,6 +2739,10 @@ def init():
 
     # Get ansible facts for localhost
     get_ansible_facts()
+
+     # Compute variables derived from all of the above
+    compute_vars()
+
     #get_ansible_tags()
     read_kiwix_catalog()
     read_oer2go_catalog()
@@ -2717,9 +2760,6 @@ def init():
     # take it out until we need it and have a better algorithm
     # or maybe later add a config switch
     #    write_sdcard_params()
-
-    # Compute variables derived from all of the above
-    compute_vars()
 
     # See if queue.db exists and create if not
     # Opening a connection creates if not exist
@@ -2916,8 +2956,12 @@ def read_maps_catalog():
     global maps_catalog
     global init_error
 
+    if osm_version == 'V2':
+        fname = maps_catalog_file_v2
+    else:
+        fname = maps_catalog_file
     try:
-        stream = open (maps_catalog_file,"r")
+        stream = open (fname,"r")
         maps_catalog = json.load(stream)
         stream.close()
     except:
@@ -3082,6 +3126,8 @@ def app_config():
     global maps_working_dir
     global maps_catalog_url
     global maps_catalog_file
+    global maps_catalog_url_v2
+    global maps_catalog_file_v2
     global vector_map_path
     global modules_dir
     global js_menu_dir
@@ -3135,6 +3181,8 @@ def app_config():
     maps_working_dir = conf['maps_working_dir']
     maps_catalog_url  = conf['maps_catalog_url']
     maps_catalog_file  = conf['maps_catalog_file']
+    maps_catalog_url_v2  = conf['maps_catalog_url_v2']
+    maps_catalog_file_v2  = conf['maps_catalog_file_v2']
     vector_map_path  = conf['vector_map_path']
     js_menu_dir = conf['js_menu_dir']
     squid_service = conf['squid_service']
@@ -3147,6 +3195,7 @@ def app_config():
 
 def compute_vars():
     global adm_conf
+    global osm_version
     # calculate osm version
     if 'osm_version' in local_vars:
         adm_conf['osm_version'] = local_vars['osm_version']
@@ -3156,6 +3205,7 @@ def compute_vars():
         adm_conf['osm_version'] = 'V1'
     else:
         adm_conf['osm_version'] = None
+    osm_version = adm_conf['osm_version']
     return
 
 def set_ready_flag(on_off):
