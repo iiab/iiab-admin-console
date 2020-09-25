@@ -728,6 +728,7 @@ def cmd_handler(cmd_msg):
         "INST-RACHEL": {"funct": install_rachel, "inet_req": True},
         "GET-OSM-VECT-CAT": {"funct": get_osm_vect_catalog, "inet_req": True},
         "INST-OSM-VECT-SET": {"funct": install_osm_vect_set, "inet_req": True},
+        "INST-SAT-AREA": {"funct": install_sat_area, "inet_req": True},
         "DEL-DOWNLOADS": {"funct": del_downloads, "inet_req": False},
         "DEL-MODULES": {"funct": del_modules, "inet_req": False},
         "GET-MENU-ITEM-DEF-LIST": {"funct": get_menu_item_def_list, "inet_req": False},
@@ -2162,6 +2163,18 @@ def install_osm_vect_set_v2(cmd_info):
     resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=3, depend_on_job_id=job_id, has_dependent="N")
 
     return resp
+
+def install_sat_area(cmd_info):
+    global ansible_running_flag
+    global jobs_requested
+    if 'cmd_args' in cmd_info:
+        longitude = cmd_info['cmd_args']['longitude']
+        latitude = cmd_info['cmd_args']['latitude']
+        radius = cmd_info['cmd_args']['radius']
+    else:
+        return cmd_malformed(cmd_info['cmd'])
+
+    job_command = "scripts/iiab-extend-sat.py --lon " + longitude + " --lat " + latitude + " --radius " + radius
 
 # Content Menu Commands
 
