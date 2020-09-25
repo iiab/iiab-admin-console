@@ -146,6 +146,7 @@ db_lock = threading.Lock() # for sqlite db concurrency
 # vars read from ansible vars directory
 # effective is composite where local takes precedence
 
+adm_conf = {} # for use by front end
 default_vars = {}
 local_vars = {}
 effective_vars = {}
@@ -684,6 +685,7 @@ def cmd_handler(cmd_msg):
         "TEST": {"funct": do_test, "inet_req": False},
         "LIST-LIBR": {"funct": list_library, "inet_req": False},
         "WGET": {"funct": wget_file, "inet_req": True},
+        "GET-ADM-CONF": {"funct": get_adm_conf, "inet_req": False},
         "GET-ANS": {"funct": get_ans_facts, "inet_req": False},
         "GET-ANS-TAGS": {"funct": get_ans_tags, "inet_req": False},
         "GET-VARS": {"funct": get_install_vars, "inet_req": False},
@@ -975,6 +977,10 @@ def get_ansible_version():
 def wget_file(cmd_info):
     resp = cmd_info['cmd'] + " done."
 
+    return (resp)
+
+def get_adm_conf(cmd_info):
+    resp = json.dumps(adm_conf)
     return (resp)
 
 def get_ans_facts(cmd_info):
@@ -3041,6 +3047,7 @@ def get_incomplete_jobs():
     conn.close()
 
 def app_config():
+    global adm_conf
     global iiab_base
     global iiab_repo
     global iiab_config_dir
@@ -3089,7 +3096,9 @@ def app_config():
     stream = open (cmdsrv_config_file,"r")
     inp = json.load(stream)
     stream.close()
+
     conf = inp['cmdsrv_conf']
+    adm_conf = conf
 
     iiab_base = conf['iiab_base']
     iiab_repo = conf['iiab_repo']
@@ -3135,10 +3144,18 @@ def app_config():
     apache_user = conf['apache_user']
     df_program = conf['df_program']
 
-# These two were taken from the OLPC idmgr application
 
 def compute_vars():
-    # nothing to do at this point
+    global adm_conf
+    # calculate osm version
+    if 'osm_version' in local_vars:
+        adm_conf['osm_version'] = local_vars['osm_version']
+    elif os.path.exists(vector_map_path + '/installer'):
+        adm_conf['osm_version'] = 'V2'
+    elif os.path.exists(vector_map_path):
+        adm_conf['osm_version'] = 'V1'
+    else:
+        adm_conf['osm_version'] = None
     return
 
 def set_ready_flag(on_off):
