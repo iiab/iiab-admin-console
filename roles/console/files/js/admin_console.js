@@ -1344,6 +1344,8 @@ function procJobStat(data)
     html += "</tr>";
 
     // there should be one or two parts - ? still need this; for cancel
+    // manual commands through iiab-cmdsrv-cti can introduce extra spaces and break this
+
     var cmd_parse = statusJob.cmd_msg.split(" ");
     statusJob['cmd_verb'] = cmd_parse[0];
     if(cmd_parse.length == 0 || typeof cmd_parse[1] === 'undefined')

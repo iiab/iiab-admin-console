@@ -2158,8 +2158,10 @@ def install_osm_vect_set_v2(cmd_info):
     # move to location and clean up
     job_command = "scripts/osm-vect_v2_install_step3.sh"
     job_command +=  " " + mbtiles_name
+    job_id = request_one_job(cmd_info, job_command, 2, job_id, "Y")
 
-    #print job_command
+    # create maps idx
+    job_command = "/usr/bin/iiab-maps-finish.py " + mbtiles_name
     resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=3, depend_on_job_id=job_id, has_dependent="N")
 
     return resp
