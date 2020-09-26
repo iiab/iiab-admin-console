@@ -2174,7 +2174,9 @@ def install_sat_area(cmd_info):
     else:
         return cmd_malformed(cmd_info['cmd'])
 
-    job_command = "scripts/iiab-extend-sat.py --lon " + longitude + " --lat " + latitude + " --radius " + radius
+    job_command = "/usr/bin/iiab-extend-sat.py --lon " + longitude + " --lat " + latitude + " --radius " + radius
+    resp = request_job(cmd_info, job_command)
+    return resp
 
 # Content Menu Commands
 
