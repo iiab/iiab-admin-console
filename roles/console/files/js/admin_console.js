@@ -8,6 +8,7 @@ var iiabContrDir = "/etc/iiab/";
 var consoleJsonDir = "/common/assets/";
 var iiabCmdService = "/iiab-cmd-service/cmd";
 var iiabAuthService = "/iiab-cmd-service/auth";
+var adminConfig = {}; // cmdsrv config values
 var ansibleFacts = {};
 var ansibleTagsStr = "";
 var effective_vars = {};
@@ -713,6 +714,14 @@ function genericCmdHandler (data)
   //alert ("in genericCmdHandler");
   consoleLog(data);
   //consoleLog(jqXHR);
+  return true;
+}
+
+function getAdminConfig (data)
+{
+  //alert ("in getAnsibleFacts");
+  consoleLog(data);
+  adminConfig = data;
   return true;
 }
 
@@ -2160,8 +2169,17 @@ function init (loginMsg='')
 function initPostLogin(){
 
   // this is all conditional on successful login
-  // invoke by login.done
+  // invoked by login.done
+  $.when(
+    sendCmdSrvCmd("GET-ADM-CONF", getAdminConfig))
+    .then(initPostLogin2)
+    .fail(function () {
+    	displayServerCommandStatus('<span style="color:red">Init Failed</span>');
+    	consoleLog("Init failed");
+    	})
+}
 
+function initPostLogin2(){
   $.when(
     getLangCodes(),
     readKiwixCatalog(),
