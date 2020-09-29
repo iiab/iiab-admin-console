@@ -8,6 +8,7 @@ var iiabContrDir = "/etc/iiab/";
 var consoleJsonDir = "/common/assets/";
 var iiabCmdService = "/iiab-cmd-service/cmd";
 var iiabAuthService = "/iiab-cmd-service/auth";
+var adminConfig = {}; // cmdsrv config values
 var ansibleFacts = {};
 var ansibleTagsStr = "";
 var effective_vars = {};
@@ -716,6 +717,14 @@ function genericCmdHandler (data)
   return true;
 }
 
+function getAdminConfig (data)
+{
+  //alert ("in getAnsibleFacts");
+  consoleLog(data);
+  adminConfig = data;
+  return true;
+}
+
 function getAnsibleFacts (data)
 {
   //alert ("in getAnsibleFacts");
@@ -1344,6 +1353,8 @@ function procJobStat(data)
     html += "</tr>";
 
     // there should be one or two parts - ? still need this; for cancel
+    // manual commands through iiab-cmdsrv-cti can introduce extra spaces and break this
+
     var cmd_parse = statusJob.cmd_msg.split(" ");
     statusJob['cmd_verb'] = cmd_parse[0];
     if(cmd_parse.length == 0 || typeof cmd_parse[1] === 'undefined')
@@ -2158,8 +2169,17 @@ function init (loginMsg='')
 function initPostLogin(){
 
   // this is all conditional on successful login
-  // invoke by login.done
+  // invoked by login.done
+  $.when(
+    sendCmdSrvCmd("GET-ADM-CONF", getAdminConfig))
+    .then(initPostLogin2)
+    .fail(function () {
+    	displayServerCommandStatus('<span style="color:red">Init Failed</span>');
+    	consoleLog("Init failed");
+    	})
+}
 
+function initPostLogin2(){
   $.when(
     getLangCodes(),
     readKiwixCatalog(),
