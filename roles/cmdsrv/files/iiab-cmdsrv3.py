@@ -98,6 +98,9 @@ maps_catalog_url = None
 maps_catalog_file = None
 maps_catalog_url_v2 = None
 maps_catalog_file_v2 = None
+maps_tiles_base = None
+maps_sat_base = None
+maps_mbtiles_src = None
 vector_map_path = None
 osm_version = None
 modules_dir = None
@@ -3146,6 +3149,9 @@ def app_config():
     global maps_catalog_url_v2
     global maps_catalog_file_v2
     global vector_map_path
+    global maps_tiles_base
+    global maps_sat_base
+    global maps_mbtiles_src
     global modules_dir
     global js_menu_dir
     global ansible_playbook_program
@@ -3201,6 +3207,9 @@ def app_config():
     maps_catalog_url_v2  = conf['maps_catalog_url_v2']
     maps_catalog_file_v2  = conf['maps_catalog_file_v2']
     vector_map_path  = conf['vector_map_path']
+    maps_tiles_base  = conf['maps_tiles_base']
+    maps_sat_base  = conf['maps_sat_base']
+    maps_mbtiles_src  = conf['maps_mbtiles_src']
     js_menu_dir = conf['js_menu_dir']
     squid_service = conf['squid_service']
     squid_whitelist = "/etc/%s/sites.whitelist.txt" % squid_service
