@@ -516,32 +516,10 @@ def add_wip(job_info):
         map_id = job_info['cmd_args']['osm_vect_id']
         download_url = maps_catalog['maps'][map_id]['detail_url']
         # let's record size in job_info as required_space
-        size = maps_catalog['maps'][map_id]['mbtiles_size']
-
-        action = "DOWNLOAD"
-        source = "oer2go"
-        else:
-            dest = job_info['cmd_args']['dest']
-            source = job_info['cmd_args']['source']
-            if cmd == "COPY-OER2GO-MOD" and dest == "internal":
-                action = "IMPORT"
-            elif cmd == "COPY-OER2GO-MOD" and dest != "internal":
-                action = "EXPORT"
-        oer2go_wip[moddir] = {"cmd":cmd, "action":action, "dest":dest, "source":source}
+        # size = maps_catalog['maps'][map_id]['mbtiles_size'] NEED THIS
 
     elif cmd in {"INST-SAT-AREA"}:
-        moddir = job_info['cmd_args']['moddir']
-        if cmd == "INST-OER2GO-MOD":
-            action = "DOWNLOAD"
-            source = "oer2go"
-        else:
-            dest = job_info['cmd_args']['dest']
-            source = job_info['cmd_args']['source']
-            if cmd == "COPY-OER2GO-MOD" and dest == "internal":
-                action = "IMPORT"
-            elif cmd == "COPY-OER2GO-MOD" and dest != "internal":
-                action = "EXPORT"
-        oer2go_wip[moddir] = {"cmd":cmd, "action":action, "dest":dest, "source":source}
+        radius = job_info['cmd_args']['radius']
 
 def remove_wip(job_info):
     global zims_wip
