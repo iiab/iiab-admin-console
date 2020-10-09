@@ -126,6 +126,7 @@ oer2go_wip = {}
 #oer2go_downloading = {}
 #oer2go_copying = {}
 oer2go_installed = []
+maps_wip = {}
 jobs_requested = {}
 jobs_to_restart = {}
 jobs_to_cancel = {}
@@ -473,6 +474,7 @@ def job_minder_thread(client_url, worker_control_url, context=None):
 def add_wip(job_info):
     global zims_wip
     global oer2go_wip
+    global maps_wip
 
     dest = "internal"
     source = "kiwix"
@@ -496,6 +498,38 @@ def add_wip(job_info):
         zims_wip[zim_id] = {"cmd":cmd, "action":action, "dest":dest, "source":source}
 
     elif cmd in {"INST-OER2GO-MOD", "COPY-OER2GO-MOD"}:
+        moddir = job_info['cmd_args']['moddir']
+        if cmd == "INST-OER2GO-MOD":
+            action = "DOWNLOAD"
+            source = "oer2go"
+        else:
+            dest = job_info['cmd_args']['dest']
+            source = job_info['cmd_args']['source']
+            if cmd == "COPY-OER2GO-MOD" and dest == "internal":
+                action = "IMPORT"
+            elif cmd == "COPY-OER2GO-MOD" and dest != "internal":
+                action = "EXPORT"
+        oer2go_wip[moddir] = {"cmd":cmd, "action":action, "dest":dest, "source":source}
+
+    elif cmd in {"INST-OSM-VECT-SET"}:
+        # handle V1?
+        map_id = job_info['cmd_args']['osm_vect_id']
+        download_url = maps_catalog['maps'][map_id]['detail_url']
+        # let's record size in job_info as required_space
+        size = maps_catalog['maps'][map_id]['mbtiles_size']
+
+        action = "DOWNLOAD"
+        source = "oer2go"
+        else:
+            dest = job_info['cmd_args']['dest']
+            source = job_info['cmd_args']['source']
+            if cmd == "COPY-OER2GO-MOD" and dest == "internal":
+                action = "IMPORT"
+            elif cmd == "COPY-OER2GO-MOD" and dest != "internal":
+                action = "EXPORT"
+        oer2go_wip[moddir] = {"cmd":cmd, "action":action, "dest":dest, "source":source}
+
+    elif cmd in {"INST-SAT-AREA"}:
         moddir = job_info['cmd_args']['moddir']
         if cmd == "INST-OER2GO-MOD":
             action = "DOWNLOAD"
@@ -681,6 +715,10 @@ def cmd_proc_thread(worker_data_url, worker_control_url, context=None):
     control_socket.close()
     #context.term()
     #sys.exit()
+
+########################################
+# cmdlist List of all Commands is Here #
+########################################
 
 def cmd_handler(cmd_msg):
 
