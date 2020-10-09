@@ -360,7 +360,7 @@ function instContentButtonsEvents() {
   if(adminConfig.osm_version == 'V2'){ //current version
     $("#INST-MAP").click(function(){
       consoleLog("in inst map click");
-      if (window.confirm('The new version of maps is not yet supported.\n\nClick OK for more information.')) {
+      if (window.confirm('The new version of maps is not yet supported here.\n\nPlease check back later.\n\nClick OK for more information.')) {
         window.open('https://github.com/iiab/iiab/wiki/IIAB-Maps#how-do-i-install-map-packs-and-satellite-photo-regions-on-iiab-72-', '_blank');
       }
     });
