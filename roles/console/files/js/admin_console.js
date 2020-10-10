@@ -28,7 +28,8 @@ var externalZimCatalog = {}; // catalog of zims on an external device
 var oer2goCatalog = {}; // catalog of rachel/oer2go modules, read from file downloaded from rachel
 var oer2goCatalogDate = new Date; // date of download, stored in json file
 var oer2goCatalogFilter = ["html"] // only manage these types as OER2GO; catalog can contain zims and kalite that we do elsewhere
-var mapCatalog = {}; // map regions specified by bounding boxes, downloadable
+var mapCatalog = {}; // catalog by map id
+var maRegionIdx = {}; // index of catalog by region
 var rachelStat = {}; // installed, enabled and whether content is installed and which is enabled
 
 var zimsInstalled = []; // list of zims already installed
@@ -316,55 +317,31 @@ function instContentButtonsEvents() {
 
   consoleLog("adminConfig.osm_version " + adminConfig.osm_version);
 
-  if(adminConfig.osm_version == 'V1'){ //old version
-    $("#INST-MAP").click(function(){
-      var map_id;
-      make_button_disabled("#INST-MAP", true);
-      selectedMapItems = []; // items no longer selected as are being installed
-      $('#mapRegionSelectList input').each( function(){
-        if (this.type == "checkbox")
-          if (this.checked){
-            var skip_map = false;
-            map_id = this.name
-            $.when(readMapIdx()).then(function(){
-            var region = get_region_from_url(map_id);
-            for (var installed_region in mapInstalled){
-              if (mapInstalled[installed_region] &&
-                mapInstalled[installed_region].hasOwnProperty('region') &&
-                mapInstalled[installed_region].region === region){
-                    // Does installed map have same basename (ignores .zip)
-                    var basename = mapCatalog[region].url.replace(/.*\//, '');
-                    // Clip off .zip
-                    basename = basename.replace(/\.zip/, '');
-                    if (basename === mapInstalled[installed_region].file_name)
-                      skip_map = true;
-                    break;
-                }
-              }
-              if (skip_map || mapWip.indexOf(map_id) != -1){
-                consoleLog("Skipping installed Module " + map_id);
-                alert ("Selected Map Region is already installed.\n");
+  // Only support V2 of maps
+  $("#INST-MAP").click(function(){
+    consoleLog("in inst map click");
+    //if (window.confirm('The new version of maps is not yet supported here.\n\nPlease check back later.\n\nClick OK for more information.')) {
+    //  window.open('https://github.com/iiab/iiab/wiki/IIAB-Maps#how-do-i-install-map-packs-and-satellite-photo-regions-on-iiab-72-', '_blank');
+    //}
+  //});
+  var mapId;
+  var region;
+  selectedMapItems = []; // items no longer selected as are being installed
+  $('#mapRegionSelectList input').each( function(){
+    if (this.type == "checkbox")
+      if (this.checked){
+        //var skip_map = false;
+        region = this.name;
+        mapId = mapCatalog[region]['map_id']
 
-              } else {
-                instMapItem(map_id);
-                alert ("Selected Map Region scheduled to be installed.\n\nPlease view Utilities->Display Job Status to see the results.");
-              }
-            })
-          }
-        })
-      //getOer2goStat();
-      make_button_disabled("#INST-MAP", false);
-    });
-  }
-
-  if(adminConfig.osm_version == 'V2'){ //current version
-    $("#INST-MAP").click(function(){
-      consoleLog("in inst map click");
-      if (window.confirm('The new version of maps is not yet supported here.\n\nPlease check back later.\n\nClick OK for more information.')) {
-        window.open('https://github.com/iiab/iiab/wiki/IIAB-Maps#how-do-i-install-map-packs-and-satellite-photo-regions-on-iiab-72-', '_blank');
+        // once we mark maps on screen as installed we will silently skip them
+        if (mapId in mapInstalled)
+          alert ("Selected Map Region is already installed.\n");
+        else
+          instMapItem(mapId);
       }
     });
-  }
+  });
 
   $("#launchKaliteButton").click(function(){
     var url = "http://" + window.location.host + ":8008";
