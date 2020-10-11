@@ -77,11 +77,11 @@ function readMapCatalog(){
 function renderRegionList(checkbox) { // generic
 	var html = "";
    // order the regionList by seq number
-   var regions = mapRegionsIdx;
+   var regions = Object.keys(mapRegionIdx);
 	console.log ("in renderRegionList");
 
 	// sort on basis of seq
-  regions = regions.sort(function(a,b){
+  regions = regionList.sort(function(a,b){
     if (a.seq < b.seq) return -1;
     else return 1;
     });
@@ -135,40 +135,59 @@ function get_region_from_url(url){
   return null
 }
 
+function instMaps(){
+  var mapId;
+  var region;
+  selectedMapItems = []; // items no longer selected as are being installed
+  $('#mapRegionSelectList input').each( function(){
+    if (this.type == "checkbox")
+      if (this.checked){
+        //var skip_map = false;
+        mapId = this.name;
+
+        // once we mark maps on screen as installed we will silently skip them
+        if (mapId in mapInstalled)
+          alert ("Selected Map Region is already installed.\n");
+        else
+          instMapItem(mapId);
+      }
+    });
+}
+
 function instMapItem(map_id) {
   var command = "INST-OSM-VECT-SET";
   var cmd_args = {};
   cmd_args['osm_vect_id'] = map_id;
   cmd = command + " " + JSON.stringify(cmd_args);
-  sendCmdSrvCmd(cmd, genericCmdHandler,"#INST-MAP");
-  mapDownloading.push(map_url);
-  if ( mapWip.indexOf(map_url) == -1 )
-     mapWip.push(map_url);
-  console.log('mapWip: ' + mapWip);
+  sendCmdSrvCmd(cmd, genericCmdHandler,"INST-MAP");
+  mapDownloading.push(map_id);
+  if ( mapWip.indexOf(map_id) == -1 )
+     mapWip.push(map_id);
+  console.log('mapWip: ' + map_id);
   return true;
 }
 
 function updateMapSpace(cb){
   console.log("in updateMapSpace" + cb);
-  var region = cb.name;
-  updateMapSpaceUtil(region, cb.checked);
+  var mapId = cb.name;
+  updateMapSpaceUtil(mapId, cb.checked);
 }
 
-function updateMapSpaceUtil(region, checked){
-  var size =  parseInt(mapRegionIdx[region].size);
+function updateMapSpaceUtil(mapId, checked){
+  var size =  parseInt(mapCatalog[mapId].size);
 
-  var modIdx = selectedMapItems.indexOf(region);
+  var selectedIdx = selectedMapItems.indexOf(mapId);
 
   if (checked){
-    if (mapInstalled.indexOf(region) == -1){ // only update if not already installed mods
+    if (mapInstalled.indexOf(mapId) == -1){ // only update if not already installed mods
       sysStorage.map_selected_size += size;
-      selectedMapItems.push(region);
+      selectedMapItems.push(mapId);
     }
   }
   else {
-    if (modIdx != -1){
+    if (selectedIdx != -1){
       sysStorage.map_selected_size -= size;
-      selectedMapItems.splice(modIdx, 1);
+      selectedMapItems.splice(selectedIdx, 1);
     }
   }
 

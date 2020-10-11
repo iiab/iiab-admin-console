@@ -29,7 +29,7 @@ var oer2goCatalog = {}; // catalog of rachel/oer2go modules, read from file down
 var oer2goCatalogDate = new Date; // date of download, stored in json file
 var oer2goCatalogFilter = ["html"] // only manage these types as OER2GO; catalog can contain zims and kalite that we do elsewhere
 var mapCatalog = {}; // catalog by map id
-var maRegionIdx = {}; // index of catalog by region
+var mapRegionIdx = {}; // index of catalog by region
 var rachelStat = {}; // installed, enabled and whether content is installed and which is enabled
 
 var zimsInstalled = []; // list of zims already installed
@@ -324,23 +324,10 @@ function instContentButtonsEvents() {
     //  window.open('https://github.com/iiab/iiab/wiki/IIAB-Maps#how-do-i-install-map-packs-and-satellite-photo-regions-on-iiab-72-', '_blank');
     //}
   //});
-  var mapId;
-  var region;
-  selectedMapItems = []; // items no longer selected as are being installed
-  $('#mapRegionSelectList input').each( function(){
-    if (this.type == "checkbox")
-      if (this.checked){
-        //var skip_map = false;
-        region = this.name;
-        mapId = mapCatalog[region]['map_id']
-
-        // once we mark maps on screen as installed we will silently skip them
-        if (mapId in mapInstalled)
-          alert ("Selected Map Region is already installed.\n");
-        else
-          instMapItem(mapId);
-      }
-    });
+    if(adminConfig.osm_version == 'V1')
+      alert('Your version of maps is no longer supported in Admin Console\n\nPlease either upgrade maps or downgrade Admin Console.');
+    else
+      instMaps()
   });
 
   $("#launchKaliteButton").click(function(){

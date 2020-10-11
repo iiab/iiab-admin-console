@@ -2166,8 +2166,8 @@ def install_osm_vect_set_v2(cmd_info):
         return cmd_malformed(cmd_info['cmd'])
 
     download_url = maps_catalog['maps'][map_id]['detail_url']
-    mbtiles_name = download_url.split('/')[-1] # osm_north_america_z11-z14_2019.mbtiles (not zipped)
-    download_file = maps_working_dir + mbtiles_name
+    #mbtiles_name = download_url.split('/')[-1] # osm_north_america_z11-z14_2019.mbtiles (not zipped)
+    download_file = maps_working_dir + map_id
 
     # download mbtiles file
     job_command = "/usr/bin/wget -c --progress=dot:giga " + download_url + " -O " + download_file
@@ -2176,7 +2176,7 @@ def install_osm_vect_set_v2(cmd_info):
 
     # move to location and clean up
     job_command = "scripts/osm-vect_v2_install_step3.sh"
-    job_command +=  " " + mbtiles_name
+    job_command +=  " " + map_id
     job_id = request_one_job(cmd_info, job_command, 2, job_id, "Y")
 
     # create maps idx
