@@ -2217,7 +2217,8 @@ def get_osm_vect_stat(cmd_info):
     else:
         all_maps['sat_base_installed'] = False
 
-
+    resp = json.dumps(all_maps)
+    return (resp)
 
 # Content Menu Commands
 
