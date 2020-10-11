@@ -748,6 +748,7 @@ def cmd_handler(cmd_msg):
         "GET-OSM-VECT-CAT": {"funct": get_osm_vect_catalog, "inet_req": True},
         "INST-OSM-VECT-SET": {"funct": install_osm_vect_set, "inet_req": True},
         "INST-SAT-AREA": {"funct": install_sat_area, "inet_req": True},
+        "GET-OSM-VECT-STAT": {"funct": get_osm_vect_stat, "inet_req": False},
         "DEL-DOWNLOADS": {"funct": del_downloads, "inet_req": False},
         "DEL-MODULES": {"funct": del_modules, "inet_req": False},
         "GET-MENU-ITEM-DEF-LIST": {"funct": get_menu_item_def_list, "inet_req": False},
@@ -2198,6 +2199,24 @@ def install_sat_area(cmd_info):
     job_command = "/usr/bin/iiab-extend-sat.py --lon " + longitude + " --lat " + latitude + " --radius " + radius
     resp = request_job(cmd_info, job_command)
     return resp
+
+def get_osm_vect_stat(cmd_info):
+    all_maps = {}
+    all_maps['WIP'] = maps_wip
+
+    all_maps['INSTALLED'] = {}
+
+    if os.path.exists(vector_map_tiles_path + maps_tiles_base):
+        all_maps['tile_base_installed'] = True
+    else
+        all_maps['tile_base_installed'] = False
+
+    if os.path.exists(vector_map_tiles_path + maps_sat_base):
+        all_maps['sat_base_installed'] = True
+    else
+        all_maps['sat_base_installed'] = False
+
+
 
 # Content Menu Commands
 
