@@ -102,6 +102,7 @@ maps_tiles_base = None
 maps_sat_base = None
 maps_mbtiles_src = None
 vector_map_path = None
+vector_map_tiles_path = None
 osm_version = None
 modules_dir = None
 small_device_size = 525000 # bigger than anticipated boot partition
@@ -2208,12 +2209,12 @@ def get_osm_vect_stat(cmd_info):
 
     if os.path.exists(vector_map_tiles_path + maps_tiles_base):
         all_maps['tile_base_installed'] = True
-    else
+    else:
         all_maps['tile_base_installed'] = False
 
     if os.path.exists(vector_map_tiles_path + maps_sat_base):
         all_maps['sat_base_installed'] = True
-    else
+    else:
         all_maps['sat_base_installed'] = False
 
 
@@ -3185,6 +3186,7 @@ def app_config():
     global maps_catalog_file_v2
     global vector_map_path
     global maps_tiles_base
+    global vector_map_tiles_path
     global maps_sat_base
     global maps_mbtiles_src
     global modules_dir
@@ -3242,6 +3244,7 @@ def app_config():
     maps_catalog_url_v2  = conf['maps_catalog_url_v2']
     maps_catalog_file_v2  = conf['maps_catalog_file_v2']
     vector_map_path  = conf['vector_map_path']
+    vector_map_tiles_path  = conf['vector_map_tiles_path']
     maps_tiles_base  = conf['maps_tiles_base']
     maps_sat_base  = conf['maps_sat_base']
     maps_mbtiles_src  = conf['maps_mbtiles_src']
