@@ -130,7 +130,7 @@
   template:
     src: 021_apache_set_time.j2
     dest: /etc/sudoers.d/021_apache_set_time
-    mode: 0644
+    mode: 0440
   when: apache_allow_sudo
 
 - name: Remove above
