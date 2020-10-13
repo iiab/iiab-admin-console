@@ -8,7 +8,7 @@ The restriction for authorization only applies to access to the Command Server (
 
 ### Authentication
 
-You can login as any sudoer or member of the iiab_admin_user_grp, but Change Password only allows changing the iiab_admin_user password as the user field is read only.
+You can login as any sudoer or member of the iiab_admin_user_group, but Change Password only allows changing the iiab_admin_user password as the user field is read only.
 
 ## Authentication Process
 
