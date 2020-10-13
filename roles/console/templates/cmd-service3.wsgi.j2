@@ -145,10 +145,13 @@ def auth_login(credentials64, client_public_key64, nonce64): # candidate for adm
     # must be in one of valid_group_list
     group_valid = False
     for group in valid_group_list:
-        grplist = grp.getgrnam(group)
-        if user in grplist.gr_mem:
-            group_valid = True
-            break
+        try:
+            grplist = grp.getgrnam(group)
+            if user in grplist.gr_mem:
+                group_valid = True
+                break
+        except:
+            continue
     if not group_valid:
         print('Bad Group')
         return False
