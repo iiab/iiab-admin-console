@@ -14,6 +14,9 @@ from nacl.encoding import Base64Encoder
 cmdsrv_pid_file = "{{ cmdsrv_pid_file }}"
 cmdsrv_ready_file = "{{ cmdsrv_ready_file }}"
 iiab_cmd_service = "{{ iiab_cmd_service_url }}"
+iiab_admin_user_grp = "{{ iiab_admin_user_grp }}"
+valid_group_list = ['sudo', iiab_admin_user_grp]
+
 
 # for testing
 #cmdsrv_pid_file = "/run/iiab-cmdsrv.pid"
@@ -139,9 +142,14 @@ def auth_login(credentials64, client_public_key64, nonce64): # candidate for adm
         print('Bad User')
         return False
 
-    # must be in sudo group
-    grplist = grp.getgrnam('sudo')
-    if user not in grplist.gr_mem:
+    # must be in one of valid_group_list
+    group_valid = False
+    for group in valid_group_list:
+        grplist = grp.getgrnam(group)
+        if user in grplist.gr_mem:
+            group_valid = True
+            break
+    if not group_valid:
         print('Bad Group')
         return False
 
