@@ -444,28 +444,7 @@
 		make_button_disabled("#REBOOT", false);
 		make_button_disabled("#POWEROFF", false);
 		console.log("Starting dynamic pages");
-		// N.B we can preassemble the html fragments with ansible assemble module so browser caches a single file
-		// We can still set up Control panel before the others
-		$.when(
-			$.get('htmlf/20-configure.html', function (data) {
-				$('#Configure').html(data);
-				configButtonsEvents();
-			}),
-			$.get('htmlf/40-install_content.html', function (data) {
-				$('#InstallContent').html(data);
-				instContentButtonsEvents();
-			}),
-			$.get('htmlf/50-edit_menus.html', function (data) { // this should be conditional on js_menu_install: True
-				$('#ContentMenus').html(data);
-				contentMenuButtonsEvents();
-			}),
-			$.get('htmlf/70-utilities.html', function (data) {
-				$('#Util').html(data);
-				utilButtonsEvents();
-			})
-		).done(function () {
-			main();
-		});
+		main();
 	</script>
 </body>
 

@@ -8,6 +8,7 @@ var iiabContrDir = "/etc/iiab/";
 var consoleJsonDir = "/common/assets/";
 var iiabCmdService = "/iiab-cmd-service/cmd";
 var iiabAuthService = "/iiab-cmd-service/auth";
+var adminConfig = {}; // cmdsrv config values
 var ansibleFacts = {};
 var ansibleTagsStr = "";
 var effective_vars = {};
@@ -27,7 +28,8 @@ var externalZimCatalog = {}; // catalog of zims on an external device
 var oer2goCatalog = {}; // catalog of rachel/oer2go modules, read from file downloaded from rachel
 var oer2goCatalogDate = new Date; // date of download, stored in json file
 var oer2goCatalogFilter = ["html"] // only manage these types as OER2GO; catalog can contain zims and kalite that we do elsewhere
-var mapCatalog = {}; // map regions specified by bounding boxes, downloadable
+var mapCatalog = {}; // catalog by map id
+var mapRegionIdx = {}; // index of catalog by region
 var rachelStat = {}; // installed, enabled and whether content is installed and which is enabled
 
 var zimsInstalled = []; // list of zims already installed
@@ -313,43 +315,19 @@ function instContentButtonsEvents() {
     make_button_disabled("#INST-MODS", false);
   });
 
-  $("#INST-MAP").click(function(){
-    var map_id;
-    make_button_disabled("#INST-MAP", true);
-    selectedMapItems = []; // items no longer selected as are being installed
-    $('#mapRegionSelectList input').each( function(){
-      if (this.type == "checkbox")
-        if (this.checked){
-          var skip_map = false;
-          map_id = this.name
-          $.when(readMapIdx()).then(function(){
-          var region = get_region_from_url(map_id);
-          for (var installed_region in mapInstalled){
-             if (mapInstalled[installed_region] &&
-               mapInstalled[installed_region].hasOwnProperty('region') &&
-               mapInstalled[installed_region].region === region){
-                  // Does installed map have same basename (ignores .zip)
-                  var basename = mapCatalog[region].url.replace(/.*\//, '');
-                  // Clip off .zip
-                  basename = basename.replace(/\.zip/, '');
-                  if (basename === mapInstalled[installed_region].file_name)
-                     skip_map = true;
-                  break;
-               }
-             }
-             if (skip_map || mapWip.indexOf(map_id) != -1){
-               consoleLog("Skipping installed Module " + map_id);
-               alert ("Selected Map Region is already installed.\n");
+  consoleLog("adminConfig.osm_version " + adminConfig.osm_version);
 
-             } else {
-               instMapItem(map_id);
-               alert ("Selected Map Region scheduled to be installed.\n\nPlease view Utilities->Display Job Status to see the results.");
-            }
-          })
-        }
-      })
-    //getOer2goStat();
-    make_button_disabled("#INST-MAP", false);
+  // Only support V2 of maps
+  $("#INST-MAP").click(function(){
+    consoleLog("in inst map click");
+    //if (window.confirm('The new version of maps is not yet supported here.\n\nPlease check back later.\n\nClick OK for more information.')) {
+    //  window.open('https://github.com/iiab/iiab/wiki/IIAB-Maps#how-do-i-install-map-packs-and-satellite-photo-regions-on-iiab-72-', '_blank');
+    //}
+  //});
+    if(adminConfig.osm_version == 'V1')
+      alert('Your version of maps is no longer supported in Admin Console\n\nPlease either upgrade maps or downgrade Admin Console.');
+    else
+      instMaps()
   });
 
   $("#launchKaliteButton").click(function(){
@@ -713,6 +691,14 @@ function genericCmdHandler (data)
   //alert ("in genericCmdHandler");
   consoleLog(data);
   //consoleLog(jqXHR);
+  return true;
+}
+
+function getAdminConfig (data)
+{
+  //alert ("in getAnsibleFacts");
+  consoleLog(data);
+  adminConfig = data;
   return true;
 }
 
@@ -1344,6 +1330,8 @@ function procJobStat(data)
     html += "</tr>";
 
     // there should be one or two parts - ? still need this; for cancel
+    // manual commands through iiab-cmdsrv-cti can introduce extra spaces and break this
+
     var cmd_parse = statusJob.cmd_msg.split(" ");
     statusJob['cmd_verb'] = cmd_parse[0];
     if(cmd_parse.length == 0 || typeof cmd_parse[1] === 'undefined')
@@ -2149,8 +2137,6 @@ function init (loginMsg='')
   authData.keepLogin = true;
 
   getServerPublicKey();
-  initVars();
-
   launchcmdServerLoginForm(loginMsg) //force login
   // on success will continue with initPostLogin()
 }
@@ -2158,8 +2144,45 @@ function init (loginMsg='')
 function initPostLogin(){
 
   // this is all conditional on successful login
-  // invoke by login.done
+  // invoked by login.done
+  $.when(
+    sendCmdSrvCmd("GET-ADM-CONF", getAdminConfig))
+    .then(initPostLogin2)
+    .fail(function () {
+    	displayServerCommandStatus('<span style="color:red">Init Failed</span>');
+    	consoleLog("Init failed");
+    	})
+}
 
+function initPostLogin2(){
+  initGetHtml();
+  initGetData();
+}
+
+function initGetHtml(){
+  $.when(
+			$.get('htmlf/20-configure.html', function (data) {
+				$('#Configure').html(data);
+				configButtonsEvents();
+			}),
+			$.get('htmlf/40-install_content.html', function (data) {
+				$('#InstallContent').html(data);
+				instContentButtonsEvents();
+			}),
+			$.get('htmlf/50-edit_menus.html', function (data) { // this should be conditional on js_menu_install: True
+				$('#ContentMenus').html(data);
+				contentMenuButtonsEvents();
+			}),
+			$.get('htmlf/70-utilities.html', function (data) {
+				$('#Util').html(data);
+				utilButtonsEvents();
+			})
+		).done(function () {
+      initVars();
+		});
+}
+
+function initGetData(){
   $.when(
     getLangCodes(),
     readKiwixCatalog(),

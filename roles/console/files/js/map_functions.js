@@ -1,5 +1,6 @@
 // map_functions.js
 // copyright 2019 George Hunt
+// rewritten for version 2
 
 var regionList = [];
 var mapAssetsDir = '/osm-vector-maps/maplist/assets/';
@@ -47,20 +48,26 @@ function readMapIdx(){
 
 function readMapCatalog(){
 	//console.log ("in readMapCalalog");
-	// read regions.json from common/assets in case osm vectors not installed
+  // read map-catalog.json from common/assets in case osm vectors not installed
   regionList = [];
   var resp = $.ajax({
     type: 'GET',
-    url: consoleJsonDir + 'regions.json',
+    url: consoleJsonDir + 'map-catalog.json',
     dataType: 'json'
   })
   .done(function( data ) {
-  	 regionJson = data;
-    mapCatalog = regionJson['regions'];
+    mapCatalog = {};
+    mapCatalog = data['maps'];
+    mapRegionIdx = {}
     for(var key in mapCatalog){
       //console.log(key + '  ' + mapCatalog[key]['title']);
-      mapCatalog[key]['name'] = key;
-      regionList.push(mapCatalog[key]);
+      var region = mapCatalog[key]['region'];
+
+      mapRegionIdx[region] = mapCatalog[key];
+      mapRegionIdx[region]['url'] = mapCatalog[key]['detail_url'];
+      mapRegionIdx[region]['map_id'] = key;
+      mapRegionIdx[region]['name'] = region;
+      regionList.push(mapRegionIdx[region]);
     }
   })
   .fail(jsonErrhandler);
@@ -70,17 +77,17 @@ function readMapCatalog(){
 function renderRegionList(checkbox) { // generic
 	var html = "";
    // order the regionList by seq number
-   var regions = regionList;
+   var regions = Object.keys(mapRegionIdx);
 	console.log ("in renderRegionList");
 
 	// sort on basis of seq
-  regions = regions.sort(function(a,b){
+  regions = regionList.sort(function(a,b){
     if (a.seq < b.seq) return -1;
     else return 1;
     });
   //console.log(regions);
 	// render each region
-   html += '<form>';
+  html += '<form>';
 	regions.forEach((region, index) => { // now render the html
       //console.log(region.title + " " +region.seq);
       html += genRegionItem(region,checkbox);
@@ -104,7 +111,7 @@ function genRegionItem(region,checkbox) {
       checked = 'checked';
     else
       checked = '';
-      html += '<input type="checkbox" name="' + region.url + '"';
+      html += '<input type="checkbox" name="' + region.map_id + '"';
       html += ' onChange="updateMapSpace(this)" ' + checked + '> ';
   }
   html += itemId;
@@ -117,6 +124,7 @@ function genRegionItem(region,checkbox) {
   return html;
 }
 
+// not used
 function get_region_from_url(url){
   for (const region in mapCatalog ){
     if (mapCatalog[region].hasOwnProperty('url') &&
@@ -127,42 +135,59 @@ function get_region_from_url(url){
   return null
 }
 
-function instMapItem(map_url) {
+function instMaps(){
+  var mapId;
+  var region;
+  selectedMapItems = []; // items no longer selected as are being installed
+  $('#mapRegionSelectList input').each( function(){
+    if (this.type == "checkbox")
+      if (this.checked){
+        //var skip_map = false;
+        mapId = this.name;
+
+        // once we mark maps on screen as installed we will silently skip them
+        if (mapId in mapInstalled)
+          alert ("Selected Map Region is already installed.\n");
+        else
+          instMapItem(mapId);
+      }
+    });
+}
+
+function instMapItem(map_id) {
   var command = "INST-OSM-VECT-SET";
   var cmd_args = {};
-  region_id = get_region_from_url(map_url);
-  if ( !region_id ) return false;
-  cmd_args['osm_vect_id'] = region_id;
+  cmd_args['osm_vect_id'] = map_id;
   cmd = command + " " + JSON.stringify(cmd_args);
-  sendCmdSrvCmd(cmd, genericCmdHandler);
-  mapDownloading.push(map_url);
-  if ( mapWip.indexOf(map_url) == -1 )
-     mapWip.push(map_url);
-  console.log('mapWip: ' + mapWip);
+  sendCmdSrvCmd(cmd, genericCmdHandler,"INST-MAP");
+  mapDownloading.push(map_id);
+  if ( mapWip.indexOf(map_id) == -1 )
+     mapWip.push(map_id);
+  console.log('mapWip: ' + map_id);
   return true;
 }
 
 function updateMapSpace(cb){
   console.log("in updateMapSpace" + cb);
-  var region = get_region_from_url(cb.name);
-  updateMapSpaceUtil(region, cb.checked);
+  var mapId = cb.name;
+  updateMapSpaceUtil(mapId, cb.checked);
 }
 
-function updateMapSpaceUtil(region, checked){
-  var size =  parseInt(mapCatalog[region].size);
+function updateMapSpaceUtil(mapId, checked){
+  var size =  parseInt(mapCatalog[mapId].size);
 
-  var modIdx = selectedMapItems.indexOf(region);
+  var selectedIdx = selectedMapItems.indexOf(mapId);
 
   if (checked){
-    if (mapInstalled.indexOf(region) == -1){ // only update if not already installed mods
+    if (mapInstalled.indexOf(mapId) == -1){ // only update if not already installed mods
       sysStorage.map_selected_size += size;
-      selectedMapItems.push(region);
+      selectedMapItems.push(mapId);
     }
   }
   else {
-    if (modIdx != -1){
+    if (selectedIdx != -1){
       sysStorage.map_selected_size -= size;
-      selectedMapItems.splice(modIdx, 1);
+      selectedMapItems.splice(selectedIdx, 1);
     }
   }
 

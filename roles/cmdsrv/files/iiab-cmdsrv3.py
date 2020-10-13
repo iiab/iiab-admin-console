@@ -96,7 +96,14 @@ maps_downloads_dir = None
 maps_working_dir = None
 maps_catalog_url = None
 maps_catalog_file = None
+maps_catalog_url_v2 = None
+maps_catalog_file_v2 = None
+maps_tiles_base = None
+maps_sat_base = None
+maps_mbtiles_src = None
 vector_map_path = None
+vector_map_tiles_path = None
+osm_version = None
 modules_dir = None
 small_device_size = 525000 # bigger than anticipated boot partition
 js_menu_dir = None
@@ -120,6 +127,7 @@ oer2go_wip = {}
 #oer2go_downloading = {}
 #oer2go_copying = {}
 oer2go_installed = []
+maps_wip = {}
 jobs_requested = {}
 jobs_to_restart = {}
 jobs_to_cancel = {}
@@ -146,6 +154,7 @@ db_lock = threading.Lock() # for sqlite db concurrency
 # vars read from ansible vars directory
 # effective is composite where local takes precedence
 
+adm_conf = {} # for use by front end
 default_vars = {}
 local_vars = {}
 effective_vars = {}
@@ -466,6 +475,7 @@ def job_minder_thread(client_url, worker_control_url, context=None):
 def add_wip(job_info):
     global zims_wip
     global oer2go_wip
+    global maps_wip
 
     dest = "internal"
     source = "kiwix"
@@ -501,6 +511,16 @@ def add_wip(job_info):
             elif cmd == "COPY-OER2GO-MOD" and dest != "internal":
                 action = "EXPORT"
         oer2go_wip[moddir] = {"cmd":cmd, "action":action, "dest":dest, "source":source}
+
+    elif cmd in {"INST-OSM-VECT-SET"}:
+        # handle V1?
+        map_id = job_info['cmd_args']['osm_vect_id']
+        download_url = maps_catalog['maps'][map_id]['detail_url']
+        # let's record size in job_info as required_space
+        # size = maps_catalog['maps'][map_id]['mbtiles_size'] NEED THIS
+
+    elif cmd in {"INST-SAT-AREA"}:
+        radius = job_info['cmd_args']['radius']
 
 def remove_wip(job_info):
     global zims_wip
@@ -675,6 +695,10 @@ def cmd_proc_thread(worker_data_url, worker_control_url, context=None):
     #context.term()
     #sys.exit()
 
+########################################
+# cmdlist List of all Commands is Here #
+########################################
+
 def cmd_handler(cmd_msg):
 
     # List of recognized commands and corresponding routine
@@ -684,6 +708,7 @@ def cmd_handler(cmd_msg):
         "TEST": {"funct": do_test, "inet_req": False},
         "LIST-LIBR": {"funct": list_library, "inet_req": False},
         "WGET": {"funct": wget_file, "inet_req": True},
+        "GET-ADM-CONF": {"funct": get_adm_conf, "inet_req": False},
         "GET-ANS": {"funct": get_ans_facts, "inet_req": False},
         "GET-ANS-TAGS": {"funct": get_ans_tags, "inet_req": False},
         "GET-VARS": {"funct": get_install_vars, "inet_req": False},
@@ -723,6 +748,8 @@ def cmd_handler(cmd_msg):
         "INST-RACHEL": {"funct": install_rachel, "inet_req": True},
         "GET-OSM-VECT-CAT": {"funct": get_osm_vect_catalog, "inet_req": True},
         "INST-OSM-VECT-SET": {"funct": install_osm_vect_set, "inet_req": True},
+        "INST-SAT-AREA": {"funct": install_sat_area, "inet_req": True},
+        "GET-OSM-VECT-STAT": {"funct": get_osm_vect_stat, "inet_req": False},
         "DEL-DOWNLOADS": {"funct": del_downloads, "inet_req": False},
         "DEL-MODULES": {"funct": del_modules, "inet_req": False},
         "GET-MENU-ITEM-DEF-LIST": {"funct": get_menu_item_def_list, "inet_req": False},
@@ -975,6 +1002,10 @@ def get_ansible_version():
 def wget_file(cmd_info):
     resp = cmd_info['cmd'] + " done."
 
+    return (resp)
+
+def get_adm_conf(cmd_info):
+    resp = json.dumps(adm_conf)
     return (resp)
 
 def get_ans_facts(cmd_info):
@@ -2079,9 +2110,18 @@ def get_osm_vect_catalog(cmd_info):
     return cmd_malformed("DUMMY")
 
 def install_osm_vect_set(cmd_info):
+    if osm_version == 'V1':
+        return install_osm_vect_set_v1(cmd_info)
+    elif osm_version == 'V2':
+        return install_osm_vect_set_v2(cmd_info)
+    else:
+        resp = cmd_error(cmd='INST-OSM-VECT-SET', msg='OSM Vectors not installed or unknown version')
+        return resp
+
+
+def install_osm_vect_set_v1(cmd_info):
     global ansible_running_flag
     global jobs_requested
-
     if 'cmd_args' in cmd_info:
         map_id = cmd_info['cmd_args']['osm_vect_id']
         if map_id not in maps_catalog['regions']:
@@ -2089,8 +2129,6 @@ def install_osm_vect_set(cmd_info):
             return resp
     else:
         return cmd_malformed(cmd_info['cmd'])
-
-    # at this point we can create all the jobs
 
     download_url = maps_catalog['regions'][map_id]['url'] # https://archive.org/download/en-osm-omt_north_america_2017-07-03_v0.1/en-osm-omt_north_america_2017-07-03_v0.1.zip
     zip_name = download_url.split('/')[-1] # en-osm-omt_north_america_2017-07-03_v0.1.zip
@@ -2117,6 +2155,70 @@ def install_osm_vect_set(cmd_info):
     resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=3, depend_on_job_id=job_id, has_dependent="N")
 
     return resp
+
+def install_osm_vect_set_v2(cmd_info):
+    global ansible_running_flag
+    global jobs_requested
+    if 'cmd_args' in cmd_info:
+        map_id = cmd_info['cmd_args']['osm_vect_id']
+        if map_id not in maps_catalog['maps']:
+            resp = cmd_error(cmd='INST-OSM-VECT-SET', msg='Map Tile Set is not in catalog in Command')
+            return resp
+    else:
+        return cmd_malformed(cmd_info['cmd'])
+
+    download_url = maps_catalog['maps'][map_id]['detail_url']
+    #mbtiles_name = download_url.split('/')[-1] # osm_north_america_z11-z14_2019.mbtiles (not zipped)
+    download_file = maps_working_dir + map_id
+
+    # download mbtiles file
+    job_command = "/usr/bin/wget -c --progress=dot:giga " + download_url + " -O " + download_file
+    job_id = request_one_job(cmd_info, job_command, 1, -1, "Y")
+    #print job_command
+
+    # move to location and clean up
+    job_command = "scripts/osm-vect_v2_install_step3.sh"
+    job_command +=  " " + map_id
+    job_id = request_one_job(cmd_info, job_command, 2, job_id, "Y")
+
+    # create maps idx
+    job_command = "/usr/bin/iiab-maps-finish.py " + mbtiles_name
+    resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=3, depend_on_job_id=job_id, has_dependent="N")
+
+    return resp
+
+def install_sat_area(cmd_info):
+    global ansible_running_flag
+    global jobs_requested
+    if 'cmd_args' in cmd_info:
+        longitude = cmd_info['cmd_args']['longitude']
+        latitude = cmd_info['cmd_args']['latitude']
+        radius = cmd_info['cmd_args']['radius']
+    else:
+        return cmd_malformed(cmd_info['cmd'])
+
+    job_command = "/usr/bin/iiab-extend-sat.py --lon " + longitude + " --lat " + latitude + " --radius " + radius
+    resp = request_job(cmd_info, job_command)
+    return resp
+
+def get_osm_vect_stat(cmd_info):
+    all_maps = {}
+    all_maps['WIP'] = maps_wip
+
+    all_maps['INSTALLED'] = {}
+
+    if os.path.exists(vector_map_tiles_path + maps_tiles_base):
+        all_maps['tile_base_installed'] = True
+    else:
+        all_maps['tile_base_installed'] = False
+
+    if os.path.exists(vector_map_tiles_path + maps_sat_base):
+        all_maps['sat_base_installed'] = True
+    else:
+        all_maps['sat_base_installed'] = False
+
+    resp = json.dumps(all_maps)
+    return (resp)
 
 # Content Menu Commands
 
@@ -2694,6 +2796,10 @@ def init():
 
     # Get ansible facts for localhost
     get_ansible_facts()
+
+     # Compute variables derived from all of the above
+    compute_vars()
+
     #get_ansible_tags()
     read_kiwix_catalog()
     read_oer2go_catalog()
@@ -2711,9 +2817,6 @@ def init():
     # take it out until we need it and have a better algorithm
     # or maybe later add a config switch
     #    write_sdcard_params()
-
-    # Compute variables derived from all of the above
-    compute_vars()
 
     # See if queue.db exists and create if not
     # Opening a connection creates if not exist
@@ -2910,8 +3013,12 @@ def read_maps_catalog():
     global maps_catalog
     global init_error
 
+    if osm_version == 'V2':
+        fname = maps_catalog_file_v2
+    else:
+        fname = maps_catalog_file
     try:
-        stream = open (maps_catalog_file,"r")
+        stream = open (fname,"r")
         maps_catalog = json.load(stream)
         stream.close()
     except:
@@ -3041,6 +3148,7 @@ def get_incomplete_jobs():
     conn.close()
 
 def app_config():
+    global adm_conf
     global iiab_base
     global iiab_repo
     global iiab_config_dir
@@ -3075,7 +3183,13 @@ def app_config():
     global maps_working_dir
     global maps_catalog_url
     global maps_catalog_file
+    global maps_catalog_url_v2
+    global maps_catalog_file_v2
     global vector_map_path
+    global maps_tiles_base
+    global vector_map_tiles_path
+    global maps_sat_base
+    global maps_mbtiles_src
     global modules_dir
     global js_menu_dir
     global ansible_playbook_program
@@ -3089,7 +3203,9 @@ def app_config():
     stream = open (cmdsrv_config_file,"r")
     inp = json.load(stream)
     stream.close()
+
     conf = inp['cmdsrv_conf']
+    adm_conf = conf
 
     iiab_base = conf['iiab_base']
     iiab_repo = conf['iiab_repo']
@@ -3126,7 +3242,13 @@ def app_config():
     maps_working_dir = conf['maps_working_dir']
     maps_catalog_url  = conf['maps_catalog_url']
     maps_catalog_file  = conf['maps_catalog_file']
+    maps_catalog_url_v2  = conf['maps_catalog_url_v2']
+    maps_catalog_file_v2  = conf['maps_catalog_file_v2']
     vector_map_path  = conf['vector_map_path']
+    vector_map_tiles_path  = conf['vector_map_tiles_path']
+    maps_tiles_base  = conf['maps_tiles_base']
+    maps_sat_base  = conf['maps_sat_base']
+    maps_mbtiles_src  = conf['maps_mbtiles_src']
     js_menu_dir = conf['js_menu_dir']
     squid_service = conf['squid_service']
     squid_whitelist = "/etc/%s/sites.whitelist.txt" % squid_service
@@ -3135,10 +3257,20 @@ def app_config():
     apache_user = conf['apache_user']
     df_program = conf['df_program']
 
-# These two were taken from the OLPC idmgr application
 
 def compute_vars():
-    # nothing to do at this point
+    global adm_conf
+    global osm_version
+    # calculate osm version
+    if 'osm_version' in local_vars:
+        adm_conf['osm_version'] = local_vars['osm_version']
+    elif os.path.exists(vector_map_path + '/installer'):
+        adm_conf['osm_version'] = 'V2'
+    elif os.path.exists(vector_map_path):
+        adm_conf['osm_version'] = 'V1'
+    else:
+        adm_conf['osm_version'] = None
+    osm_version = adm_conf['osm_version']
     return
 
 def set_ready_flag(on_off):
