@@ -29,3 +29,6 @@ iiab_pat_url : 'http://medbox.iiab.me/catalog/pcgvtd9-20-3-1.php'
 iiab_users_name : 'IIAB Users'
 iiab_users_email : 'iiab.users@gmail.com'
 iiab_admin_user_group: 'iiab-admin'
+# This is a departure from IIAB
+# Expected values are archive, timmoody, bittorrent
+map_download_src: 'timmoody'
