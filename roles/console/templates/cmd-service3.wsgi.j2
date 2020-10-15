@@ -3,6 +3,7 @@ import os.path
 import time
 import urllib.request, urllib.error, urllib.parse
 import crypt
+import pwd
 import spwd
 import grp
 import secrets
@@ -138,6 +139,7 @@ def auth_login(credentials64, client_public_key64, nonce64): # candidate for adm
     # see if user exists
     try:
         spwddb = spwd.getspnam(user)
+        user_info = pwd.getpwnam(user)
     except:
         print('Bad User')
         return False
@@ -146,10 +148,15 @@ def auth_login(credentials64, client_public_key64, nonce64): # candidate for adm
     group_valid = False
     for group in valid_group_list:
         try:
-            grplist = grp.getgrnam(group)
-            if user in grplist.gr_mem:
+            grp_info = grp.getgrnam(group)
+            if user in grp_info.gr_mem:
                 group_valid = True
                 break
+
+            if grp_info.gr_gid == user_info.pw_gid:
+                group_valid = True
+                break
+
         except:
             continue
     if not group_valid:
