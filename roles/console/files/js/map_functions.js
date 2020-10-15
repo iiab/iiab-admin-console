@@ -14,11 +14,29 @@ function instMapError(data, cmd_args) {
     return true;
 }
 
-function getMapStat(){
+function refreshRegionList(){
   // called during the init
-  console.log('in getMapStat');
-  readMapCatalog();
-  readMapIdx();
+  console.log('in refreshRegionList');
+  $.when(
+    readMapCatalog(),
+    readMapIdx(),
+    getOsmVectStat()
+  ).then(renderRegionList);
+}
+
+function getOsmVectStat(){
+  // get installed, wip state from cmdsrv
+  sendCmdSrvCmd("GET-OSM-VECT-STAT", procOsmVectStat);
+}
+
+//**************************
+// mapInstalled is set by both of the next two functions
+// *************************
+
+function procOsmVectStat(data){
+  mapStat = data;
+  mapWip = Object.keys(mapStat.WIP)
+  mapInstalled = Object.keys(mapStat.INSTALLED)
 }
 
 function readMapIdx(){
@@ -31,15 +49,16 @@ function readMapIdx(){
   .done(function( data ) {
   	//mapInstalled = data['regions'];
    consoleLog (data);
-   mapInstalled = [];
+   vectorMapIdx = data;
+   //mapInstalled = [];
    //mapInstalled = Object.keys(data);
-   for (var map in data) {
-   	 consoleLog (map)
-     if (data[map]) {
-       mapInstalled.push(data[map]);
-     }
-  };
-  consoleLog(mapInstalled + '');
+   //for (var map in data) {
+   //	 consoleLog (map)
+   //  if (data[map]) {
+   //    mapInstalled.push(data[map]);
+   //  }
+   //};
+  //consoleLog(mapInstalled + '');
   })
   .fail(jsonErrhandler);
 
@@ -56,7 +75,8 @@ function readMapCatalog(){
     dataType: 'json'
   })
   .done(function( data ) {
-    mapCatalog = {};
+    // mapCatalog = {};
+    // start with the optional regions
     mapCatalog = data['maps'];
     mapRegionIdx = {}
     for(var key in mapCatalog){
@@ -69,12 +89,18 @@ function readMapCatalog(){
       mapRegionIdx[region]['name'] = region;
       regionList.push(mapRegionIdx[region]);
     }
+    // add in the base maps
+    for (var base_map in data['base']){
+      mapId =
+      mapCatalog[base_map] = data['base'][base_map];
+      mapCatalog[base_map]['map_id'] = base_map;
+    }
   })
   .fail(jsonErrhandler);
   return resp;
 }
 
-function renderRegionList(checkbox) { // generic
+function renderRegionList(checkbox=true) { // generic
 	var html = "";
    // order the regionList by seq number
    var regions = Object.keys(mapRegionIdx);
@@ -88,8 +114,12 @@ function renderRegionList(checkbox) { // generic
   //console.log(regions);
 	// render each region
   html += '<form>';
-	regions.forEach((region, index) => { // now render the html
+  html += '<div><h3>Required Base Files</h3></div>';
+  html += renderBaseMapsList(checkbox);
+  html += '<div><h3>Hi-Res Regions (Zoom to 14)</h3></div>';
+	regions.forEach((region, index) => {
       //console.log(region.title + " " +region.seq);
+      //consoleLog(mapInstalled);
       html += genRegionItem(region,checkbox);
   });
   html += '</form>';
@@ -97,22 +127,48 @@ function renderRegionList(checkbox) { // generic
   $( "#mapRegionSelectList" ).html(html);
 }
 
-
-function genRegionItem(region,checkbox) {
+function renderBaseMapsList(checkbox) {
   var html = "";
+  html += genRegionItem(mapCatalog[adminConfig['maps_tiles_base']], checkbox, true, true);
+  html += genRegionItem(mapCatalog[adminConfig['maps_sat_base']], checkbox, true, true);
+  return html;
+}
+
+function genRegionItem(region,checkbox, forceCheck=false, makeDisabled=false) {
+  var html = "";
+  var checked = '';
+  var disabledFlag = '';
+  var labelClass = '';
+
+  var installed = false;
+  var wip = false;
+
   console.log("in genRegionItem: " + region.name);
   var itemId = region.title;
-  var ksize = region.size / 1000;
+  var ksize = region.size / 1024;
+
+  if (selectedMapItems.indexOf(region.name) != -1 || forceCheck)
+      checked = 'checked';
+  if (makeDisabled)
+      disabledFlag = 'disabled';
+  if (mapWip.indexOf(region.map_id) != -1){
+    checked = 'checked';
+    disabledFlag = 'disabled';
+    labelClass = 'class="scheduled"';
+    // itemMsg = ''; for future installed or wip message
+  }
+  if (mapInstalled.indexOf(region.map_id) != -1){
+    checked = 'checked';
+    disabledFlag = 'disabled';
+    labelClass = 'class="installed"'
+  }
+
   //console.log(html);
   html += '<div class="extract" data-region={"name":"' + region.name + '"}> ';
-  html += '<label>';
+  html += '<label ' + labelClass + '>';
   if ( checkbox ) {
-    if (selectedMapItems.indexOf(region.name) != -1)
-      checked = 'checked';
-    else
-      checked = '';
-      html += '<input type="checkbox" name="' + region.map_id + '"';
-      html += ' onChange="updateMapSpace(this)" ' + checked + '> ';
+    html += '<input type="checkbox" name="' + region.map_id + '"';
+    html += ' onChange="updateMapSpace(this)" ' + checked + ' ' + disabledFlag + '> ';
   }
   html += itemId;
   if ( checkbox ) { html += '</input>';};
@@ -201,16 +257,20 @@ function renderMap(){
    else{
      window.map.setTarget($("#map-container")[0]);
      window.map.render();
-     renderRegionList(true);
+     refreshRegionList();
+     //renderRegionList(true);
   }
 }
 function initMap(){
    var url =  mapAssetsDir + 'regions.json';
    sysStorage.map_selected_size = 0; // always set to 0
-   if (UrlExists(url)){
-      $.when(getMapStat()).then(renderRegionList);
-   }
+   //if (UrlExists(url)){
+   //   $.when(getMapStat()).then(renderRegionList);
+   //}
+
+   refreshRegionList(); // should probably only read data here as will draw when option clicked, but small perf penalty
 }
+
 function UrlExists(url)
 {
     var http = new XMLHttpRequest();

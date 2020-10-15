@@ -127,6 +127,7 @@ oer2go_wip = {}
 #oer2go_downloading = {}
 #oer2go_copying = {}
 oer2go_installed = []
+osm_vect_installed = []
 maps_wip = {}
 jobs_requested = {}
 jobs_to_restart = {}
@@ -2161,13 +2162,20 @@ def install_osm_vect_set_v2(cmd_info):
     global jobs_requested
     if 'cmd_args' in cmd_info:
         map_id = cmd_info['cmd_args']['osm_vect_id']
-        if map_id not in maps_catalog['maps']:
+        if map_id not in maps_catalog:
             resp = cmd_error(cmd='INST-OSM-VECT-SET', msg='Map Tile Set is not in catalog in Command')
             return resp
     else:
         return cmd_malformed(cmd_info['cmd'])
 
-    download_url = maps_catalog['maps'][map_id]['detail_url']
+    #download_url = maps_catalog[map_id]['detail_url']
+    # hard coding for now as the control vars don't make much sense
+    download_url = 'http://timmoody.com/iiab-files/maps/' + map_id
+
+    # save some values for later
+    cmd_info['download_url'] = download_url
+    cmd_info['size'] = maps_catalog['map_id']['size']
+
     #mbtiles_name = download_url.split('/')[-1] # osm_north_america_z11-z14_2019.mbtiles (not zipped)
     download_file = maps_working_dir + map_id
 
@@ -2182,7 +2190,7 @@ def install_osm_vect_set_v2(cmd_info):
     job_id = request_one_job(cmd_info, job_command, 2, job_id, "Y")
 
     # create maps idx
-    job_command = "/usr/bin/iiab-maps-finish.py " + mbtiles_name
+    job_command = "/usr/bin/iiab-maps-finish.py " + map_id
     resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=3, depend_on_job_id=job_id, has_dependent="N")
 
     return resp
@@ -2202,6 +2210,8 @@ def install_sat_area(cmd_info):
     return resp
 
 def get_osm_vect_stat(cmd_info):
+    global osm_vect_installed
+
     all_maps = {}
     all_maps['WIP'] = maps_wip
 
@@ -2217,8 +2227,18 @@ def get_osm_vect_stat(cmd_info):
     else:
         all_maps['sat_base_installed'] = False
 
+    # see what is installed
+    # in /library/www/osm-vector-maps/viewer/tiles
+    osm_vect_installed = os.listdir(vector_map_tiles_path)
+    for map in osm_vect_installed:
+        all_maps['INSTALLED'][map] = True
+
     resp = json.dumps(all_maps)
     return (resp)
+
+# def get_osm_vect_installed_list(device=""):
+#    osm_vect_installed = os.listdir(vector_map_tiles_path)
+
 
 # Content Menu Commands
 
@@ -3019,7 +3039,15 @@ def read_maps_catalog():
         fname = maps_catalog_file
     try:
         stream = open (fname,"r")
-        maps_catalog = json.load(stream)
+        catalog = json.load(stream)
+        if osm_version == 'V1':
+            maps_catalog = catalog
+
+        # for v2 flatten the catalog to put maps and base in same
+        if osm_version == 'V2':
+            maps_catalog = catalog['maps']
+            maps_catalog.update(catalog['base'])
+
         stream.close()
     except:
         init_error = True
