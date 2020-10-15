@@ -1240,8 +1240,6 @@ function changePasswordSuccess ()
     $( "#iiabIni" ).html(html);
     //consoleLog(jqXHR);
 
-    // Set Password Fields
-    $( "#iiab_admin_user").val(iiab_ini['iiab-admin']['iiab_admin_user']);
     return true;
   }
 
@@ -2211,6 +2209,11 @@ function initDone (){
 	  // now turn on navigation
     navButtonsEvents();
     //$('#initDataModal').modal('hide');
+
+    // Set Password Change Fields
+    var user = authData.credentials.split(':')[0]
+    $( "#iiab_admin_user").val(user);
+
     consoleLog("Init Finished Successfully");
   } else {
     consoleLog("Init Failed");
