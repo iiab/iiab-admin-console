@@ -15,8 +15,8 @@ from nacl.encoding import Base64Encoder
 cmdsrv_pid_file = "{{ cmdsrv_pid_file }}"
 cmdsrv_ready_file = "{{ cmdsrv_ready_file }}"
 iiab_cmd_service = "{{ iiab_cmd_service_url }}"
-iiab_admin_user_group = "{{ iiab_admin_user_group }}"
-valid_group_list = ['sudo', iiab_admin_user_group]
+admin_console_group = "{{ admin_console_group }}"
+valid_group_list = ['sudo', admin_console_group]
 
 
 # for testing

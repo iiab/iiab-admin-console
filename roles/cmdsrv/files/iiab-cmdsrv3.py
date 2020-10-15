@@ -196,7 +196,7 @@ def main():
     client_url = "ipc://" + ipc_sock
 
     owner = pwd.getpwnam(apache_user)
-    group = grp.getgrnam("iiab-admin")
+    group = grp.getgrnam(apache_user)
 
     # Prepare our context and sockets
     context = zmq.Context.instance()
