@@ -100,7 +100,7 @@ maps_catalog_url_v2 = None
 maps_catalog_file_v2 = None
 maps_tiles_base = None
 maps_sat_base = None
-maps_mbtiles_src = None
+maps_download_src = None
 vector_map_path = None
 vector_map_tiles_path = None
 osm_version = None
@@ -164,7 +164,7 @@ ansible_tags = {}
 iiab_ini = {}
 kiwix_catalog = {}
 oer2go_catalog = {}
-maps_catalog = {}
+maps_catalog = {} # this has been flattened when read to include both maps and base
 is_rpi = False
 
 # vars set by admin-console
@@ -2170,7 +2170,12 @@ def install_osm_vect_set_v2(cmd_info):
 
     #download_url = maps_catalog[map_id]['detail_url']
     # hard coding for now as the control vars don't make much sense
-    download_url = 'http://timmoody.com/iiab-files/maps/' + map_id
+    if maps_download_src == 'timmoody':
+        download_url = 'http://timmoody.com/iiab-files/maps/' + map_id
+    elif maps_download_src == 'archive':
+        download_url = 'https://archive.org/download/' + map_id + '/' + map_id
+    elif maps_download_src == 'bittorrent':
+        download_url = maps_catalog[map_id]['bittorrent_url']
 
     # save some values for later
     cmd_info['download_url'] = download_url
@@ -3217,7 +3222,7 @@ def app_config():
     global maps_tiles_base
     global vector_map_tiles_path
     global maps_sat_base
-    global maps_mbtiles_src
+    global maps_download_src
     global modules_dir
     global js_menu_dir
     global ansible_playbook_program
@@ -3276,7 +3281,7 @@ def app_config():
     vector_map_tiles_path  = conf['vector_map_tiles_path']
     maps_tiles_base  = conf['maps_tiles_base']
     maps_sat_base  = conf['maps_sat_base']
-    maps_mbtiles_src  = conf['maps_mbtiles_src']
+    maps_download_src  = conf['maps_download_src']
     js_menu_dir = conf['js_menu_dir']
     squid_service = conf['squid_service']
     squid_whitelist = "/etc/%s/sites.whitelist.txt" % squid_service

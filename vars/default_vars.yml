@@ -31,4 +31,4 @@ iiab_users_email : 'iiab.users@gmail.com'
 admin_console_group: 'iiab-admin'
 # This is a departure from IIAB
 # Expected values are archive, timmoody, bittorrent
-map_download_src: 'timmoody'
+maps_download_src: 'timmoody'
