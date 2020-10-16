@@ -2185,7 +2185,7 @@ def install_osm_vect_set_v2(cmd_info):
     #print job_command
 
     # move to location and clean up
-    job_command = "scripts/osm-vect_v2_install_step3.sh"
+    job_command = "scripts/osm-vect_v2_install_step2.sh"
     job_command +=  " " + map_id
     job_id = request_one_job(cmd_info, job_command, 2, job_id, "Y")
 
