@@ -30,5 +30,5 @@ iiab_users_name : 'IIAB Users'
 iiab_users_email : 'iiab.users@gmail.com'
 admin_console_group: 'iiab-admin'
 # This is a departure from IIAB
-# Expected values are archive, timmoody, bittorrent
-maps_download_src: 'timmoody'
+# Expected values are archive, iiab.me, bittorrent
+maps_download_src: 'iiab.me'

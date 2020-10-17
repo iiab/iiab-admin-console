@@ -83,8 +83,11 @@ function readMapCatalog(){
       //console.log(key + '  ' + mapCatalog[key]['title']);
       var region = mapCatalog[key]['region'];
 
-      mapRegionIdx[region] = mapCatalog[key];
-      mapRegionIdx[region]['url'] = mapCatalog[key]['detail_url'];
+      // mapRegionIdx is a map by region cross reference index
+      // it is not vector-map-idx.json
+
+      mapRegionIdx[region] = mapCatalog[key]; // this is not vector-map-idx.json
+      //mapRegionIdx[region]['url'] = mapCatalog[key]['detail_url']; ? still needed
       mapRegionIdx[region]['map_id'] = key;
       mapRegionIdx[region]['name'] = region;
       regionList.push(mapRegionIdx[region]);

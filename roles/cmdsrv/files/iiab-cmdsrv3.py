@@ -2170,12 +2170,14 @@ def install_osm_vect_set_v2(cmd_info):
 
     #download_url = maps_catalog[map_id]['detail_url']
     # hard coding for now as the control vars don't make much sense
-    if maps_download_src == 'timmoody':
+    if maps_download_src == 'iiab.me':
         download_url = 'http://timmoody.com/iiab-files/maps/' + map_id
     elif maps_download_src == 'archive':
         download_url = 'https://archive.org/download/' + map_id + '/' + map_id
     elif maps_download_src == 'bittorrent':
         download_url = maps_catalog[map_id]['bittorrent_url']
+        resp = cmd_error(cmd='INST-OSM-VECT-SET', msg='Not able to do bittorrent yet in Command')
+        return resp
 
     # save some values for later
     cmd_info['download_url'] = download_url
@@ -2195,7 +2197,7 @@ def install_osm_vect_set_v2(cmd_info):
     job_id = request_one_job(cmd_info, job_command, 2, job_id, "Y")
 
     # create maps idx
-    job_command = "/usr/bin/iiab-maps-finish.py " + map_id
+    job_command = "scripts/osm-vect_v2_finish_install.py " + map_id
     resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=3, depend_on_job_id=job_id, has_dependent="N")
 
     return resp
