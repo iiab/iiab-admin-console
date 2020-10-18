@@ -4,6 +4,7 @@
 
 var regionList = [];
 var mapAssetsDir = '/osm-vector-maps/maplist/assets/';
+var mapCatalogFile = consoleJsonDir + 'adm-map-catalog.json' // unique to admin console
 
 function instMapError(data, cmd_args) {
     consoleLog(cmd_args);
@@ -71,7 +72,7 @@ function readMapCatalog(){
   regionList = [];
   var resp = $.ajax({
     type: 'GET',
-    url: consoleJsonDir + 'map-catalog.json',
+    url: mapCatalogFile,
     dataType: 'json'
   })
   .done(function( data ) {
@@ -94,7 +95,6 @@ function readMapCatalog(){
     }
     // add in the base maps
     for (var base_map in data['base']){
-      mapId =
       mapCatalog[base_map] = data['base'][base_map];
       mapCatalog[base_map]['map_id'] = base_map;
     }

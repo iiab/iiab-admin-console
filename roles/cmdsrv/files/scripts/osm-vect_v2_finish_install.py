@@ -16,7 +16,7 @@ import iiab.adm_lib as adm
 viewer_path = adm.CONST.map_doc_root + '/viewer'
 vector_map_idx_dir = adm.CONST.vector_map_idx_dir
 
-catalog_path = iiab.CONST.iiab_etc_path + '/map-catalog.json'
+catalog_path = iiab.CONST.iiab_etc_path + '/adm-map-catalog.json'
 map_catalog = {}
 base_catalog = {}
 
@@ -41,7 +41,7 @@ def main():
     is_base = map_id in base_catalog
 
     if not is_base and not is_map:
-        print('Download URL not found in map-catalog.json: %s'%args.map_id)
+        print('Download URL not found in Map Catalog: %s'%args.map_id)
         sys.exit(1)
 
     # create init.json which sets initial coords and zoom
@@ -94,7 +94,7 @@ def write_vector_map_idx_v2(installed_maps):
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Create init.json for a tile URL.")
-    parser.add_argument("map_id", help="The key field in map-catalog.json.")
+    parser.add_argument("map_id", help="The key field in the Map Catalog.")
     return parser.parse_args()
 
 

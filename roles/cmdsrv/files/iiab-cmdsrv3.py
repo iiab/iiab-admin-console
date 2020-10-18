@@ -96,8 +96,8 @@ maps_downloads_dir = None
 maps_working_dir = None
 maps_catalog_url = None
 maps_catalog_file = None
-maps_catalog_url_v2 = None
-maps_catalog_file_v2 = None
+maps_catalog_url_v2 = None # adm-maps-catalog.json
+maps_catalog_file_v2 = None # used exclusively by admin console
 maps_tiles_base = None
 maps_sat_base = None
 maps_download_src = None
@@ -516,9 +516,9 @@ def add_wip(job_info):
     elif cmd in {"INST-OSM-VECT-SET"}:
         # handle V1?
         map_id = job_info['cmd_args']['osm_vect_id']
-        download_url = maps_catalog['maps'][map_id]['detail_url']
+        download_url = maps_catalog[map_id]['detail_url']
         # let's record size in job_info as required_space
-        # size = maps_catalog['maps'][map_id]['mbtiles_size'] NEED THIS
+        # size = maps_catalog[map_id]['mbtiles_size'] NEED THIS
 
     elif cmd in {"INST-SAT-AREA"}:
         radius = job_info['cmd_args']['radius']
@@ -2181,7 +2181,7 @@ def install_osm_vect_set_v2(cmd_info):
 
     # save some values for later
     cmd_info['download_url'] = download_url
-    cmd_info['size'] = maps_catalog['map_id']['size']
+    cmd_info['size'] = maps_catalog[map_id]['size']
 
     #mbtiles_name = download_url.split('/')[-1] # osm_north_america_z11-z14_2019.mbtiles (not zipped)
     download_file = maps_working_dir + map_id
@@ -3051,6 +3051,7 @@ def read_maps_catalog():
             maps_catalog = catalog
 
         # for v2 flatten the catalog to put maps and base in same
+        # uses adm-maps-catalog.json
         if osm_version == 'V2':
             maps_catalog = catalog['maps']
             maps_catalog.update(catalog['base'])
