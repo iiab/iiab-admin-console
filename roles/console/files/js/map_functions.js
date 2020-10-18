@@ -134,6 +134,7 @@ function renderBaseMapsList(checkbox) {
   var html = "";
   html += genRegionItem(mapCatalog[adminConfig['maps_tiles_base']], checkbox, true, true);
   html += genRegionItem(mapCatalog[adminConfig['maps_sat_base']], checkbox);
+  updateMapSpaceUtil(mapCatalog[adminConfig['maps_tiles_base']], true) // because defaults to checked
   return html;
 }
 

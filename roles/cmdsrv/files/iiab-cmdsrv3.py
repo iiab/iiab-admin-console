@@ -516,12 +516,12 @@ def add_wip(job_info):
     elif cmd in {"INST-OSM-VECT-SET"}:
         # handle V1?
         map_id = job_info['cmd_args']['osm_vect_id']
-        download_url = maps_catalog[map_id]['detail_url']
-        # let's record size in job_info as required_space
-        # size = maps_catalog[map_id]['mbtiles_size'] NEED THIS
+        download_url = job_info['extra_vars']['download_url']
+        size = job_info['extra_vars']['size']
+        maps_wip[map_id] = {"cmd":cmd, "action":action, "dest":dest, "source":source, "download_url":download_url, "size": size}
 
     elif cmd in {"INST-SAT-AREA"}:
-        radius = job_info['cmd_args']['radius']
+        radius = job_info['extra_vars']['radius']
 
 def remove_wip(job_info):
     global zims_wip
@@ -2179,17 +2179,25 @@ def install_osm_vect_set_v2(cmd_info):
         resp = cmd_error(cmd='INST-OSM-VECT-SET', msg='Not able to do bittorrent yet in Command')
         return resp
 
-    # save some values for later
-    cmd_info['download_url'] = download_url
-    cmd_info['size'] = maps_catalog[map_id]['size']
-
-    #mbtiles_name = download_url.split('/')[-1] # osm_north_america_z11-z14_2019.mbtiles (not zipped)
     download_file = maps_working_dir + map_id
+    tiles_path = vector_map_tiles_path + map_id
+
+    # see if already installed
+    if os.path.isfile(tiles_path) and os.path.getsize(tiles_path) == maps_catalog[map_id]['size']:
+        resp = cmd_error(cmd='INST-OSM-VECT-SET', msg=map_id + ' is already downloaded')
+        return resp
+
+    # save some values for later
+    cmd_info['extra_vars'] = {}
+    cmd_info['extra_vars']['download_url'] = download_url
+    cmd_info['extra_vars']['size'] = maps_catalog[map_id]['size']
 
     # download mbtiles file
-    job_command = "/usr/bin/wget -c --progress=dot:giga " + download_url + " -O " + download_file
-    job_id = request_one_job(cmd_info, job_command, 1, -1, "Y")
-    #print job_command
+    # unless already done
+    if not os.path.isfile(download_file) or os.path.getsize(download_file) == maps_catalog[map_id]['size']:
+        job_command = "/usr/bin/wget -c --progress=dot:giga " + download_url + " -O " + download_file
+        job_id = request_one_job(cmd_info, job_command, 1, -1, "Y")
+        #print job_command
 
     # move to location and clean up
     job_command = "scripts/osm-vect_v2_install_step2.sh"
@@ -2527,6 +2535,7 @@ def request_one_job(cmd_info, job_command, cmd_step_no, depend_on_job_id, has_de
     job_info['cmd_rowid'] = cmd_info['cmd_rowid']
     job_info['cmd'] = cmd_info['cmd']
     job_info['cmd_args'] = cmd_info['cmd_args']
+    job_info['extra_vars'] = cmd_info['extra_vars'] # optional
 
     job_info['cmd_step_no'] = cmd_step_no
     job_info['depend_on_job_id'] = depend_on_job_id

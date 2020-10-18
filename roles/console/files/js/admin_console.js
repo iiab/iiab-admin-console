@@ -1617,7 +1617,7 @@ function sumOer2goWip(){
   return totalSpace;
 }
 
-function sumMapWip(){
+function sumMapWipV1(){ // save for now
   var totalSpace = 0;
 
   for (var idx in mapWip){
@@ -1625,7 +1625,16 @@ function sumMapWip(){
    var region = get_region_from_url(url);
   	totalSpace += parseInt(mapCatalog[region].osm_size) + parseInt(mapCatalog[region].sat_size);
   }
-  return totalSpace/1000;
+  return totalSpace/1024;
+}
+
+function sumMapWip(){
+  var totalSpace = 0;
+
+  for (var mapId in mapWip){
+  	totalSpace += parseInt(mapCatalog[mapId].size);
+  }
+  return totalSpace/1024;
 }
 
 function calcLibraryDiskSpace(){
