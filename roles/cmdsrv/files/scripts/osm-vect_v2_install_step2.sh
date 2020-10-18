@@ -9,6 +9,8 @@
 
 PREVIEW_SAT=satellite_z0-z6_v3.mbtiles
 PREVIEW_OSM=planet_z0-z6_2019.mbtiles
+PROD_SAT=satellite_z0-z9_v3.mbtiles
+PROD_OSM=osm-planet_z0-z10_2019.mbtiles
 
 download_dir='/library/working/maps'
 tiles_dir='/library/www/osm-vector-maps/viewer/tiles'
@@ -21,11 +23,14 @@ exit 1
 fi
 
 # if the PREVIEW tiles are in place, delete them
-if [ -e "/library/www/osm-vector-maps/viewer/tiles/$PREVIEW_OSM" ]; then
-   unlink "/library/www/osm-vector-maps/viewer/tiles/$PREVIEW_OSM"
+if [ -e "/library/www/osm-vector-maps/viewer/tiles/$PROD_OSM" ]; then
+   if [ -e "/library/www/osm-vector-maps/viewer/tiles/$PREVIEW_OSM" ]; then
+      unlink "/library/www/osm-vector-maps/viewer/tiles/$PREVIEW_OSM"
+   fi
 fi
-if [ -e "/library/www/osm-vector-maps/viewer/tiles/$PREVIEW_SAT" ]; then
-   rm -f "/library/www/osm-vector-maps/viewer/tiles/$PREVIEW_SAT"
+if [ -e "/library/www/osm-vector-maps/viewer/tiles/$PROD_SAT" ]; then
+   if [ -e "/library/www/osm-vector-maps/viewer/tiles/$PREVIEW_SAT" ]; then
+      rm -f "/library/www/osm-vector-maps/viewer/tiles/$PREVIEW_SAT"
+   fi
 fi
-
 exit 0

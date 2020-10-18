@@ -4,7 +4,7 @@
 
 var regionList = [];
 var mapAssetsDir = '/osm-vector-maps/maplist/assets/';
-var mapCatalogFile = consoleJsonDir + 'adm-map-catalog.json' // unique to admin console
+var mapCatalogFile = '/common/assets/adm-map-catalog.json' // unique to admin console
 
 function instMapError(data, cmd_args) {
     consoleLog(cmd_args);
@@ -133,11 +133,11 @@ function renderRegionList(checkbox=true) { // generic
 function renderBaseMapsList(checkbox) {
   var html = "";
   html += genRegionItem(mapCatalog[adminConfig['maps_tiles_base']], checkbox, true, true);
-  html += genRegionItem(mapCatalog[adminConfig['maps_sat_base']], checkbox, true, true);
+  html += genRegionItem(mapCatalog[adminConfig['maps_sat_base']], checkbox);
   return html;
 }
 
-function genRegionItem(region,checkbox, forceCheck=false, makeDisabled=false) {
+function genRegionItem(region, checkbox, forceCheck=false, makeDisabled=false) {
   var html = "";
   var checked = '';
   var disabledFlag = '';
@@ -254,10 +254,12 @@ function updateMapSpaceUtil(mapId, checked){
 }
 
 function renderMap(){
-   //console.log('in renderMap');
-   if (Object.keys(mapCatalog).length === 0)
-     $("#map-container").html('<BR><BR><center><span style="font-size: 30px;"><B>MAPS NOT INSTALLED<B></span></center>');
-   else{
+  //console.log('in renderMap');
+  if (Object.keys(mapCatalog).length === 0)
+    $("#map-container").html('<BR><BR><center><span style="font-size: 30px;"><B>MAPS NOT INSTALLED<B></span></center>');
+  else if (adminConfig.osm_version != 'V2')
+    $("#map-container").html('<BR><BR><center><span style="font-size: 30px;"><B>Your version of Maps is not support by this version of Admin Console<B></span></center>');
+  else{
      window.map.setTarget($("#map-container")[0]);
      window.map.render();
      refreshRegionList();
