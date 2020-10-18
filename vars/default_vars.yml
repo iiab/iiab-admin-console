@@ -32,3 +32,4 @@ admin_console_group: 'iiab-admin'
 # This is a departure from IIAB
 # Expected values are archive, iiab.me, bittorrent
 maps_download_src: 'iiab.me'
+adm_maps_catalog_file: 'adm-map-catalog.json'

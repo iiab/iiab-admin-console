@@ -96,8 +96,8 @@ maps_downloads_dir = None
 maps_working_dir = None
 maps_catalog_url = None
 maps_catalog_file = None
-maps_catalog_url_v2 = None # adm-maps-catalog.json
-maps_catalog_file_v2 = None # used exclusively by admin console
+# maps_catalog_url_v2 = future if we need to download
+adm_maps_catalog_file = None # used exclusively by admin console
 maps_tiles_base = None
 maps_sat_base = None
 maps_download_src = None
@@ -3041,7 +3041,7 @@ def read_maps_catalog():
     global init_error
 
     if osm_version == 'V2':
-        fname = maps_catalog_file_v2
+        fname = adm_maps_catalog_file
     else:
         fname = maps_catalog_file
     try:
@@ -3220,7 +3220,7 @@ def app_config():
     global maps_catalog_url
     global maps_catalog_file
     global maps_catalog_url_v2
-    global maps_catalog_file_v2
+    global adm_maps_catalog_file
     global vector_map_path
     global maps_tiles_base
     global vector_map_tiles_path
@@ -3278,8 +3278,8 @@ def app_config():
     maps_working_dir = conf['maps_working_dir']
     maps_catalog_url  = conf['maps_catalog_url']
     maps_catalog_file  = conf['maps_catalog_file']
-    maps_catalog_url_v2  = conf['maps_catalog_url_v2']
-    maps_catalog_file_v2  = conf['maps_catalog_file_v2']
+    #maps_catalog_url_v2  = conf['maps_catalog_url_v2']
+    adm_maps_catalog_file  = conf['adm_maps_catalog_file']
     vector_map_path  = conf['vector_map_path']
     vector_map_tiles_path  = conf['vector_map_tiles_path']
     maps_tiles_base  = conf['maps_tiles_base']
