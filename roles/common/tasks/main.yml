@@ -129,10 +129,10 @@
   when: osm_vector_maps_enabled
 
 # Copy Map Catalog used by Admin Console
-- name: Copy Map Catalog used by Admin Console ({{ maps_catalog_file_v2 }})
+- name: Copy Map Catalog used by Admin Console ({{ maps_catalog_file }})
   copy:
     src: map/adm-map-catalog.json
-    dest: "{{ maps_catalog_file_v2 }}"
+    dest: "{{ doc_root }}/common/assets/{{ adm_maps_catalog_file }}"
     owner: root
     group: root
     mode: 0644
