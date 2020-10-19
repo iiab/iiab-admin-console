@@ -127,7 +127,10 @@ function renderRegionList(checkbox=true) { // generic
       html += genRegionItem(region,checkbox);
   });
   html += '</form>';
+  html += '<div class="installed">INSTALLED</div>';
+  html += '<div class="scheduled">DOWNLOADING</div>';
   //console.log(html);
+
   $( "#mapRegionSelectList" ).html(html);
   updateMapEstimatedSpace();
 }
