@@ -203,7 +203,8 @@ function get_region_from_url(url){
 function instMaps(){
   calcMapSelected();
   selectedMapItems.forEach(function (mapId, index){
-    instMapItem(mapId);
+    if (mapWip.indexOf(mapId) == -1)
+      instMapItem(mapId);
   });
   alert ("Selected Map Regions scheduled to be installed.\n\nPlease view Utilities->Display Job Status to see the results.");
   renderMap();
