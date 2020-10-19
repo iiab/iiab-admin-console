@@ -1572,7 +1572,7 @@ function calcAllocatedSpace(){
 	totalSpace += sumAllocationList(selectedOer2goItems, 'oer2go');
 	totalSpace += sumOer2goWip();
 	totalSpace += sumAllocationList(selectedMapItems, 'map');
-	totalSpace += sumMapWip();
+	// totalSpace += sumMapWip(); selectedMapItems also holds wip as they are still selected
 	return totalSpace;
 }
 

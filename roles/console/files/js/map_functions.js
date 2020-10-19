@@ -105,7 +105,7 @@ function readMapCatalog(){
 
 function renderRegionList(checkbox=true) { // generic
   var html = "";
-  sysStorage.map_selected_size = 0; // always set to 0
+  //sysStorage.map_selected_size = 0; // always set to 0
    // order the regionList by seq number
    var regions = Object.keys(mapRegionIdx);
 	console.log ("in renderRegionList");
@@ -129,6 +129,7 @@ function renderRegionList(checkbox=true) { // generic
   html += '</form>';
   //console.log(html);
   $( "#mapRegionSelectList" ).html(html);
+  updateMapEstimatedSpace();
 }
 
 function renderBaseMapsList(checkbox) {
@@ -200,24 +201,10 @@ function get_region_from_url(url){
 }
 
 function instMaps(){
-  var mapId;
-  var region;
-  selectedMapItems = []; // items no longer selected as are being installed
-  $('#mapRegionSelectList input').each( function(){
-    if (this.type == "checkbox")
-      if (this.checked){
-        //var skip_map = false;
-        mapId = this.name;
-        if (mapInstalled.indexOf(mapId) == -1){
-
-        // once we mark maps on screen as installed we will silently skip them
-        //if (mapId in mapInstalled)
-        //alert ("Selected Map Region is already installed.\n");
-        //else
-          instMapItem(mapId);
-        }
-      }
-    });
+  calcMapSelected();
+  selectedMapItems.forEach(function (mapId, index){
+    instMapItem(mapId);
+  });
 }
 
 function instMapItem(map_id) {
@@ -257,6 +244,26 @@ function updateMapSpaceUtil(mapId, checked){
   displaySpaceAvail();
 }
 
+function updateMapEstimatedSpace(){
+  calcMapSelected();
+  displaySpaceAvail();
+}
+
+function calcMapSelected(){
+  // adds all selected to array even if wip, but not if installed
+  var mapId;
+  selectedMapItems = []; // refresh list
+  $('#mapRegionSelectList input').each( function(){
+    if (this.type == "checkbox")
+      if (this.checked){
+        mapId = this.name;
+        if (mapInstalled.indexOf(mapId) == -1){
+          selectedMapItems.push(mapId);
+        }
+    }
+  });
+}
+
 function renderMap(){
   //console.log('in renderMap');
   if (Object.keys(mapCatalog).length === 0)
@@ -272,7 +279,7 @@ function renderMap(){
 }
 function initMap(){
    var url =  mapAssetsDir + 'regions.json';
-   sysStorage.map_selected_size = 0; // always set to 0
+   // sysStorage.map_selected_size = 0; // always set to 0
    //if (UrlExists(url)){
    //   $.when(getMapStat()).then(renderRegionList);
    //}
