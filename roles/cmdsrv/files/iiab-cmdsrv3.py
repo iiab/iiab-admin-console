@@ -358,6 +358,7 @@ def job_minder_thread(client_url, worker_control_url, context=None):
 
             # don't start job if at max allowed
             if running_job_count >= cmdsrv_max_concurrent_jobs:
+                # print(f'Waiting for queue: running_job_count {running_job_count}, cmdsrv_max_concurrent_jobs {cmdsrv_max_concurrent_jobs}')
                 continue
 
             #print "starting prereq check"
@@ -536,7 +537,7 @@ def remove_wip(job_info):
     elif job_info['cmd'] in ["INST-OER2GO-MOD", "COPY-OER2GO-MOD"]:
         oer2go_wip.pop(job_info['cmd_args']['moddir'], None)
     elif job_info['cmd'] in {"INST-OSM-VECT-SET"}:
-        maps_wip.pop(job_info['cmd_args']['map_id'], None)
+        maps_wip.pop(job_info['cmd_args']['osm_vect_id'], None)
 
 def start_job(job_id, job_info, status='STARTED'):
     global running_job_count

@@ -205,6 +205,8 @@ function instMaps(){
   selectedMapItems.forEach(function (mapId, index){
     instMapItem(mapId);
   });
+  alert ("Selected Map Regions scheduled to be installed.\n\nPlease view Utilities->Display Job Status to see the results.");
+  renderMap();
 }
 
 function instMapItem(map_id) {
@@ -220,7 +222,7 @@ function instMapItem(map_id) {
   return true;
 }
 
-function updateMapSpace(cb){
+function updateMapSpace(cb){ // for single clicks only
   console.log("in updateMapSpace" + cb);
   var mapId = cb.name;
   updateMapSpaceUtil(mapId, cb.checked);
