@@ -76,13 +76,14 @@ def write_vector_map_idx_v2(installed_maps):
     map_dict = {}
     idx_dict = {}
     for fname in installed_maps:
-        map_dict = catalog.get(fname, None)
+        map_id = fname
+        map_dict = catalog.get(map_id, None)
         if not map_dict : continue
 
         # Create the idx file in format required by js-menu system
         item = map_dict['perma_ref']
         idx_dict[item] = {}
-        idx_dict[item]['file_name'] = os.path.basename(map_dict['detail_url'])
+        idx_dict[item]['file_name'] = fname # ? os.path.basename(map_dict['detail_url'])
         idx_dict[item]['menu_item'] = map_dict['perma_ref']
         idx_dict[item]['size'] = map_dict['size']
         idx_dict[item]['date'] = map_dict['date']

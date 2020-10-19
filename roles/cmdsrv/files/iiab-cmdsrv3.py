@@ -526,6 +526,7 @@ def add_wip(job_info):
 def remove_wip(job_info):
     global zims_wip
     global oer2go_wip
+    global maps_wip
 
     #print job_info
     #print "in remove_wip"
@@ -534,6 +535,8 @@ def remove_wip(job_info):
         zims_wip.pop(job_info['cmd_args']['zim_id'], None)
     elif job_info['cmd'] in ["INST-OER2GO-MOD", "COPY-OER2GO-MOD"]:
         oer2go_wip.pop(job_info['cmd_args']['moddir'], None)
+    elif job_info['cmd'] in {"INST-OSM-VECT-SET"}:
+        maps_wip.pop(job_info['cmd_args']['map_id'], None)
 
 def start_job(job_id, job_info, status='STARTED'):
     global running_job_count
@@ -2541,7 +2544,7 @@ def request_one_job(cmd_info, job_command, cmd_step_no, depend_on_job_id, has_de
     job_info['cmd_rowid'] = cmd_info['cmd_rowid']
     job_info['cmd'] = cmd_info['cmd']
     job_info['cmd_args'] = cmd_info['cmd_args']
-    job_info['extra_vars'] = cmd_info['extra_vars'] # optional
+    job_info['extra_vars'] = cmd_info.get('extra_vars', None) # optional
 
     job_info['cmd_step_no'] = cmd_step_no
     job_info['depend_on_job_id'] = depend_on_job_id

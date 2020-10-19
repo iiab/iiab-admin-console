@@ -208,12 +208,14 @@ function instMaps(){
       if (this.checked){
         //var skip_map = false;
         mapId = this.name;
+        if (mapInstalled.indexOf(mapId) == -1){
 
         // once we mark maps on screen as installed we will silently skip them
-        if (mapId in mapInstalled)
-          alert ("Selected Map Region is already installed.\n");
-        else
+        //if (mapId in mapInstalled)
+        //alert ("Selected Map Region is already installed.\n");
+        //else
           instMapItem(mapId);
+        }
       }
     });
 }
@@ -238,21 +240,18 @@ function updateMapSpace(cb){
 }
 
 function updateMapSpaceUtil(mapId, checked){
-  var size =  parseInt(mapCatalog[mapId].size);
+  if (mapInstalled.indexOf(mapId) != -1) // already installed so not part of allocation, already in storage
+    return;
 
+  var size =  parseInt(mapCatalog[mapId].size);
   var selectedIdx = selectedMapItems.indexOf(mapId);
 
   if (checked){
-    if (mapInstalled.indexOf(mapId) == -1){ // only update if not already installed mods
-      sysStorage.map_selected_size += size;
-      selectedMapItems.push(mapId);
-    }
-  }
-  else {
-    if (selectedIdx != -1){
-      sysStorage.map_selected_size -= size;
-      selectedMapItems.splice(selectedIdx, 1);
-    }
+    sysStorage.map_selected_size += size;
+    selectedMapItems.push(mapId);
+  } else {
+    sysStorage.map_selected_size -= size;
+    selectedMapItems.splice(selectedIdx, 1);
   }
 
   displaySpaceAvail();

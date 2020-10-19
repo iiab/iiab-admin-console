@@ -1589,7 +1589,7 @@ function sumAllocationList(list, type){
     else if (type == "oer2go")
       totalSpace += parseInt(oer2goCatalog[id].ksize);
     else if (type == "map")
-      totalSpace += parseInt(mapCatalog[id].size / 1000);
+      totalSpace += parseInt(mapCatalog[id].size / 1024);
 
   }
   // sysStorage.oer2go_selected_size = totalSpace;
@@ -1631,9 +1631,10 @@ function sumMapWipV1(){ // save for now
 function sumMapWip(){
   var totalSpace = 0;
 
-  for (var mapId in mapWip){
-  	totalSpace += parseInt(mapCatalog[mapId].size);
-  }
+  mapWip.forEach(function (mapId, index) {
+    totalSpace += parseInt(mapCatalog[mapId].size);
+  });
+
   return totalSpace/1024;
 }
 
@@ -2200,7 +2201,10 @@ function initGetData(){
     sendCmdSrvCmd("GET-IIAB-INI", procXsceIni),
     sendCmdSrvCmd("GET-ZIM-STAT", procZimStatInit),
     getOer2goStat(),
-    initMap(),
+    readMapCatalog(),
+    readMapIdx(),
+    getOsmVectStat(),
+    //initMap(),
     getSpaceAvail(),
     getExternalDevInfo())
     .then(initDone)
@@ -2237,7 +2241,8 @@ function initDone (){
     initConfigVars();
     consoleLog("starting procZimCatalog");
     procZimCatalog();
-	  displayServerCommandStatus('<span style="color:green">Init Finished Successfully</span>');
+    displayServerCommandStatus('<span style="color:green">Init Finished Successfully</span>');
+    renderRegionList();
 	  //selectedLangsDefaults(); // any installed or wip content plus default language
 	  displaySpaceAvail(); // display on various panels
 	  // now turn on navigation
