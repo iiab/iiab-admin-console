@@ -136,7 +136,7 @@
     owner: root
     group: root
     mode: 0644
-    force: no
+    force: yes
   when: osm_vector_maps_enabled
 
 # Put dummy regions file in place only if it does not already exist (should have been put there when osm installed)

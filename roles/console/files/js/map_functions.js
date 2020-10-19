@@ -104,7 +104,8 @@ function readMapCatalog(){
 }
 
 function renderRegionList(checkbox=true) { // generic
-	var html = "";
+  var html = "";
+  sysStorage.map_selected_size = 0; // always set to 0
    // order the regionList by seq number
    var regions = Object.keys(mapRegionIdx);
 	console.log ("in renderRegionList");
@@ -132,9 +133,12 @@ function renderRegionList(checkbox=true) { // generic
 
 function renderBaseMapsList(checkbox) {
   var html = "";
-  html += genRegionItem(mapCatalog[adminConfig['maps_tiles_base']], checkbox, true, true);
+  var mapsTilesBaseMapId = adminConfig['maps_tiles_base'];
+  html += genRegionItem(mapCatalog[mapsTilesBaseMapId], checkbox, true, true);
+  updateMapSpaceUtil(mapsTilesBaseMapId, true) // because defaults to checked
+
   html += genRegionItem(mapCatalog[adminConfig['maps_sat_base']], checkbox);
-  updateMapSpaceUtil(mapCatalog[adminConfig['maps_tiles_base']], true) // because defaults to checked
+
   return html;
 }
 

@@ -2194,19 +2194,25 @@ def install_osm_vect_set_v2(cmd_info):
 
     # download mbtiles file
     # unless already done
-    if not os.path.isfile(download_file) or os.path.getsize(download_file) == maps_catalog[map_id]['size']:
+    next_step = 1
+    job_id = -1
+
+    if not os.path.isfile(download_file) or os.path.getsize(download_file) != maps_catalog[map_id]['size']:
         job_command = "/usr/bin/wget -c --progress=dot:giga " + download_url + " -O " + download_file
         job_id = request_one_job(cmd_info, job_command, 1, -1, "Y")
+        next_step = 2
         #print job_command
 
     # move to location and clean up
     job_command = "scripts/osm-vect_v2_install_step2.sh"
     job_command +=  " " + map_id
-    job_id = request_one_job(cmd_info, job_command, 2, job_id, "Y")
+    job_id = request_one_job(cmd_info, job_command, next_step, job_id, "Y")
+
+    next_step += 1
 
     # create maps idx
     job_command = "scripts/osm-vect_v2_finish_install.py " + map_id
-    resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=3, depend_on_job_id=job_id, has_dependent="N")
+    resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=next_step, depend_on_job_id=job_id, has_dependent="N")
 
     return resp
 
