@@ -6,6 +6,84 @@ var regionList = [];
 var mapAssetsDir = '/osm-vector-maps/maplist/assets/';
 var mapCatalogFile = '/common/assets/adm-map-catalog.json' // unique to admin console
 
+function drawmap(mapContainer) {
+  // variable to control which features are shown
+  var mapShowAttr = {};
+
+  var map = new ol.Map({
+    target: mapContainer,
+    layers: [
+      new ol.layer.Vector({
+        source: new ol.source.Vector({
+          format: new ol.format.GeoJSON(),
+          url: mapAssetsDir + '/countries.json'
+        }),
+        style: new ol.style.Style({
+          fill: new ol.style.Fill({
+            color: 'rgb(219, 180, 131)'
+          }),
+          stroke: new ol.style.Stroke({
+            color: 'white'
+          })
+        })
+      }),
+    ],
+    view: new ol.View({
+      center: [0, 0],
+      zoom: 2
+    })
+  });
+
+  var setBoxStyle = function (feature) {
+    var name = feature.get("name");
+    //alert(keys+'');
+    if (typeof mapShowAttr !== 'undefined' &&
+      mapShowAttr != null && name == mapShowAttr) {
+      return new ol.style.Style({
+        fill: new ol.style.Fill({
+          color: 'rgba(67, 163, 46, 0.2)'
+        }),
+        stroke: new ol.style.Stroke({
+          color: 'rgba(67, 163, 46, 1)',
+          width: 2
+        })
+      })
+    } else {
+      return new ol.style.Style({
+        fill: new ol.style.Fill({
+          color: 'rgba(255,255,255,.10)'
+        }),
+        stroke: new ol.style.Stroke({
+          color: 'rgba(255,255,255,.3)'
+        })
+      })
+    }
+  }
+
+  var boxLayer = new ol.layer.Vector({
+    source: new ol.source.Vector({
+      format: new ol.format.GeoJSON(),
+      url: mapAssetsDir + '/bboxes.geojson'
+    }),
+    id: 'boxes',
+    style: setBoxStyle
+  });
+  map.addLayer(boxLayer);
+
+  $(document).on("mouseover", ".extract", function () {
+
+    var data = JSON.parse($(this).attr('data-region'));
+    mapShowAttr = data.name;
+    //setBoxStyle();
+    boxLayer.changed();
+  });
+  $(document).on("mouseout", ".extract", function () {
+    var data = JSON.parse($(this).attr('data-region'));
+    mapShowAttr = '';
+    boxLayer.changed();
+  });
+}
+
 function instMapError(data, cmd_args) {
     consoleLog(cmd_args);
     //cmdargs = JSON.parse(command);
@@ -192,17 +270,6 @@ function genRegionItem(region, checkbox, forceCheck=false, makeDisabled=false) {
   return html;
 }
 
-// not used
-function get_region_from_url(url){
-  for (const region in mapCatalog ){
-    if (mapCatalog[region].hasOwnProperty('url') &&
-      mapCatalog[region].url === url ){
-      return mapCatalog[region].name;
-    }
-  }
-  return null
-}
-
 function instMaps(){
   calcMapSelected();
   selectedMapItems.forEach(function (mapId, index){
@@ -277,18 +344,12 @@ function renderMap(){
   else if (adminConfig.osm_version != 'V2')
     $("#map-container").html('<BR><BR><center><span style="font-size: 30px;"><B>Your version of Maps is not support by this version of Admin Console<B></span></center>');
   else{
-     window.map.setTarget($("#map-container")[0]);
-     window.map.render();
-     refreshRegionList();
-     //renderRegionList(true);
+    drawmap("map-container");
+    refreshRegionList();
+    //renderRegionList(true);
   }
 }
 function initMap(){
-   var url =  mapAssetsDir + 'regions.json';
-   // sysStorage.map_selected_size = 0; // always set to 0
-   //if (UrlExists(url)){
-   //   $.when(getMapStat()).then(renderRegionList);
-   //}
 
    refreshRegionList(); // should probably only read data here as will draw when option clicked, but small perf penalty
 }
