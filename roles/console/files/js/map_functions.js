@@ -5,6 +5,7 @@
 var regionList = [];
 var mapAssetsDir = '/osm-vector-maps/maplist/assets/';
 var mapCatalogFile = '/common/assets/adm-map-catalog.json' // unique to admin console
+var mapsDrawn = {'region': false, 'addons': false};
 
 function drawmap(mapContainer) {
   // variable to control which features are shown
@@ -337,27 +338,147 @@ function calcMapSelected(){
   });
 }
 
-function renderMap(){
+function renderRegionMap(){
   //console.log('in renderMap');
   if (Object.keys(mapCatalog).length === 0)
-    $("#map-container").html('<BR><BR><center><span style="font-size: 30px;"><B>MAPS NOT INSTALLED<B></span></center>');
+    $("#mapRegionContainer").html('<BR><BR><center><span style="font-size: 30px;"><B>MAPS NOT INSTALLED<B></span></center>');
   else if (adminConfig.osm_version != 'V2')
-    $("#map-container").html('<BR><BR><center><span style="font-size: 30px;"><B>Your version of Maps is not support by this version of Admin Console<B></span></center>');
+    $("#mapRegionContainer").html('<BR><BR><center><span style="font-size: 30px;"><B>Your version of Maps is not support by this version of Admin Console<B></span></center>');
   else{
-    drawmap("map-container");
+    //drawmap("mapRegionsContainer");
+    //drawmap("mapAddonsContainer");
+    if (!mapsDrawn.addons){
+      showRegionsMap();
+      mapsDrawn.region = true;
+    }
+
+    //showAddonsMap();
     refreshRegionList();
     //renderRegionList(true);
   }
 }
+
+function renderAddonsMap(){
+  if (Object.keys(mapCatalog).length === 0)
+    $("#mapAddonContainer").html('<BR><BR><center><span style="font-size: 30px;"><B>MAPS NOT INSTALLED<B></span></center>');
+  else{
+    if (!mapsDrawn.addons){
+      showAddonsMap();
+      mapsDrawn.addons = true;
+    }
+  }
+}
+
 function initMap(){
 
    refreshRegionList(); // should probably only read data here as will draw when option clicked, but small perf penalty
 }
 
-function UrlExists(url)
-{
-    var http = new XMLHttpRequest();
-    http.open('HEAD', url, false);
-    http.send();
-    return http.status!=404;
+function showRegionsMap() {
+  // variable to control which features are shown
+  var mapShowAttr = {};
+  var mapData = "/osm-vector-maps/viewer/assets";
+
+  var map = new ol.Map({
+    target: "mapRegionContainer",
+    layers: [
+      new ol.layer.Vector({
+        source: new ol.source.Vector({
+          format: new ol.format.GeoJSON(),
+          url: mapData + '/countries.json'
+        }),
+        style: new ol.style.Style({
+          fill: new ol.style.Fill({
+            color: 'rgb(219, 180, 131)'
+          }),
+          stroke: new ol.style.Stroke({
+            color: 'white'
+          })
+        })
+      }),
+    ],
+    view: new ol.View({
+      center: [0, 0],
+      zoom: 2
+    })
+  });
+
+  var setBoxStyle = function (feature) {
+    var name = feature.get("name");
+    //alert(keys+'');
+    if (typeof mapShowAttr !== 'undefined' &&
+      mapShowAttr != null && name == mapShowAttr) {
+      return new ol.style.Style({
+        fill: new ol.style.Fill({
+          color: 'rgba(67, 163, 46, 0.2)'
+        }),
+        stroke: new ol.style.Stroke({
+          color: 'rgba(67, 163, 46, 1)',
+          width: 2
+        })
+      })
+    } else {
+      return new ol.style.Style({
+        fill: new ol.style.Fill({
+          color: 'rgba(255,255,255,.10)'
+        }),
+        stroke: new ol.style.Stroke({
+          color: 'rgba(255,255,255,.3)'
+        })
+      })
+    }
+  }
+
+  var boxLayer = new ol.layer.Vector({
+    source: new ol.source.Vector({
+      format: new ol.format.GeoJSON(),
+      url: mapData + '/bboxes.geojson'
+    }),
+    id: 'boxes',
+    style: setBoxStyle
+  });
+  map.addLayer(boxLayer);
+
+  $('#mapRegionSelection').on("mouseover", ".extract", function () {
+    var data = JSON.parse($(this).attr('data-region'));
+    mapShowAttr = data.name;
+    //setBoxStyle();
+    boxLayer.changed();
+  });
+
+  $('#mapRegionSelection').on("mouseout", ".extract", function () {
+    var data = JSON.parse($(this).attr('data-region'));
+    mapShowAttr = '';
+    boxLayer.changed();
+  });
+}
+
+function showAddonsMap() {
+  // variable to control which features are shown
+  var mapShowAttr = {};
+  var mapData = "/osm-vector-maps/viewer/assets";
+
+  var map = new ol.Map({
+    target: "mapAddonContainer",
+    layers: [
+      new ol.layer.Vector({
+        source: new ol.source.Vector({
+          format: new ol.format.GeoJSON(),
+          url: mapData + '/countries.json'
+        }),
+        style: new ol.style.Style({
+          fill: new ol.style.Fill({
+            color: 'rgb(219, 180, 131)'
+          }),
+          stroke: new ol.style.Stroke({
+            color: 'white'
+          })
+        })
+      }),
+    ],
+    view: new ol.View({
+      center: [0, 0],
+      zoom: 2
+    })
+  });
 }

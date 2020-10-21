@@ -2181,7 +2181,7 @@ function initGetHtml(){
 			}),
 			$.get('htmlf/50-edit_menus.html', function (data) { // this should be conditional on js_menu_install: True
 				$('#ContentMenus').html(data);
-				contentMenuButtonsEvents();
+        contentMenuButtonsEvents();
 			}),
 			$.get('htmlf/70-utilities.html', function (data) {
 				$('#Util').html(data);
@@ -2242,7 +2242,8 @@ function initDone (){
     consoleLog("starting procZimCatalog");
     procZimCatalog();
     displayServerCommandStatus('<span style="color:green">Init Finished Successfully</span>');
-    renderRegionList();
+    //renderRegionMap();
+    //renderAddonsMap();
 	  //selectedLangsDefaults(); // any installed or wip content plus default language
 	  displaySpaceAvail(); // display on various panels
 	  // now turn on navigation
