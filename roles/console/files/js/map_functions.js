@@ -3,87 +3,9 @@
 // rewritten for version 2
 
 var regionList = [];
-var mapAssetsDir = '/osm-vector-maps/maplist/assets/';
+var mapAssetsDir = '/osm-vector-maps/viewer/assets';
 var mapCatalogFile = '/common/assets/adm-map-catalog.json' // unique to admin console
-var mapsDrawn = {'region': false, 'addons': false};
-
-function drawmap(mapContainer) {
-  // variable to control which features are shown
-  var mapShowAttr = {};
-
-  var map = new ol.Map({
-    target: mapContainer,
-    layers: [
-      new ol.layer.Vector({
-        source: new ol.source.Vector({
-          format: new ol.format.GeoJSON(),
-          url: mapAssetsDir + '/countries.json'
-        }),
-        style: new ol.style.Style({
-          fill: new ol.style.Fill({
-            color: 'rgb(219, 180, 131)'
-          }),
-          stroke: new ol.style.Stroke({
-            color: 'white'
-          })
-        })
-      }),
-    ],
-    view: new ol.View({
-      center: [0, 0],
-      zoom: 2
-    })
-  });
-
-  var setBoxStyle = function (feature) {
-    var name = feature.get("name");
-    //alert(keys+'');
-    if (typeof mapShowAttr !== 'undefined' &&
-      mapShowAttr != null && name == mapShowAttr) {
-      return new ol.style.Style({
-        fill: new ol.style.Fill({
-          color: 'rgba(67, 163, 46, 0.2)'
-        }),
-        stroke: new ol.style.Stroke({
-          color: 'rgba(67, 163, 46, 1)',
-          width: 2
-        })
-      })
-    } else {
-      return new ol.style.Style({
-        fill: new ol.style.Fill({
-          color: 'rgba(255,255,255,.10)'
-        }),
-        stroke: new ol.style.Stroke({
-          color: 'rgba(255,255,255,.3)'
-        })
-      })
-    }
-  }
-
-  var boxLayer = new ol.layer.Vector({
-    source: new ol.source.Vector({
-      format: new ol.format.GeoJSON(),
-      url: mapAssetsDir + '/bboxes.geojson'
-    }),
-    id: 'boxes',
-    style: setBoxStyle
-  });
-  map.addLayer(boxLayer);
-
-  $(document).on("mouseover", ".extract", function () {
-
-    var data = JSON.parse($(this).attr('data-region'));
-    mapShowAttr = data.name;
-    //setBoxStyle();
-    boxLayer.changed();
-  });
-  $(document).on("mouseout", ".extract", function () {
-    var data = JSON.parse($(this).attr('data-region'));
-    mapShowAttr = '';
-    boxLayer.changed();
-  });
-}
+var mapsDrawn = {'regions': false, 'addons': false};
 
 function instMapError(data, cmd_args) {
     consoleLog(cmd_args);
@@ -347,9 +269,9 @@ function renderRegionMap(){
   else{
     //drawmap("mapRegionsContainer");
     //drawmap("mapAddonsContainer");
-    if (!mapsDrawn.addons){
+    if (!mapsDrawn.regions){
       showRegionsMap();
-      mapsDrawn.region = true;
+      mapsDrawn.regions = true;
     }
 
     //showAddonsMap();
@@ -377,15 +299,15 @@ function initMap(){
 function showRegionsMap() {
   // variable to control which features are shown
   var mapShowAttr = {};
-  var mapData = "/osm-vector-maps/viewer/assets";
 
+  $('#mapRegionContainer').html('') // clear container
   var map = new ol.Map({
     target: "mapRegionContainer",
     layers: [
       new ol.layer.Vector({
         source: new ol.source.Vector({
           format: new ol.format.GeoJSON(),
-          url: mapData + '/countries.json'
+          url: mapAssetsDir + '/countries.json'
         }),
         style: new ol.style.Style({
           fill: new ol.style.Fill({
@@ -432,7 +354,7 @@ function showRegionsMap() {
   var boxLayer = new ol.layer.Vector({
     source: new ol.source.Vector({
       format: new ol.format.GeoJSON(),
-      url: mapData + '/bboxes.geojson'
+      url: mapAssetsDir + '/bboxes.geojson'
     }),
     id: 'boxes',
     style: setBoxStyle
@@ -456,7 +378,7 @@ function showRegionsMap() {
 function showAddonsMap() {
   // variable to control which features are shown
   var mapShowAttr = {};
-  var mapData = "/osm-vector-maps/viewer/assets";
+  $('#mapAddonContainer').html('') // clear container
 
   var map = new ol.Map({
     target: "mapAddonContainer",
@@ -464,7 +386,7 @@ function showAddonsMap() {
       new ol.layer.Vector({
         source: new ol.source.Vector({
           format: new ol.format.GeoJSON(),
-          url: mapData + '/countries.json'
+          url: mapAssetsDir + '/countries.json'
         }),
         style: new ol.style.Style({
           fill: new ol.style.Fill({

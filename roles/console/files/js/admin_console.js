@@ -2204,7 +2204,6 @@ function initGetData(){
     readMapCatalog(),
     readMapIdx(),
     getOsmVectStat(),
-    //initMap(),
     getSpaceAvail(),
     getExternalDevInfo())
     .then(initDone)
@@ -2242,8 +2241,6 @@ function initDone (){
     consoleLog("starting procZimCatalog");
     procZimCatalog();
     displayServerCommandStatus('<span style="color:green">Init Finished Successfully</span>');
-    //renderRegionMap();
-    //renderAddonsMap();
 	  //selectedLangsDefaults(); // any installed or wip content plus default language
 	  displaySpaceAvail(); // display on various panels
 	  // now turn on navigation
