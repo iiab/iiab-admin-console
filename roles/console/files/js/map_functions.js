@@ -3,7 +3,10 @@
 // rewritten for version 2
 
 var regionList = [];
+var mapProdDir = '/osm-vector-maps/viewer';
 var mapAssetsDir = '/osm-vector-maps/viewer/assets';
+var mapTileServer = '/osm-vector-maps/installer/tileserver.php?./detail/{z}/{x}/{y}.pbf';
+
 var mapCatalogFile = '/common/assets/adm-map-catalog.json' // unique to admin console
 var mapsDrawn = {'regions': false, 'addons': false};
 
@@ -378,29 +381,140 @@ function showRegionsMap() {
 function showAddonsMap() {
   // variable to control which features are shown
   var mapShowAttr = {};
+  var lat = 20;
+  var lon = -122;
+  var radius = 100;
+  var boxcoords = [[[0,0],[0,1],[1,1],[1,0],[0,0]]];
+  var ptrcoords = [0,0];
+
+  var TileLayer = ol.layer.Tile;
+  var TileImage = ol.source.TileImage;
+  var VectorTileLayer = ol.layer.VectorTile;
+  var VectorTileSource = ol.source.VectorTile;
+  var VectorLayer = ol.layer.Vector;
+  var VectorSource = ol.source.Vector;
+  var MVT = ol.format.MVT;
+  var fromLonLat = ol.proj.fromLonLat;
+  var toLonLat = ol.proj.toLonLat;
+
   $('#mapAddonContainer').html('') // clear container
+
+  var tileLayer = new VectorTileLayer({
+    source: new VectorTileSource({
+       format: new MVT(),
+       url: mapTileServer,
+       minZoom: 0,
+       attributions: ['&copy <a href="https://openstreetmap.org">OpenStreetMaps, </a> <a href="https://openmaptiles.com"> &copy OpenMapTiles</a>'
+       ]
+       //maxZoom: 14
+    }),
+    declutter: true,
+  });
+
+  var styleFunction = olms.stylefunction;
+    fetch('/osm-vector-maps/installer/style-osm.json').then(function(response) {
+      response.json().then(function(glStyle) {
+        styleFunction(tileLayer, glStyle,"openmaptiles");
+      });
+    });
+
+  var getBoxSource = function (){
+    var box_spec = calcMapBoxCoords(radius * 1000.0,lon,lat);
+    var boxFeature = new ol.Feature({
+       geometry: new ol.geom.Polygon([box_spec])
+    });
+    var boxSource =  new ol.source.Vector({
+       features: [boxFeature]
+    });
+    return(boxSource)
+  };
+
+  var satLayer = new ol.layer.Vector({
+    style: new ol.style.Style({
+       stroke: new ol.style.Stroke({
+         color: 'rgb(255, 140, 0, 1)'
+       })
+    }),
+    source: getBoxSource()
+  });
+
+  var pointerLayer = new ol.layer.Vector({
+    style: new ol.style.Style({
+       stroke: new ol.style.Stroke({
+         color: 'rgb(115, 77, 38)'
+       })
+    }),
+    source: getBoxSource()
+  });
 
   var map = new ol.Map({
     target: "mapAddonContainer",
-    layers: [
-      new ol.layer.Vector({
-        source: new ol.source.Vector({
-          format: new ol.format.GeoJSON(),
-          url: mapAssetsDir + '/countries.json'
-        }),
-        style: new ol.style.Style({
-          fill: new ol.style.Fill({
-            color: 'rgb(219, 180, 131)'
-          }),
-          stroke: new ol.style.Stroke({
-            color: 'white'
-          })
-        })
-      }),
-    ],
+    layers: [tileLayer, satLayer, pointerLayer],
     view: new ol.View({
-      center: [0, 0],
+      center: fromLonLat([lon,lat]),
       zoom: 2
     })
+  }); //end of new Map
+
+  var view = map.getView();
+
+  map.on("pointermove", function(evt) {
+    var toLonLat = ol.proj.toLonLat;
+    ptrcoords = toLonLat(evt.coordinate);
+    lat = ptrcoords[1];
+    lon = ptrcoords[0];
+    //satLayer.getSource().clear();
+    //update_satbox(evt);
+    pointerLayer.setSource(getBoxSource());
+    pointerLayer.changed();
   });
+
+  $( '#mapAddonsSelection' ).on('change','#mapAreaSelection',function(elem){
+    if ( elem.target.value == 'small' )
+       radius = 50;
+    else if (elem.target.value == 'medium')
+       radius = 150
+    else if (elem.target.value == 'large')
+       radius = 500;
+    satLayer.setSource(getBoxSource());
+    satLayer.changed();
+    console.log("radius changed");
+  });
+
+  map.on("click", function(evt) {
+    coords = ol.proj.toLonLat(evt.coordinate);
+    lat = coords[1];
+    lon = coords[0];
+    satLayer.setSource(getBoxSource());
+    satLayer.changed();
+    $('#mapLatLong').html('Latitude: ' + lat.toFixed(4) + '<br>Longitude: ' + lon.toFixed(4));
+  });
+
+}
+
+function calcMapBoxCoords(radius,lon,lat){
+  // go to polar coords -- Math functions want and provide in radians
+  var deltaY = Math.asin(radius / 6378000.0);
+  //console.log('deltaYradians'+deltaY);
+  var lat_rad = lat * Math.PI /180;
+  var deltaX = deltaY / Math.cos(lat_rad);
+  var lon_rad = lon * Math.PI / 180;
+  var west = (lon_rad - deltaX) * 180 / Math.PI;
+  var south = (lat_rad - deltaY) * 180 / Math.PI;
+  var east = (lon_rad + deltaX) * 180 / Math.PI
+  var north = (lat_rad + deltaY) * 180 / Math.PI
+  //console.log('west:'+west+'south:'+south+'east:'+east+'north;'+north)
+  var sw = [west,south];
+  var se = [east,south];
+  var ne = [east,north];
+  var nw = [west,north];
+  var fromLonLat = ol.proj.fromLonLat;
+  sw = fromLonLat(sw);
+  se = fromLonLat(se);
+  ne = fromLonLat(ne);
+  nw = fromLonLat(nw);
+  //console.log('box x:' + sw[0]-se[0] + 'box y:' + ne[1]-se[1]);
+  var boxcoords = [nw,sw,se,ne,nw];
+  //console.log(boxcoords + 'boxcoords');
+  return(boxcoords);
 }
