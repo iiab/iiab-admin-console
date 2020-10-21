@@ -107,12 +107,30 @@
           <div class="row">
             <div class="col-sm-3"></div>
             <div class="col-sm-4"><span id="mapDiskSpace2">0</span> </div>
-            <div class="col-sm-2"><button id="INST-SAT" type="button" class="btn btn-lg btn-primary">Install Satellite
-                Photos</button></div>
+            <div class="col-sm-2"><button id="INST-SAT" type="button" class="btn btn-lg btn-primary">Download Satellite Photos</button></div>
+            <div class="col-sm-2"><button id="INST-WD-POINT" type="button" class="btn btn-lg btn-primary">Download Points of Interest</button></div>
           </div>
           <div id="mapAddonsSelection">
             <div id="mapAddonContainer" class="map-container"></div>
             <div id="mapAddonsEntry"></div>
+            <h3>Location</h3>
+            <div id='mapLatLong'>Latitude: 43<br>Longitude: -79</div>
+            <h3>Satellite Photos</h3>
+            <div id="area-choice">
+              <div>
+                <input type="radio" id="small" name="size" value="small">
+                <label>100 x 100 km ~ 5 MB ~ 5 min download</label>
+              </div>
+              <div>
+                <input type="radio" id="medium" name="size" value="medium">
+                <label>300 x 300 km ~ 50 MB ~ 0.5 hour download</label>
+              </div>
+              <div>
+                <input type="radio" id="large" name="size" checked="" value="large">
+                <label>1000 x 1000 km ~ 500 MB ~ 5 hour download</label>
+              </div>
+            </div>
+            <h3>WikiData Points of Interest</h3>
           </div>
         </div> <!--  End instOsmAddons Submenu Option Pane -->
         <div class="tab-pane" id="instConKAlite">

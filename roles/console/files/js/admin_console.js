@@ -1523,6 +1523,7 @@ function displaySpaceAvail(){
   $( "#zimDiskSpace" ).html(html);
   $( "#oer2goDiskSpace" ).html(html);
   $( "#mapDiskSpace" ).html(html);
+  $( "#mapDiskSpace2" ).html(html);
 
   // calc internalContentSelected
 
