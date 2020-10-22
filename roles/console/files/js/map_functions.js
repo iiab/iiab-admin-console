@@ -431,8 +431,8 @@ function showAddonsMap() {
       });
     });
 
-  var getBoxSource = function (){
-    var box_spec = calcMapBoxCoords(radius * 1000.0,lon,lat);
+  var getBoxSource = function (lon, lat){
+    var box_spec = calcMapBoxCoords(mapSelectedRadius * 1000.0,lon,lat);
     var boxFeature = new ol.Feature({
        geometry: new ol.geom.Polygon([box_spec])
     });
@@ -445,10 +445,10 @@ function showAddonsMap() {
   var satLayer = new ol.layer.Vector({
     style: new ol.style.Style({
        stroke: new ol.style.Stroke({
-         color: 'rgb(255, 140, 0, 1)'
+         color: 'rgb(255, 0, 0, 10)'
        })
     }),
-    source: getBoxSource()
+    source: getBoxSource(mapSelectedLong, mapSelectedLat)
   });
 
   var pointerLayer = new ol.layer.Vector({
@@ -457,7 +457,7 @@ function showAddonsMap() {
          color: 'rgb(115, 77, 38)'
        })
     }),
-    source: getBoxSource()
+    source: getBoxSource(lon, lat)
   });
 
   var map = new ol.Map({
@@ -478,7 +478,7 @@ function showAddonsMap() {
     lon = ptrcoords[0];
     //satLayer.getSource().clear();
     //update_satbox(evt);
-    pointerLayer.setSource(getBoxSource());
+    pointerLayer.setSource(getBoxSource(lon, lat));
     pointerLayer.changed();
   });
 
@@ -491,7 +491,7 @@ function showAddonsMap() {
        radius = 500;
     mapSelectedRadius = radius;
 
-    satLayer.setSource(getBoxSource());
+    satLayer.setSource(getBoxSource(mapSelectedLong, mapSelectedLat));
     satLayer.changed();
     console.log("radius changed");
   });
@@ -502,7 +502,7 @@ function showAddonsMap() {
     lon = coords[0];
     mapSelectedLat = lat;
     mapSelectedLong = lon;
-    satLayer.setSource(getBoxSource());
+    satLayer.setSource(getBoxSource(mapSelectedLong, mapSelectedLat));
     satLayer.changed();
     $('#mapLatLong').html('Latitude: ' + lat.toFixed(4) + '<br>Longitude: ' + lon.toFixed(4));
   });
