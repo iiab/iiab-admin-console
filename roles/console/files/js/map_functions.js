@@ -10,6 +10,10 @@ var mapTileServer = '/osm-vector-maps/installer/tileserver.php?./detail/{z}/{x}/
 var mapCatalogFile = '/common/assets/adm-map-catalog.json' // unique to admin console
 var mapsDrawn = {'regions': false, 'addons': false};
 
+var mapSelectedLat = 0;
+var mapSelectedLong = 0;
+var mapSelectedRadius = 50;
+
 function instMapError(data, cmd_args) {
     consoleLog(cmd_args);
     //cmdargs = JSON.parse(command);
@@ -219,6 +223,20 @@ function instMapItem(map_id) {
   return true;
 }
 
+function instSatArea() {
+  var command = "INST-SAT-AREA";
+  var cmd_args = {};
+  cmd_args['longitude'] = mapSelectedLong;
+  cmd_args['latitude'] = mapSelectedLat;
+  cmd_args['radius'] = mapSelectedRadius;
+
+  cmd = command + " " + JSON.stringify(cmd_args);
+  sendCmdSrvCmd(cmd, genericCmdHandler,"INST-SAT");
+  alert ("Selected Satellite Photos scheduled to be installed.\n\nPlease view Utilities->Display Job Status to see the results.");
+
+  return true;
+}
+
 function updateMapSpace(cb){ // for single clicks only
   console.log("in updateMapSpace" + cb);
   var mapId = cb.name;
@@ -292,11 +310,6 @@ function renderAddonsMap(){
       mapsDrawn.addons = true;
     }
   }
-}
-
-function initMap(){
-
-   refreshRegionList(); // should probably only read data here as will draw when option clicked, but small perf penalty
 }
 
 function showRegionsMap() {
@@ -476,15 +489,19 @@ function showAddonsMap() {
        radius = 150
     else if (elem.target.value == 'large')
        radius = 500;
+    mapSelectedRadius = radius;
+
     satLayer.setSource(getBoxSource());
     satLayer.changed();
     console.log("radius changed");
   });
 
   map.on("click", function(evt) {
-    coords = ol.proj.toLonLat(evt.coordinate);
+    var coords = ol.proj.toLonLat(evt.coordinate);
     lat = coords[1];
     lon = coords[0];
+    mapSelectedLat = lat;
+    mapSelectedLong = lon;
     satLayer.setSource(getBoxSource());
     satLayer.changed();
     $('#mapLatLong').html('Latitude: ' + lat.toFixed(4) + '<br>Longitude: ' + lon.toFixed(4));
@@ -517,4 +534,9 @@ function calcMapBoxCoords(radius,lon,lat){
   var boxcoords = [nw,sw,se,ne,nw];
   //console.log(boxcoords + 'boxcoords');
   return(boxcoords);
+}
+
+function initMap(){ // not used
+
+  refreshRegionList(); // should probably only read data here as will draw when option clicked, but small perf penalty
 }

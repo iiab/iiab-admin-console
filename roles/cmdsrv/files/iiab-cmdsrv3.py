@@ -522,7 +522,8 @@ def add_wip(job_info):
         maps_wip[map_id] = {"cmd":cmd, "action":action, "dest":dest, "source":source, "download_url":download_url, "size": size}
 
     elif cmd in {"INST-SAT-AREA"}:
-        radius = job_info['extra_vars']['radius']
+        pass
+        # radius = job_info['extra_vars']['radius'] not much housekeeping to do
 
 def remove_wip(job_info):
     global zims_wip
@@ -2224,9 +2225,9 @@ def install_sat_area(cmd_info):
     global ansible_running_flag
     global jobs_requested
     if 'cmd_args' in cmd_info:
-        longitude = cmd_info['cmd_args']['longitude']
-        latitude = cmd_info['cmd_args']['latitude']
-        radius = cmd_info['cmd_args']['radius']
+        longitude = str(cmd_info['cmd_args']['longitude'])
+        latitude = str(cmd_info['cmd_args']['latitude'])
+        radius = str(cmd_info['cmd_args']['radius'])
     else:
         return cmd_malformed(cmd_info['cmd'])
 

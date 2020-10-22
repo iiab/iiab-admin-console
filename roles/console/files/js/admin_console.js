@@ -322,14 +322,20 @@ function instContentButtonsEvents() {
   // Only support V2 of maps
   $("#INST-MAP").click(function(){
     consoleLog("in inst map click");
-    //if (window.confirm('The new version of maps is not yet supported here.\n\nPlease check back later.\n\nClick OK for more information.')) {
-    //  window.open('https://github.com/iiab/iiab/wiki/IIAB-Maps#how-do-i-install-map-packs-and-satellite-photo-regions-on-iiab-72-', '_blank');
-    //}
-  //});
+
     if(adminConfig.osm_version == 'V1')
       alert('Your version of maps is no longer supported in Admin Console\n\nPlease either upgrade maps or downgrade Admin Console.');
     else
       instMaps()
+  });
+
+  $("#INST-SAT").click(function(){
+    consoleLog("in inst sat click");
+
+    if(adminConfig.osm_version == 'V1')
+      alert('Your version of maps is no longer supported in Admin Console\n\nPlease either upgrade maps or downgrade Admin Console.');
+    else
+    instSatArea()
   });
 
   $("#launchKaliteButton").click(function(){
