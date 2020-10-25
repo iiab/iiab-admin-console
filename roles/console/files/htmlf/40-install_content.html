@@ -17,7 +17,7 @@
         <li class="active"><a href="#instConStart">Get Started</a></li>
         <li><a href="#instConZims" call-after="checkKiwixCatalogDate">Get ZIM Files from Kiwix</a></li>
         <li><a href="#instConOer2go" call-after="oer2goMenuOption">Get OER2Go(RACHEL) Modules</a></li>
-        <li><a href="#instOsmRegion" call-after="renderRegionMap">Get Map Region</a></li>
+        <li><a href="#instOsmRegion" call-after="renderRegionMap">Get Map Regions</a></li>
         <li><a href="#instOsmAddons" call-after="renderAddonsMap">Get Map Addons</a></li>
         <li><a href="#instConKAlite">Download Khan Academy Videos</a></li>
         <li><a href="#instManageContent" call-after="manageContentInit">Manage Content</a></li>
@@ -84,10 +84,8 @@
         </div> <!--  End instConOer2go Submenu Option Pane -->
         <div class="tab-pane" id="instOsmRegion">
           <!-- Start instOsmRegion Submenu Option Pane -->
-          <h2>Install Map Region</h2>
-          <p>Please select regions to download and install (each region also includes at least 10 levels of zoom for the
-            entire world &mdash; and a 25 MB searchable database of cities/settlements worldwide with populations larger
-            than 1000). Then click "Install Selected Region" to start the jobs.</p>
+          <h2>Install Map Regions</h2>
+          <p>Please select regions to download and install. You must install the Base Planet region.</p>
           <div class="row">
             <div class="col-sm-3"></div>
             <div class="col-sm-4"><span id="mapDiskSpace">0</span> </div>
@@ -131,6 +129,7 @@
               </div>
             </div>
             <h3>WikiData Points of Interest</h3>
+            <p>Coming Soon</p>
           </div>
         </div> <!--  End instOsmAddons Submenu Option Pane -->
         <div class="tab-pane" id="instConKAlite">
