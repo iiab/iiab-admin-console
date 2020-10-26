@@ -317,7 +317,7 @@ function renderAddonsMap(){
     }
     // enable buttons
     make_button_disabled('#INST-SAT', false);
-    make_button_disabled('#INST-WD-POINT', false);
+    //make_button_disabled('#INST-WD-POINT', false);
   }
 }
 
