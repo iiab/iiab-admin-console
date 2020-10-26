@@ -128,6 +128,17 @@
     force: no
   when: osm_vector_maps_enabled
 
+# Copy Map Catalog used by Admin Console
+- name: Copy Map Catalog used by Admin Console ({{ adm_maps_catalog_file }})
+  copy:
+    src: map/adm-map-catalog.json
+    dest: "{{ doc_root }}/common/assets/{{ adm_maps_catalog_file }}"
+    owner: root
+    group: root
+    mode: 0644
+    force: yes
+  when: osm_vector_maps_enabled
+
 # Put dummy regions file in place only if it does not already exist (should have been put there when osm installed)
 - name: Copy dummy Osm Vector Maps regions.json file if not exist
   copy:

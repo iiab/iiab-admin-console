@@ -8,6 +8,7 @@ var iiabContrDir = "/etc/iiab/";
 var consoleJsonDir = "/common/assets/";
 var iiabCmdService = "/iiab-cmd-service/cmd";
 var iiabAuthService = "/iiab-cmd-service/auth";
+var adminConfig = {}; // cmdsrv config values
 var ansibleFacts = {};
 var ansibleTagsStr = "";
 var effective_vars = {};
@@ -27,7 +28,8 @@ var externalZimCatalog = {}; // catalog of zims on an external device
 var oer2goCatalog = {}; // catalog of rachel/oer2go modules, read from file downloaded from rachel
 var oer2goCatalogDate = new Date; // date of download, stored in json file
 var oer2goCatalogFilter = ["html"] // only manage these types as OER2GO; catalog can contain zims and kalite that we do elsewhere
-var mapCatalog = {}; // map regions specified by bounding boxes, downloadable
+var mapCatalog = {}; // catalog by map id
+var mapRegionIdx = {}; // index of catalog by region
 var rachelStat = {}; // installed, enabled and whether content is installed and which is enabled
 
 var zimsInstalled = []; // list of zims already installed
@@ -40,6 +42,8 @@ var oer2goDownloading = []; // list of Oer2go items being downloaded
 var oer2goCopying = []; // list of Oer2go items being copied
 var oer2goExternal = []; // list of Oer2go items on external device
 var downloadedFiles = {};
+var mapStat = {}; // source of most of the lists below
+var vectorMapIdx = {} // save this and other stat though there is overlap
 var mapDownloading = []; // list of Map items being downloaded
 var mapWip = []; // list of copying, downloading, exporting
 var mapInstalled = []; // list of map regions already installed
@@ -313,43 +317,25 @@ function instContentButtonsEvents() {
     make_button_disabled("#INST-MODS", false);
   });
 
-  $("#INST-MAP").click(function(){
-    var map_id;
-    make_button_disabled("#INST-MAP", true);
-    selectedMapItems = []; // items no longer selected as are being installed
-    $('#mapRegionSelectList input').each( function(){
-      if (this.type == "checkbox")
-        if (this.checked){
-          var skip_map = false;
-          map_id = this.name
-          $.when(readMapIdx()).then(function(){
-          var region = get_region_from_url(map_id);
-          for (var installed_region in mapInstalled){
-             if (mapInstalled[installed_region] &&
-               mapInstalled[installed_region].hasOwnProperty('region') &&
-               mapInstalled[installed_region].region === region){
-                  // Does installed map have same basename (ignores .zip)
-                  var basename = mapCatalog[region].url.replace(/.*\//, '');
-                  // Clip off .zip
-                  basename = basename.replace(/\.zip/, '');
-                  if (basename === mapInstalled[installed_region].file_name)
-                     skip_map = true;
-                  break;
-               }
-             }
-             if (skip_map || mapWip.indexOf(map_id) != -1){
-               consoleLog("Skipping installed Module " + map_id);
-               alert ("Selected Map Region is already installed.\n");
+  consoleLog("adminConfig.osm_version " + adminConfig.osm_version);
 
-             } else {
-               instMapItem(map_id);
-               alert ("Selected Map Region scheduled to be installed.\n\nPlease view Utilities->Display Job Status to see the results.");
-            }
-          })
-        }
-      })
-    //getOer2goStat();
-    make_button_disabled("#INST-MAP", false);
+  // Only support V2 of maps
+  $("#INST-MAP").click(function(){
+    consoleLog("in inst map click");
+
+    if(adminConfig.osm_version == 'V1')
+      alert('Your version of maps is no longer supported in Admin Console\n\nPlease either upgrade maps or downgrade Admin Console.');
+    else
+      instMaps()
+  });
+
+  $("#INST-SAT").click(function(){
+    consoleLog("in inst sat click");
+
+    if(adminConfig.osm_version == 'V1')
+      alert('Your version of maps is no longer supported in Admin Console\n\nPlease either upgrade maps or downgrade Admin Console.');
+    else
+    instSatArea()
   });
 
   $("#launchKaliteButton").click(function(){
@@ -713,6 +699,14 @@ function genericCmdHandler (data)
   //alert ("in genericCmdHandler");
   consoleLog(data);
   //consoleLog(jqXHR);
+  return true;
+}
+
+function getAdminConfig (data)
+{
+  //alert ("in getAnsibleFacts");
+  consoleLog(data);
+  adminConfig = data;
   return true;
 }
 
@@ -1342,6 +1336,8 @@ function procJobStat(data)
     html += "</tr>";
 
     // there should be one or two parts - ? still need this; for cancel
+    // manual commands through iiab-cmdsrv-cti can introduce extra spaces and break this
+
     var cmd_parse = statusJob.cmd_msg.split(" ");
     statusJob['cmd_verb'] = cmd_parse[0];
     if(cmd_parse.length == 0 || typeof cmd_parse[1] === 'undefined')
@@ -1533,6 +1529,7 @@ function displaySpaceAvail(){
   $( "#zimDiskSpace" ).html(html);
   $( "#oer2goDiskSpace" ).html(html);
   $( "#mapDiskSpace" ).html(html);
+  $( "#mapDiskSpace2" ).html(html);
 
   // calc internalContentSelected
 
@@ -1582,7 +1579,7 @@ function calcAllocatedSpace(){
 	totalSpace += sumAllocationList(selectedOer2goItems, 'oer2go');
 	totalSpace += sumOer2goWip();
 	totalSpace += sumAllocationList(selectedMapItems, 'map');
-	totalSpace += sumMapWip();
+	// totalSpace += sumMapWip(); selectedMapItems also holds wip as they are still selected
 	return totalSpace;
 }
 
@@ -1599,7 +1596,7 @@ function sumAllocationList(list, type){
     else if (type == "oer2go")
       totalSpace += parseInt(oer2goCatalog[id].ksize);
     else if (type == "map")
-      totalSpace += parseInt(mapCatalog[id].size / 1000);
+      totalSpace += parseInt(mapCatalog[id].size / 1024);
 
   }
   // sysStorage.oer2go_selected_size = totalSpace;
@@ -1627,7 +1624,7 @@ function sumOer2goWip(){
   return totalSpace;
 }
 
-function sumMapWip(){
+function sumMapWipV1(){ // save for now
   var totalSpace = 0;
 
   for (var idx in mapWip){
@@ -1635,7 +1632,17 @@ function sumMapWip(){
    var region = get_region_from_url(url);
   	totalSpace += parseInt(mapCatalog[region].osm_size) + parseInt(mapCatalog[region].sat_size);
   }
-  return totalSpace/1000;
+  return totalSpace/1024;
+}
+
+function sumMapWip(){
+  var totalSpace = 0;
+
+  mapWip.forEach(function (mapId, index) {
+    totalSpace += parseInt(mapCatalog[mapId].size);
+  });
+
+  return totalSpace/1024;
 }
 
 function calcLibraryDiskSpace(){
@@ -2147,8 +2154,6 @@ function init (loginMsg='')
   authData.keepLogin = true;
 
   getServerPublicKey();
-  initVars();
-
   launchcmdServerLoginForm(loginMsg) //force login
   // on success will continue with initPostLogin()
 }
@@ -2156,8 +2161,45 @@ function init (loginMsg='')
 function initPostLogin(){
 
   // this is all conditional on successful login
-  // invoke by login.done
+  // invoked by login.done
+  $.when(
+    sendCmdSrvCmd("GET-ADM-CONF", getAdminConfig))
+    .then(initPostLogin2)
+    .fail(function () {
+    	displayServerCommandStatus('<span style="color:red">Init Failed</span>');
+    	consoleLog("Init failed");
+    	})
+}
 
+function initPostLogin2(){
+  initGetHtml();
+  initGetData();
+}
+
+function initGetHtml(){
+  $.when(
+			$.get('htmlf/20-configure.html', function (data) {
+				$('#Configure').html(data);
+				configButtonsEvents();
+			}),
+			$.get('htmlf/40-install_content.html', function (data) {
+				$('#InstallContent').html(data);
+				instContentButtonsEvents();
+			}),
+			$.get('htmlf/50-edit_menus.html', function (data) { // this should be conditional on js_menu_install: True
+				$('#ContentMenus').html(data);
+        contentMenuButtonsEvents();
+			}),
+			$.get('htmlf/70-utilities.html', function (data) {
+				$('#Util').html(data);
+				utilButtonsEvents();
+			})
+		).done(function () {
+      initVars();
+		});
+}
+
+function initGetData(){
   $.when(
     getLangCodes(),
     readKiwixCatalog(),
@@ -2166,7 +2208,9 @@ function initPostLogin(){
     sendCmdSrvCmd("GET-IIAB-INI", procXsceIni),
     sendCmdSrvCmd("GET-ZIM-STAT", procZimStatInit),
     getOer2goStat(),
-    initMap(),
+    readMapCatalog(),
+    readMapIdx(),
+    getOsmVectStat(),
     getSpaceAvail(),
     getExternalDevInfo())
     .then(initDone)
@@ -2203,7 +2247,7 @@ function initDone (){
     initConfigVars();
     consoleLog("starting procZimCatalog");
     procZimCatalog();
-	  displayServerCommandStatus('<span style="color:green">Init Finished Successfully</span>');
+    displayServerCommandStatus('<span style="color:green">Init Finished Successfully</span>');
 	  //selectedLangsDefaults(); // any installed or wip content plus default language
 	  displaySpaceAvail(); // display on various panels
 	  // now turn on navigation

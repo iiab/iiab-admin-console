@@ -395,8 +395,8 @@ function clearManContSelections(dev, reset=false){
 }
 
 function refreshAllContentPanels() {
-	$.when(getDownloadList(), getOer2goStat(), getZimStat(), getExternalDevInfo())
-	.done(renderZimInstalledList, renderOer2goInstalledList, renderExternalList, refreshDiskSpace);
+	$.when(getDownloadList(), getOer2goStat(), getZimStat(), getExternalDevInfo(), getOsmVectStat())
+	.done(renderZimInstalledList, renderOer2goInstalledList, renderExternalList, renderRegionList, refreshDiskSpace);
 }
 
 function refreshAllInstalledList() {
