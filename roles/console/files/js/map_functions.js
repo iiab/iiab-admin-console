@@ -150,7 +150,7 @@ function renderBaseMapsList(checkbox) {
   html += genRegionItem(mapCatalog[mapsTilesBaseMapId], checkbox, true, true);
   updateMapSpaceUtil(mapsTilesBaseMapId, true) // because defaults to checked
 
-  html += genRegionItem(mapsSatBaseMapId, checkbox, true, true);
+  html += genRegionItem(mapCatalog[mapsSatBaseMapId], checkbox, true, true);
   updateMapSpaceUtil(mapsSatBaseMapId, true) // because defaults to checked
   return html;
 }
@@ -305,16 +305,19 @@ function renderRegionMap(){
 function renderAddonsMap(){
   if (Object.keys(mapCatalog).length === 0)
     $("#mapAddonContainer").html('<BR><BR><center><span style="font-size: 30px;"><B>MAPS NOT INSTALLED<B></span></center>');
-  else if (!tile_base_installed || !sat_base_installed){
+  else if (!mapStat.tile_base_installed || !mapStat.sat_base_installed){
     var warning = '<BR><BR><center><span style="font-size: 18px;"><B>BASE MAPS NOT INSTALLED<B></span></center>';
     warning += '<BR><BR><center><span style="font-size: 18px;">Please install them in <b>Get Map Regions</b></span></center>';
     $("#mapAddonContainer").html(warning);
     }
-    else{
+  else{
     if (!mapsDrawn.addons){
       showAddonsMap();
       mapsDrawn.addons = true;
     }
+    // enable buttons
+    make_button_disabled('#INST-SAT', false);
+    make_button_disabled('#INST-WD-POINT', false);
   }
 }
 
