@@ -146,11 +146,12 @@ function renderRegionList(checkbox=true) { // generic
 function renderBaseMapsList(checkbox) {
   var html = "";
   var mapsTilesBaseMapId = adminConfig['maps_tiles_base'];
+  var mapsSatBaseMapId = adminConfig['maps_sat_base'];
   html += genRegionItem(mapCatalog[mapsTilesBaseMapId], checkbox, true, true);
   updateMapSpaceUtil(mapsTilesBaseMapId, true) // because defaults to checked
 
-  html += genRegionItem(mapCatalog[adminConfig['maps_sat_base']], checkbox);
-
+  html += genRegionItem(mapsSatBaseMapId, checkbox, true, true);
+  updateMapSpaceUtil(mapsSatBaseMapId, true) // because defaults to checked
   return html;
 }
 
@@ -207,7 +208,7 @@ function instMaps(){
       instMapItem(mapId);
   });
   alert ("Selected Map Regions scheduled to be installed.\n\nPlease view Utilities->Display Job Status to see the results.");
-  renderMap();
+  renderRegionMap();
 }
 
 function instMapItem(map_id) {
@@ -282,7 +283,7 @@ function calcMapSelected(){
 }
 
 function renderRegionMap(){
-  //console.log('in renderMap');
+  //console.log('in renderRegionMap');
   if (Object.keys(mapCatalog).length === 0)
     $("#mapRegionContainer").html('<BR><BR><center><span style="font-size: 30px;"><B>MAPS NOT INSTALLED<B></span></center>');
   else if (adminConfig.osm_version != 'V2')
@@ -304,7 +305,12 @@ function renderRegionMap(){
 function renderAddonsMap(){
   if (Object.keys(mapCatalog).length === 0)
     $("#mapAddonContainer").html('<BR><BR><center><span style="font-size: 30px;"><B>MAPS NOT INSTALLED<B></span></center>');
-  else{
+  else if (!tile_base_installed || !sat_base_installed){
+    var warning = '<BR><BR><center><span style="font-size: 18px;"><B>BASE MAPS NOT INSTALLED<B></span></center>';
+    warning += '<BR><BR><center><span style="font-size: 18px;">Please install them in <b>Get Map Regions</b></span></center>';
+    $("#mapAddonContainer").html(warning);
+    }
+    else{
     if (!mapsDrawn.addons){
       showAddonsMap();
       mapsDrawn.addons = true;
