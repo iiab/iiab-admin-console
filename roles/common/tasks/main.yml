@@ -6,6 +6,12 @@
     - meta: end_play
   when: not nginx_enabled
 
+- name: Install dependencies
+  package:
+    name:
+      - python3-requests
+    state: present
+
 # Duplicates IIAB, but we are never able to change that, and these are all used by Admin Console
 - name: Create required Directories
   file:
