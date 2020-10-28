@@ -487,6 +487,7 @@ function showAddonsMap() {
     lon = ptrcoords[0];
     //satLayer.getSource().clear();
     //update_satbox(evt);
+    // https://gis.stackexchange.com/questions/198683/how-can-i-create-a-circle-feature-that-will-have-a-constant-radius-in-pixels-eve
     pointerLayer.setSource(getBoxSource(lon, lat));
     pointerLayer.changed();
   });
