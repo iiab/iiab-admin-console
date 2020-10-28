@@ -284,27 +284,24 @@ function calcMapSelected(){
 
 function renderRegionMap(){
   //console.log('in renderRegionMap');
-  if (Object.keys(mapCatalog).length === 0)
-    $("#mapRegionContainer").html('<BR><BR><center><span style="font-size: 30px;"><B>MAPS NOT INSTALLED<B></span></center>');
+  if (iiab_ini['osm-vector-maps'].enabled == "False") // as stored in ini file
+    $("#mapRegionContainer").html('<BR><BR><center><span style="font-size: 30px;"><B>MAPS NOT INSTALLED OR NOT ENABLED<B></span></center>');
   else if (adminConfig.osm_version != 'V2')
     $("#mapRegionContainer").html('<BR><BR><center><span style="font-size: 30px;"><B>Your version of Maps is not support by this version of Admin Console<B></span></center>');
   else{
-    //drawmap("mapRegionsContainer");
-    //drawmap("mapAddonsContainer");
     if (!mapsDrawn.regions){
       showRegionsMap();
       mapsDrawn.regions = true;
     }
 
-    //showAddonsMap();
+    make_button_disabled('#INST-MAP', false);
     refreshRegionList();
-    //renderRegionList(true);
   }
 }
 
 function renderAddonsMap(){
-  if (Object.keys(mapCatalog).length === 0)
-    $("#mapAddonContainer").html('<BR><BR><center><span style="font-size: 30px;"><B>MAPS NOT INSTALLED<B></span></center>');
+  if (iiab_ini['osm-vector-maps'].enabled == "False")
+    $("#mapAddonContainer").html('<BR><BR><center><span style="font-size: 30px;"><B>MAPS NOT INSTALLED OR NOT ENABLED<B></span></center>');
   else if (!mapStat.tile_base_installed || !mapStat.sat_base_installed){
     var warning = '<BR><BR><center><span style="font-size: 18px;"><B>BASE MAPS NOT INSTALLED<B></span></center>';
     warning += '<BR><BR><center><span style="font-size: 18px;">Please install them in <b>Get Map Regions</b></span></center>';

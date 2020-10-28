@@ -143,7 +143,7 @@
     group: root
     mode: 0644
     force: yes
-  when: osm_vector_maps_enabled
+  # when: osm_vector_maps_enabled - always install so cmdsrv has it
 
 # Put dummy regions file in place only if it does not already exist (should have been put there when osm installed)
 - name: Copy dummy Osm Vector Maps regions.json file if not exist
