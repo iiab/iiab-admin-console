@@ -1506,7 +1506,8 @@ function displaySpaceAvail(){
 	var availableSpace = 0;
 	var usedSpace = 0;
 	var internalContentSelected = 0;
-	var internalSpace = calcLibraryDiskSpace();
+  var internalSpace = calcLibraryDiskSpace();
+  var html = '';
 	availableSpace = internalSpace.availableSpace;
 	usedSpace = internalSpace.usedSpace;
 
@@ -1518,12 +1519,18 @@ function displaySpaceAvail(){
 	if (allocatedSpace / availableSpace > .85)
 	  warningStyle = 'style="color: red;"';
 
-	var html = "Library Space Available : <b>";
+  if (window.innerWidth > 1400) // make this responsive
+    html = "Library Space Available : <b>";
+  else
+    html = "Space Available : <b>";
   html += readableSize(availableSpace) + "</b><BR>";
 
   $( "#dnldDiskSpace" ).html(html);
 
-  html += "Estimated Space Required: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+  if (window.innerWidth > 1400) // make this responsive
+    html += "Estimated Space Required: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+  else
+    html += "Space Required: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
   html += '<b><span ' + warningStyle + '>' + readableSize(allocatedSpace) + '</span</b>';
 
   $( "#zimDiskSpace" ).html(html);
