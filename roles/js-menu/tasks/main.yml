@@ -122,6 +122,9 @@
         state=directory
         recurse=true
 
+- name: Make sure iiab-make-kiwix-lib has been run
+  shell: "/usr/bin/iiab-make-kiwix-lib"
+
 - name: Add any IIAB roles that are installed to home/menu.js
   shell: "{{ cmdsrv_dir }}/scripts/iiab_update_menus.py"
 
