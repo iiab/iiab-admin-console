@@ -94,8 +94,12 @@ def get_all_menu_defs():
 def get_substitution_data(perma_ref, zim_versions, zims_installed, path_to_id_map):
     #reconstruct the path in the id map
     path = 'content/' + zim_versions[perma_ref]['file_name'] + '.zim'
-    zim_id = path_to_id_map[path]
-    item = zims_installed[zim_id]
+    try:
+        zim_id = path_to_id_map[path]
+        item = zims_installed[zim_id]
+    except:
+        print("Zim files and library.xml are out of sync. Please run iiab-make-kiwix-lib.")
+        sys.exit(1)
 
     if len(item) != 0 or perma_ref == 'test':
         mediacount = item.get('mediaCount', '')
