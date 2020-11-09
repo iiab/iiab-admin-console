@@ -2242,22 +2242,22 @@ def get_osm_vect_stat(cmd_info):
     all_maps['WIP'] = maps_wip
 
     all_maps['INSTALLED'] = {}
+    all_maps['tile_base_installed'] = False
+    all_maps['sat_base_installed'] = False
 
-    if os.path.exists(vector_map_tiles_path + maps_tiles_base):
-        all_maps['tile_base_installed'] = True
-    else:
-        all_maps['tile_base_installed'] = False
+    if osm_version != None:
 
-    if os.path.exists(vector_map_tiles_path + maps_sat_base):
-        all_maps['sat_base_installed'] = True
-    else:
-        all_maps['sat_base_installed'] = False
+        if os.path.exists(vector_map_tiles_path + maps_tiles_base):
+            all_maps['tile_base_installed'] = True
 
-    # see what is installed
-    # in /library/www/osm-vector-maps/viewer/tiles
-    osm_vect_installed = os.listdir(vector_map_tiles_path)
-    for map in osm_vect_installed:
-        all_maps['INSTALLED'][map] = True
+        if os.path.exists(vector_map_tiles_path + maps_sat_base):
+            all_maps['sat_base_installed'] = True
+
+        # see what is installed
+        # in /library/www/osm-vector-maps/viewer/tiles
+        osm_vect_installed = os.listdir(vector_map_tiles_path)
+        for map in osm_vect_installed:
+            all_maps['INSTALLED'][map] = True
 
     resp = json.dumps(all_maps)
     return (resp)
