@@ -43,6 +43,7 @@ if [[ "$1" ==  "-n" ]]; then
   echo "Skipping data setup"
 else
   # Run various utilites to setup initial data
+  echo "Downloading Catalogs and Building Local Data Files."
 
   iiab-get-kiwix-cat -v
   iiab-get-oer2go-cat
@@ -51,4 +52,5 @@ else
 fi
 
 # Start CMDSRV
+echo "(Re)Starting CMDSRV"
 systemctl restart iiab-cmdsrv
