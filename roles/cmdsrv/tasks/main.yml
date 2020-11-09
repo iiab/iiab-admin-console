@@ -125,11 +125,11 @@
         owner=root
         group=root
 
-- name: Create fresh kiwix_catalog.json
-  shell: "iiab-get-kiwix-cat -v"
-  register: kiwix_cat
+#- name: Create fresh kiwix_catalog.json
+#  shell: "iiab-get-kiwix-cat -v"
+#  register: kiwix_cat
 
-- debug: var=kiwix_cat.stdout_lines
+#- debug: var=kiwix_cat.stdout_lines
 
 - name: Copy default oer2go_catalog.json
   copy: src="json/oer2go_catalog.json"
@@ -139,9 +139,9 @@
         owner=root
         group=root
 
-- name: Create fresh oer2go_catalog.json
-  shell: "iiab-get-oer2go-cat"
-  register: oer2go_cat
+#- name: Create fresh oer2go_catalog.json
+#  shell: "iiab-get-oer2go-cat"
+#  register: oer2go_cat
 
 - name: Create symlink from /common/assets to kiwix_catalog.json
   file: src=/etc/iiab/kiwix_catalog.json

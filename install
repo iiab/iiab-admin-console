@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 
 if [ -f /etc/iiab/iiab.env ]
 then
@@ -36,3 +36,19 @@ export ANSIBLE_LOG_PATH="$IIAB_ADMIN_DIR/admin-install.log"
 
 #ansible-playbook -i $INVENTORY $PLAYBOOK --extra-vars "${ARGS}" --connection=local
 ansible-playbook -i $INVENTORY $PLAYBOOK --connection=local
+
+if [[ "$1" ==  "-n" ]]; then
+  echo "WARNING: THIS CAN CAUSE PROBLEMS"
+  echo "Only do this if a full install has already completed"
+  echo "Skipping data setup"
+else
+  # Run various utilites to setup initial data
+
+  iiab-get-kiwix-cat -v
+  iiab-get-oer2go-cat
+  iiab-make-kiwix-lib
+  iiab-update-menus
+fi
+
+# Start CMDSRV
+systemctl restart iiab-cmdsrv
