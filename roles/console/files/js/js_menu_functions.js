@@ -552,7 +552,12 @@ function menuItemAddDnDHandlers(elem) {
 
 function saveContentMenuItemDef() {
     var command = "SAVE-MENU-ITEM-DEF";
-    var cmdArgs = getEditMenuItemFormValues();
+    var formVars = getEditMenuItemFormValues(); // also validates
+    var validFlag = formVars.validFlag;
+    var cmdArgs = formVars.menuDefArgs;
+
+    if (!validFlag) // message issued in called function
+      return false;
 
     // warn if will overwrite central repo
     if (cmdArgs.menu_item_def.upload_flag)
@@ -675,12 +680,20 @@ function setEditMenuItemFormChecked (menuDef, fieldName, screenName='') {
 }
 
 function getEditMenuItemFormValues (){
-	var menuDefArgs = {}
-	var menuDef = {};
+  // also validates and returns validFlag
 
-	var menuItemName = getFormValue ('menu_item_name');
-	var suffix = getFormValue ('menu_item_name_suffix');
-	var content_target = getFormValue ('menu_item_content_target');
+	var menuDefArgs = {}
+  var menuDef = {};
+  var validFlag = true;
+
+  var menuItemCode = getFormValue ('menu_item_name');
+  var suffix = getFormValue ('menu_item_name_suffix');
+  var menuItemName = menuItemCode
+
+  if (suffix != '')
+    menuItemName = menuItemCode + '-' + suffix
+
+   var content_target = getFormValue ('menu_item_content_target');
 
   menuDef['intended_use'] = getFormValue ('intended_use', screenName='menu_item_type');
   menuDef['lang'] = getFormValue ('lang', screenName='menu_item_lang');
@@ -712,13 +725,37 @@ function getEditMenuItemFormValues (){
   //else if use in zim, html, webroot, download =  lang - target - suffix
   //else 	= lang - intended use
 
-  //report if duplicate
-
   menuDefArgs['menu_item_name'] = menuItemName;
   menuDefArgs['mode'] = menuItemEditMode;
   menuDefArgs['menu_item_def'] = menuDef;
 
-  return menuDefArgs;
+  validFlag = validateMenuItemName(menuItemName, menuDef);
+
+  return {
+    validFlag,
+    menuDefArgs
+  };
+}
+
+function validateMenuItemName(menuItemName, menuDef){
+  //console.log(menuItemName)
+  // mode is clone and is duplicate
+  if (menuItemEditMode == 'clone' && menuItemDefList.includes(menuItemName)){
+    alert('This Menu Item Definition already exists. Please use a different Menu Item Code and Suffix when cloning.');
+    return false;
+  }
+  // has lang code
+  var nameParts = menuItemName.split('-');
+  if (nameParts[1] == ''){
+    alert('The Menu Item Code and Suffix together must be a name of the form <language code>-<content indicator text>-<suffix>. For Zims and Modules it should reference the target content.');
+    return false;
+  }
+  var lang = nameParts[0];
+  if (!langCodesXRef.hasOwnProperty(lang)){
+    alert('The Menu Item Code must start with a valid language code. Use the dropdown to chose one.');
+    return false;
+  }
+  return true;
 }
 
 function setFormValue (fieldName, fieldValue, screenName='') {
