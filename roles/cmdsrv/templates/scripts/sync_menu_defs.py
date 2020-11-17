@@ -65,6 +65,16 @@ for menu_item_def_name in local_menu_item_defs:
 
     if menu_item_def_name not in repo_menu_item_defs: # new and upload allowed
         if upload_flag:
+            # Upload any icon
+            if 'logo_url' in menu_item_def and menu_item_def['logo_url'] != '':
+                logo_url_file = menu_item_def['logo_url']
+                if logo_url_file in menu_def_repo_data['icons']:
+                    logo_sha = menu_def_repo_data['icons'][logo_url_file].get('sha', None)
+                else:
+                    logo_sha = None
+                adm.put_icon_file(logo_url_file, sha=logo_sha)
+            # upload html file - not for now
+            # upload menu def
             adm.put_menu_item_def(menu_item_def_name, menu_item_def)
             menu_item_def = adm.get_menu_item_def_from_repo_by_name(menu_item_def_name) # get the actual stored values including commit
             # write it to local files so we have the new commit sha and preserve flags
@@ -108,7 +118,10 @@ for menu_item_def_name in local_menu_item_defs:
                     # Upload any icon
                     if 'logo_url' in menu_item_def and menu_item_def['logo_url'] != '':
                         logo_url_file = menu_item_def['logo_url']
-                        logo_sha = menu_def_repo_data['icons'][logo_url_file].get('sha', None)
+                        if logo_url_file in menu_def_repo_data['icons']:
+                            logo_sha = menu_def_repo_data['icons'][logo_url_file].get('sha', None)
+                        else:
+                            logo_sha = None
                         adm.put_icon_file(logo_url_file, sha=logo_sha)
 
                     # Upload any extra_html
