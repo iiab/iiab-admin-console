@@ -80,6 +80,8 @@ except (urllib.error.URLError) as exc:
 # read our zim catalog
 # no try catch as mask our bugs
 
+if verbose:
+    print("Reading Our Catalog)
 url_handle = urllib.request.urlopen(iiab_zim_cat_url)
 iiab_zim_cat_json = url_handle.read()
 url_handle.close()
@@ -112,8 +114,14 @@ def main():
             zim_dict[attr['id']] = parse_attr(attr)
 
     # now merge our own zim catalog
+    if verbose:
+        print("Starting of processing our zim catalog into " + kiwix_catalog)
     for zim_id in iiab_zim_cat:
-        zim_dict[zim_id] = parse_attr(iiab_zim_cat[zim_id])
+        zim_attr = parse_attr(iiab_zim_cat[zim_id])
+        # fix up any fields
+        zim_attr['category'] = zim_attr['creator'] # need to match zim_functions.js
+        zim_attr['source'] = 'IIAB' # steal field no longer used for portable
+        zim_dict[zim_id] = zim_attr
 
     zimCat['download_date'] = time.strftime("%Y-%m-%d.%H:%M:%S")
     zimCat['zims'] = zim_dict
