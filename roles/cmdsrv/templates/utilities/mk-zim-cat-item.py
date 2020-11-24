@@ -48,6 +48,20 @@ def main():
     iiab.add_libr_xml(kiwix_library_xml, zim_path, zim_fname, '')
     zims_installed, _ = iiab.read_library_xml(kiwix_library_xml, kiwix_exclude_attr=[''])
 
+    zim_id = list(zims_installed)[0]
+
+    name_parts = zim_fname.split('_')
+    name = '_'
+    if name_parts[-2] in ['mini','nopic', 'maxi']:
+        flavour = '_' + name_parts[-2]
+        name = name.join(name_parts[:-2])
+    else:
+        flavour = ''
+        name = name.join(name_parts[:-1])
+
+    zims_installed[zim_id]['name'] = name
+    zims_installed[zim_id]['flavour'] = flavour
+
     zim_json = zim_fname.replace('.zim', '.json')
     adm.write_json_file(zims_installed, zim_json)
 
