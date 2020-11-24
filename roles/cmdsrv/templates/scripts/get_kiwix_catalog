@@ -81,7 +81,7 @@ except (urllib.error.URLError) as exc:
 # no try catch as mask our bugs
 
 if verbose:
-    print("Reading Our Catalog)
+    print("Reading Our Catalog")
 url_handle = urllib.request.urlopen(iiab_zim_cat_url)
 iiab_zim_cat_json = url_handle.read()
 url_handle.close()
