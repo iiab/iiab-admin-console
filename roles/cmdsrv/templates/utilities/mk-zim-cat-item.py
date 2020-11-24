@@ -59,6 +59,9 @@ def main():
         flavour = ''
         name = name.join(name_parts[:-1])
 
+    url = download_source + zim_fname
+    zims_installed[zim_id]['url'] = url
+
     zims_installed[zim_id]['name'] = name
     zims_installed[zim_id]['flavour'] = flavour
 
