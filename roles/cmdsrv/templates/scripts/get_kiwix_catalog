@@ -41,6 +41,7 @@ kiwixLibUrl = 'http://download.kiwix.org/library/library.xml'
 kiwixZimLibUrl = 'http://download.kiwix.org/library/library_zim.xml'
 zimKiwixUrl = "http://download.kiwix.org/portable/"
 zimKiwixPrefix = "kiwix-0.9+"
+iiab_zim_cat_url = 'https://raw.githubusercontent.com/iiab/iiab-admin-console/master/assets/iiab-zim-cat.json'
 
 # output files
 
@@ -76,6 +77,14 @@ except (urllib.error.URLError) as exc:
     sys.stdout.flush()
     sys.exit(1)
 
+# read our zim catalog
+# no try catch as mask our bugs
+
+url_handle = urllib.request.urlopen(iiab_zim_cat_url)
+iiab_zim_cat_json = url_handle.read()
+url_handle.close()
+
+iiab_zim_cat = json.loads(iiab_zim_cat_json)
 #tree = ET.parse("assets/test.xml")
 
 if verbose:
@@ -101,6 +110,10 @@ def main():
         if 'id' in attr and 'language' in attr and 'creator' in attr:
             zimCount += 1
             zim_dict[attr['id']] = parse_attr(attr)
+
+    # now merge our own zim catalog
+    for zim_id in iiab_zim_cat:
+        zim_dict[zim_id] = parse_attr(iiab_zim_cat[zim_id])
 
     zimCat['download_date'] = time.strftime("%Y-%m-%d.%H:%M:%S")
     zimCat['zims'] = zim_dict
@@ -147,7 +160,7 @@ def parse_attr(attributes):
     category = attributes['creator']
 
     tags = attributes['tags'].split(';') if 'tags' in attributes else []
-    if '_ftindex' in tags:
+    if '_ftindex:yes' in tags:
         has_embedded_index = True
 
     if 'nodet' in tags:
@@ -182,12 +195,13 @@ def parse_attr(attributes):
     else:
         # if there is a builtin index get from zims directory else from portable if it is in portable
         downloadUrl = url.replace(".zim.meta4", ".zim")
-        if not has_embedded_index:
-            if attributes['id'] in portable_list:
-                source = "portable"
-                downloadUrl = url.replace("/zim/", "/portable/")
-                downloadUrl = downloadUrl.replace(urlEnd, zimKiwixPrefix + urlEnd)
-                downloadUrl = downloadUrl.replace(".zim.meta4", ".zip") # urlEnd still has zim.meta4
+        # there have not been external indices for some time
+        #if not has_embedded_index:
+        #    if attributes['id'] in portable_list:
+        #        source = "portable"
+        #        downloadUrl = url.replace("/zim/", "/portable/")
+        #        downloadUrl = downloadUrl.replace(urlEnd, zimKiwixPrefix + urlEnd)
+        #        downloadUrl = downloadUrl.replace(".zim.meta4", ".zip") # urlEnd still has zim.meta4
 
     # print zimCount, attributes['language'], attributes['title'], attributes['description']
     for key in attributes:
