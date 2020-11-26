@@ -41,7 +41,7 @@ kiwixLibUrl = 'http://download.kiwix.org/library/library.xml'
 kiwixZimLibUrl = 'http://download.kiwix.org/library/library_zim.xml'
 zimKiwixUrl = "http://download.kiwix.org/portable/"
 zimKiwixPrefix = "kiwix-0.9+"
-iiab_zim_cat_url = {{ iiab_zim_cat_url }}
+iiab_zim_cat_url = "{{ iiab_zim_cat_url }}"
 
 # output files
 
