@@ -729,12 +729,29 @@ function getEditMenuItemFormValues (){
   menuDefArgs['mode'] = menuItemEditMode;
   menuDefArgs['menu_item_def'] = menuDef;
 
-  validFlag = validateMenuItemName(menuItemName, menuDef);
+  validFlag = validateMenuItemDef(menuItemName, menuDef);
 
   return {
     validFlag,
     menuDefArgs
   };
+}
+
+function validateMenuItemDef(menuItemName, menuDef){
+  if (menuItemEditMode == 'clone')
+    if (!validateMenuItemName(menuItemName, menuDef))
+      return false;
+
+  if (menuDef['title'] == ''){
+    alert('Title may not be left blank.');
+    return false;
+  }
+
+  if (menuDef['description'] == ''){
+    alert('Description may not be left blank.');
+    return false;
+  }
+  return true;
 }
 
 function validateMenuItemName(menuItemName, menuDef){
