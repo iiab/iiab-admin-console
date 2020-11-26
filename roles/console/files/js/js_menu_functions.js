@@ -585,6 +585,9 @@ function updateContentMenuItemDef (command, cmdArgs) {
   drawMenuItemDef (menuItemName, menuItemDefPrefixes.all);
   drawMenuItemDef (menuItemName, menuItemDefPrefixes.current);
   drawMenuItemSelectListItem (menuItemName, menuItemDefPrefixes.select);
+  // take out of clone mode
+  lockMenuItemHeader(true);
+  menuItemEditMode = 'edit';
 }
 
 function handleEditMenuItemClick (menuItem, action){
