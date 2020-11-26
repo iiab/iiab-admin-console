@@ -73,7 +73,7 @@ def main ():
             sys.stdout.flush()
             sys.exit(1)
         try:
-            url_handle = urllib.request.urlopen(adm.CONST.iiab_cat_url)
+            url_handle = urllib.request.urlopen(adm.CONST.iiab_module_cat_url)
             iiab_catalog_json = url_handle.read()
             url_handle.close()
         except (urllib.error.URLError) as exc:

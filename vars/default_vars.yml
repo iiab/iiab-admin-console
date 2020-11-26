@@ -14,7 +14,9 @@ iiab_config_file : "{{ iiab_config_dir }}/iiab.env"
 phplib_dir : '{{ ansible_local["local_facts"]["phplib_dir"] }}'
 oer2go_cat_url : http://dev.worldpossible.org/cgi/json_api_v1.pl
 oer2go_cat_url_v2: http://oer2go.org/cgi/json_api_v2.pl
-iiab_cat_url : https://raw.githubusercontent.com/iiab/iiab-admin-console/master/assets/iiab_catalog.json
+#iiab_cat_url : https://raw.githubusercontent.com/iiab/iiab-admin-console/master/assets/iiab_catalog.json
+iiab_module_cat_url: https://raw.githubusercontent.com/iiab-share/iiab-content/main/catalogs/iiab-module-cat.json
+iiab_zim_cat_url: https://raw.githubusercontent.com/iiab-share/iiab-content/main/catalogs/iiab-zim-cat.json
 rachel_mods_url : rsync://dev.worldpossible.org/rachelmods/
 oer2go_mods_url : "{{ rachel_mods_url }}"
 iiab_map_url : http://download.iiab.io/content/OSM/vector-tiles/maplist/hidden
