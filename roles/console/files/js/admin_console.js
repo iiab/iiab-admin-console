@@ -432,8 +432,9 @@ function contentMenuButtonsEvents() {
   $("#LOAD-CONTENT-MENU").click(function(){
     var currentJsMenuToEditUrl = $("#content_menu_url").val();
     getContentMenuToEdit(currentJsMenuToEditUrl);
-  	var currentJsMenuToEditUrl = $("#content_menu_url").val();
-    getContentMenuToEdit(currentJsMenuToEditUrl);
+    // why was this here twice?
+    // var currentJsMenuToEditUrl = $("#content_menu_url").val();
+    // getContentMenuToEdit(currentJsMenuToEditUrl);
   });
   $("#SAVE-CONTENT-MENU").click(function(){
     saveContentMenuDef();
