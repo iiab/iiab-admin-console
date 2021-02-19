@@ -1291,7 +1291,7 @@ def write_wpa_supplicant_file(connect_wifi_ssid, connect_wifi_password):
     # re.finditer(r'network.+?}.+?\n', wpa_txt, re.DOTALL):
     # re.search(r'network\s*=\s*{\s*ssid\s*=\s*"Pluto-UniFl_RE"', wpa_txt)
 
-    print(wpa_txt)
+    # print(wpa_txt)
 
     search_ssid = '"' + connect_wifi_ssid + '"'
     output = wpa_txt
@@ -1311,8 +1311,8 @@ def write_wpa_supplicant_file(connect_wifi_ssid, connect_wifi_password):
         network_lines = run_command("/usr/bin/wpa_passphrase '" + connect_wifi_ssid + "' " + connect_wifi_password)
     else:
         network_lines = ['network={', '\tssid="' + connect_wifi_ssid + '"', '\tkey_mgmt=NONE', '}']
-    print(wpa_lines)
-    print(network_lines)
+    # print(wpa_lines)
+    # print(network_lines)
 
     wpa_lines.extend(network_lines)
     with open(wpa_sup_file, 'w') as f:
