@@ -1274,9 +1274,9 @@ def set_wpa_credentials (cmd_info):
     return resp
 
 def write_wpa_supplicant_file(connect_wifi_ssid, connect_wifi_password):
+    wpa_sup_file = '/etc/wpa_supplicant/wpa_supplicant.conf'
     try:
-        with open('/etc/wpa_supplicant/wpa_supplicant.conf', 'r') as f:
-            wpa_txt = f.read()
+        with open(wpa_sup_file, 'r') as f: wpa_txt = f.read()
     except IOError: # for now patch missing file
         wpa_txt = 'ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1\ncountry=US\n'
 
@@ -1284,15 +1284,28 @@ def write_wpa_supplicant_file(connect_wifi_ssid, connect_wifi_password):
     # if password != '' call wpa_passphrase
     # else set to static array
     # write lines
+    # no attempt to fix extra spaces or messed up network keyword from previous versions
+
+    # Outtakes
+    # stripped = ''.join(wpa_txt.split(' ')) - NO. can be space in ssid
+    # re.finditer(r'network.+?}.+?\n', wpa_txt, re.DOTALL):
+    # re.search(r'network\s*=\s*{\s*ssid\s*=\s*"Pluto-UniFl_RE"', wpa_txt)
 
     print(wpa_txt)
-    if connect_wifi_ssid in wpa_txt:
-        ssid_loc = wpa_txt.index(connect_wifi_ssid)
-        network_start = wpa_txt.rindex("network={",0,ssid_loc)
-        network_end = wpa_txt.index('}', network_start) + 3
-        wpa_txt = wpa_txt.replace(wpa_txt[network_start:network_end], '')
 
-    wpa_lines = wpa_txt.split('\n')
+    search_ssid = '"' + connect_wifi_ssid + '"'
+    output = wpa_txt
+
+    # check for ssid def in file stripped of whitespace
+    # stripped = ''.join(wpa_txt.split(' ')) - NO. can be space in ssid
+
+    if search_ssid in wpa_txt: # remove if found
+        for net in re.finditer('network.+?}\n', wpa_txt, re.DOTALL):
+            if search_ssid in net.group(0):
+                output = wpa_txt[:net.start()] + wpa_txt[net.end():]
+                break
+
+    wpa_lines = output.split('\n')
 
     if connect_wifi_password != '':
         network_lines = run_command("/usr/bin/wpa_passphrase '" + connect_wifi_ssid + "' " + connect_wifi_password)
@@ -1302,7 +1315,7 @@ def write_wpa_supplicant_file(connect_wifi_ssid, connect_wifi_password):
     print(network_lines)
 
     wpa_lines.extend(network_lines)
-    with open('/etc/wpa_supplicant/wpa_supplicant.conf', 'w') as f:
+    with open(wpa_sup_file, 'w') as f:
         for l in wpa_lines:
             if l != '':
                 f.write(l + '\n')
