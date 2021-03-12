@@ -11,7 +11,7 @@ t2 = time.time()
 
 if rc == 0:
     t3 = t2 - t1
-    speed = 10/t3
-    print ("Time for 10MB was %f; Speed was %f MB/s" % (t3, speed))
+    speed = 10/t3*8
+    print ("Time for 10MB was %f seconds; Speed was %f Mbit/s" % (t3, speed))
 else:
     print ("Speed Test Failed.")
