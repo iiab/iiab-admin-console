@@ -1098,7 +1098,7 @@ def get_external_device_info(cmd_info):
 
         if os.path.exists(lib_dir):
             extdev_info[dev_name]['oer2go_modules'] = get_oer2go_installed_list(dev_name)
-            if iiab_ini['kiwix']: # if kiwix installed catalog zims
+            if iiab_ini.get('kiwix'): # if kiwix installed catalog zims
                 extdev_info[dev_name]['zim_modules'] = get_ext_zim_catalog(dev_name)
 
             # put local_content here
