@@ -742,6 +742,7 @@ def cmd_handler(cmd_msg):
         "GET-INET-SPEED2": {"funct": get_inet_speed2, "inet_req": True},
         "GET-KIWIX-CAT": {"funct": get_kiwix_catalog, "inet_req": True},
         "GET-ZIM-STAT": {"funct": get_zim_stat, "inet_req": False},
+        "INST-PRESETS": {"funct": install_presets, "inet_req": True},
         "INST-ZIMS": {"funct": install_zims, "inet_req": True},
         "COPY-ZIMS": {"funct": copy_zims, "inet_req": False},
         "MAKE-KIWIX-LIB": {"funct": make_kiwix_lib, "inet_req": False}, # runs as job
@@ -1759,6 +1760,21 @@ def run_ansible(cmd_info): # create multiple jobs to run in succession
     resp = request_job(cmd_info, job_command)
     return resp
 
+def run_ansible_roles(cmd_info):
+    # calculate list of roles to run which have changes to enabled flag or install flag (only false to true)
+    # assemble /opt/iiab/iiab/run-roles-tmp.yml
+    # run it with ansible_playbook_program
+
+    global ansible_running_flag
+    global jobs_requested
+
+    if ansible_running_flag:
+        return (cmd_error(msg="Ansible Command already Running."))
+
+    job_command = ansible_playbook_program + " -i " + iiab_repo + "/ansible_hosts " + iiab_repo + "/run-roles-tmp.yml --connection=local"
+    resp = request_job(cmd_info, job_command)
+    return resp
+
 def get_rachel_stat(cmd_info):
     # see if rachel installed from iiab_ini
     # see if rachel content installed from iiab_ini.rachel_content_path
@@ -1812,6 +1828,11 @@ def get_rachel_modules(module_dir, state):
         modules[title] = module
 
     return (modules)
+
+def install_presets(cmd_info):
+
+    resp = cmd_success_msg(cmd_info['cmd'], "All jobs scheduled")
+    return resp
 
 def install_zims(cmd_info):
 
