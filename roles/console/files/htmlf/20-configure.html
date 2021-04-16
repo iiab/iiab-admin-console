@@ -75,16 +75,17 @@
 						</div>
 					</form>
 				</div> <!--  network pane -->
+				<!-- MOVE THIS DOWN TO 2ND TO END OR JUST IN MENU  -->
 				<div class="tab-pane" id="confNetFilter"> <!-- Start Configure Network Filter Pane -->
 					<h2>Internet Caching/Filtering</h2>
 					<p><b>Please Note:</b> These parameters only take effect when you have selected the Gateway Role on the previous screen and have the necessary Network Adapters.</p>
 					<form role="form" id="confNetFilterForm">
-						<div class="checkbox">
+						<div class="checkbox squid_service">
 							<label>
 								<input type="checkbox" name="squid_enabled" id="squid_enabled">Check to Enable local Web Page storage for later fast access (Squid cache)
 							</label>
 						</div>
-						<div class="checkbox">
+						<div class="checkbox squid_service">
 							<label>
 								<input type="checkbox" name="gw_squid_whitelist" id="xo-gw_squid_whitelist">Check to Restrict Web Page Access to a Specific List of Sites (Permitted URLs)
 							</label>
@@ -94,7 +95,7 @@
 								<input type="checkbox" name="gw_block_https" id="xo-gw_block_https">Check to Block all HTTPS Access to Web Page
 							</label>
 						</div>
-						<div class="checkbox">
+						<div class="checkbox dansguardian_service">
 							<label>
 								<input type="checkbox" name="dansguardian_enabled" id="dansguardian_enabled">Check to Restrict Web Page Access according to Words in the Content (DansGuardian)
 							</label>
