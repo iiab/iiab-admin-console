@@ -798,16 +798,27 @@ def get_roles_status():
         stat_src = CONST.iiab_roles[role].get('stat_src')
         if stat_src == 'service':
             roles_status[role]['enabled'] = is_role_service_enabled(role)
+            roles_status[role]['active'] = is_role_service_active(role)
         elif stat_src == 'nginx':
             roles_status[role]['enabled'] = is_role_nginx_enabled(role)
+            roles_status[role]['active'] = roles_status[role]['enabled'] # assumes nginx is running
         elif stat_src == 'install':
             roles_status[role]['enabled'] = roles_status[role]['installed']
+            roles_status[role]['active'] = roles_status[role]['enabled']
         elif stat_src == 'apache':
             roles_status[role]['enabled'] = False # for now we don't install apache
+            roles_status[role]['active'] = False
     return roles_status
 
 def is_role_service_enabled(role):
     rc = subproc_run('systemctl is-enabled ' + CONST.iiab_roles[role]['stat_arg'])
+    if rc.returncode:
+        return False
+    else:
+        return True
+
+def is_role_service_active(role):
+    rc = subproc_run('systemctl is-active ' + CONST.iiab_roles[role]['stat_arg'])
     if rc.returncode:
         return False
     else:
