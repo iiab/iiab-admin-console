@@ -3366,10 +3366,10 @@ def compute_vars():
 def set_ready_flag(on_off):
     if on_off == "ON":
         try:
-            ready_file = open( cmdsrv_ready_file, "w" );
-            ready_file.write( "ready" );
-            ready_file.write( "\n" );
-            ready_file.close();
+            ready_file = open( cmdsrv_ready_file, "w" )
+            ready_file.write( "ready" )
+            ready_file.write( "\n" )
+            ready_file.close()
         except OSError as e:
             syslog.openlog( 'iiab_cmdsrv', 0, syslog.LOG_USER )
             syslog.syslog( syslog.LOG_ALERT, "Writing Ready file: %s [%d]" % (e.strerror, e.errno) )

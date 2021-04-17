@@ -785,6 +785,40 @@ def extract_region_from_filename(fname):
 
 # Misc
 
+def get_roles_status():
+    roles_status = {}
+    state = read_yaml(IIAB_CONST.iiab_state_file)
+    for role in CONST.iiab_roles:
+        if role in CONST.iiab_roles_renamed:
+            role_name = CONST.iiab_roles_renamed[role]
+        else:
+            role_name = role
+        roles_status[role] = {}
+        roles_status[role]['installed'] = state.get(role_name + '_installed', False)
+        stat_src = CONST.iiab_roles[role].get('stat_src')
+        if stat_src == 'service':
+            roles_status[role]['enabled'] = is_role_service_enabled(role)
+        elif stat_src == 'nginx':
+            roles_status[role]['enabled'] = is_role_nginx_enabled(role)
+        elif stat_src == 'install':
+            roles_status[role]['enabled'] = roles_status[role]['installed']
+        elif stat_src == 'apache':
+            roles_status[role]['enabled'] = False # for now we don't install apache
+    return roles_status
+
+def is_role_service_enabled(role):
+    rc = subproc_run('systemctl is-enabled ' + CONST.iiab_roles[role]['stat_arg'])
+    if rc.returncode:
+        return False
+    else:
+        return True
+
+def is_role_nginx_enabled(role):
+    if os.path.exists('/etc/nginx/conf.d/' + CONST.iiab_roles[role]['stat_arg']):
+        return True
+    else:
+        return False
+
 def pcgvtd9():
     global headers
     global git_committer_handle
