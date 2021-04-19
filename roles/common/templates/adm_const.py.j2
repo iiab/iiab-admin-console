@@ -47,6 +47,9 @@ menu_json_path = IIAB_CONST.doc_root + "/home/menu.json"
 rachel_path = IIAB_CONST.doc_root + 'modules'
 obsolete_menu_defs = admin_scripts_dir + '/obsolete-menu-defs.json'
 
+# either remove iiab_menu_items or remove menu_def attribute from iiab_roles
+# possibly move iiab_roles to iiab_const and lib
+
 iiab_menu_items={
      "calibre":"en-calibre",\
      "calibreweb":"en-calibreweb",\
@@ -76,7 +79,7 @@ iiab_roles = {
      "azuracast": {"menu_def": "en", "stat_src": "install", "stat_arg": None},\
      # check
      "calibre": {"menu_def": "en", "stat_src": "service", "stat_arg": "calibre-serve.service"},\
-     "calibre-web": {"menu_def": "en-calibre", "stat_src": "service", "stat_arg": "calibre-serve.service"},\
+     "calibre-web": {"menu_def": "en-calibre", "stat_src": "service", "stat_arg": "calibre-web.service"},\
      "captiveportal": {"menu_def": None, "stat_src": "nginx", "stat_arg": "capture.conf"},\
      "cups": {"menu_def": "en-cups", "stat_src": "service", "stat_arg": "cups.service"},\
      "elgg": {"menu_def": "en-elgg", "stat_src": "nginx", "stat_arg": "elgg-nginx.conf"},\

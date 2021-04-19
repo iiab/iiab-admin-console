@@ -733,6 +733,7 @@ def cmd_handler(cmd_msg):
         "CTL-VPN": {"funct": ctl_vpn, "inet_req": True},
         "REMOVE-USB": {"funct": umount_usb, "inet_req": False},
         "RUN-ANSIBLE": {"funct": run_ansible, "inet_req": False},
+        "GET-ROLES-STAT": {"funct": get_roles_stat, "inet_req": False},
         "RESET-NETWORK": {"funct": run_ansible, "inet_req": False},
         "GET-JOB-STAT": {"funct": get_last_jobs_stat, "inet_req": False},
         "CANCEL-JOB": {"funct": cancel_job, "inet_req": False},
@@ -1774,6 +1775,10 @@ def run_ansible_roles(cmd_info):
     job_command = ansible_playbook_program + " -i " + iiab_repo + "/ansible_hosts " + iiab_repo + "/run-roles-tmp.yml --connection=local"
     resp = request_job(cmd_info, job_command)
     return resp
+
+def get_roles_stat(cmd_info):
+    resp = json.dumps(adm.get_roles_status())
+    return (resp)
 
 def get_rachel_stat(cmd_info):
     # see if rachel installed from iiab_ini
