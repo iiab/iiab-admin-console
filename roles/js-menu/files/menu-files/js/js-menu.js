@@ -859,7 +859,7 @@ function filterContent() {
     if (hasLocalStorage()) {
         setLocalStore(); // save them
     }
-    procMenu(); // redraw menu
+    drawMenu(); // redraw menu
 }
 
 
