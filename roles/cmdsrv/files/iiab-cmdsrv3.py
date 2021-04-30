@@ -1139,7 +1139,7 @@ def calc_network_info():
 
     # ip -br addr
     # ip route | grep default
-    # brctl show
+    # bridge -d link
     # systemctl is-active hostapd
     # systemctl is-active openvpn
     # /etc/iiab/uuid
@@ -1175,23 +1175,10 @@ def calc_network_info():
 
     outp = run_command("/sbin/bridge -d link")
     bridge_devs = []
-    # 4: br-8e247b2250bf: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 master br-8e247b2250bf
-    # 5: br-bd1dce283af7: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 master br-bd1dce283af7
-    # 6: br-d19e880366fe: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 master br-d19e880366fe
-
-    # 4: ap0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 master br0 state forwarding priority 32 cost 100
-    #   hairpin off guard off root_block off fastleave off learning on flood on mcast_flood on neigh_suppress off vlan_tunnel off isolated off
-    # 5: br0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 master br0
-
 
     for line in outp:
-        if line == '':
-            continue
-        bridge_props = line.split()
-        if bridge_props[0] == 'bridge':
-            continue # skip header
-        if len(bridge_props) >= 4:
-            bridge_devs.append(bridge_props[3])
+        if 'forwarding' in line:
+            bridge_devs.append(line.split(':')[1].strip())
 
     net_stat["bridge_devs"] = bridge_devs
 
