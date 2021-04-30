@@ -1139,7 +1139,7 @@ def calc_network_info():
 
     # ip -br addr
     # ip route | grep default
-    # brctl show
+    # bridge -d link
     # systemctl is-active hostapd
     # systemctl is-active openvpn
     # /etc/iiab/uuid
@@ -1173,16 +1173,12 @@ def calc_network_info():
     else:
         net_stat["internet_access"] = False
 
-    outp = run_command("/sbin/brctl show")
+    outp = run_command("/sbin/bridge -d link")
     bridge_devs = []
+
     for line in outp:
-        if line == '':
-            continue
-        bridge_props = line.split()
-        if bridge_props[0] == 'bridge':
-            continue # skip header
-        if len(bridge_props) >= 4:
-            bridge_devs.append(bridge_props[3])
+        if 'forwarding' in line:
+            bridge_devs.append(line.split(':')[1].strip())
 
     net_stat["bridge_devs"] = bridge_devs
 
