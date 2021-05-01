@@ -1,0 +1,33 @@
+{
+    "zims": [
+      "wikipedia_es_all_maxi",
+      "phet_es",
+      "wiktionary_es_all_maxi",
+      "wikiquote_es_all_maxi",
+      "es-gutenberg_es_all",
+      "en-wikipedia_en_simple_all_maxi",
+      "en-wikipedia_en_top_maxi",
+      "en-wiktionary_en_simple_all_maxi",
+      "en-crashcourse_en_all"
+    ],
+    "modules": [
+      "es-hesperian_health",
+      "es-medline_plus",
+      "es-educalab",
+      "es-soluciones",
+      "es-GCF2015",
+      "es-GCF2021",
+      "es-wikihow",
+      "es-ecured_es_all",
+      "es-bibliofilo",
+      "es-sugarizer",
+      "es-blockly-games",
+      "es-vedoque",
+      "es-mustardseedbooks",
+      "es-ebooks"
+    ],
+    "maps": [
+      "osm-omt_central_america"
+    ],
+    "kalite": []
+}
