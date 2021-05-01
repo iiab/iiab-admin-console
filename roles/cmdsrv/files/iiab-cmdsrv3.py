@@ -733,6 +733,7 @@ def cmd_handler(cmd_msg):
         "CTL-VPN": {"funct": ctl_vpn, "inet_req": True},
         "REMOVE-USB": {"funct": umount_usb, "inet_req": False},
         "RUN-ANSIBLE": {"funct": run_ansible, "inet_req": False},
+        "RUN-ANSIBLE-ROLES": {"funct": run_ansible_roles, "inet_req": False},
         "GET-ROLES-STAT": {"funct": get_roles_stat, "inet_req": False},
         "RESET-NETWORK": {"funct": run_ansible, "inet_req": False},
         "GET-JOB-STAT": {"funct": get_last_jobs_stat, "inet_req": False},
@@ -1761,6 +1762,7 @@ def run_ansible_roles(cmd_info):
     # calculate list of roles to run which have changes to enabled flag or install flag (only false to true)
     # assemble /opt/iiab/iiab/run-roles-tmp.yml
     # run it with ansible_playbook_program
+    # ToDo allow delta local vars as optional parameter
 
     global ansible_running_flag
     global jobs_requested
@@ -1768,7 +1770,63 @@ def run_ansible_roles(cmd_info):
     if ansible_running_flag:
         return (cmd_error(msg="Ansible Command already Running."))
 
-    job_command = ansible_playbook_program + " -i " + iiab_repo + "/ansible_hosts " + iiab_repo + "/run-roles-tmp.yml --connection=local"
+    # refresh effective_vars
+    # assume default_vars is current
+    read_iiab_local_vars() # read local vars and compute effective vars
+
+    roles_status = adm.get_roles_status()
+    internet_avail = is_internet_avail()
+    changed_local_vars = {}
+
+     # get playbook preamble
+    with open('assets/run-roles-base.yml') as f:
+        lines = f.readlines()
+
+    role_cnt = 0
+    for role in roles_status:
+        if not local_vars.get(role + '_install'):
+            continue # for now skip unknown roles
+        install = effective_vars[role + '_install']
+        installed = roles_status[role]['installed']
+        enable = effective_vars[role + '_enabled']
+        # enabled = roles_status[role]['enabled'] # some services show enabled-runtime
+        enabled = roles_status[role]['active']
+        if install == installed and enable == enabled:
+            continue
+        if role in adm.CONST.iiab_roles_renamed:
+            run_role = adm.CONST.iiab_roles_renamed[role]
+        else:
+            run_role = role
+        if install != installed:
+            if install == True: # desired, not installed
+                if not internet_avail:
+                    resp = cmd_error(msg='Internet is Required to install a Service, but is Not Available.')
+                    return resp
+                else:
+                    lines.append('    - { role: ' + run_role + ' }\n')
+                    role_cnt += 1
+            else: # installed, but not desired. we can't uninstall
+                if enabled == True: # just disable it
+                    changed_local_vars[role + '_enabled'] = False
+                    lines.append('    - { role: ' + run_role + ' }\n')
+                    role_cnt += 1
+        else: # enabled status has changed
+            lines.append('    - { role: ' + run_role + ' }\n')
+            role_cnt += 1
+
+    if role_cnt == 0:
+        resp = cmd_error(msg='All Roles are already As Requested.')
+        return resp
+
+    # patch local vars
+    if len(changed_local_vars) > 0:
+        adm.write_iiab_local_vars(changed_local_vars)
+
+    # assemble playbook
+    with open(iiab_repo + '/adm-run-roles-tmp.yml', 'w') as f:
+        f.writelines(lines)
+
+    job_command = ansible_playbook_program + " -i " + iiab_repo + "/ansible_hosts " + iiab_repo + "/adm-run-roles-tmp.yml --connection=local"
     resp = request_job(cmd_info, job_command)
     return resp
 
