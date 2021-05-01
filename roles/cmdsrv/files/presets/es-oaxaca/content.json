@@ -4,11 +4,12 @@
       "phet_es",
       "wiktionary_es_all_maxi",
       "wikiquote_es_all_maxi",
-      "es-gutenberg_es_all",
-      "en-wikipedia_en_simple_all_maxi",
-      "en-wikipedia_en_top_maxi",
-      "en-wiktionary_en_simple_all_maxi",
-      "en-crashcourse_en_all"
+      "ecured_es_all",
+      "gutenberg_es_all",
+      "wikipedia_en_simple_all_maxi",
+      "wikipedia_en_top_maxi",
+      "wiktionary_en_simple_all_maxi",
+      "crashcourse_en_all"
     ],
     "modules": [
       "es-hesperian_health",
@@ -29,5 +30,8 @@
     "maps": [
       "osm-omt_central_america"
     ],
-    "kalite": []
+    "kalite": {
+      "lang_pack": "es",
+      "videos": []
+    }
 }
