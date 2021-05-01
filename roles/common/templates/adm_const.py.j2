@@ -47,6 +47,9 @@ menu_json_path = IIAB_CONST.doc_root + "/home/menu.json"
 rachel_path = IIAB_CONST.doc_root + 'modules'
 obsolete_menu_defs = admin_scripts_dir + '/obsolete-menu-defs.json'
 
+# either remove iiab_menu_items or remove menu_def attribute from iiab_roles
+# possibly move iiab_roles to iiab_const and lib
+
 iiab_menu_items={
      "calibre":"en-calibre",\
      "calibreweb":"en-calibreweb",\
@@ -64,6 +67,48 @@ iiab_menu_items={
      "sugarizer":"en-sugarizer",\
      #"teamviewer":"en-teamviewer",\
      "wordpress":"en-wordpress"
+}
+
+iiab_roles_renamed = {
+     "calibreweb": "calibre-web",
+     "osm_vector_maps": "osm-vector-maps"
+}
+
+iiab_roles = {
+     "awstats": {"menu_def": None, "stat_src": "nginx", "stat_arg": "awstats-nginx.conf"},\
+     "azuracast": {"menu_def": "en", "stat_src": "install", "stat_arg": None},\
+     # check
+     "calibre": {"menu_def": "en", "stat_src": "service", "stat_arg": "calibre-serve.service"},\
+     "calibreweb": {"menu_def": "en-calibre", "stat_src": "service", "stat_arg": "calibre-web.service"},\
+     "captiveportal": {"menu_def": None, "stat_src": "nginx", "stat_arg": "capture.conf"},\
+     "cups": {"menu_def": "en-cups", "stat_src": "service", "stat_arg": "cups.service"},\
+     "elgg": {"menu_def": "en-elgg", "stat_src": "nginx", "stat_arg": "elgg-nginx.conf"},\
+     "gitea": {"menu_def": "en-gitea", "stat_src": "service", "stat_arg": "gitea.service"},\
+     "internetarchive": {"menu_def": "en-internetarchive", "stat_src": "service", "stat_arg": "internetarchive.service"},\
+     "jupyterhub": {"menu_def": "en-jupyter", "stat_src": "service", "stat_arg": "jupyterhub.service"},\
+     "kalite": {"menu_def": "en-kalite", "stat_src": "service", "stat_arg": "kalite-serve.service"},\
+     "kiwix": {"menu_def": "en-test_zim", "stat_src": "service", "stat_arg": "kiwix-serve.service"},\
+     "kolibri": {"menu_def": "en-kolibri", "stat_src": "service", "stat_arg": "kolibri.service"},\
+     "lokole": {"menu_def": "en-lokole", "stat_src": "service", "stat_arg": "lokole.service"},\
+     "mediawiki": {"menu_def": "en-calibre", "stat_src": "nginx", "stat_arg": "mediawiki-nginx.conf"},\
+     "minetest": {"menu_def": "en-minetest", "stat_src": "service", "stat_arg": "minetest-server.service"},\
+     "monit": {"menu_def": None, "stat_src": "service", "stat_arg": "monit.service"},\
+     "moodle": {"menu_def": "en-moodle", "stat_src": "nginx", "stat_arg": "moodle-nginx.conf"},\
+     "mosquitto": {"menu_def": None, "stat_src": "service", "stat_arg": "mosquitto.service"},\
+     "munin": {"menu_def": None, "stat_src": "nginx", "stat_arg": "munin24-nginx.conf"},\
+     "nextcloud": {"menu_def": "en-nextcloud", "stat_src": "nginx", "stat_arg": "nextcloud-nginx.conf"},\
+     "nodered": {"menu_def": "en-nodered", "stat_src": "service", "stat_arg": "nodered.service"},\
+     "openvpn": {"menu_def": None, "stat_src": "service", "stat_arg": "openvpn@xscenet.service"},\
+     # en-osm_viewer_v2
+     "osm_vector_maps": {"menu_def": None, "stat_src": "nginx", "stat_arg": "osm-vector-maps-nginx.conf"},\
+     "pbx": {"menu_def": None, "stat_src": "service", "stat_arg": "freepbx.service"},\
+     "phpmyadmin": {"menu_def": None, "stat_src": "apache", "stat_arg": "phpmyadmin.conf"},\
+     "samba": {"menu_def": None, "stat_src": "service", "stat_arg": "{{ smb_service }}"},\
+     "sugarizer": {"menu_def": "en-sugarizer", "stat_src": "service", "stat_arg": "sugarizer.service"},\
+     "transmission": {"menu_def": None, "stat_src": "service", "stat_arg": "transmission-daemon.service"},\
+     "usb_lib": {"menu_def": "en-usb", "stat_src": "service", "stat_arg": "usbmount@.service"},\
+     "vnstat": {"menu_def": None, "stat_src": "service", "stat_arg": "vnstat.service"},\
+     "wordpress": {"menu_def": "en-wordpress", "stat_src": "nginx", "stat_arg": "wordpress-nginx.conf"}\
 }
 
 # for maps

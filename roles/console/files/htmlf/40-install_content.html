@@ -14,6 +14,7 @@
       <h2>Installation Tasks</h2>
       <ul id="installContentMenu" class="nav nav-pills nav-stacked">
         <!-- Start XXX Sub Level Menu -->
+        <!-- <li class="active"><a href="#instConPresets">Quick Pick</a></li>-->
         <li class="active"><a href="#instConStart">Get Started</a></li>
         <li><a href="#instConZims" call-after="checkKiwixCatalogDate">Get ZIM Files from Kiwix</a></li>
         <li><a href="#instConOer2go" call-after="oer2goMenuOption">Get OER2Go(RACHEL) Modules</a></li>
@@ -45,12 +46,47 @@
             content comes from the internet or a portable hard disk drive.</p>
           <p>These options are aimed at people who plan to set up the server in a location where there is a relatively
             high bandwidth connection and then deploy it where there is little or no connectivity.</p>
+            <p>Please note that these options require a <b>minimum</b> sized sd card of <b>128G</b></p>
           <p>Options planned but not yet implemented</p>
           <ul>
             <li>Ability to set removable storage as working disk for downloads.</li>
             <li>Flag to allow downloads of content to be valid only for each session.</li>
           </ul>
         </div> <!--  End instConStart Submenu Option Pane -->
+        <div class="tab-pane" id="instConPresets">
+          <!-- Start instConStart Submenu Option Pane -->
+          <h2>Quick Pick</h2>
+          <p>Use this menu option to select a collection of content items that are commonly used for a given audience.</p>
+          <p>You can optionally add additional content with other Install Content menu options.</p>
+          <p>Please select one of the following <b>Content Collections:</b></p>
+
+          <!--
+            save as sample for later
+          <label><input type="radio" id="es-school" name="content-preset" value="es-school"></label>
+
+          <span class="" data-toggle="tooltip" data-placement="top" data-html="true" title=""
+            data-original-title="<h3>School with instruction in English</h3>Contains:<ul><li>Wikipedia</li><li>Khan Academy</li></ul></b>">
+              &nbsp;&nbsp;School with instruction in English
+          </span>
+          -->
+
+          <div class="radio">
+            <label><input type="radio" name="content-preset" id="en-school" value="en-school">School with Instruction in English</label>
+          </div>
+          <div class="radio">
+            <label><input type="radio" name="content-preset" id="es-school" value="es-school">School with Instruction in Spanish</label>
+          </div>
+          <div class="radio">
+            <label><input type="radio" name="content-preset" id="fr-school" value="fr-school">School with Instruction in French</label>
+          </div>
+          <div class="radio">
+            <label><input type="radio" name="content-preset" id="en-medical" value="en-medical">Medical Practitioners using English</label>
+          </div>
+
+          <button id="INST-CONTENT-PRESET" type="button" class="btn btn-lg btn-primary">Install Selected Collection</button>
+
+        </div> <!--  End instConPresets Submenu Option Pane -->
+
         <div class="tab-pane" id="instConZims">
           <!-- Start instConZims Submenu Option Pane -->
           <h2>Install Kiwix ZIM Files</h2>

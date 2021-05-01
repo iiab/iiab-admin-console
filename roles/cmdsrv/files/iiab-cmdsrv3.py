@@ -733,6 +733,8 @@ def cmd_handler(cmd_msg):
         "CTL-VPN": {"funct": ctl_vpn, "inet_req": True},
         "REMOVE-USB": {"funct": umount_usb, "inet_req": False},
         "RUN-ANSIBLE": {"funct": run_ansible, "inet_req": False},
+        "RUN-ANSIBLE-ROLES": {"funct": run_ansible_roles, "inet_req": False},
+        "GET-ROLES-STAT": {"funct": get_roles_stat, "inet_req": False},
         "RESET-NETWORK": {"funct": run_ansible, "inet_req": False},
         "GET-JOB-STAT": {"funct": get_last_jobs_stat, "inet_req": False},
         "CANCEL-JOB": {"funct": cancel_job, "inet_req": False},
@@ -742,6 +744,7 @@ def cmd_handler(cmd_msg):
         "GET-INET-SPEED2": {"funct": get_inet_speed2, "inet_req": True},
         "GET-KIWIX-CAT": {"funct": get_kiwix_catalog, "inet_req": True},
         "GET-ZIM-STAT": {"funct": get_zim_stat, "inet_req": False},
+        "INST-PRESETS": {"funct": install_presets, "inet_req": True},
         "INST-ZIMS": {"funct": install_zims, "inet_req": True},
         "COPY-ZIMS": {"funct": copy_zims, "inet_req": False},
         "MAKE-KIWIX-LIB": {"funct": make_kiwix_lib, "inet_req": False}, # runs as job
@@ -1755,6 +1758,82 @@ def run_ansible(cmd_info): # create multiple jobs to run in succession
     resp = request_job(cmd_info, job_command)
     return resp
 
+def run_ansible_roles(cmd_info):
+    # calculate list of roles to run which have changes to enabled flag or install flag (only false to true)
+    # assemble /opt/iiab/iiab/run-roles-tmp.yml
+    # run it with ansible_playbook_program
+    # ToDo allow delta local vars as optional parameter
+
+    global ansible_running_flag
+    global jobs_requested
+
+    if ansible_running_flag:
+        return (cmd_error(msg="Ansible Command already Running."))
+
+    # refresh effective_vars
+    # assume default_vars is current
+    read_iiab_local_vars() # read local vars and compute effective vars
+
+    roles_status = adm.get_roles_status()
+    internet_avail = is_internet_avail()
+    changed_local_vars = {}
+
+     # get playbook preamble
+    with open('assets/run-roles-base.yml') as f:
+        lines = f.readlines()
+
+    role_cnt = 0
+    for role in roles_status:
+        if not local_vars.get(role + '_install'):
+            continue # for now skip unknown roles
+        install = effective_vars[role + '_install']
+        installed = roles_status[role]['installed']
+        enable = effective_vars[role + '_enabled']
+        # enabled = roles_status[role]['enabled'] # some services show enabled-runtime
+        enabled = roles_status[role]['active']
+        if install == installed and enable == enabled:
+            continue
+        if role in adm.CONST.iiab_roles_renamed:
+            run_role = adm.CONST.iiab_roles_renamed[role]
+        else:
+            run_role = role
+        if install != installed:
+            if install == True: # desired, not installed
+                if not internet_avail:
+                    resp = cmd_error(msg='Internet is Required to install a Service, but is Not Available.')
+                    return resp
+                else:
+                    lines.append('    - { role: ' + run_role + ' }\n')
+                    role_cnt += 1
+            else: # installed, but not desired. we can't uninstall
+                if enabled == True: # just disable it
+                    changed_local_vars[role + '_enabled'] = False
+                    lines.append('    - { role: ' + run_role + ' }\n')
+                    role_cnt += 1
+        else: # enabled status has changed
+            lines.append('    - { role: ' + run_role + ' }\n')
+            role_cnt += 1
+
+    if role_cnt == 0:
+        resp = cmd_error(msg='All Roles are already As Requested.')
+        return resp
+
+    # patch local vars
+    if len(changed_local_vars) > 0:
+        adm.write_iiab_local_vars(changed_local_vars)
+
+    # assemble playbook
+    with open(iiab_repo + '/adm-run-roles-tmp.yml', 'w') as f:
+        f.writelines(lines)
+
+    job_command = ansible_playbook_program + " -i " + iiab_repo + "/ansible_hosts " + iiab_repo + "/adm-run-roles-tmp.yml --connection=local"
+    resp = request_job(cmd_info, job_command)
+    return resp
+
+def get_roles_stat(cmd_info):
+    resp = json.dumps(adm.get_roles_status())
+    return (resp)
+
 def get_rachel_stat(cmd_info):
     # see if rachel installed from iiab_ini
     # see if rachel content installed from iiab_ini.rachel_content_path
@@ -1808,6 +1887,11 @@ def get_rachel_modules(module_dir, state):
         modules[title] = module
 
     return (modules)
+
+def install_presets(cmd_info):
+
+    resp = cmd_success_msg(cmd_info['cmd'], "All jobs scheduled")
+    return resp
 
 def install_zims(cmd_info):
 
@@ -3341,10 +3425,10 @@ def compute_vars():
 def set_ready_flag(on_off):
     if on_off == "ON":
         try:
-            ready_file = open( cmdsrv_ready_file, "w" );
-            ready_file.write( "ready" );
-            ready_file.write( "\n" );
-            ready_file.close();
+            ready_file = open( cmdsrv_ready_file, "w" )
+            ready_file.write( "ready" )
+            ready_file.write( "\n" )
+            ready_file.close()
         except OSError as e:
             syslog.openlog( 'iiab_cmdsrv', 0, syslog.LOG_USER )
             syslog.syslog( syslog.LOG_ALERT, "Writing Ready file: %s [%d]" % (e.strerror, e.errno) )

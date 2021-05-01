@@ -1,5 +1,5 @@
 // admin_console.js
-// copyright 2020 Tim Moody
+// copyright 2021 Tim Moody
 
 var today = new Date();
 var dayInMs = 1000*60*60*24;
@@ -11,6 +11,7 @@ var iiabAuthService = "/iiab-cmd-service/auth";
 var adminConfig = {}; // cmdsrv config values
 var ansibleFacts = {};
 var ansibleTagsStr = "";
+var ansibleRolesStatus = {};
 var effective_vars = {};
 var config_vars = {}; // working variable, no long separate from local vars
 var iiab_ini = {};
@@ -1237,6 +1238,29 @@ function changePasswordSuccess ()
 
     return true;
   }
+
+function getRolesStat () {
+    //alert ("in getRolesStat");
+    sendCmdSrvCmd("GET-ROLES-STAT", procRolesStat);
+    return true;
+ }
+
+function procRolesStat(data) {
+  ansibleRolesStatus = data;
+}
+
+/* this works, but is limited in parameter passing
+function getRolesStat(data) { // try php style function
+  //alert ("in getRolesStat");
+  if (typeof(data) === 'undefined') {
+    sendCmdSrvCmd("GET-ROLES-STAT", getRolesStat);
+  } else {
+    ansibleRolesStatus = data;
+  }
+}
+*/
+
+
 
   function getWhitelist (data)  {
     sendCmdSrvCmd("GET-WHLIST", procWhitelist);
