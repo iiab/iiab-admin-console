@@ -789,12 +789,8 @@ def get_roles_status():
     roles_status = {}
     state = read_yaml(IIAB_CONST.iiab_state_file)
     for role in CONST.iiab_roles:
-        if role in CONST.iiab_roles_renamed:
-            role_name = CONST.iiab_roles_renamed[role]
-        else:
-            role_name = role
         roles_status[role] = {}
-        roles_status[role]['installed'] = state.get(role_name + '_installed', False)
+        roles_status[role]['installed'] = state.get(role + '_installed', False)
         stat_src = CONST.iiab_roles[role].get('stat_src')
         if stat_src == 'service':
             roles_status[role]['enabled'] = is_role_service_enabled(role)
