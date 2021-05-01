@@ -49,6 +49,7 @@
   with_items:
     - "{{ cmdsrv_dir }}"
     - "{{ cmdsrv_dir }}/scripts"
+    - "{{ cmdsrv_dir }}/assets"
 
 - name: Install Command Server Executable
   copy: src=iiab-cmdsrv3.py
@@ -99,6 +100,15 @@
     - { src: 'scripts/iiab_update_menus3.py', dest: '{{ cmdsrv_dir }}/scripts/iiab_update_menus.py'}
     - { src: 'scripts/iiab-update-map3.py', dest: '{{ cmdsrv_dir }}/scripts/iiab-update-map.py'}
 
+
+- name: Copy assets
+  copy: src={{ item }}
+            dest="{{ cmdsrv_dir }}/assets"
+            mode=0755
+            owner=root
+            group=root
+  with_fileglob:
+            - assets/*
 
 - name: Allow running iiab_update_menus from the command line
   file: src="{{ cmdsrv_dir }}/scripts/iiab_update_menus.py"
