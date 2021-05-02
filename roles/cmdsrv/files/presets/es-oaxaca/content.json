@@ -19,7 +19,6 @@
       "es-GCF2015",
       "es-GCF2021",
       "es-wikihow",
-      "es-ecured_es_all",
       "es-bibliofilo",
       "es-sugarizer",
       "es-blockly-games",
@@ -32,6 +31,6 @@
     ],
     "kalite": {
       "lang_pack": "es",
-      "video_nodes": []
+      "video_nodes": ["khan/"]
     }
 }
