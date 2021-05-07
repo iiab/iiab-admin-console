@@ -1890,6 +1890,8 @@ def get_rachel_modules(module_dir, state):
 
 def install_presets(cmd_info):
     # first pass we will just call various command handlers and evaluate resp
+    # INST-PRESETS '{"cmd_args":{"preset_id":"test"}}'
+    #print(cmd_info)
     presets_dir = 'presets/'
     if 'cmd_args' not in cmd_info:
         return cmd_malformed(cmd_info['cmd'])
@@ -1897,6 +1899,7 @@ def install_presets(cmd_info):
         preset_id = cmd_info['cmd_args']['preset_id']
         if not os.path.isdir(presets_dir + preset_id): # currently a preset is a directory in presets dir
             return cmd_error(cmd='INST-PRESET', msg='Preset ' + preset_id + ' not found.')
+
     # get preset definition
     src_dir = presets_dir + preset_id + '/'
     preset = adm.read_json(src_dir + 'preset.json')
@@ -1904,15 +1907,23 @@ def install_presets(cmd_info):
     content = adm.read_json(src_dir + 'content.json')
     vars = adm.read_yaml(src_dir + 'vars.yml')
 
+    # check for sufficient storage
+
     # add vars to local_vars and run roles
     adm.write_iiab_local_vars(vars)
     resp = run_ansible_roles(cmd_info)
+    # All roles installed also returns error "All Roles are already As Requested"
     if 'Error' in resp:
-        return cmd_error(cmd='INST-PRESET', msg='Ansible install step failed. Please try again.')
+        if not 'All Roles are already As Requested' in resp: # pretty klugey
+            return cmd_error(cmd='INST-PRESET', msg='Ansible install step failed. Please try again.')
 
     # now do content areas
     # how to wait for ansible to complete
     # ?don't start any jobs if ansible is running, lines 350ff
+    # but ansible failure will release remaining jobs
+    # ? add global ansible job no
+
+    # ? check to see if content already installed
 
     # ZIMs
     # create list of ids using most recent url
@@ -1930,22 +1941,33 @@ def install_presets(cmd_info):
                 if url > perma_ref_idx[perma_ref]['url']:
                     perma_ref_idx[perma_ref] = {'id': zim_id, 'url': url}
 
+    #cmd_info['cmd_rowid'] = cmd_rowid
+    #cmd_info['cmd_msg'] = cmd_msg
+    #cmd_info['cmd'] = cmd
+    #cmd_info['cmd_args'] = cmd_args
+
+    zim_cmd_info = cmd_info
     for ref in perma_ref_idx:
-        zim_cmd_info = {'cmd': 'INST-ZIM', 'cmd_args': {'zim_id': perma_ref_idx[ref]['id']}}
+        zim_cmd_info['cmd'] ='INST-ZIM'
+        zim_cmd_info['cmd_args'] = {'zim_id': perma_ref_idx[ref]['id']}
         resp = install_zims(zim_cmd_info)
 
     # modules
 
+    module_cmd_info = cmd_info
     module_list = content['modules']
     for module in module_list:
-        module_cmd_info = {'cmd': 'INST-OER2GO-MOD', 'cmd_args': {'moddir': module}}
+        module_cmd_info['cmd'] = 'INST-OER2GO-MOD'
+        module_cmd_info['cmd_args'] = {'moddir': module}
         resp = install_oer2go_mod(module_cmd_info)
 
     # maps
 
+    map_cmd_info = cmd_info
     map_list = content['maps']
     for map in map_list:
-        map_cmd_info = {'cmd': 'INST-OSM-VECT-SET', 'cmd_args': {'osm_vect_id': map}}
+        map_cmd_info['cmd'] = 'INST-OSM-VECT-SET'
+        map_cmd_info['cmd_args'] = {'osm_vect_id': map}
         resp = install_osm_vect_set_v2(map_cmd_info)
 
     # kalite
