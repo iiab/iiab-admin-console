@@ -1,16 +1,6 @@
 #!/usr/bin/python3
+# Get one or more categories of kalite videos for a given language
 
-# Get new oer2go (rachel) catalog
-# for now we will assume that old modules are still in the current catalog
-# exclude known modules that we get by another means, such as zims
-# for modules with no menu defs create that and an extra html file under js-menu/local/unedited/
-# there is an optional switch to suppress menu processing
-
-import xml.etree.ElementTree as ET
-import json
-import csv
-import operator
-import base64
 import os.path
 import sys
 import shutil
@@ -22,139 +12,80 @@ import shlex
 import uuid
 import re
 import argparse
-import fnmatch
+import sqlite3
 from datetime import date
 
-import iiab.iiab_lib as iiab
+#import iiab.iiab_lib as iiab
 import iiab.adm_lib as adm
 
-verbose = False
+KALITEDIR = '/library/ka-lite'
+# ENDB = 'content_khan_en.sqlite'
+REMOTE_URL = 'http://s3.us-east-2.wasabisys.com/ka-lite-0.17-resized-videos/'
+LANG_LIST = ['en', 'es', 'fr', 'hi', 'pt-BR', 'pt-PT']
 
-oer2go_duplicates = {'en': [5, 6, 17, 19, 20, 23, 44, 50, 60, 65, 68, 86, 88, 93, 122, 139],
-  'es': [26, 49, 51, 53, 58, 59, 61, 63, 66, 69, 72, 75, 94],
-  'fr': [],
-  'misc': [98,114]}
-
-dup_list = []
-for lang in oer2go_duplicates:
-    dup_list += oer2go_duplicates[lang]
-dup_list = [str(i) for i in dup_list]
-
-iiab_oer2go_catalog = {}
-
-php_parser = re.compile('\<\?php echo .+? \?>')
+# assuming these are the case
+VIDEO_EXT = '.mp4'
+IMAGE_EXT = '.png'
 
 def main ():
-
-    global verbose
-    oer2go_catalog = {}
+    global REMOTE_URL
 
     args = parse_args()
-    if args.verbose:
-        verbose = True
+    lang_code = args.lang_code.lower()
+    REMOTE_URL += lang_code + '/'
+    sqlite_file = KALITEDIR + "/database/content_khan_" + lang_code + ".sqlite"
+    topics = args.topics
 
-    # make sure we have menu js_menu_dir if args.menu true
-    if args.menu:
-        if not os.path.isdir(adm.CONST.js_menu_dir):
-            sys.stdout.write("GET-OER2GO-CAT ERROR - iiab-menu not installed and --menu option given\n")
-            sys.stdout.flush()
-            sys.exit(99)
+    if lang_code not in LANG_LIST:
+        sys.stdout.write("Language must be one of ".join(LANG_LIST) + "n") # is this necessary?
+        sys.stdout.flush()
+        sys.exit(1)
 
-    # for now we will assume that old modules are still in the current catalog
-    # get new oer2go catalog unless told not to
+    if not os.path.isfile(sqlite_file):
+        print("Database " + sqlite_file + " not found. Exiting.")
+        sys.exit(1)
 
-    if not args.no_download:
-        try:
-            url_handle = urllib.request.urlopen(adm.CONST.oer2go_cat_url)
-            oer2go_catalog_json = url_handle.read()
-            url_handle.close()
-        except (urllib.error.URLError) as exc:
-            sys.stdout.write("GET-OER2GO-CAT ERROR - " + str(exc.reason) +'\n')
-            sys.stdout.flush()
+    conn = sqlite3.connect(sqlite_file)
+    c = conn.cursor()
+
+    # validate topics
+
+    for topic in topics:
+        c.execute("select path from item where kind = 'Topic' and path = ?", (topic,))
+        if len(c.fetchall()) == 0:
+            print("Topic " + topic + " not found in database. Exiting.")
             sys.exit(1)
-        try:
-            url_handle = urllib.request.urlopen(adm.CONST.iiab_module_cat_url)
-            iiab_catalog_json = url_handle.read()
-            url_handle.close()
-        except (urllib.error.URLError) as exc:
-            sys.stdout.write("GET-OER2GO-CAT ERROR - " + str(exc.reason) +'\n')
-            sys.stdout.flush()
-            sys.exit(2)
 
-        # now try to parse
-        try:
-            oer2go_catalog = json.loads(oer2go_catalog_json)
-            iiab_catalog = json.loads(iiab_catalog_json)
-        except:
-            sys.stdout.write("GET-OER2GO-CAT ERROR - " + str(sys.exc_info()[0]) + "," +  str(sys.exc_info()[1])  + '\n')
-            sys.stdout.flush()
-            sys.exit(3)
+    # now get videos for all topics and sub topics
 
-        # merge iiab_catalog.json if was downloaded otherwise assume was previously merged
-        for item in iiab_catalog:
-            moddir = item['moddir']
-            id = item['module_id']
-            module = item
-            iiab_oer2go_catalog[moddir] = module
-
-    else:
-        local_oer2go_catalog = adm.read_json(adm.CONST.oer2go_catalog_file)
-        oer2go_catalog = local_oer2go_catalog['modules']
-
-    working_dir = adm.CONST.rachel_working_dir + str(uuid.uuid4()) + "/"
-    os.mkdir(working_dir)
-    #os.mkdir(iiab_menu_download_dir)
-
-    for item in oer2go_catalog: # structure of local and remote catalogs is different
-        if args.no_download: # local
-            moddir = item
-            module = oer2go_catalog[moddir]
-            module_id = module['module_id']
-        else: # remote
-            moddir = item['moddir']
-            module_id = item['module_id']
-            module = item
-
-        if moddir is None: # skip items with no moddir
-            continue
-
-        menu_item_name = moddir
-        if module_id not in dup_list:
-            is_downloaded, has_menu_def = adm.get_module_status (module)
-            if args.menu and is_downloaded:
-                if not has_menu_def:
-                    menu_item_name = adm.create_module_menu_def(module, working_dir, incl_extra_html = False)
-                    msg = "Generating menu files"
-                    if verbose:
-                        print("%s %s %s" % (msg, module_id, moddir))
-                adm.update_menu_json(menu_item_name) # only adds if not already in menu
-        else:
-            msg = "Skipping module not needed by Internet in a Box"
-            if verbose:
-                print("%s %s %s" % (msg, module_id, moddir))
-            continue
-        iiab_oer2go_catalog[moddir] = module
-
-    # no need to write catalog if not downloaded as we don't need wip and other extra menu def fields
-    if not args.no_download:
-        dated_oer2go_cat = {}
-        dated_oer2go_cat['download_date'] = time.strftime("%Y-%m-%d.%H:%M:%S")
-        dated_oer2go_cat['modules'] = iiab_oer2go_catalog
-
-        with open(adm.CONST.oer2go_catalog_file, 'w') as outfile:
-            json.dump(dated_oer2go_cat, outfile, indent=2)
-
-    shutil.rmtree(working_dir)
+    for topic in topics:
+        topic_like = topic + '%'
+        c.execute('SELECT youtube_id, path FROM item WHERE kind = "Video" and youtube_id is not null and path like ?', (topic_like,))
+        video_list = c.fetchall()
+        get_topic_videos(video_list)
 
     sys.stdout.write("SUCCESS")
     sys.stdout.flush()
     sys.exit(0)
 
+def get_topic_videos(video_list):
+    for video_id in video_list:
+        vid = video_id[0] + VIDEO_EXT
+        image = video_id[0] + IMAGE_EXT
+        for f in [vid, image]:
+            if not os.path.isfile(KALITEDIR + "/content/" + f):
+                download_file(f)
+
+def download_file(file):
+    cmd = 'wget -O /tmp/' + file + ' ' + REMOTE_URL + file
+    adm.subproc_cmd(cmd)
+    shutil.move('/tmp/' + file, KALITEDIR + '/content/')
+
 def parse_args():
-    parser = argparse.ArgumentParser(description="Get Rachel/OER2Go catalog. Create menu defs if not found.")
-    parser.add_argument("--no_download", help="Don't download catalog just check which modules are installed", action="store_true")
-    parser.add_argument("--menu", help="When downloading generate files for IIAB menu and put them in iiab-menu/local/unedited", action="store_true")
-    parser.add_argument("-v", "--verbose", help="Print messages.", action="store_true")
+    parser = argparse.ArgumentParser(description="Install KA Lite Videos by Category.")
+    parser.add_argument("lang_code", help="Two character languare code")
+    parser.add_argument("topics", help="List of KA Lite Topics to Download", type=str, nargs='+')
+    #parser.add_argument("-v", "--verbose", help="Print messages.", action="store_true")
     return parser.parse_args()
 
 if __name__ == "__main__":
