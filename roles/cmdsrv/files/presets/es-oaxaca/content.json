@@ -32,7 +32,7 @@
       "osm_central_america_z11-z14_2019.mbtiles"
     ],
     "kalite": {
-      "lang_pack": "es",
-      "video_nodes": ["khan/"]
+      "lang_code": "es",
+      "topics": ["khan/"]
     }
 }
