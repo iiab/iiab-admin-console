@@ -1,0 +1,17 @@
+{
+    "zims": [
+      "artofproblemsolving_en_all_maxi",
+      "wikem_en_all_maxi"
+    ],
+    "modules": [
+      "en-afristory",
+      "en-wassce"
+    ],
+    "maps": [
+      "satellite_z0-z9_v3.mbtiles"
+    ],
+    "kalite": {
+      "lang_code": "es",
+      "topics": ["khan/math/trigonometry/"]
+    }
+}
