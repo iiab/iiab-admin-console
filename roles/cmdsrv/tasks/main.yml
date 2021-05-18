@@ -113,7 +113,7 @@
 
 - name: Copy presets recursively
   copy: src=presets
-            dest="{{ cmdsrv_dir }}/presets"
+            dest="{{ cmdsrv_dir }}"
             mode=0755
             owner=root
             group=root
