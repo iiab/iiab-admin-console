@@ -59,10 +59,20 @@ def main ():
     # now get videos for all topics and sub topics
 
     for topic in topics:
-        topic_like = topic + '%'
-        c.execute('SELECT youtube_id, path FROM item WHERE kind = "Video" and youtube_id is not null and path like ?', (topic_like,))
-        video_list = c.fetchall()
-        get_topic_videos(video_list)
+        try:
+            c.execute('SELECT youtube_id, path FROM item WHERE kind = "Video" and youtube_id is not null and path like ?', (topic + '%',))
+            video_list = c.fetchall()
+            get_topic_videos(video_list)
+        except:
+            print('Error getting downloads. Exiting.')
+            sys.exit(1)
+
+    # do video scan with kalite manage
+
+    cmd = 'kalite manage videoscan -l' + lang_code
+    adm.subproc_cmd(cmd)
+
+    # exit 0 when complete
 
     sys.stdout.write("SUCCESS")
     sys.stdout.flush()
@@ -78,8 +88,13 @@ def get_topic_videos(video_list):
 
 def download_file(file):
     cmd = 'wget -O /tmp/' + file + ' ' + REMOTE_URL + file
-    adm.subproc_cmd(cmd)
-    shutil.move('/tmp/' + file, KALITEDIR + '/content/')
+    try:
+        adm.subproc_cmd(cmd)
+        shutil.move('/tmp/' + file, KALITEDIR + '/content/')
+    except Exception as e:
+        print('Error downloading ' + file)
+        print(e)
+        raise
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Install KA Lite Videos by Category.")

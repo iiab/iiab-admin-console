@@ -759,6 +759,7 @@ def cmd_handler(cmd_msg):
         "INST-OSM-VECT-SET": {"funct": install_osm_vect_set, "inet_req": True},
         "INST-SAT-AREA": {"funct": install_sat_area, "inet_req": True},
         "GET-OSM-VECT-STAT": {"funct": get_osm_vect_stat, "inet_req": False},
+        "INST-KALITE": {"funct": install_kalite, "inet_req": True},
         "DEL-DOWNLOADS": {"funct": del_downloads, "inet_req": False},
         "DEL-MODULES": {"funct": del_modules, "inet_req": False},
         "GET-MENU-ITEM-DEF-LIST": {"funct": get_menu_item_def_list, "inet_req": False},
@@ -1972,8 +1973,10 @@ def install_presets(cmd_info):
 
     # kalite
 
-    kalite_nodes = content['kalite']
-
+    kalite_cmd_info = cmd_info
+    kalite_cmd_info['cmd'] = 'INST-KALITE'
+    kalite_cmd_info['cmd_args'] = content['kalite']
+    resp = install_kalite(kalite_cmd_info)
 
     resp = cmd_success_msg(cmd_info['cmd'], "All jobs scheduled")
     return resp
@@ -2443,6 +2446,30 @@ def get_osm_vect_stat(cmd_info):
 # def get_osm_vect_installed_list(device=""):
 #    osm_vect_installed = os.listdir(vector_map_tiles_path)
 
+def install_kalite(cmd_info):
+    global ansible_running_flag
+    global jobs_requested
+    if 'cmd_args' in cmd_info:
+        lang_code = cmd_info['cmd_args']['lang_code']
+        topics = cmd_info['cmd_args']['topics']
+    else:
+        return cmd_malformed(cmd_info['cmd'])
+
+    # validate topics (? or do in script)
+
+    # run kalite_install_lang.sh
+    next_step = 1
+    job_id = -1
+    job_command = "scripts/kalite_install_lang.sh " + lang_code
+    job_id = request_one_job(cmd_info, job_command, next_step, job_id, "Y")
+
+    next_step += 1
+
+    # run kalite_install_videos.py
+    job_command = "scripts/kalite_install_videos.py " + lang_code + " ".join(topics)
+    resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=next_step, depend_on_job_id=job_id, has_dependent="N")
+
+    return resp
 
 # Content Menu Commands
 

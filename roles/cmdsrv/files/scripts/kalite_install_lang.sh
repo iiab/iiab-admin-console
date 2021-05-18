@@ -58,8 +58,14 @@ if [ "$LANG" != "en" ]; then # get secondary lang pack
   echo "Installing $LANG Pack"
   cd /tmp
   kalite manage retrievecontentpack local $LANG $LANG.zip
-fi
 
-sqlite3 $KALITEDIR/database/data.sqlite "update config_settings set value = '$LANG' where name = 'default_language';"
+  # mostly this needs an insert not update
+  # sqlite3 $KALITEDIR/database/data.sqlite "update config_settings set value = '$LANG' where name = 'default_language';"
+  ISLANGSET=`grep LANGUAGE_CODE "$KALITEDIR/settings.py"`
+  if [ -z "$ISLANGSET" ]; then
+    echo  LANGUAGE_CODE = "'$LANG'" >> "$KALITEDIR/settings.py"
+    systemctl restart kalite-serve
+  fi
+fi
 
 exit 0
