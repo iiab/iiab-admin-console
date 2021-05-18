@@ -2467,7 +2467,7 @@ def install_kalite(cmd_info):
     next_step += 1
 
     # run kalite_install_videos.py
-    job_command = "scripts/kalite_install_videos.py " + lang_code + + " " + " ".join(topics)
+    job_command = "scripts/kalite_install_videos.py " + lang_code + " " + " ".join(topics)
     resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=next_step, depend_on_job_id=job_id, has_dependent="N")
 
     return resp
