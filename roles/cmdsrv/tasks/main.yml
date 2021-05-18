@@ -50,6 +50,7 @@
     - "{{ cmdsrv_dir }}"
     - "{{ cmdsrv_dir }}/scripts"
     - "{{ cmdsrv_dir }}/assets"
+    - "{{ cmdsrv_dir }}/presets"
 
 - name: Install Command Server Executable
   copy: src=iiab-cmdsrv3.py
@@ -109,6 +110,13 @@
             group=root
   with_fileglob:
             - assets/*
+
+- name: Copy presets recursively
+  copy: src=presets
+            dest="{{ cmdsrv_dir }}/presets"
+            mode=0755
+            owner=root
+            group=root
 
 - name: Allow running iiab_update_menus from the command line
   file: src="{{ cmdsrv_dir }}/scripts/iiab_update_menus.py"
