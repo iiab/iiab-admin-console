@@ -353,7 +353,7 @@ def job_minder_thread(client_url, worker_control_url, context=None):
                 continue
 
             # don't create ansible job if one is running
-            if job_info['cmd'] in ["RUN-ANSIBLE", "RESET-NETWORK"] and ansible_running_flag == True:
+            if job_info['cmd'] in ["RUN-ANSIBLE", "RESET-NETWORK", "RUN-ANSIBLE-ROLES"] and ansible_running_flag == True:
                 continue
 
             # don't start job if at max allowed
@@ -562,7 +562,7 @@ def start_job(job_id, job_info, status='STARTED'):
     if job_id in prereq_jobs:
         prereq_jobs[job_id]['status'] = 'STARTED'
 
-    if job_info['cmd'] in ["RUN-ANSIBLE", "RESET-NETWORK"]:
+    if job_info['cmd'] in ["RUN-ANSIBLE", "RESET-NETWORK", "RUN-ANSIBLE-ROLES"]:
         ansible_running_flag = True
 
     if status == 'STARTED':
@@ -621,7 +621,7 @@ def end_job(job_id, job_info, status): # modify to use tail of job_output
     upd_job_finished(job_id, job_output, status)
     os.remove(output_file)
 
-    if job_info['cmd'] in ["RUN-ANSIBLE", "RESET-NETWORK"]:
+    if job_info['cmd'] in ["RUN-ANSIBLE", "RESET-NETWORK", "RUN-ANSIBLE-ROLES"]:
         ansible_running_flag = False
         #if status == "SUCCEEDED":
         read_iiab_ini_file() # reread ini file after running ansible
@@ -759,6 +759,7 @@ def cmd_handler(cmd_msg):
         "INST-OSM-VECT-SET": {"funct": install_osm_vect_set, "inet_req": True},
         "INST-SAT-AREA": {"funct": install_sat_area, "inet_req": True},
         "GET-OSM-VECT-STAT": {"funct": get_osm_vect_stat, "inet_req": False},
+        "INST-KALITE": {"funct": install_kalite, "inet_req": True},
         "DEL-DOWNLOADS": {"funct": del_downloads, "inet_req": False},
         "DEL-MODULES": {"funct": del_modules, "inet_req": False},
         "GET-MENU-ITEM-DEF-LIST": {"funct": get_menu_item_def_list, "inet_req": False},
@@ -1665,7 +1666,7 @@ def set_white_list(cmd_info):
 def get_kiwix_catalog(cmd_info):
     outp = subproc_check_output(["scripts/get_kiwix_catalog"])
     if outp == "SUCCESS":
-        read_kiwix_catalog()
+        read_kiwix_catalog
         resp = cmd_success("GET-KIWIX-CAT")
         return (resp)
     else:
@@ -1889,8 +1890,96 @@ def get_rachel_modules(module_dir, state):
     return (modules)
 
 def install_presets(cmd_info):
+    # first pass we will just call various command handlers and evaluate resp
+    # INST-PRESETS '{"cmd_args":{"preset_id":"test"}}'
+    # test with iiab-cmdsrv-ctl 'INST-PRESETS {"preset_id":"test"}'
+    #print(cmd_info)
+    presets_dir = 'presets/'
+    if 'cmd_args' not in cmd_info:
+        return cmd_malformed(cmd_info['cmd'])
+    else:
+        preset_id = cmd_info['cmd_args']['preset_id']
+        if not os.path.isdir(presets_dir + preset_id): # currently a preset is a directory in presets dir
+            return cmd_error(cmd='INST-PRESETS', msg='Preset ' + preset_id + ' not found.')
 
-    resp = cmd_success_msg(cmd_info['cmd'], "All jobs scheduled")
+    # get preset definition
+    src_dir = presets_dir + preset_id + '/'
+    preset = adm.read_json(src_dir + 'preset.json')
+    menu = adm.read_json(src_dir + 'menu.json') # actually only need to cp the file
+    content = adm.read_json(src_dir + 'content.json')
+    vars = adm.read_yaml(src_dir + 'vars.yml')
+
+    # check for sufficient storage
+
+    # add vars to local_vars and run roles
+    adm.write_iiab_local_vars(vars)
+    resp = run_ansible_roles(cmd_info)
+    # All roles installed also returns error "All Roles are already As Requested"
+    if 'Error' in resp:
+        if not 'All Roles are already As Requested' in resp: # pretty klugey
+            return cmd_error(cmd='INST-PRESETS', msg='Ansible install step failed. Please try again.')
+
+    # now do content areas
+    # how to wait for ansible to complete
+    # ?don't start any jobs if ansible is running, lines 350ff
+    # but ansible failure will release remaining jobs
+    # ? add global ansible job no
+
+    # ? check to see if content already installed
+
+    # ZIMs
+    # create list of ids using most recent url
+
+    zim_list = content['zims']
+    perma_ref_idx = {}
+    for zim_id in kiwix_catalog:
+        if kiwix_catalog[zim_id]['perma_ref'] in zim_list:
+            perma_ref = kiwix_catalog[zim_id]['perma_ref']
+            url = kiwix_catalog[zim_id]['url'].split('.meta')[0]
+            print (zim_id, perma_ref, url)
+            if perma_ref not in perma_ref_idx:
+                perma_ref_idx[perma_ref] = {'id': zim_id, 'url': url}
+            else:
+                if url > perma_ref_idx[perma_ref]['url']:
+                    perma_ref_idx[perma_ref] = {'id': zim_id, 'url': url}
+
+    #cmd_info['cmd_rowid'] = cmd_rowid
+    #cmd_info['cmd_msg'] = cmd_msg
+    #cmd_info['cmd'] = cmd
+    #cmd_info['cmd_args'] = cmd_args
+
+    zim_cmd_info = cmd_info
+    for ref in perma_ref_idx:
+        zim_cmd_info['cmd'] ='INST-ZIM'
+        zim_cmd_info['cmd_args'] = {'zim_id': perma_ref_idx[ref]['id']}
+        resp = install_zims(zim_cmd_info)
+
+    # modules
+
+    module_cmd_info = cmd_info
+    module_list = content['modules']
+    for module in module_list:
+        module_cmd_info['cmd'] = 'INST-OER2GO-MOD'
+        module_cmd_info['cmd_args'] = {'moddir': module}
+        resp = install_oer2go_mod(module_cmd_info)
+
+    # maps
+
+    map_cmd_info = cmd_info
+    map_list = content['maps']
+    for map in map_list:
+        map_cmd_info['cmd'] = 'INST-OSM-VECT-SET'
+        map_cmd_info['cmd_args'] = {'osm_vect_id': map}
+        resp = install_osm_vect_set_v2(map_cmd_info)
+
+    # kalite
+
+    kalite_cmd_info = cmd_info
+    kalite_cmd_info['cmd'] = 'INST-KALITE'
+    kalite_cmd_info['cmd_args'] = content['kalite']
+    resp = install_kalite(kalite_cmd_info)
+
+    resp = cmd_success_msg('INST-PRESETS', "All jobs scheduled")
     return resp
 
 def install_zims(cmd_info):
@@ -2358,6 +2447,30 @@ def get_osm_vect_stat(cmd_info):
 # def get_osm_vect_installed_list(device=""):
 #    osm_vect_installed = os.listdir(vector_map_tiles_path)
 
+def install_kalite(cmd_info):
+    global ansible_running_flag
+    global jobs_requested
+    if 'cmd_args' in cmd_info:
+        lang_code = cmd_info['cmd_args']['lang_code']
+        topics = cmd_info['cmd_args']['topics']
+    else:
+        return cmd_malformed(cmd_info['cmd'])
+
+    # validate topics (? or do in script)
+
+    # run kalite_install_lang.sh
+    next_step = 1
+    job_id = -1
+    job_command = "scripts/kalite_install_lang.sh " + lang_code
+    job_id = request_one_job(cmd_info, job_command, next_step, job_id, "Y")
+
+    next_step += 1
+
+    # run kalite_install_videos.py
+    job_command = "scripts/kalite_install_videos.py " + lang_code + " " + " ".join(topics)
+    resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=next_step, depend_on_job_id=job_id, has_dependent="N")
+
+    return resp
 
 # Content Menu Commands
 
