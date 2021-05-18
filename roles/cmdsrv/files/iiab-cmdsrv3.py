@@ -1892,6 +1892,7 @@ def get_rachel_modules(module_dir, state):
 def install_presets(cmd_info):
     # first pass we will just call various command handlers and evaluate resp
     # INST-PRESETS '{"cmd_args":{"preset_id":"test"}}'
+    # test with iiab-cmdsrv-ctl 'INST-PRESETS {"preset_id":"test"}'
     #print(cmd_info)
     presets_dir = 'presets/'
     if 'cmd_args' not in cmd_info:
@@ -1899,7 +1900,7 @@ def install_presets(cmd_info):
     else:
         preset_id = cmd_info['cmd_args']['preset_id']
         if not os.path.isdir(presets_dir + preset_id): # currently a preset is a directory in presets dir
-            return cmd_error(cmd='INST-PRESET', msg='Preset ' + preset_id + ' not found.')
+            return cmd_error(cmd='INST-PRESETS', msg='Preset ' + preset_id + ' not found.')
 
     # get preset definition
     src_dir = presets_dir + preset_id + '/'
@@ -1916,7 +1917,7 @@ def install_presets(cmd_info):
     # All roles installed also returns error "All Roles are already As Requested"
     if 'Error' in resp:
         if not 'All Roles are already As Requested' in resp: # pretty klugey
-            return cmd_error(cmd='INST-PRESET', msg='Ansible install step failed. Please try again.')
+            return cmd_error(cmd='INST-PRESETS', msg='Ansible install step failed. Please try again.')
 
     # now do content areas
     # how to wait for ansible to complete
@@ -1978,7 +1979,7 @@ def install_presets(cmd_info):
     kalite_cmd_info['cmd_args'] = content['kalite']
     resp = install_kalite(kalite_cmd_info)
 
-    resp = cmd_success_msg(cmd_info['cmd'], "All jobs scheduled")
+    resp = cmd_success_msg('INST-PRESETS', "All jobs scheduled")
     return resp
 
 def install_zims(cmd_info):
@@ -2466,7 +2467,7 @@ def install_kalite(cmd_info):
     next_step += 1
 
     # run kalite_install_videos.py
-    job_command = "scripts/kalite_install_videos.py " + lang_code + " ".join(topics)
+    job_command = "scripts/kalite_install_videos.py " + lang_code + + " " + " ".join(topics)
     resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=next_step, depend_on_job_id=job_id, has_dependent="N")
 
     return resp

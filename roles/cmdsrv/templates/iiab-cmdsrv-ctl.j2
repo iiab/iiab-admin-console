@@ -20,6 +20,7 @@ seconds_polled = 0
 
 if  len(sys.argv) == 1 or len(sys.argv) > 3:
     print ('usage: cmdsrv-ctl "<command>" "<optional json argument>"')
+    # iiab-cmdsrv-ctl 'LIST-LIBR {"sub_dir":"zims"}' works
     sys.exit(1)
 
 cmd = sys.argv[1]
