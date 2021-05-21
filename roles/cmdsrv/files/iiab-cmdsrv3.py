@@ -136,7 +136,9 @@ prereq_jobs = {}
 jobs_running = {}
 running_job_count = 0
 
+ANSIBLE_COMMANDS = ["RUN-ANSIBLE", "RESET-NETWORK", "RUN-ANSIBLE-ROLES"]
 ansible_running_flag = False
+iiab_roles_status = {}
 daemon_mode = False
 init_error = False
 
@@ -353,7 +355,7 @@ def job_minder_thread(client_url, worker_control_url, context=None):
                 continue
 
             # don't create ansible job if one is running
-            if job_info['cmd'] in ["RUN-ANSIBLE", "RESET-NETWORK", "RUN-ANSIBLE-ROLES"] and ansible_running_flag == True:
+            if job_info['cmd'] in ANSIBLE_COMMANDS and ansible_running_flag == True:
                 continue
 
             # don't start job if at max allowed
@@ -384,6 +386,11 @@ def job_minder_thread(client_url, worker_control_url, context=None):
                         prereq_jobs_to_clear.append(depend_on_job_id) # mark for deletion
 
             else: # not a multi-step job or first step of multi
+                # don't start if depends on uninstalled or inactive service
+                service_required = job_info.get('service_required') # array that holds service and required state
+                if service_required:
+                    if not iiab_roles_status.get(service_required[0], {}).get(service_required[1]):
+                        continue
                 job_info = start_job(job_id, job_info) # Create running job
                 jobs_running[job_id] = job_info
                 jobs_requested_done.append(job_id)
@@ -562,7 +569,7 @@ def start_job(job_id, job_info, status='STARTED'):
     if job_id in prereq_jobs:
         prereq_jobs[job_id]['status'] = 'STARTED'
 
-    if job_info['cmd'] in ["RUN-ANSIBLE", "RESET-NETWORK", "RUN-ANSIBLE-ROLES"]:
+    if job_info['cmd'] in ANSIBLE_COMMANDS:
         ansible_running_flag = True
 
     if status == 'STARTED':
@@ -621,10 +628,11 @@ def end_job(job_id, job_info, status): # modify to use tail of job_output
     upd_job_finished(job_id, job_output, status)
     os.remove(output_file)
 
-    if job_info['cmd'] in ["RUN-ANSIBLE", "RESET-NETWORK", "RUN-ANSIBLE-ROLES"]:
+    if job_info['cmd'] in ANSIBLE_COMMANDS:
         ansible_running_flag = False
         #if status == "SUCCEEDED":
         read_iiab_ini_file() # reread ini file after running ansible
+        read_iiab_roles_stat() # refresh global iiab_roles_status
 
     running_job_count -= 1
     if running_job_count < 0:
@@ -1774,8 +1782,8 @@ def run_ansible_roles(cmd_info):
     # refresh effective_vars
     # assume default_vars is current
     read_iiab_local_vars() # read local vars and compute effective vars
+    read_iiab_roles_stat() # into global iiab_roles_status
 
-    roles_status = adm.get_roles_status()
     internet_avail = is_internet_avail()
     changed_local_vars = {}
 
@@ -1784,14 +1792,14 @@ def run_ansible_roles(cmd_info):
         lines = f.readlines()
 
     role_cnt = 0
-    for role in roles_status:
+    for role in iiab_roles_status:
         if not local_vars.get(role + '_install'):
             continue # for now skip unknown roles
         install = effective_vars[role + '_install']
-        installed = roles_status[role]['installed']
+        installed = iiab_roles_status[role]['installed']
         enable = effective_vars[role + '_enabled']
-        # enabled = roles_status[role]['enabled'] # some services show enabled-runtime
-        enabled = roles_status[role]['active']
+        # enabled = iiab_roles_status[role]['enabled'] # some services show enabled-runtime
+        enabled = iiab_roles_status[role]['active']
         if install == installed and enable == enabled:
             continue
         if role in adm.CONST.iiab_roles_renamed:
@@ -1832,8 +1840,13 @@ def run_ansible_roles(cmd_info):
     return resp
 
 def get_roles_stat(cmd_info):
-    resp = json.dumps(adm.get_roles_status())
+    read_iiab_roles_stat() # into global iiab_roles_status
+    resp = json.dumps(iiab_roles_status)
     return (resp)
+
+def read_iiab_roles_stat():
+    global iiab_roles_status
+    iiab_roles_status = adm.get_roles_status()
 
 def get_rachel_stat(cmd_info):
     # see if rachel installed from iiab_ini
@@ -1977,6 +1990,7 @@ def install_presets(cmd_info):
     kalite_cmd_info = cmd_info
     kalite_cmd_info['cmd'] = 'INST-KALITE'
     kalite_cmd_info['cmd_args'] = content['kalite']
+    kalite_cmd_info['service_required'] = ['kalite', 'active']
     resp = install_kalite(kalite_cmd_info)
 
     resp = cmd_success_msg('INST-PRESETS', "All jobs scheduled")
@@ -3046,6 +3060,7 @@ def init():
     read_iiab_vars()
     get_install_vars_init()
     read_iiab_ini_file()
+    read_iiab_roles_stat() # into global iiab_roles_status
 
     # Get ansible facts for localhost
     get_ansible_facts()
@@ -3169,7 +3184,7 @@ def read_iiab_default_vars():
     global default_vars
     default_vars = adm.read_yaml(iiab_repo + "/vars/default_vars.yml")
 
-def read_iiab_vars():
+def read_iiab_vars(): # and role status
     global default_vars
     global local_vars
     global effective_vars
