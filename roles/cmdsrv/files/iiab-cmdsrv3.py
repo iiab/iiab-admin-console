@@ -158,8 +158,8 @@ db_lock = threading.Lock() # for sqlite db concurrency
 # effective is composite where local takes precedence
 
 adm_conf = {} # for use by front end
-default_vars = {}
-local_vars = {}
+default_vars = {} # /opt/iiab/iiab/vars/default_vars.yml
+local_vars = {} # /etc/iiab/local_vars.yml
 effective_vars = {}
 ansible_facts = {}
 ansible_tags = {}
@@ -1041,7 +1041,7 @@ def get_install_vars(cmd_info):
     resp = json.dumps(effective_vars)
     return (resp)
 
-def get_install_vars_init():
+def OBSOL_get_install_vars_init():
     # assumes default vars already read
     read_iiab_local_vars() # any errors are raised
 
@@ -3057,8 +3057,11 @@ def init():
     app_config()
 
     # Read vars from ansible file into global vars
-    read_iiab_vars()
-    get_install_vars_init()
+    read_iiab_default_vars()
+    read_iiab_local_vars()
+    # REMOVE OBSOLETE
+    # read_iiab_vars()
+    # get_install_vars_init()
     read_iiab_ini_file()
     read_iiab_roles_stat() # into global iiab_roles_status
 
@@ -3137,9 +3140,9 @@ def read_iiab_ini_file():
 
 def read_iiab_local_vars():
     global local_vars
-
     try:
-        local_vars = adm.read_yaml(iiab_local_vars_file)
+        vars_dict = adm.read_yaml(iiab_local_vars_file)
+        local_vars = adm.jinja2_subst(vars_dict, dflt_dict=default_vars)
         merge_effective_vars()
     except Exception as e:
         local_vars_error = "Error in " + iiab_local_vars_file
@@ -3150,41 +3153,23 @@ def read_iiab_local_vars():
         raise
 
 def merge_effective_vars():
+    # assumes default_vars was read in init()
+    # assumes adm.jinja2_subst() has done substitutions on both
     # combine vars with local taking precedence
-    # exclude derived vars marked by {
+    # OK. a little simpler than before
+    global effective_vars
 
-    for key in default_vars:
-        if isinstance(default_vars[key], str):
-            findpos = default_vars[key].find("{")
-            if findpos == -1:
-                effective_vars[key] = default_vars[key]
-        else:
-            effective_vars[key] = default_vars[key]
-
-    for key in local_vars:
-        if isinstance(local_vars[key], str):
-            findpos = local_vars[key].find("{")
-            if findpos == -1:
-                effective_vars[key] = local_vars[key]
-        else:
-            effective_vars[key] = local_vars[key]
-
-def merge_config_vars(config_vars):
-    # put config vars in effective vars on write
-
-    for key in config_vars:
-        if isinstance(config_vars[key], str):
-            findpos = config_vars[key].find("{")
-            if findpos == -1:
-                effective_vars[key] = config_vars[key]
-        else:
-            effective_vars[key] = config_vars[key]
+    effective_vars = {**default_vars , **local_vars}
 
 def read_iiab_default_vars():
     global default_vars
-    default_vars = adm.read_yaml(iiab_repo + "/vars/default_vars.yml")
+    vars_dict = adm.read_yaml(iiab_repo + "/vars/default_vars.yml")
+    default_vars = adm.jinja2_subst(vars_dict)
 
-def read_iiab_vars(): # and role status
+def OBSOL_read_iiab_vars():
+    # retain for alternate ansible variable logic
+    # assumes default_vars was read in init()
+    # and role status
     global default_vars
     global local_vars
     global effective_vars
