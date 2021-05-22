@@ -1906,6 +1906,7 @@ def install_presets(cmd_info):
     # first pass we will just call various command handlers and evaluate resp
     # INST-PRESETS '{"cmd_args":{"preset_id":"test"}}'
     # test with iiab-cmdsrv-ctl 'INST-PRESETS {"preset_id":"test"}'
+
     #print(cmd_info)
     presets_dir = 'presets/'
     if 'cmd_args' not in cmd_info:
@@ -1924,6 +1925,33 @@ def install_presets(cmd_info):
 
     # check for sufficient storage
 
+    # add roles needed by content but not requested
+
+    planned_vars = adm.jinja2_subst(vars, dflt_dict=effective_vars)
+    zim_list = content['zims']
+    module_list = content['modules'] # service is web server which is always installed
+    map_list = content['maps']
+    kalite_vars = content['kalite']
+    needed_services = []
+
+    if len(zim_list) > 0:
+        if planned_vars['kiwix_install'] != True or planned_vars['kiwix_enabled'] != True:
+            needed_services.append('Kixix')
+            vars['kiwix_install'] = True
+            vars['kiwix_enabled'] = True
+    elif len(map_list) > 0:
+        if planned_vars['osm_vector_maps_install'] != True or planned_vars['osm_vector_maps_enabled'] != True:
+            needed_services.append('OSM Vector Maps')
+            vars['osm_vector_maps_install'] = True
+            vars['osm_vector_maps_enabled'] = True
+    elif len(kalite_vars) > 0:
+        if planned_vars['kalite_install'] != True or planned_vars['kalite_enabled'] != True:
+            needed_services.append('KA Lite')
+            vars['kalite_install'] = True
+            vars['kalite_enabled'] = True
+
+    services_needed_error = ', '.join(needed_services)
+
     # add vars to local_vars and run roles
     adm.write_iiab_local_vars(vars)
     resp = run_ansible_roles(cmd_info)
@@ -1933,8 +1961,9 @@ def install_presets(cmd_info):
             return cmd_error(cmd='INST-PRESETS', msg='Ansible install step failed. Please try again.')
 
     # now do content areas
-    # how to wait for ansible to complete
-    # ?don't start any jobs if ansible is running, lines 350ff
+    # will block if required service is not yet active
+
+    # don't start any jobs if ansible is running, lines 350ff
     # but ansible failure will release remaining jobs
     # ? add global ansible job no
 
@@ -1950,16 +1979,11 @@ def install_presets(cmd_info):
             perma_ref = kiwix_catalog[zim_id]['perma_ref']
             url = kiwix_catalog[zim_id]['url'].split('.meta')[0]
             print (zim_id, perma_ref, url)
-            if perma_ref not in perma_ref_idx:
+            if perma_ref not in perma_ref_idx: # find most recent zim
                 perma_ref_idx[perma_ref] = {'id': zim_id, 'url': url}
             else:
                 if url > perma_ref_idx[perma_ref]['url']:
                     perma_ref_idx[perma_ref] = {'id': zim_id, 'url': url}
-
-    #cmd_info['cmd_rowid'] = cmd_rowid
-    #cmd_info['cmd_msg'] = cmd_msg
-    #cmd_info['cmd'] = cmd
-    #cmd_info['cmd_args'] = cmd_args
 
     zim_cmd_info = cmd_info
     for ref in perma_ref_idx:
@@ -1990,14 +2014,15 @@ def install_presets(cmd_info):
     kalite_cmd_info = cmd_info
     kalite_cmd_info['cmd'] = 'INST-KALITE'
     kalite_cmd_info['cmd_args'] = content['kalite']
-    kalite_cmd_info['service_required'] = ['kalite', 'active']
     resp = install_kalite(kalite_cmd_info)
 
-    resp = cmd_success_msg('INST-PRESETS', "All jobs scheduled")
+    if len(services_needed_error) > 0:
+        resp = cmd_error(cmd='INST-PRESETS', msg='WARNING: The following services were added - ' + services_needed_error)
+    else:
+        resp = cmd_success_msg('INST-PRESETS', "All jobs scheduled")
     return resp
 
 def install_zims(cmd_info):
-
     global ansible_running_flag
     global jobs_requested
     global kiwix_catalog
@@ -2009,6 +2034,12 @@ def install_zims(cmd_info):
         else:
             resp = cmd_error(cmd='INST-ZIMS', msg='Zim ID not found in Command')
             return resp
+
+        if 'service_required' in cmd_info['cmd_args']: # allow caller to supply
+            cmd_info['service_required'] = cmd_info['cmd_args']['service_required']
+        else:
+            cmd_info['service_required'] = ['kiwix', 'active']
+
 
         downloadSrcFile = kiwix_catalog[zimId]['download_url']
         print(downloadSrcFile)
@@ -2369,6 +2400,11 @@ def install_osm_vect_set_v2(cmd_info):
     else:
         return cmd_malformed(cmd_info['cmd'])
 
+    if 'service_required' in cmd_info['cmd_args']: # allow caller to supply
+        cmd_info['service_required'] = cmd_info['cmd_args']['service_required']
+    else:
+        cmd_info['service_required'] = ['osm_vector_maps', 'active']
+
     #download_url = maps_catalog[map_id]['detail_url']
     # hard coding for now as the control vars don't make much sense
     if maps_download_src == 'iiab.me':
@@ -2469,6 +2505,11 @@ def install_kalite(cmd_info):
         topics = cmd_info['cmd_args']['topics']
     else:
         return cmd_malformed(cmd_info['cmd'])
+
+    if 'service_required' in cmd_info['cmd_args']: # allow caller to supply
+        cmd_info['service_required'] = cmd_info['cmd_args']['service_required']
+    else:
+        cmd_info['service_required'] = ['kalite', 'active']
 
     # validate topics (? or do in script)
 
@@ -2767,6 +2808,7 @@ def request_one_job(cmd_info, job_command, cmd_step_no, depend_on_job_id, has_de
     job_info['cmd'] = cmd_info['cmd']
     job_info['cmd_args'] = cmd_info['cmd_args']
     job_info['extra_vars'] = cmd_info.get('extra_vars', None) # optional
+    job_info['service_required'] = cmd_info.get('service_required', None) # only some commands
 
     job_info['cmd_step_no'] = cmd_step_no
     job_info['depend_on_job_id'] = depend_on_job_id
