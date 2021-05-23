@@ -3432,11 +3432,13 @@ def get_incomplete_jobs():
         job_info = {}
         parse = cmd_msg.split(' ')
         job_info['cmd'] = parse[0]
+        if len(parse) > 1:
+            job_info['cmd_args'] = cmd_msg.split(job_info['cmd'] + ' ')[1]
 
-        try:
-            job_info['cmd_args'] = json.loads(parse[1])
-        except IndexError:
-           job_info['cmd_args'] =  {}
+        #try:
+        #    job_info['cmd_args'] = json.loads(parse[1])
+        #except IndexError:
+        #   job_info['cmd_args'] =  {}
 
         job_info['cmd_rowid'] = cmd_rowid
         job_info['job_command'] = job_command
@@ -3606,15 +3608,16 @@ def app_config():
 def compute_vars():
     global adm_conf
     global osm_version
+    # only support the older version of vector maps if is in local_vars
     # calculate osm version
     if 'osm_version' in local_vars:
         adm_conf['osm_version'] = local_vars['osm_version']
-    elif os.path.exists(vector_map_path + '/installer'):
-        adm_conf['osm_version'] = 'V2'
-    elif os.path.exists(vector_map_path):
-        adm_conf['osm_version'] = 'V1'
+    #elif os.path.exists(vector_map_path + '/installer'):
+    #    adm_conf['osm_version'] = 'V2'
+    #elif os.path.exists(vector_map_path):
+    #    adm_conf['osm_version'] = 'V1'
     else:
-        adm_conf['osm_version'] = None
+        adm_conf['osm_version'] = 'V2'
     osm_version = adm_conf['osm_version']
     return
 
