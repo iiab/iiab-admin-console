@@ -633,6 +633,8 @@ def end_job(job_id, job_info, status): # modify to use tail of job_output
         #if status == "SUCCEEDED":
         read_iiab_ini_file() # reread ini file after running ansible
         read_iiab_roles_stat() # refresh global iiab_roles_status
+        print('read role stat')
+        print(iiab_roles_status)
 
     running_job_count -= 1
     if running_job_count < 0:
@@ -1927,7 +1929,7 @@ def install_presets(cmd_info):
 
     # add roles needed by content but not requested
 
-    planned_vars = adm.jinja2_subst(vars, dflt_dict=effective_vars)
+    planned_vars = {**effective_vars, **vars}
     zim_list = content['zims']
     module_list = content['modules'] # service is web server which is always installed
     map_list = content['maps']
@@ -1939,12 +1941,12 @@ def install_presets(cmd_info):
             needed_services.append('Kixix')
             vars['kiwix_install'] = True
             vars['kiwix_enabled'] = True
-    elif len(map_list) > 0:
+    if len(map_list) > 0:
         if planned_vars['osm_vector_maps_install'] != True or planned_vars['osm_vector_maps_enabled'] != True:
             needed_services.append('OSM Vector Maps')
             vars['osm_vector_maps_install'] = True
             vars['osm_vector_maps_enabled'] = True
-    elif len(kalite_vars) > 0:
+    if len(kalite_vars) > 0:
         if planned_vars['kalite_install'] != True or planned_vars['kalite_enabled'] != True:
             needed_services.append('KA Lite')
             vars['kalite_install'] = True
@@ -1954,7 +1956,13 @@ def install_presets(cmd_info):
 
     # add vars to local_vars and run roles
     adm.write_iiab_local_vars(vars)
+    ansible_cmd_info = cmd_info
+    ansible_cmd_info['cmd'] ='RUN-ANSIBLE-ROLES'
+    ansible_cmd_info['cmd_args'] = {}
+
+    ansible_cmd_info = pseudo_cmd_handler(ansible_cmd_info, check_dup=False)
     resp = run_ansible_roles(cmd_info)
+
     # All roles installed also returns error "All Roles are already As Requested"
     if 'Error' in resp:
         if not 'All Roles are already As Requested' in resp: # pretty klugey
@@ -1989,7 +1997,9 @@ def install_presets(cmd_info):
     for ref in perma_ref_idx:
         zim_cmd_info['cmd'] ='INST-ZIM'
         zim_cmd_info['cmd_args'] = {'zim_id': perma_ref_idx[ref]['id']}
-        resp = install_zims(zim_cmd_info)
+        zim_cmd_info = pseudo_cmd_handler(zim_cmd_info)
+        if zim_cmd_info:
+            resp = install_zims(zim_cmd_info)
 
     # modules
 
@@ -1998,7 +2008,9 @@ def install_presets(cmd_info):
     for module in module_list:
         module_cmd_info['cmd'] = 'INST-OER2GO-MOD'
         module_cmd_info['cmd_args'] = {'moddir': module}
-        resp = install_oer2go_mod(module_cmd_info)
+        module_cmd_info = pseudo_cmd_handler(module_cmd_info)
+        if module_cmd_info:
+            resp = install_oer2go_mod(module_cmd_info)
 
     # maps
 
@@ -2007,20 +2019,49 @@ def install_presets(cmd_info):
     for map in map_list:
         map_cmd_info['cmd'] = 'INST-OSM-VECT-SET'
         map_cmd_info['cmd_args'] = {'osm_vect_id': map}
-        resp = install_osm_vect_set_v2(map_cmd_info)
+        map_cmd_info = pseudo_cmd_handler(map_cmd_info)
+        if map_cmd_info:
+            resp = install_osm_vect_set_v2(map_cmd_info)
 
     # kalite
 
     kalite_cmd_info = cmd_info
     kalite_cmd_info['cmd'] = 'INST-KALITE'
     kalite_cmd_info['cmd_args'] = content['kalite']
-    resp = install_kalite(kalite_cmd_info)
+    kalite_cmd_info = pseudo_cmd_handler(kalite_cmd_info)
+    if map_cmd_info:
+        resp = install_kalite(kalite_cmd_info)
 
     if len(services_needed_error) > 0:
         resp = cmd_error(cmd='INST-PRESETS', msg='WARNING: The following services were added - ' + services_needed_error)
     else:
         resp = cmd_success_msg('INST-PRESETS', "All jobs scheduled")
     return resp
+
+def pseudo_cmd_handler(cmd_info, check_dup=True):
+    # do some of what cmd_handler does so can call cmd function directly
+    # create cmd_msg
+    # insert into db
+    # check if duplicate
+
+    cmd_args = cmd_info.get('cmd_args')
+    if cmd_args and len(cmd_args) > 0:
+        cmd_msg = cmd_info['cmd'] + ' ' + json.dumps(cmd_args)
+    else:
+        cmd_msg = cmd_info['cmd']
+
+    if check_dup: # ansible does it's own check
+        dup_cmd = next((job_id for job_id, active_cmd_msg in list(active_commands.items()) if active_cmd_msg == cmd_msg), None)
+        if dup_cmd != None:
+            print('Skipping already running command.')
+            return None
+
+    cmd_rowid = insert_command(cmd_msg)
+
+    cmd_info['cmd_rowid'] = cmd_rowid
+    cmd_info['cmd_msg'] = cmd_msg
+
+    return cmd_info
 
 def install_zims(cmd_info):
     global ansible_running_flag
