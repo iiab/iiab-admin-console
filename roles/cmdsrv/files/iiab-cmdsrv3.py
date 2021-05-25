@@ -797,26 +797,14 @@ def cmd_handler(cmd_msg):
     cmd_rowid = insert_command(cmd_msg)
 
     # process the command
-
-    cmd_info = {}
-
-    # parse for arguments
-    cmd_parts = cmd_msg.split(' ',1)
-
-    cmd = cmd_parts[0]
-    if len(cmd_parts)>1:
-        try:
-            cmd_args = json.loads(cmd_parts[1])
-        except:
-            return cmd_malformed(cmd)
-    else:
-        cmd_args = {}
-
+    parse_failed, cmd_info = parse_cmd_msg(cmd_msg)
+    if parse_failed:
+        return cmd_malformed(cmd_info['cmd'])
 
     cmd_info['cmd_rowid'] = cmd_rowid
     cmd_info['cmd_msg'] = cmd_msg
-    cmd_info['cmd'] = cmd
-    cmd_info['cmd_args'] = cmd_args
+    cmd = cmd_info['cmd']
+
     #print (cmd_info)
 
     # commands that run scripts should check for malicious characters in cmd_arg_str and return error if found
@@ -842,6 +830,21 @@ def cmd_handler(cmd_msg):
     return (resp)
 
 # Helper functions
+def parse_cmd_msg(cmd_msg):
+    # convert string from client to cmd and cmd_args
+    cmd_dict = {}
+    parse_failed = False
+    parse = cmd_msg.split(' ')
+    cmd_dict['cmd'] = parse[0]
+    cmd_dict['cmd_args'] = {} # always have cmd_args
+    if len(parse) > 1:
+        try:
+            cmd_args_str = cmd_msg.split(cmd_dict['cmd'] + ' ')[1]
+            cmd_dict['cmd_args'] = json.loads(cmd_args_str)
+        except:
+            parse_failed = True
+    return parse_failed, cmd_dict
+
 def is_internet_avail():
     #return is_url_avail("www.google.com")
     return is_url_avail("neverssl.com") # in case captive portal traps www.google.com
@@ -2518,16 +2521,15 @@ def get_osm_vect_stat(cmd_info):
     all_maps['tile_base_installed'] = False
     all_maps['sat_base_installed'] = False
 
-    if osm_version != None:
+    if os.path.exists(vector_map_tiles_path + maps_tiles_base):
+        all_maps['tile_base_installed'] = True
 
-        if os.path.exists(vector_map_tiles_path + maps_tiles_base):
-            all_maps['tile_base_installed'] = True
+    if os.path.exists(vector_map_tiles_path + maps_sat_base):
+        all_maps['sat_base_installed'] = True
 
-        if os.path.exists(vector_map_tiles_path + maps_sat_base):
-            all_maps['sat_base_installed'] = True
-
-        # see what is installed
-        # in /library/www/osm-vector-maps/viewer/tiles
+    # see what is installed
+    # in /library/www/osm-vector-maps/viewer/tiles
+    if os.path.exists(vector_map_tiles_path):
         osm_vect_installed = os.listdir(vector_map_tiles_path)
         for map in osm_vect_installed:
             all_maps['INSTALLED'][map] = True
@@ -2858,8 +2860,16 @@ def request_one_job(cmd_info, job_command, cmd_step_no, depend_on_job_id, has_de
     job_info['status'] = 'SCHEDULED'
     job_info['status_datetime'] = str(datetime.now())
 
+    opt_args = {}
+    if 'extra_vars' in job_info:
+        opt_args ['extra_vars'] = job_info['extra_vars']
+    if 'service_required' in job_info:
+        opt_args ['service_required'] = job_info['service_required']
+
+    opt_args_json = json.dumps(opt_args)
+
     jobs_requested[job_id] = job_info
-    insert_job(job_id, cmd_info['cmd_rowid'], job_command, cmd_step_no, depend_on_job_id, has_dependent)
+    insert_job(job_id, cmd_info['cmd_rowid'], job_command, opt_args_json, cmd_step_no, depend_on_job_id, has_dependent)
 
     if has_dependent == "Y":
         prereq_info ['status'] = job_info['status']
@@ -3038,7 +3048,7 @@ def insert_command(cmd_msg):
 
     return (cmd_id)
 
-def insert_job(job_id, cmd_rowid, job_command, cmd_step_no, depend_on_job_id, has_dependent):
+def insert_job(job_id, cmd_rowid, job_command, opt_args_json, cmd_step_no, depend_on_job_id, has_dependent):
     #print "in insert job"
     now = datetime.now()
     job_pid=0
@@ -3048,8 +3058,8 @@ def insert_job(job_id, cmd_rowid, job_command, cmd_step_no, depend_on_job_id, ha
     db_lock.acquire()
     try:
         conn = sqlite3.connect(cmdsrv_dbpath)
-        conn.execute ("INSERT INTO jobs (rowid, cmd_rowid, cmd_step_no, depend_on_job_id, has_dependent, job_command, job_pid, job_output, job_status, create_datetime, last_update_datetime) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-                      (job_id, cmd_rowid, cmd_step_no, depend_on_job_id, has_dependent, job_command, job_pid, job_output, job_status, now, now))
+        conn.execute ("INSERT INTO jobs (rowid, cmd_rowid, cmd_step_no, depend_on_job_id, has_dependent, job_command, opt_args_json, job_pid, job_output, job_status, create_datetime, last_update_datetime) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+                      (job_id, cmd_rowid, cmd_step_no, depend_on_job_id, has_dependent, job_command, opt_args_json, job_pid, job_output, job_status, now, now))
 
         conn.commit()
         conn.close()
@@ -3181,7 +3191,7 @@ def init():
         conn = sqlite3.connect(cmdsrv_dbpath)
         conn.execute ("CREATE TABLE commands (cmd_msg text, create_datetime text)")
         conn.commit()
-        conn.execute ("CREATE TABLE jobs (cmd_rowid integer, cmd_step_no integer, depend_on_job_id integer, has_dependent text, job_command text, job_pid integer, job_output text, job_status text, create_datetime text, last_update_datetime text)")
+        conn.execute ("CREATE TABLE jobs (cmd_rowid integer, cmd_step_no integer, depend_on_job_id integer, has_dependent text, job_command text, opt_args_json text, job_pid integer, job_output text, job_status text, create_datetime text, last_update_datetime text)")
         conn.commit()
         conn.close()
     else:
@@ -3401,14 +3411,14 @@ def get_incomplete_jobs():
 
     # get jobs from database that didn't finish, group by command in desc order so we only done the last one
     conn = sqlite3.connect(cmdsrv_dbpath)
-    sql = "SELECT jobs.rowid, cmd_rowid, cmd_step_no, depend_on_job_id, has_dependent, job_command, job_pid, job_output, job_status, jobs.create_datetime, cmd_msg from commands, jobs "
+    sql = "SELECT jobs.rowid, cmd_rowid, cmd_step_no, depend_on_job_id, has_dependent, job_command, opt_args_json, job_pid, job_output, job_status, jobs.create_datetime, cmd_msg from commands, jobs "
     sql += "WHERE commands.rowid = jobs.cmd_rowid and job_status IN ('STARTED', 'RESTARTED', 'SCHEDULED') ORDER BY job_command, jobs.rowid DESC"
     cur = conn.execute(sql)
 
     last_command = ""
 
     for row in cur.fetchall():
-        job_id, cmd_rowid, cmd_step_no, depend_on_job_id, has_dependent, job_command, job_pid, job_output, job_status, create_datetime, cmd_msg = row
+        job_id, cmd_rowid, cmd_step_no, depend_on_job_id, has_dependent, job_command, opt_args_json, job_pid, job_output, job_status, create_datetime, cmd_msg = row
 
         job_created_time = datetime.strptime(create_datetime, "%Y-%m-%d %H:%M:%S.%f") # create_datetime to datetime type
 
@@ -3429,16 +3439,9 @@ def get_incomplete_jobs():
             except OSError:
                 pass
 
-        job_info = {}
-        parse = cmd_msg.split(' ')
-        job_info['cmd'] = parse[0]
-        if len(parse) > 1:
-            job_info['cmd_args'] = cmd_msg.split(job_info['cmd'] + ' ')[1]
-
-        #try:
-        #    job_info['cmd_args'] = json.loads(parse[1])
-        #except IndexError:
-        #   job_info['cmd_args'] =  {}
+        parse_failed, job_info = parse_cmd_msg(cmd_msg)
+        if parse_failed:
+            log(syslog.LOG_ERR, "Error: Unexpected error in when restarting Command %s." % job_info['cmd'])
 
         job_info['cmd_rowid'] = cmd_rowid
         job_info['job_command'] = job_command
@@ -3449,6 +3452,14 @@ def get_incomplete_jobs():
         job_info['status'] = job_status
         job_info['create_datetime'] = create_datetime
         job_info['status_datetime'] = str(datetime.now())
+
+        opt_args = json.loads(opt_args_json)
+
+        # break out special attributes
+        if 'extra_vars' in opt_args:
+            job_info['extra_vars'] = opt_args['extra_vars']
+        if 'service_required' in opt_args:
+            job_info['service_required'] = opt_args['service_required']
 
         # only restart if we haven't already seen this command
         # we assume that we can always use the highest numbered job for a given command
