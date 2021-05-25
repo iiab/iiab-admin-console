@@ -433,7 +433,7 @@ def job_minder_thread(client_url, worker_control_url, context=None):
                         t += 1
                     if rc == None:
                         p.kill()
-                    job_info = end_job(job_id, job_info, 'CANCELLED')
+                    job_info = end_job(job_id, jobs_running[job_id], 'CANCELLED')
                     jobs_to_close.append(job_id)
                     upd_job_cancelled(job_id)
             else:
@@ -445,7 +445,7 @@ def job_minder_thread(client_url, worker_control_url, context=None):
                 else:
                     status = 'FAILED'
 
-                job_info = end_job(job_id, job_info, status)
+                job_info = end_job(job_id, jobs_running[job_id], status)
 
                 # flag job for removal
                 jobs_to_close.append(job_id)
@@ -612,6 +612,7 @@ def end_job(job_id, job_info, status): # modify to use tail of job_output
 
     job_output = job_output.encode('ascii', 'replace').decode()
 
+    print(job_id)
     print(job_output)
     jobs_running[job_id]['job_output'] = job_output
 
@@ -628,13 +629,13 @@ def end_job(job_id, job_info, status): # modify to use tail of job_output
     upd_job_finished(job_id, job_output, status)
     os.remove(output_file)
 
+
     if job_info['cmd'] in ANSIBLE_COMMANDS:
+        #if 1 == 1:
         ansible_running_flag = False
         #if status == "SUCCEEDED":
         read_iiab_ini_file() # reread ini file after running ansible
         read_iiab_roles_stat() # refresh global iiab_roles_status
-        print('read role stat')
-        print(iiab_roles_status)
 
     running_job_count -= 1
     if running_job_count < 0:
@@ -1923,10 +1924,13 @@ def install_presets(cmd_info):
 
     # get preset definition
     src_dir = presets_dir + preset_id + '/'
-    preset = adm.read_json(src_dir + 'preset.json')
-    menu = adm.read_json(src_dir + 'menu.json') # actually only need to cp the file
-    content = adm.read_json(src_dir + 'content.json')
-    vars = adm.read_yaml(src_dir + 'vars.yml')
+    try:
+        preset = adm.read_json(src_dir + 'preset.json')
+        menu = adm.read_json(src_dir + 'menu.json') # actually only need to cp the file
+        content = adm.read_json(src_dir + 'content.json')
+        vars = adm.read_yaml(src_dir + 'vars.yml')
+    except:
+        return cmd_error(cmd='INST-PRESETS', msg='Preset ' + preset_id + ' has errors in the json.')
 
     # check for sufficient storage
 
@@ -1964,12 +1968,14 @@ def install_presets(cmd_info):
     ansible_cmd_info['cmd_args'] = {}
 
     ansible_cmd_info = pseudo_cmd_handler(ansible_cmd_info, check_dup=False)
-    resp = run_ansible_roles(cmd_info)
+    resp = run_ansible_roles(ansible_cmd_info)
 
     # All roles installed also returns error "All Roles are already As Requested"
     if 'Error' in resp:
-        if not 'All Roles are already As Requested' in resp: # pretty klugey
-            return cmd_error(cmd='INST-PRESETS', msg='Ansible install step failed. Please try again.')
+        resp_dict = json.loads(resp)
+        err_msg = resp_dict['Error']
+        if not 'All Roles are already As Requested' in err_msg: # pretty klugey
+            return cmd_error(cmd='INST-PRESETS', msg='Ansible install step failed. ' + err_msg)
 
     # now do content areas
     # will block if required service is not yet active
@@ -2032,7 +2038,7 @@ def install_presets(cmd_info):
     kalite_cmd_info['cmd'] = 'INST-KALITE'
     kalite_cmd_info['cmd_args'] = content['kalite']
     kalite_cmd_info = pseudo_cmd_handler(kalite_cmd_info)
-    if map_cmd_info:
+    if kalite_cmd_info:
         resp = install_kalite(kalite_cmd_info)
 
     if len(services_needed_error) > 0:
