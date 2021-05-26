@@ -136,7 +136,9 @@ prereq_jobs = {}
 jobs_running = {}
 running_job_count = 0
 
+ANSIBLE_COMMANDS = ["RUN-ANSIBLE", "RESET-NETWORK", "RUN-ANSIBLE-ROLES"]
 ansible_running_flag = False
+iiab_roles_status = {}
 daemon_mode = False
 init_error = False
 
@@ -156,8 +158,8 @@ db_lock = threading.Lock() # for sqlite db concurrency
 # effective is composite where local takes precedence
 
 adm_conf = {} # for use by front end
-default_vars = {}
-local_vars = {}
+default_vars = {} # /opt/iiab/iiab/vars/default_vars.yml
+local_vars = {} # /etc/iiab/local_vars.yml
 effective_vars = {}
 ansible_facts = {}
 ansible_tags = {}
@@ -353,7 +355,7 @@ def job_minder_thread(client_url, worker_control_url, context=None):
                 continue
 
             # don't create ansible job if one is running
-            if job_info['cmd'] in ["RUN-ANSIBLE", "RESET-NETWORK", "RUN-ANSIBLE-ROLES"] and ansible_running_flag == True:
+            if job_info['cmd'] in ANSIBLE_COMMANDS and ansible_running_flag == True:
                 continue
 
             # don't start job if at max allowed
@@ -384,6 +386,11 @@ def job_minder_thread(client_url, worker_control_url, context=None):
                         prereq_jobs_to_clear.append(depend_on_job_id) # mark for deletion
 
             else: # not a multi-step job or first step of multi
+                # don't start if depends on uninstalled or inactive service
+                service_required = job_info.get('service_required') # array that holds service and required state
+                if service_required:
+                    if not iiab_roles_status.get(service_required[0], {}).get(service_required[1]):
+                        continue
                 job_info = start_job(job_id, job_info) # Create running job
                 jobs_running[job_id] = job_info
                 jobs_requested_done.append(job_id)
@@ -426,7 +433,7 @@ def job_minder_thread(client_url, worker_control_url, context=None):
                         t += 1
                     if rc == None:
                         p.kill()
-                    job_info = end_job(job_id, job_info, 'CANCELLED')
+                    job_info = end_job(job_id, jobs_running[job_id], 'CANCELLED')
                     jobs_to_close.append(job_id)
                     upd_job_cancelled(job_id)
             else:
@@ -438,7 +445,7 @@ def job_minder_thread(client_url, worker_control_url, context=None):
                 else:
                     status = 'FAILED'
 
-                job_info = end_job(job_id, job_info, status)
+                job_info = end_job(job_id, jobs_running[job_id], status)
 
                 # flag job for removal
                 jobs_to_close.append(job_id)
@@ -562,7 +569,7 @@ def start_job(job_id, job_info, status='STARTED'):
     if job_id in prereq_jobs:
         prereq_jobs[job_id]['status'] = 'STARTED'
 
-    if job_info['cmd'] in ["RUN-ANSIBLE", "RESET-NETWORK", "RUN-ANSIBLE-ROLES"]:
+    if job_info['cmd'] in ANSIBLE_COMMANDS:
         ansible_running_flag = True
 
     if status == 'STARTED':
@@ -596,8 +603,8 @@ def end_job(job_id, job_info, status): # modify to use tail of job_output
     command = "tail " + output_file
     args = shlex.split(command)
     job_output = subproc_check_output(args)
-    print(type(job_output))
-    print(job_output)
+
+    #print(job_output)
     # make html safe
     #job_output = escape_html(job_output)
 
@@ -605,7 +612,8 @@ def end_job(job_id, job_info, status): # modify to use tail of job_output
 
     job_output = job_output.encode('ascii', 'replace').decode()
 
-    print(job_output)
+    #print(job_id)
+    tprint(job_output)
     jobs_running[job_id]['job_output'] = job_output
 
 
@@ -621,10 +629,13 @@ def end_job(job_id, job_info, status): # modify to use tail of job_output
     upd_job_finished(job_id, job_output, status)
     os.remove(output_file)
 
-    if job_info['cmd'] in ["RUN-ANSIBLE", "RESET-NETWORK", "RUN-ANSIBLE-ROLES"]:
+
+    if job_info['cmd'] in ANSIBLE_COMMANDS:
+        #if 1 == 1:
         ansible_running_flag = False
         #if status == "SUCCEEDED":
         read_iiab_ini_file() # reread ini file after running ansible
+        read_iiab_roles_stat() # refresh global iiab_roles_status
 
     running_job_count -= 1
     if running_job_count < 0:
@@ -787,26 +798,14 @@ def cmd_handler(cmd_msg):
     cmd_rowid = insert_command(cmd_msg)
 
     # process the command
-
-    cmd_info = {}
-
-    # parse for arguments
-    cmd_parts = cmd_msg.split(' ',1)
-
-    cmd = cmd_parts[0]
-    if len(cmd_parts)>1:
-        try:
-            cmd_args = json.loads(cmd_parts[1])
-        except:
-            return cmd_malformed(cmd)
-    else:
-        cmd_args = {}
-
+    parse_failed, cmd_info = parse_cmd_msg(cmd_msg)
+    if parse_failed:
+        return cmd_malformed(cmd_info['cmd'])
 
     cmd_info['cmd_rowid'] = cmd_rowid
     cmd_info['cmd_msg'] = cmd_msg
-    cmd_info['cmd'] = cmd
-    cmd_info['cmd_args'] = cmd_args
+    cmd = cmd_info['cmd']
+
     #print (cmd_info)
 
     # commands that run scripts should check for malicious characters in cmd_arg_str and return error if found
@@ -832,6 +831,21 @@ def cmd_handler(cmd_msg):
     return (resp)
 
 # Helper functions
+def parse_cmd_msg(cmd_msg):
+    # convert string from client to cmd and cmd_args
+    cmd_dict = {}
+    parse_failed = False
+    parse = cmd_msg.split(' ')
+    cmd_dict['cmd'] = parse[0]
+    cmd_dict['cmd_args'] = {} # always have cmd_args
+    if len(parse) > 1:
+        try:
+            cmd_args_str = cmd_msg.split(cmd_dict['cmd'] + ' ')[1]
+            cmd_dict['cmd_args'] = json.loads(cmd_args_str)
+        except:
+            parse_failed = True
+    return parse_failed, cmd_dict
+
 def is_internet_avail():
     #return is_url_avail("www.google.com")
     return is_url_avail("neverssl.com") # in case captive portal traps www.google.com
@@ -1033,7 +1047,7 @@ def get_install_vars(cmd_info):
     resp = json.dumps(effective_vars)
     return (resp)
 
-def get_install_vars_init():
+def OBSOL_get_install_vars_init():
     # assumes default vars already read
     read_iiab_local_vars() # any errors are raised
 
@@ -1254,7 +1268,7 @@ def set_wpa_credentials (cmd_info):
         resp = cmd_error(cmd=cmd_info['cmd'], msg='Only supported on Raspberry Pi.')
         return (resp)
 
-    print(cmd_info)
+    #print(cmd_info)
     if 'cmd_args' in cmd_info:
         connect_wifi_ssid = cmd_info['cmd_args']['connect_wifi_ssid']
         connect_wifi_password = cmd_info['cmd_args']['connect_wifi_password']
@@ -1774,8 +1788,8 @@ def run_ansible_roles(cmd_info):
     # refresh effective_vars
     # assume default_vars is current
     read_iiab_local_vars() # read local vars and compute effective vars
+    read_iiab_roles_stat() # into global iiab_roles_status
 
-    roles_status = adm.get_roles_status()
     internet_avail = is_internet_avail()
     changed_local_vars = {}
 
@@ -1784,14 +1798,14 @@ def run_ansible_roles(cmd_info):
         lines = f.readlines()
 
     role_cnt = 0
-    for role in roles_status:
+    for role in iiab_roles_status:
         if not local_vars.get(role + '_install'):
             continue # for now skip unknown roles
         install = effective_vars[role + '_install']
-        installed = roles_status[role]['installed']
+        installed = iiab_roles_status[role]['installed']
         enable = effective_vars[role + '_enabled']
-        # enabled = roles_status[role]['enabled'] # some services show enabled-runtime
-        enabled = roles_status[role]['active']
+        # enabled = iiab_roles_status[role]['enabled'] # some services show enabled-runtime
+        enabled = iiab_roles_status[role]['active']
         if install == installed and enable == enabled:
             continue
         if role in adm.CONST.iiab_roles_renamed:
@@ -1832,8 +1846,13 @@ def run_ansible_roles(cmd_info):
     return resp
 
 def get_roles_stat(cmd_info):
-    resp = json.dumps(adm.get_roles_status())
+    read_iiab_roles_stat() # into global iiab_roles_status
+    resp = json.dumps(iiab_roles_status)
     return (resp)
+
+def read_iiab_roles_stat():
+    global iiab_roles_status
+    iiab_roles_status = adm.get_roles_status()
 
 def get_rachel_stat(cmd_info):
     # see if rachel installed from iiab_ini
@@ -1893,6 +1912,7 @@ def install_presets(cmd_info):
     # first pass we will just call various command handlers and evaluate resp
     # INST-PRESETS '{"cmd_args":{"preset_id":"test"}}'
     # test with iiab-cmdsrv-ctl 'INST-PRESETS {"preset_id":"test"}'
+
     #print(cmd_info)
     presets_dir = 'presets/'
     if 'cmd_args' not in cmd_info:
@@ -1904,24 +1924,63 @@ def install_presets(cmd_info):
 
     # get preset definition
     src_dir = presets_dir + preset_id + '/'
-    preset = adm.read_json(src_dir + 'preset.json')
-    menu = adm.read_json(src_dir + 'menu.json') # actually only need to cp the file
-    content = adm.read_json(src_dir + 'content.json')
-    vars = adm.read_yaml(src_dir + 'vars.yml')
+    try:
+        preset = adm.read_json(src_dir + 'preset.json')
+        menu = adm.read_json(src_dir + 'menu.json') # actually only need to cp the file
+        content = adm.read_json(src_dir + 'content.json')
+        vars = adm.read_yaml(src_dir + 'vars.yml')
+    except:
+        return cmd_error(cmd='INST-PRESETS', msg='Preset ' + preset_id + ' has errors in the json.')
 
     # check for sufficient storage
 
+    # add roles needed by content but not requested
+
+    planned_vars = {**effective_vars, **vars}
+    zim_list = content['zims']
+    module_list = content['modules'] # service is web server which is always installed
+    map_list = content['maps']
+    kalite_vars = content['kalite']
+    needed_services = []
+
+    if len(zim_list) > 0:
+        if planned_vars['kiwix_install'] != True or planned_vars['kiwix_enabled'] != True:
+            needed_services.append('Kixix')
+            vars['kiwix_install'] = True
+            vars['kiwix_enabled'] = True
+    if len(map_list) > 0:
+        if planned_vars['osm_vector_maps_install'] != True or planned_vars['osm_vector_maps_enabled'] != True:
+            needed_services.append('OSM Vector Maps')
+            vars['osm_vector_maps_install'] = True
+            vars['osm_vector_maps_enabled'] = True
+    if len(kalite_vars) > 0:
+        if planned_vars['kalite_install'] != True or planned_vars['kalite_enabled'] != True:
+            needed_services.append('KA Lite')
+            vars['kalite_install'] = True
+            vars['kalite_enabled'] = True
+
+    services_needed_error = ', '.join(needed_services)
+
     # add vars to local_vars and run roles
     adm.write_iiab_local_vars(vars)
-    resp = run_ansible_roles(cmd_info)
+    ansible_cmd_info = cmd_info
+    ansible_cmd_info['cmd'] ='RUN-ANSIBLE-ROLES'
+    ansible_cmd_info['cmd_args'] = {}
+
+    ansible_cmd_info = pseudo_cmd_handler(ansible_cmd_info, check_dup=False)
+    resp = run_ansible_roles(ansible_cmd_info)
+
     # All roles installed also returns error "All Roles are already As Requested"
     if 'Error' in resp:
-        if not 'All Roles are already As Requested' in resp: # pretty klugey
-            return cmd_error(cmd='INST-PRESETS', msg='Ansible install step failed. Please try again.')
+        resp_dict = json.loads(resp)
+        err_msg = resp_dict['Error']
+        if not 'All Roles are already As Requested' in err_msg: # pretty klugey
+            return cmd_error(cmd='INST-PRESETS', msg='Ansible install step failed. ' + err_msg)
 
     # now do content areas
-    # how to wait for ansible to complete
-    # ?don't start any jobs if ansible is running, lines 350ff
+    # will block if required service is not yet active
+
+    # don't start any jobs if ansible is running, lines 350ff
     # but ansible failure will release remaining jobs
     # ? add global ansible job no
 
@@ -1936,23 +1995,20 @@ def install_presets(cmd_info):
         if kiwix_catalog[zim_id]['perma_ref'] in zim_list:
             perma_ref = kiwix_catalog[zim_id]['perma_ref']
             url = kiwix_catalog[zim_id]['url'].split('.meta')[0]
-            print (zim_id, perma_ref, url)
-            if perma_ref not in perma_ref_idx:
+            #print (zim_id, perma_ref, url)
+            if perma_ref not in perma_ref_idx: # find most recent zim
                 perma_ref_idx[perma_ref] = {'id': zim_id, 'url': url}
             else:
                 if url > perma_ref_idx[perma_ref]['url']:
                     perma_ref_idx[perma_ref] = {'id': zim_id, 'url': url}
 
-    #cmd_info['cmd_rowid'] = cmd_rowid
-    #cmd_info['cmd_msg'] = cmd_msg
-    #cmd_info['cmd'] = cmd
-    #cmd_info['cmd_args'] = cmd_args
-
     zim_cmd_info = cmd_info
     for ref in perma_ref_idx:
         zim_cmd_info['cmd'] ='INST-ZIM'
         zim_cmd_info['cmd_args'] = {'zim_id': perma_ref_idx[ref]['id']}
-        resp = install_zims(zim_cmd_info)
+        zim_cmd_info = pseudo_cmd_handler(zim_cmd_info)
+        if zim_cmd_info:
+            resp = install_zims(zim_cmd_info)
 
     # modules
 
@@ -1961,7 +2017,9 @@ def install_presets(cmd_info):
     for module in module_list:
         module_cmd_info['cmd'] = 'INST-OER2GO-MOD'
         module_cmd_info['cmd_args'] = {'moddir': module}
-        resp = install_oer2go_mod(module_cmd_info)
+        module_cmd_info = pseudo_cmd_handler(module_cmd_info)
+        if module_cmd_info:
+            resp = install_oer2go_mod(module_cmd_info)
 
     # maps
 
@@ -1970,20 +2028,51 @@ def install_presets(cmd_info):
     for map in map_list:
         map_cmd_info['cmd'] = 'INST-OSM-VECT-SET'
         map_cmd_info['cmd_args'] = {'osm_vect_id': map}
-        resp = install_osm_vect_set_v2(map_cmd_info)
+        map_cmd_info = pseudo_cmd_handler(map_cmd_info)
+        if map_cmd_info:
+            resp = install_osm_vect_set_v2(map_cmd_info)
 
     # kalite
 
     kalite_cmd_info = cmd_info
     kalite_cmd_info['cmd'] = 'INST-KALITE'
     kalite_cmd_info['cmd_args'] = content['kalite']
-    resp = install_kalite(kalite_cmd_info)
+    kalite_cmd_info = pseudo_cmd_handler(kalite_cmd_info)
+    if kalite_cmd_info:
+        resp = install_kalite(kalite_cmd_info)
 
-    resp = cmd_success_msg('INST-PRESETS', "All jobs scheduled")
+    if len(services_needed_error) > 0:
+        resp = cmd_error(cmd='INST-PRESETS', msg='WARNING: The following services were added - ' + services_needed_error)
+    else:
+        resp = cmd_success_msg('INST-PRESETS', "All jobs scheduled")
     return resp
 
-def install_zims(cmd_info):
+def pseudo_cmd_handler(cmd_info, check_dup=True):
+    # do some of what cmd_handler does so can call cmd function directly
+    # create cmd_msg
+    # insert into db
+    # check if duplicate
 
+    cmd_args = cmd_info.get('cmd_args')
+    if cmd_args and len(cmd_args) > 0:
+        cmd_msg = cmd_info['cmd'] + ' ' + json.dumps(cmd_args)
+    else:
+        cmd_msg = cmd_info['cmd']
+
+    if check_dup: # ansible does it's own check
+        dup_cmd = next((job_id for job_id, active_cmd_msg in list(active_commands.items()) if active_cmd_msg == cmd_msg), None)
+        if dup_cmd != None:
+            print('Skipping already running command.')
+            return None
+
+    cmd_rowid = insert_command(cmd_msg)
+
+    cmd_info['cmd_rowid'] = cmd_rowid
+    cmd_info['cmd_msg'] = cmd_msg
+
+    return cmd_info
+
+def install_zims(cmd_info):
     global ansible_running_flag
     global jobs_requested
     global kiwix_catalog
@@ -1996,8 +2085,14 @@ def install_zims(cmd_info):
             resp = cmd_error(cmd='INST-ZIMS', msg='Zim ID not found in Command')
             return resp
 
+        if 'service_required' in cmd_info['cmd_args']: # allow caller to supply
+            cmd_info['service_required'] = cmd_info['cmd_args']['service_required']
+        else:
+            cmd_info['service_required'] = ['kiwix', 'active']
+
+
         downloadSrcFile = kiwix_catalog[zimId]['download_url']
-        print(downloadSrcFile)
+        #print(downloadSrcFile)
         try:
             rc = urllib.request.urlopen(downloadSrcFile)
             rc.close()
@@ -2355,6 +2450,11 @@ def install_osm_vect_set_v2(cmd_info):
     else:
         return cmd_malformed(cmd_info['cmd'])
 
+    if 'service_required' in cmd_info['cmd_args']: # allow caller to supply
+        cmd_info['service_required'] = cmd_info['cmd_args']['service_required']
+    else:
+        cmd_info['service_required'] = ['osm_vector_maps', 'active']
+
     #download_url = maps_catalog[map_id]['detail_url']
     # hard coding for now as the control vars don't make much sense
     if maps_download_src == 'iiab.me':
@@ -2427,16 +2527,15 @@ def get_osm_vect_stat(cmd_info):
     all_maps['tile_base_installed'] = False
     all_maps['sat_base_installed'] = False
 
-    if osm_version != None:
+    if os.path.exists(vector_map_tiles_path + maps_tiles_base):
+        all_maps['tile_base_installed'] = True
 
-        if os.path.exists(vector_map_tiles_path + maps_tiles_base):
-            all_maps['tile_base_installed'] = True
+    if os.path.exists(vector_map_tiles_path + maps_sat_base):
+        all_maps['sat_base_installed'] = True
 
-        if os.path.exists(vector_map_tiles_path + maps_sat_base):
-            all_maps['sat_base_installed'] = True
-
-        # see what is installed
-        # in /library/www/osm-vector-maps/viewer/tiles
+    # see what is installed
+    # in /library/www/osm-vector-maps/viewer/tiles
+    if os.path.exists(vector_map_tiles_path):
         osm_vect_installed = os.listdir(vector_map_tiles_path)
         for map in osm_vect_installed:
             all_maps['INSTALLED'][map] = True
@@ -2455,6 +2554,11 @@ def install_kalite(cmd_info):
         topics = cmd_info['cmd_args']['topics']
     else:
         return cmd_malformed(cmd_info['cmd'])
+
+    if 'service_required' in cmd_info['cmd_args']: # allow caller to supply
+        cmd_info['service_required'] = cmd_info['cmd_args']['service_required']
+    else:
+        cmd_info['service_required'] = ['kalite', 'active']
 
     # validate topics (? or do in script)
 
@@ -2563,8 +2667,8 @@ def move_uploaded_file(cmd_info):
         return cmd_malformed(cmd_info['cmd'])
     src = src_path + file_name
     dst = dest_paths[file_use] + file_name
-    print(src)
-    print(dst)
+    #print(src)
+    #print(dst)
     if len(filter_array) > 0:
         if imghdr.what(src) not in filter_array:
             os.remove(src)
@@ -2753,6 +2857,7 @@ def request_one_job(cmd_info, job_command, cmd_step_no, depend_on_job_id, has_de
     job_info['cmd'] = cmd_info['cmd']
     job_info['cmd_args'] = cmd_info['cmd_args']
     job_info['extra_vars'] = cmd_info.get('extra_vars', None) # optional
+    job_info['service_required'] = cmd_info.get('service_required', None) # only some commands
 
     job_info['cmd_step_no'] = cmd_step_no
     job_info['depend_on_job_id'] = depend_on_job_id
@@ -2761,8 +2866,16 @@ def request_one_job(cmd_info, job_command, cmd_step_no, depend_on_job_id, has_de
     job_info['status'] = 'SCHEDULED'
     job_info['status_datetime'] = str(datetime.now())
 
+    opt_args = {}
+    if 'extra_vars' in job_info:
+        opt_args ['extra_vars'] = job_info['extra_vars']
+    if 'service_required' in job_info:
+        opt_args ['service_required'] = job_info['service_required']
+
+    opt_args_json = json.dumps(opt_args)
+
     jobs_requested[job_id] = job_info
-    insert_job(job_id, cmd_info['cmd_rowid'], job_command, cmd_step_no, depend_on_job_id, has_dependent)
+    insert_job(job_id, cmd_info['cmd_rowid'], job_command, opt_args_json, cmd_step_no, depend_on_job_id, has_dependent)
 
     if has_dependent == "Y":
         prereq_info ['status'] = job_info['status']
@@ -2941,7 +3054,7 @@ def insert_command(cmd_msg):
 
     return (cmd_id)
 
-def insert_job(job_id, cmd_rowid, job_command, cmd_step_no, depend_on_job_id, has_dependent):
+def insert_job(job_id, cmd_rowid, job_command, opt_args_json, cmd_step_no, depend_on_job_id, has_dependent):
     #print "in insert job"
     now = datetime.now()
     job_pid=0
@@ -2951,8 +3064,8 @@ def insert_job(job_id, cmd_rowid, job_command, cmd_step_no, depend_on_job_id, ha
     db_lock.acquire()
     try:
         conn = sqlite3.connect(cmdsrv_dbpath)
-        conn.execute ("INSERT INTO jobs (rowid, cmd_rowid, cmd_step_no, depend_on_job_id, has_dependent, job_command, job_pid, job_output, job_status, create_datetime, last_update_datetime) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-                      (job_id, cmd_rowid, cmd_step_no, depend_on_job_id, has_dependent, job_command, job_pid, job_output, job_status, now, now))
+        conn.execute ("INSERT INTO jobs (rowid, cmd_rowid, cmd_step_no, depend_on_job_id, has_dependent, job_command, opt_args_json, job_pid, job_output, job_status, create_datetime, last_update_datetime) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+                      (job_id, cmd_rowid, cmd_step_no, depend_on_job_id, has_dependent, job_command, opt_args_json, job_pid, job_output, job_status, now, now))
 
         conn.commit()
         conn.close()
@@ -3043,9 +3156,13 @@ def init():
     app_config()
 
     # Read vars from ansible file into global vars
-    read_iiab_vars()
-    get_install_vars_init()
+    read_iiab_default_vars()
+    read_iiab_local_vars()
+    # REMOVE OBSOLETE
+    # read_iiab_vars()
+    # get_install_vars_init()
     read_iiab_ini_file()
+    read_iiab_roles_stat() # into global iiab_roles_status
 
     # Get ansible facts for localhost
     get_ansible_facts()
@@ -3080,7 +3197,7 @@ def init():
         conn = sqlite3.connect(cmdsrv_dbpath)
         conn.execute ("CREATE TABLE commands (cmd_msg text, create_datetime text)")
         conn.commit()
-        conn.execute ("CREATE TABLE jobs (cmd_rowid integer, cmd_step_no integer, depend_on_job_id integer, has_dependent text, job_command text, job_pid integer, job_output text, job_status text, create_datetime text, last_update_datetime text)")
+        conn.execute ("CREATE TABLE jobs (cmd_rowid integer, cmd_step_no integer, depend_on_job_id integer, has_dependent text, job_command text, opt_args_json text, job_pid integer, job_output text, job_status text, create_datetime text, last_update_datetime text)")
         conn.commit()
         conn.close()
     else:
@@ -3122,9 +3239,9 @@ def read_iiab_ini_file():
 
 def read_iiab_local_vars():
     global local_vars
-
     try:
-        local_vars = adm.read_yaml(iiab_local_vars_file)
+        vars_dict = adm.read_yaml(iiab_local_vars_file)
+        local_vars = adm.jinja2_subst(vars_dict, dflt_dict=default_vars)
         merge_effective_vars()
     except Exception as e:
         local_vars_error = "Error in " + iiab_local_vars_file
@@ -3135,41 +3252,23 @@ def read_iiab_local_vars():
         raise
 
 def merge_effective_vars():
+    # assumes default_vars was read in init()
+    # assumes adm.jinja2_subst() has done substitutions on both
     # combine vars with local taking precedence
-    # exclude derived vars marked by {
+    # OK. a little simpler than before
+    global effective_vars
 
-    for key in default_vars:
-        if isinstance(default_vars[key], str):
-            findpos = default_vars[key].find("{")
-            if findpos == -1:
-                effective_vars[key] = default_vars[key]
-        else:
-            effective_vars[key] = default_vars[key]
-
-    for key in local_vars:
-        if isinstance(local_vars[key], str):
-            findpos = local_vars[key].find("{")
-            if findpos == -1:
-                effective_vars[key] = local_vars[key]
-        else:
-            effective_vars[key] = local_vars[key]
-
-def merge_config_vars(config_vars):
-    # put config vars in effective vars on write
-
-    for key in config_vars:
-        if isinstance(config_vars[key], str):
-            findpos = config_vars[key].find("{")
-            if findpos == -1:
-                effective_vars[key] = config_vars[key]
-        else:
-            effective_vars[key] = config_vars[key]
+    effective_vars = {**default_vars , **local_vars}
 
 def read_iiab_default_vars():
     global default_vars
-    default_vars = adm.read_yaml(iiab_repo + "/vars/default_vars.yml")
+    vars_dict = adm.read_yaml(iiab_repo + "/vars/default_vars.yml")
+    default_vars = adm.jinja2_subst(vars_dict)
 
-def read_iiab_vars():
+def OBSOL_read_iiab_vars():
+    # retain for alternate ansible variable logic
+    # assumes default_vars was read in init()
+    # and role status
     global default_vars
     global local_vars
     global effective_vars
@@ -3318,14 +3417,14 @@ def get_incomplete_jobs():
 
     # get jobs from database that didn't finish, group by command in desc order so we only done the last one
     conn = sqlite3.connect(cmdsrv_dbpath)
-    sql = "SELECT jobs.rowid, cmd_rowid, cmd_step_no, depend_on_job_id, has_dependent, job_command, job_pid, job_output, job_status, jobs.create_datetime, cmd_msg from commands, jobs "
+    sql = "SELECT jobs.rowid, cmd_rowid, cmd_step_no, depend_on_job_id, has_dependent, job_command, opt_args_json, job_pid, job_output, job_status, jobs.create_datetime, cmd_msg from commands, jobs "
     sql += "WHERE commands.rowid = jobs.cmd_rowid and job_status IN ('STARTED', 'RESTARTED', 'SCHEDULED') ORDER BY job_command, jobs.rowid DESC"
     cur = conn.execute(sql)
 
     last_command = ""
 
     for row in cur.fetchall():
-        job_id, cmd_rowid, cmd_step_no, depend_on_job_id, has_dependent, job_command, job_pid, job_output, job_status, create_datetime, cmd_msg = row
+        job_id, cmd_rowid, cmd_step_no, depend_on_job_id, has_dependent, job_command, opt_args_json, job_pid, job_output, job_status, create_datetime, cmd_msg = row
 
         job_created_time = datetime.strptime(create_datetime, "%Y-%m-%d %H:%M:%S.%f") # create_datetime to datetime type
 
@@ -3346,14 +3445,9 @@ def get_incomplete_jobs():
             except OSError:
                 pass
 
-        job_info = {}
-        parse = cmd_msg.split(' ')
-        job_info['cmd'] = parse[0]
-
-        try:
-            job_info['cmd_args'] = json.loads(parse[1])
-        except IndexError:
-           job_info['cmd_args'] =  {}
+        parse_failed, job_info = parse_cmd_msg(cmd_msg)
+        if parse_failed:
+            log(syslog.LOG_ERR, "Error: Unexpected error in when restarting Command %s." % job_info['cmd'])
 
         job_info['cmd_rowid'] = cmd_rowid
         job_info['job_command'] = job_command
@@ -3364,6 +3458,14 @@ def get_incomplete_jobs():
         job_info['status'] = job_status
         job_info['create_datetime'] = create_datetime
         job_info['status_datetime'] = str(datetime.now())
+
+        opt_args = json.loads(opt_args_json)
+
+        # break out special attributes
+        if 'extra_vars' in opt_args:
+            job_info['extra_vars'] = opt_args['extra_vars']
+        if 'service_required' in opt_args:
+            job_info['service_required'] = opt_args['service_required']
 
         # only restart if we haven't already seen this command
         # we assume that we can always use the highest numbered job for a given command
@@ -3523,15 +3625,16 @@ def app_config():
 def compute_vars():
     global adm_conf
     global osm_version
+    # only support the older version of vector maps if is in local_vars
     # calculate osm version
     if 'osm_version' in local_vars:
         adm_conf['osm_version'] = local_vars['osm_version']
-    elif os.path.exists(vector_map_path + '/installer'):
-        adm_conf['osm_version'] = 'V2'
-    elif os.path.exists(vector_map_path):
-        adm_conf['osm_version'] = 'V1'
+    #elif os.path.exists(vector_map_path + '/installer'):
+    #    adm_conf['osm_version'] = 'V2'
+    #elif os.path.exists(vector_map_path):
+    #    adm_conf['osm_version'] = 'V1'
     else:
-        adm_conf['osm_version'] = None
+        adm_conf['osm_version'] = 'V2'
     osm_version = adm_conf['osm_version']
     return
 

@@ -1360,15 +1360,20 @@ function procJobStat(data)
 
     html += "</tr>";
 
+    // To Do
+    // insert cmd and cmd_args into commands when job created
+    // changes schema
+
     // there should be one or two parts - ? still need this; for cancel
     // manual commands through iiab-cmdsrv-cti can introduce extra spaces and break this
+    // breaks on install kalite
 
-    var cmd_parse = statusJob.cmd_msg.split(" ");
-    statusJob['cmd_verb'] = cmd_parse[0];
-    if(cmd_parse.length == 0 || typeof cmd_parse[1] === 'undefined')
-      statusJob['cmd_args'] = ""
-    else
-      statusJob['cmd_args'] = JSON.parse(cmd_parse[1]);
+    //var cmd_parse = statusJob.cmd_msg.split(" ");
+    //statusJob['cmd_verb'] = cmd_parse[0];
+    //if(cmd_parse.length == 0 || typeof cmd_parse[1] === 'undefined')
+    //  statusJob['cmd_args'] = ""
+    //else
+    //  statusJob['cmd_args'] = JSON.parse(cmd_parse[1]);
 
     consoleLog(statusJob);
     job_status[statusJob.job_id] = statusJob;

@@ -16,6 +16,7 @@ import re
 import shutil
 import requests
 import yaml
+import jinja2
 
 import iiab.iiab_lib as iiab
 import iiab.iiab_const as IIAB_CONST
@@ -950,6 +951,23 @@ def read_yaml(file_name, loader=yaml.SafeLoader):
             return y
     except:
         raise
+
+def jinja2_subst(src_dict, dflt_dict=None):
+    # assumes all substitution variables are in src_dict or dflt
+    # if not substitution will be a zero length string
+    dest_dict = {}
+    if not dflt_dict:
+        lookup_dict = src_dict
+    else:
+        lookup_dict = {**dflt_dict,**src_dict}
+
+    for k, v in src_dict.items():
+        try:
+            t = jinja2.Template(v)
+            dest_dict[k] = t.render(lookup_dict)
+        except:
+            dest_dict[k] = v
+    return dest_dict
 
 def subproc_run(cmdstr, shell=False, check=False):
     args = shlex.split(cmdstr)
