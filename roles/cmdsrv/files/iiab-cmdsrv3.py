@@ -603,8 +603,8 @@ def end_job(job_id, job_info, status): # modify to use tail of job_output
     command = "tail " + output_file
     args = shlex.split(command)
     job_output = subproc_check_output(args)
-    print(type(job_output))
-    print(job_output)
+
+    #print(job_output)
     # make html safe
     #job_output = escape_html(job_output)
 
@@ -612,8 +612,8 @@ def end_job(job_id, job_info, status): # modify to use tail of job_output
 
     job_output = job_output.encode('ascii', 'replace').decode()
 
-    print(job_id)
-    print(job_output)
+    #print(job_id)
+    tprint(job_output)
     jobs_running[job_id]['job_output'] = job_output
 
 
@@ -1268,7 +1268,7 @@ def set_wpa_credentials (cmd_info):
         resp = cmd_error(cmd=cmd_info['cmd'], msg='Only supported on Raspberry Pi.')
         return (resp)
 
-    print(cmd_info)
+    #print(cmd_info)
     if 'cmd_args' in cmd_info:
         connect_wifi_ssid = cmd_info['cmd_args']['connect_wifi_ssid']
         connect_wifi_password = cmd_info['cmd_args']['connect_wifi_password']
@@ -1995,7 +1995,7 @@ def install_presets(cmd_info):
         if kiwix_catalog[zim_id]['perma_ref'] in zim_list:
             perma_ref = kiwix_catalog[zim_id]['perma_ref']
             url = kiwix_catalog[zim_id]['url'].split('.meta')[0]
-            print (zim_id, perma_ref, url)
+            #print (zim_id, perma_ref, url)
             if perma_ref not in perma_ref_idx: # find most recent zim
                 perma_ref_idx[perma_ref] = {'id': zim_id, 'url': url}
             else:
@@ -2092,7 +2092,7 @@ def install_zims(cmd_info):
 
 
         downloadSrcFile = kiwix_catalog[zimId]['download_url']
-        print(downloadSrcFile)
+        #print(downloadSrcFile)
         try:
             rc = urllib.request.urlopen(downloadSrcFile)
             rc.close()
@@ -2667,8 +2667,8 @@ def move_uploaded_file(cmd_info):
         return cmd_malformed(cmd_info['cmd'])
     src = src_path + file_name
     dst = dest_paths[file_use] + file_name
-    print(src)
-    print(dst)
+    #print(src)
+    #print(dst)
     if len(filter_array) > 0:
         if imghdr.what(src) not in filter_array:
             os.remove(src)
