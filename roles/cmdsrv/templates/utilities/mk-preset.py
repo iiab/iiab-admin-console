@@ -12,8 +12,10 @@ zim_path = iiab.CONST.zim_path + '/content'
 module_path = iiab.CONST.doc_root + '/modules'
 map_path = adm.CONST.map_doc_root + '/viewer/tiles'
 presets_dir = adm.CONST.admin_install_base + '/cmdsrv/presets/'
+role_stats = {}
 
 def main():
+    global role_stats
     parser = argparse.ArgumentParser(description="Generate directory and json files for a preset.")
     parser.add_argument("preset", help="The name of the preset. Is the directory in which the json files are store.")
     args =  parser.parse_args()
@@ -22,17 +24,14 @@ def main():
     if not os.path.exists(this_preset_dir):
         os.makedirs(this_preset_dir)
 
+    role_stats = adm.get_roles_status()
+
     do_preset(this_preset_dir)
     do_menu(this_preset_dir)
     do_vars(this_preset_dir)
     do_content(this_preset_dir)
 
     sys.exit()
-
-    preset = adm.read_json(src_dir + 'preset.json')
-    menu = adm.read_json(src_dir + 'menu.json') # actually only need to cp the file
-    content = adm.read_json(src_dir + 'content.json')
-    vars = adm.read_yaml(src_dir + 'vars.yml')
 
 def do_preset(this_preset_dir):
     preset_file = this_preset_dir + 'preset.json'
@@ -52,13 +51,13 @@ def do_menu(this_preset_dir):
 
 def do_vars(this_preset_dir):
     vars_file = this_preset_dir + 'vars.json'
-    role_stat = adm.get_roles_status()
-
     with open(vars_file, 'w') as f:
-        for role in role_stat:
-            if role_stat[role]['active']:
+        for role in role_stats:
+            if role_stats[role]['active']:
                 f.write(role + '_install: True\n')
                 f.write(role + '_enabled: True\n')
+    # or copy local_vars
+    # or copy delta of local vars
 
 def do_content(this_preset_dir):
     content = {}
@@ -101,6 +100,8 @@ def do_content(this_preset_dir):
 
     # preserve any kalite for now
     content["kalite"] = old_content.get("kalite", {})
+    if role_stats['kalite']['active']:
+        pass
 
     adm.write_json_file(content, content_file)
 
