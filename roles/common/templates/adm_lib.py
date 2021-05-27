@@ -948,6 +948,8 @@ def read_yaml(file_name, loader=yaml.SafeLoader):
     try:
         with open(file_name, 'r') as f:
             y = yaml.load(f, Loader=loader)
+            if y == None: # file is empty
+                y = {}
             return y
     except:
         raise
