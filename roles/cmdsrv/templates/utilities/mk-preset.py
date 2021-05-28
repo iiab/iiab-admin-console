@@ -5,6 +5,7 @@ import os, sys, syslog
 import pwd, grp
 import shutil
 import argparse
+import sqlite3
 import iiab.iiab_lib as iiab
 import iiab.adm_lib as adm
 
@@ -13,6 +14,7 @@ module_path = iiab.CONST.doc_root + '/modules'
 map_path = adm.CONST.map_doc_root + '/viewer/tiles'
 presets_dir = adm.CONST.admin_install_base + '/cmdsrv/presets/'
 role_stats = {}
+kalite_topics = []
 
 def main():
     global role_stats
@@ -64,7 +66,7 @@ def do_content(this_preset_dir):
     content["zims"] = []
     content["modules"] = []
     content["maps"] = []
-    content["kalite"] = {}
+    content["kalite"] = {'lang_code': 'en', 'topics': []} # defaults
     content_file = this_preset_dir + 'content.json'
 
     if os.path.exists(content_file):
@@ -101,9 +103,54 @@ def do_content(this_preset_dir):
     # preserve any kalite for now
     content["kalite"] = old_content.get("kalite", {})
     if role_stats['kalite']['active']:
-        pass
+        lang = get_kalite_lang()
+        content["kalite"]["lang_code"] = lang
+        get_kalite_complete('khan/', lang)
+        content["kalite"]["topics"] = kalite_topics
 
     adm.write_json_file(content, content_file)
+
+def get_kalite_lang():
+    # assumes normal, not PRESETS install
+    # default language is in config_settings or blank = en
+    # for now ignore any language in settings.py as IIAB does not set it
+    kalite_db = '/library/ka-lite/database/data.sqlite'
+    conn = sqlite3.connect(kalite_db)
+    cur = conn.execute ('SELECT name, value from config_settings where name  = ?', ('default_language', ))
+    settings_info = cur.fetchall()
+    conn.close()
+    if len(settings_info) == 0:
+        lang = 'en'
+    else:
+        _, lang = settings_info[0]
+    return lang
+
+def get_kalite_complete(topic, lang):
+    global kalite_topics
+    kalite_db = '/library/ka-lite/database/content_khan_' + lang + '.sqlite'
+    conn = sqlite3.connect(kalite_db)
+    cur = conn.execute ('SELECT files_complete, total_files from item where kind = "Topic" and path = ?', (topic, ))
+    topic_info = cur.fetchall()
+    conn.close()
+    complete, total = topic_info[0]
+    if complete == total:
+        # completely installed so include in list
+        kalite_topics.append(topic)
+        print(topic)
+        return
+    elif complete == 0:
+        # non installed
+        return
+    else:
+        # partially complete so look for complete child
+        conn = sqlite3.connect(kalite_db)
+        cur = conn.execute ("select path from item where kind = 'Topic' and parent_id = (select pk from item where path = ?) order by sort_order", (topic,))
+        subtopic_info = cur.fetchall()
+        conn.close()
+        for item in subtopic_info:
+            next_topic, = item
+            get_kalite_complete(next_topic, lang)
+
 
 # Now start the application
 if __name__ == "__main__":
