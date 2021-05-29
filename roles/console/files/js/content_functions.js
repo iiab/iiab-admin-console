@@ -143,6 +143,17 @@ function readableSize(kbytes) {
   return (bytes / Math.pow(1024, e)).toFixed(2) + " " + s[e];
 }
 
+// Install Preset Functions
+
+function installPreset(presetId){
+  var command = "INST-PRESETS";
+  var cmd_args = {};
+  cmd_args['preset_id'] = presetId;
+  cmd = command + " " + JSON.stringify(cmd_args);
+  return sendCmdSrvCmd(cmd, genericCmdHandler, "INST-CONTENT-PRESET");
+
+}
+
 // Manage Content Functions
 
 function manageContentInit(){

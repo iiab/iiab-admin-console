@@ -2042,7 +2042,7 @@ def install_presets(cmd_info):
         resp = install_kalite(kalite_cmd_info)
 
     if len(services_needed_error) > 0:
-        resp = cmd_error(cmd='INST-PRESETS', msg='WARNING: The following services were added - ' + services_needed_error)
+        resp = cmd_warning(cmd='INST-PRESETS', msg='WARNING: The following services were added - ' + services_needed_error)
     else:
         resp = cmd_success_msg('INST-PRESETS', "All jobs scheduled")
     return resp
@@ -3017,6 +3017,10 @@ def cmd_success(cmd):
 
 def cmd_success_msg(cmd, msg):
    return ('{"Success": "' + cmd + " " + msg + '."}')
+
+def cmd_warning(cmd="", msg="WARNING: Success, but Some Exceptions may have occured."):
+    log(syslog.LOG_ERR, "Warning: %s %s." % (msg, cmd))
+    return ('{"Warning": "' + msg + ' ' + cmd + '."}')
 
 def cmd_error(cmd="", msg="Internal Server Error processing Command"):
     log(syslog.LOG_ERR, "Error: %s %s." % (msg, cmd))

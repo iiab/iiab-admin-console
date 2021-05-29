@@ -69,7 +69,7 @@ def send_command(cmd, start_ms):
 
             if socket in socks and socks[socket] == zmq.POLLIN:
                 reply_msg = socket.recv()
-                if '"Error":' not in reply_msg:
+                if '"Error":' not in reply_msg: # this will include warnings in Data which are a form of success
                     cur_ms = time.time()
                     elapsed_ms = cur_ms - start_ms
                     reply_msg = '{"Data": ' + reply_msg + ',"Resp_time": "' + str(elapsed_ms) + '"}'

@@ -280,6 +280,12 @@ function instContentButtonsEvents() {
     $('#ContentLanguages2').show();
   });
 
+  $("#INST-CONTENT-PRESET").click(function(){
+    var presetId = $("#instConPresets input[type='radio']:checked").val()
+    installPreset(presetId);
+    alert ("Selected Preset Installation Started.\n\nPlease view Utilities->Display Job Status to see the results.");
+  });
+
   $("#INST-ZIMS").click(function(){
     var zim_id;
     make_button_disabled("#INST-ZIMS", true);
@@ -2007,7 +2013,7 @@ async function sendCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdA
   })
   //.done(callback)
   .done(function(dataResp, textStatus, jqXHR) {
-  	//consoleLog (dataResp);
+    //consoleLog (dataResp);
   	//consoleLog (callback);
   	//var dataResp = data;
   	if ("Error" in dataResp){
@@ -2017,6 +2023,12 @@ async function sendCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdA
   	    errCallback(data, cmdArgs);
   	  }
   	}
+    else if ("Warning" in dataResp.Data) {
+      cmdSrvWarning(cmdVerb, dataResp);
+      var data = dataResp.Data;
+  	  callback(data, command);
+      logServerCommands (cmdVerb, "warning", "", dataResp.Resp_time);
+    }
   	else {
   		var data = dataResp.Data;
   	  callback(data, command);
@@ -2057,6 +2069,12 @@ function cmdSrvError (cmdVerb, dataResp){
   logServerCommands (cmdVerb, "failed", errorText);
   cmdSrvErrorAlert (cmdVerb, dataResp)
   initStat["error"] = true;
+}
+
+function cmdSrvWarning(cmdVerb, dataResp){
+  var errorText = dataResp.Data.Warning;
+	var alertText = cmdVerb + " " + errorText;
+	alert(alertText);
 }
 
 function cmdSrvErrorAlert (cmdVerb, dataResp){

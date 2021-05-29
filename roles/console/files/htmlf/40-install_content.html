@@ -14,8 +14,8 @@
       <h2>Installation Tasks</h2>
       <ul id="installContentMenu" class="nav nav-pills nav-stacked">
         <!-- Start XXX Sub Level Menu -->
-        <!-- <li class="active"><a href="#instConPresets">Quick Pick</a></li>-->
-        <li class="active"><a href="#instConStart">Get Started</a></li>
+        <li class="active"><a href="#instConPresets">Quick Pick</a></li>
+        <!-- <li class="active"><a href="#instConStart">Get Started</a></li> -->
         <li><a href="#instConZims" call-after="checkKiwixCatalogDate">Get ZIM Files from Kiwix</a></li>
         <li><a href="#instConOer2go" call-after="oer2goMenuOption">Get OER2Go(RACHEL) Modules</a></li>
         <li><a href="#instOsmRegion" call-after="renderRegionMap">Get Map Regions</a></li>
@@ -39,7 +39,7 @@
       <!-- Start right column -->
       <div id="installContentOptions" class="tab-content">
         <!-- Start Container for Sub Menu Options Panes -->
-        <div class="tab-pane active" id="instConStart">
+        <div class="tab-pane" id="instConStart">
           <!-- Start instConStart Submenu Option Pane -->
           <h2>Get Started</h2>
           <p>The options on this menu allow you to copy, download and install content onto Internet-in-a-Box. This
@@ -53,7 +53,7 @@
             <li>Flag to allow downloads of content to be valid only for each session.</li>
           </ul>
         </div> <!--  End instConStart Submenu Option Pane -->
-        <div class="tab-pane" id="instConPresets">
+        <div class="tab-pane active" id="instConPresets">
           <!-- Start instConStart Submenu Option Pane -->
           <h2>Quick Pick</h2>
           <p>Use this menu option to select a collection of content items that are commonly used for a given audience.</p>
@@ -71,7 +71,7 @@
           -->
 
           <div class="radio">
-            <label><input type="radio" name="content-preset" id="en-school" value="en-school">School with Instruction in English</label>
+            <label><input type="radio" name="content-preset" id="en-school" value="en-school" checked>School with Instruction in English</label>
           </div>
           <div class="radio">
             <label><input type="radio" name="content-preset" id="es-school" value="es-school">School with Instruction in Spanish</label>
@@ -81,6 +81,9 @@
           </div>
           <div class="radio">
             <label><input type="radio" name="content-preset" id="en-medical" value="en-medical">Medical Practitioners using English</label>
+          </div>
+          <div class="radio">
+            <label><input type="radio" name="content-preset" id="test" value="test">Test</label>
           </div>
 
           <button id="INST-CONTENT-PRESET" type="button" class="btn btn-lg btn-primary">Install Selected Collection</button>
