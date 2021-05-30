@@ -52,7 +52,7 @@ def do_menu(this_preset_dir):
     shutil.copyfile(iiab.CONST.doc_root + '/home/menu.json', menu_file)
 
 def do_vars(this_preset_dir):
-    vars_file = this_preset_dir + 'vars.json'
+    vars_file = this_preset_dir + 'vars.yml'
     with open(vars_file, 'w') as f:
         for role in role_stats:
             if role_stats[role]['active']:
