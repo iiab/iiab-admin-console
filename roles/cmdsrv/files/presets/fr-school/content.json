@@ -1,0 +1,35 @@
+{
+    "zims": [
+      "wikipedia_fr_all_maxi",
+      "vikidia_fr_all_maxi",
+      "la_chaine_de_maths_et_tiques_fr_all",
+      "les-fondamentaux_fr_all",
+      "cest-pas-sorcier_fr_all",
+      "universcience-tv_fr_all",
+      "wiktionary_fr_all_maxi",
+      "wikiquote_fr_all_maxi",
+      "wikisource_fr_all_maxi",
+      "wikistage_fr_all",
+      "wikiversity_fr_all_maxi",
+      "wikivoyage_fr_all_maxi",
+      "biologie-tout-compris_fr_all",
+      "bouquineux_fr_all",
+      "deus-ex-silicium_fr_all",
+      "dirtybiology_fr_all",
+      "e-penser_fr_all",
+      "icd10_fr_all",
+      "wikimooc_fr_all",
+      "wikipedia_fr_medicine_maxi"
+    ],
+    "modules": [],
+    "maps": [
+      "satellite_z0-z9_v3.mbtiles",
+      "osm-planet_z0-z10_2019.mbtiles"
+    ],
+    "kalite": {
+      "lang_code": "fr",
+      "topics": [
+        "khan/"
+      ]
+    }
+  }
