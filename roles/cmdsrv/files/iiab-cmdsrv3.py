@@ -2034,12 +2034,13 @@ def install_presets(cmd_info):
 
     # kalite
 
-    kalite_cmd_info = cmd_info
-    kalite_cmd_info['cmd'] = 'INST-KALITE'
-    kalite_cmd_info['cmd_args'] = content['kalite']
-    kalite_cmd_info = pseudo_cmd_handler(kalite_cmd_info)
-    if kalite_cmd_info:
-        resp = install_kalite(kalite_cmd_info)
+    if len(kalite_vars) > 0:
+        kalite_cmd_info = cmd_info
+        kalite_cmd_info['cmd'] = 'INST-KALITE'
+        kalite_cmd_info['cmd_args'] = content['kalite']
+        kalite_cmd_info = pseudo_cmd_handler(kalite_cmd_info)
+        if kalite_cmd_info:
+            resp = install_kalite(kalite_cmd_info)
 
     if len(services_needed_error) > 0:
         resp = cmd_warning(cmd='INST-PRESETS', msg='WARNING: The following services were added - ' + services_needed_error)
