@@ -15,7 +15,7 @@
     "allow_kiwix_search": true,
     "allow_poweroff": false,
     "poweroff_prompt": "Power Off",
-    "autoupdate_menu": true,
+    "autoupdate_menu": false,
     "allow_server_time_update": false,
     "multi_tab": false,
     "tab_names": [
@@ -44,7 +44,6 @@
       "es-gutenberg_es_all",
       "es-calibreweb",
       "en-wikipedia_en_simple_all_maxi",
-      "en-wikipedia_en_top_maxi",
       "en-wiktionary_en_simple_all_maxi",
       "en-crashcourse_en_all",
       "es-wordpress",
