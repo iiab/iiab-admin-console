@@ -5,23 +5,23 @@
     "wiktionary_es_all_maxi",
     "wikiquote_es_all_maxi",
     "ecured_es_all",
+    "gcflearn_es_all_maxi",
     "gutenberg_es_all",
-    "wikipedia_en_simple_all_maxi",
     "wikipedia_en_top_maxi",
+    "wikipedia_en_simple_all_maxi",
     "wiktionary_en_simple_all_maxi",
-    "crashcourse_en_all"
+    "crashcourse_en_top"
   ],
   "modules": [
     "es-hesperian_health",
     "es-medline_plus",
     "es-educalab",
     "es-soluciones",
-    "es-GCF2021",
     "es-wikihow",
     "es-bibliofilo",
     "es-blockly-games",
     "es-vedoque",
-    "es-mustardseedbooks/MustardSeedBooksSP.html",
+    "es-mustardseedbooks",
     "es-ebooks"
   ],
   "maps": [

@@ -1680,7 +1680,7 @@ def set_white_list(cmd_info):
 def get_kiwix_catalog(cmd_info):
     outp = subproc_check_output(["scripts/get_kiwix_catalog"])
     if outp == "SUCCESS":
-        read_kiwix_catalog
+        read_kiwix_catalog()
         resp = cmd_success("GET-KIWIX-CAT")
         return (resp)
     else:
@@ -3344,7 +3344,6 @@ def get_ansible_tags():
 def read_kiwix_catalog():
     global kiwix_catalog
     global init_error
-
     try:
         stream = open (kiwix_catalog_file,"r")
         kiwix_catalog_with_date = json.load(stream)
