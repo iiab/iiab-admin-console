@@ -2042,6 +2042,9 @@ def install_presets(cmd_info):
         if kalite_cmd_info:
             resp = install_kalite(kalite_cmd_info)
 
+    # copy menu.json
+    shutil.copyfile(src_dir + 'menu.json', iiab.CONST.doc_root + '/home/menu.json')
+
     if len(services_needed_error) > 0:
         resp = cmd_warning(cmd='INST-PRESETS', msg='WARNING: The following services were added - ' + services_needed_error)
     else:
