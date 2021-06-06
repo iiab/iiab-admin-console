@@ -1,0 +1,19 @@
+#!/usr/bin/python3
+import os
+import iiab.adm_lib as adm
+
+adm.pcgvtd9()
+local_menu_item_defs = adm.get_local_menu_item_defs() # returns dict
+repo_menu_item_defs = adm.get_repo_menu_item_defs() # returns dict
+obsolete_menu_item_defs = adm.read_json(adm.CONST.obsolete_menu_defs)
+
+for menu_item_def_name in obsolete_menu_item_defs:
+    if menu_item_def_name in local_menu_item_defs:
+        print('Removing local file ' + menu_item_def_name)
+        os.remove( adm.CONST.menu_def_dir + menu_item_def_name + '.json')
+    if menu_item_def_name in repo_menu_item_defs:
+        print('Removing repo file ' + menu_item_def_name)
+        url = repo_menu_item_defs[menu_item_def_name]['url']
+        sha = repo_menu_item_defs[menu_item_def_name]['sha']
+        response = adm.del_github_file(url, sha)
+        print(response)

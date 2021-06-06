@@ -39,12 +39,13 @@ Install Content
 * Get OER2Go(RACHEL) Modules
 * Download Khan Academy Videos
 * Manage Content
+* Clone IIAB
 
 Content Menus
 -------------
 
 * Edit Content Menus
-* Edit Menu Items - Future
+* Edit Menu Items
 
 Utilities
 ---------

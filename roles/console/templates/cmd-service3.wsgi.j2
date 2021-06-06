@@ -1,0 +1,292 @@
+import zmq
+import os.path
+import time
+import urllib.request, urllib.error, urllib.parse
+import crypt
+import pwd
+import spwd
+import grp
+import secrets
+import base64
+import nacl.utils
+from nacl.public import PrivateKey, PublicKey, Box
+from nacl.encoding import Base64Encoder
+
+cmdsrv_pid_file = "{{ cmdsrv_pid_file }}"
+cmdsrv_ready_file = "{{ cmdsrv_ready_file }}"
+iiab_cmd_service = "{{ iiab_cmd_service_url }}"
+admin_console_group = "{{ admin_console_group }}"
+valid_group_list = ['sudo', admin_console_group]
+
+
+# for testing
+#cmdsrv_pid_file = "/run/iiab-cmdsrv.pid"
+#cmdsrv_ready_file = "/run/iiab-cmdsrv-ready"
+#iiab_cmd_service = '/iiab-cmd-service'
+
+server_key_pair = None
+server_public_key64 = None # ? not needed
+server_public_key_bytes = None
+
+# Note that this does not work if uwsgi has > 1 worker
+# data global to threads but not to processes
+# stored in base64 bytes for convenience
+valid_nonces = []
+
+# not used
+# future guard against attack against already logged in machine
+# ould add expiry, ip addr OR just alway use credentials
+valid_tokens = []
+
+# init() at bottom
+
+alert_param = ',"Alert": "True"}' # global for cmd response
+
+def application(environ, start_response):
+    global valid_nonces
+    req_method = environ['REQUEST_METHOD']
+    req_uri = environ['REQUEST_URI'].split('?')[0] # remove any cache buster
+    #print(req_method, req_uri)
+    #print(environ)
+
+    if req_method == 'GET':
+        if req_uri == iiab_cmd_service + '/auth/login':
+            response_headers = [('Content-type', 'text/plain'), ('Access-Control-Allow-Headers', '*')]
+            token = ''
+            status = '403 Invalid Login'
+            #print(environ)
+            if authenticate(environ):
+                token = secrets.token_urlsafe(32)
+                status = '200 OK'
+            #print(status)
+            start_response(status, response_headers)
+            return token
+
+        else: # these are all gets
+            response_headers = [('Content-type', 'text/plain')]
+            #print(response_headers)
+            status = '200 OK'
+            start_response(status, response_headers)
+
+            if req_uri == iiab_cmd_service + '/auth/get_pubkey':
+                print('Get Server Public Key')
+                #print(server_public_key64)
+                return server_public_key_bytes
+            elif req_uri == iiab_cmd_service + '/auth/get_nonce':
+                print('Get Server Nonce')
+                nonce = nacl.utils.random(Box.NONCE_SIZE)
+                #print (nonce)
+                n64 = base64.b64encode(nonce)
+                valid_nonces.append(n64)
+                return n64
+            elif req_uri == iiab_cmd_service + '/auth/refresh':    # reload passwd cache. not for now as will use token
+                print('Unused Refresh Service')
+                return ''
+            else:
+                response_body = dump(environ)
+                # convert string response back to bytes
+                return [response_body.encode()]
+
+    elif req_method == 'POST':
+        if req_uri == iiab_cmd_service + '/cmd':
+            if authenticate(environ):
+                response_body = handle_cmd(req_uri, environ)
+                status = '200 OK'
+                response_headers = [('Content-type', 'application/json'), ('Content-Length', str(len(response_body)))]
+                start_response(status, response_headers)
+                # convert string response back to bytes
+                return [response_body.encode()]
+            else:
+                status = '403 Invalid Login'
+                response_headers = [('Content-type', 'text/plain'), ('Access-Control-Allow-Headers', '*')]
+                start_response(status, response_headers)
+                return ''
+                #return ['{"Error": "Invalid login"}'.encode()]
+
+def authenticate(environ):
+    if 'HTTP_X_IIAB_CREDENTIALS' in environ and 'HTTP_X_IIAB_CLIENTKEY' in environ and 'HTTP_X_IIAB_NONCE' in environ:
+        credentials64 = environ['HTTP_X_IIAB_CREDENTIALS']
+        client_public_key64 = environ['HTTP_X_IIAB_CLIENTKEY']
+        nonce64 = environ['HTTP_X_IIAB_NONCE']
+        return auth_login(credentials64, client_public_key64, nonce64)
+    else:
+        return False
+
+def auth_login(credentials64, client_public_key64, nonce64): # candidate for adm_lib
+    global valid_nonces
+    print('Starting Authentication')
+    nonce64_bytes = nonce64.encode()
+
+    if nonce64_bytes not in valid_nonces:
+        print('Invalid Nonce')
+        return False
+
+    valid_nonces.remove(nonce64_bytes) # enforce single use of nonce
+    decrypt_success, credentials = nacl_decrpt(credentials64, client_public_key64, nonce64)
+
+    if not decrypt_success:
+        print('Decryption Failed')
+        return False
+
+    u_pw = credentials.split(':')
+    user = u_pw[0]
+    if len(u_pw) == 2:
+        password = u_pw[1]
+    else:
+        print('User:Password Failed')
+        return False
+
+    # see if user exists
+    try:
+        spwddb = spwd.getspnam(user)
+        user_info = pwd.getpwnam(user)
+    except:
+        print('Bad User')
+        return False
+
+    # must be in one of valid_group_list
+    group_valid = False
+    for group in valid_group_list:
+        try:
+            grp_info = grp.getgrnam(group)
+            if user in grp_info.gr_mem:
+                group_valid = True
+                break
+
+            if grp_info.gr_gid == user_info.pw_gid:
+                group_valid = True
+                break
+
+        except:
+            continue
+    if not group_valid:
+        print('Bad Group')
+        return False
+
+    # check password - N.B. allows password guessing
+    readpasswd = spwddb[1]
+    pwparts = readpasswd.split('$')
+    if len(pwparts) < 4:
+        salt = ''
+        print('No Password Salt')
+    else:
+        salt = '$' + pwparts[1] + '$' +  pwparts[2] +'$'
+    calcpasswd = crypt.crypt(password, salt)
+
+    if calcpasswd != readpasswd:
+        print('Bad Password')
+        return False
+    else:
+        return True
+
+def nacl_decrpt(message64, client_public_key64, nonce64):
+    decrypt_success = True
+    encrypted = base64.b64decode(message64)
+    nonce = base64.b64decode(nonce64)
+    client_public_key = nacl.public.PublicKey(client_public_key64, encoder = nacl.encoding.Base64Encoder) # works
+    box = Box(server_key_pair, client_public_key)
+    try:
+        plaintext = box.decrypt(encrypted, nonce) #works; base64 decoding can be done inside with encoder = nacl.encoding.Base64Encoder
+    except:
+        plaintext = b''
+        decrypt_success = False
+    return decrypt_success, plaintext.decode()
+
+def handle_cmd(req_uri, environ):
+    start_ms = time.time()
+    try:
+        request_body_size = int(environ.get('CONTENT_LENGTH', 0))
+    except (ValueError):
+        request_body_size = 0
+
+    request_body = environ['wsgi.input'].read(request_body_size).decode('utf8')
+    # request_body holds command=<text of cmd>
+    # or encrypted_command=<encrypted text of cmd>
+    # it is byte so we convert to string for easier manipulation
+
+    if os.path.exists(cmdsrv_pid_file):
+        if os.path.exists(cmdsrv_ready_file):
+            # unpack cmd, urldecode, and substitute space for %20
+            payload = request_body.split('=')
+            cmd_type = payload[0]
+            cmd = payload[1]
+            cmd = urllib.parse.unquote(cmd)
+            if cmd_type == 'encrypted_command':
+                client_public_key64 = environ['HTTP_X_IIAB_CLIENTKEY']
+                nonce64 = environ['HTTP_X_IIAB_NONCE']
+                decrypt_success, cmd = nacl_decrpt(cmd, client_public_key64, nonce64)
+
+            #cmd = urllib.parse.unquote(cmd)
+            cmd = cmd.replace('%20', ' ')
+            print('Handling ' + cmd)
+
+            response_body = send_command(cmd, start_ms)
+        else:
+            response_body = '{"Error": "CMDSRV has started but is not ready."' + alert_param
+    else:
+        response_body = '{"Error": "CMDSRV is not running."' + alert_param
+
+    print(response_body[0:80])
+    return response_body
+
+def dump(environ):
+    print("Dump Environment")
+    response_body = ['%s: %s' % (key, value) for key, value in sorted(environ.items())]
+    response_body = '\n'.join(response_body)
+    return response_body
+
+def send_command(cmd, start_ms):
+    REQUEST_TIMEOUT = 30000
+    send_msg = cmd
+
+    ipc_sock = "/run/cmdsrv_sock"
+
+    try:
+        context = zmq.Context()
+        #print "Connecting to server..."
+        socket = context.socket(zmq.DEALER)
+        socket.connect ("ipc://%s" % ipc_sock)
+        try:
+            # socket.setsockopt(zmq.SOCKOPT_LINGER, 0) this should be the default for close() and is not in python binding
+            poll = zmq.Poller()
+            poll.register(socket, zmq.POLLIN)
+
+            socket.send_string (send_msg)
+            socks = dict(poll.poll(REQUEST_TIMEOUT))
+
+            if socket in socks and socks[socket] == zmq.POLLIN:
+                reply_msg = socket.recv_string()
+                if '"Error":' not in reply_msg:
+                    cur_ms = time.time()
+                    elapsed_ms = cur_ms - start_ms
+                    reply_msg = '{"Data": ' + reply_msg + ',"Resp_time": "' + str(elapsed_ms) + '"}'
+            else:
+                reply_msg = '{"Error": "Jeez! CMDSRV did not respond in ' + str(REQUEST_TIMEOUT) + ' milliseconds. Probably too busy to pick up the phone. Please try again later."' + alert_param
+
+            socket.setsockopt(zmq.LINGER, 0)
+        finally:
+            socket.close()
+            try:
+                poll.unregister(socket)
+            except Exception:
+                pass
+
+    except Exception as e:
+        reply_msg = '{"Error": "' + str(e) + '"' + alert_param
+
+    return reply_msg
+
+def calc_keys():
+    print('Generating Server Key Pair')
+    global server_key_pair
+    global server_public_key64
+    global server_public_key_bytes
+    server_key_pair = PrivateKey.generate() # nacl
+    public_key = server_key_pair.public_key # nacl
+    server_public_key_bytes = public_key.encode(Base64Encoder) # nacl
+    server_public_key64 = server_public_key_bytes.decode()
+
+def init():
+    calc_keys()
+
+init()

@@ -1,0 +1,8 @@
+{
+    "name": "Test",
+    "description": "This preset simply tests the preset functionality",
+    "default_lang": "en",
+    "location": "Toronto",
+    "size_in_gb": 115,
+    "last_modified": "2021-05-07"
+  }

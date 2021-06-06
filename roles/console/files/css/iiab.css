@@ -1,5 +1,26 @@
 @charset "UTF-8";
 
+/* Override Bootstrap 3 */
+
+.adm-cons-page-header {
+  font-size: 30px;
+  padding-top: 10px;
+  background:#E5CF87;
+}
+
+.h1, .h2, .h3, h1, h2, h3 {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.h1, h1 {
+  font-size: 30px;
+}
+
+.h2, h2 {
+  font-size: 24px;
+}
+
 #iiab-top-nav {
   background: #E5CF87;
 }
@@ -75,6 +96,23 @@ border-radius: 8px 8px 0 0;
 
 .modal-wide .modal-body {
   overflow-y: auto;
+}
+
+/* for some reason h5 causes wrap on close button */
+.modal-title-4 {
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.modal-background {
+  position: fixed;
+  top: 0;
+  /*left: 0; */
+  height: 100%;
+  width: 100%;
+  /*margin: auto;*/
+  background-color: rgba(0,0,0,0.6);
+  z-index: -1;
 }
 
 #ZimDownload h2 {
@@ -270,4 +308,12 @@ border-radius: 8px 8px 0 0;
 
 #INST-MAP {
   margin-bottom: 10px;
+}
+
+.map-container {
+  background-color: #b2d3f8;
+  float: right;
+  width: 65%;
+  right: 10px;
+  height: 500px;
 }

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 """
 
@@ -28,16 +28,19 @@ import sqlite3
 import json
 import xml.etree.ElementTree as ET
 import yaml
-import ConfigParser
+import configparser
 import re
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import string
+import imghdr
 import crypt
 import spwd
 import cracklib
 import socket
+import iiab.adm_lib as adm
 
-# import cgi keep to escape html in future
+
+# import cgi # keep to escape html in future
 
 # cmdsrv config file
 # if run standalone is in current directory
@@ -93,9 +96,16 @@ maps_downloads_dir = None
 maps_working_dir = None
 maps_catalog_url = None
 maps_catalog_file = None
+# maps_catalog_url_v2 = future if we need to download
+adm_maps_catalog_file = None # used exclusively by admin console
+maps_tiles_base = None
+maps_sat_base = None
+maps_download_src = None
 vector_map_path = None
+vector_map_tiles_path = None
+osm_version = None
 modules_dir = None
-small_device_size = 250000
+small_device_size = 525000 # bigger than anticipated boot partition
 js_menu_dir = None
 
 # Global Variables
@@ -117,6 +127,8 @@ oer2go_wip = {}
 #oer2go_downloading = {}
 #oer2go_copying = {}
 oer2go_installed = []
+osm_vect_installed = []
+maps_wip = {}
 jobs_requested = {}
 jobs_to_restart = {}
 jobs_to_cancel = {}
@@ -124,7 +136,9 @@ prereq_jobs = {}
 jobs_running = {}
 running_job_count = 0
 
+ANSIBLE_COMMANDS = ["RUN-ANSIBLE", "RESET-NETWORK", "RUN-ANSIBLE-ROLES"]
 ansible_running_flag = False
+iiab_roles_status = {}
 daemon_mode = False
 init_error = False
 
@@ -143,15 +157,17 @@ db_lock = threading.Lock() # for sqlite db concurrency
 # vars read from ansible vars directory
 # effective is composite where local takes precedence
 
-default_vars = {}
-local_vars = {}
+adm_conf = {} # for use by front end
+default_vars = {} # /opt/iiab/iiab/vars/default_vars.yml
+local_vars = {} # /etc/iiab/local_vars.yml
 effective_vars = {}
 ansible_facts = {}
 ansible_tags = {}
 iiab_ini = {}
 kiwix_catalog = {}
 oer2go_catalog = {}
-maps_catalog = {}
+maps_catalog = {} # this has been flattened when read to include both maps and base
+is_rpi = False
 
 # vars set by admin-console
 # config_vars = {} no longer distinct from local vars
@@ -182,7 +198,7 @@ def main():
     client_url = "ipc://" + ipc_sock
 
     owner = pwd.getpwnam(apache_user)
-    group = grp.getgrnam("iiab-admin")
+    group = grp.getgrnam(apache_user)
 
     # Prepare our context and sockets
     context = zmq.Context.instance()
@@ -191,7 +207,7 @@ def main():
     clients = context.socket(zmq.ROUTER)
     clients.bind(client_url)
     os.chown(ipc_sock, owner.pw_uid, group.gr_gid)
-    os.chmod(ipc_sock, 0770)
+    os.chmod(ipc_sock, 0o770)
 
     # Socket to talk to workers
     workers_data = context.socket(zmq.DEALER)
@@ -220,25 +236,27 @@ def main():
         sockets = dict(poll.poll())
         if clients in sockets:
             ident, msg = clients.recv_multipart()
-            tprint('sending message server received from client to worker %s id %s' % (msg, ident))
-            if msg == "STOP":
+            msg = msg.decode('utf8') # byte to str
+            #tprint(f'sending message server received from client to worker %s id %s' % (msg, ident))
+            tprint(f'sending message server received from client to worker {msg} id {ident}')
+            if msg == 'STOP':
                 # Tell the worker threads to shut down
                 set_ready_flag("OFF")
                 tprint('sending control message server received from client to worker %s id %s' % (msg, ident))
-                workers_control.send("EXIT")
-                clients.send_multipart([ident, '{"Status": "Stopping"}'])
+                workers_control.send(b'EXIT')
+                clients.send_multipart([ident, b'{"Status": "Stopping"}'])
                 log(syslog.LOG_INFO, 'Stopping Command Server')
                 time.sleep(3)
                 server_run = False
             else:
-                # if in daemon mode report and init failed alwasy return same error message
+                # if in daemon mode report and init failed always return same error message
                 if daemon_mode == True and init_error == True:
                     msg = '{"Error": "IIAB-CMDSRV failed to initialize","Alert": "True"}'
-                    clients.send_multipart([ident, msg])
+                    clients.send_multipart([ident, msg.encode('utf8')])
                 else:
                     tprint('sending data message server received from client to worker %s id %s' % (msg, ident))
                     log(syslog.LOG_INFO, 'Received CMD Message %s.' % msg )
-                    workers_data.send_multipart([ident, msg])
+                    workers_data.send_multipart([ident, msg.encode('utf8')])
         if workers_data in sockets:
             ident, msg = workers_data.recv_multipart()
             tprint('Sending worker message to client %s id %s' % (msg[:60], ident))
@@ -283,7 +301,7 @@ def job_minder_thread(client_url, worker_control_url, context=None):
     context = context or zmq.Context.instance()
     control_socket = context.socket(zmq.SUB)
     control_socket.connect(worker_control_url)
-    control_socket.setsockopt(zmq.SUBSCRIBE,"")
+    control_socket.setsockopt_string(zmq.SUBSCRIBE,"")
 
     # Socket to send job status back to main
     resp_socket = context.socket(zmq.DEALER)
@@ -312,7 +330,7 @@ def job_minder_thread(client_url, worker_control_url, context=None):
     while thread_run == True:
         lock.acquire() # will block if lock is already held
         try:
-            jobs_requested_list = jobs_requested.keys() # create copy of keys so we can update global dictionary in loop
+            jobs_requested_list = list(jobs_requested.keys()) # create copy of keys so we can update global dictionary in loop
         finally:
             lock.release() # release lock, no matter what
 
@@ -337,11 +355,12 @@ def job_minder_thread(client_url, worker_control_url, context=None):
                 continue
 
             # don't create ansible job if one is running
-            if job_info['cmd'] in ["RUN-ANSIBLE", "RESET-NETWORK"] and ansible_running_flag == True:
+            if job_info['cmd'] in ANSIBLE_COMMANDS and ansible_running_flag == True:
                 continue
 
             # don't start job if at max allowed
             if running_job_count >= cmdsrv_max_concurrent_jobs:
+                # print(f'Waiting for queue: running_job_count {running_job_count}, cmdsrv_max_concurrent_jobs {cmdsrv_max_concurrent_jobs}')
                 continue
 
             #print "starting prereq check"
@@ -367,6 +386,11 @@ def job_minder_thread(client_url, worker_control_url, context=None):
                         prereq_jobs_to_clear.append(depend_on_job_id) # mark for deletion
 
             else: # not a multi-step job or first step of multi
+                # don't start if depends on uninstalled or inactive service
+                service_required = job_info.get('service_required') # array that holds service and required state
+                if service_required:
+                    if not iiab_roles_status.get(service_required[0], {}).get(service_required[1]):
+                        continue
                 job_info = start_job(job_id, job_info) # Create running job
                 jobs_running[job_id] = job_info
                 jobs_requested_done.append(job_id)
@@ -409,7 +433,7 @@ def job_minder_thread(client_url, worker_control_url, context=None):
                         t += 1
                     if rc == None:
                         p.kill()
-                    job_info = end_job(job_id, job_info, 'CANCELLED')
+                    job_info = end_job(job_id, jobs_running[job_id], 'CANCELLED')
                     jobs_to_close.append(job_id)
                     upd_job_cancelled(job_id)
             else:
@@ -421,7 +445,7 @@ def job_minder_thread(client_url, worker_control_url, context=None):
                 else:
                     status = 'FAILED'
 
-                job_info = end_job(job_id, job_info, status)
+                job_info = end_job(job_id, jobs_running[job_id], status)
 
                 # flag job for removal
                 jobs_to_close.append(job_id)
@@ -440,7 +464,7 @@ def job_minder_thread(client_url, worker_control_url, context=None):
         #print 'starting socket poll'
         sockets = dict(poll.poll(1000))
         if control_socket in sockets:
-            ctl_msg = control_socket.recv()
+            ctl_msg = control_socket.recv_string()
             tprint('got ctl msg %s in monitor' % ctl_msg)
             if ctl_msg == "EXIT":
                 # stop loop in order to terminate thread
@@ -460,6 +484,7 @@ def job_minder_thread(client_url, worker_control_url, context=None):
 def add_wip(job_info):
     global zims_wip
     global oer2go_wip
+    global maps_wip
 
     dest = "internal"
     source = "kiwix"
@@ -496,9 +521,21 @@ def add_wip(job_info):
                 action = "EXPORT"
         oer2go_wip[moddir] = {"cmd":cmd, "action":action, "dest":dest, "source":source}
 
+    elif cmd in {"INST-OSM-VECT-SET"}:
+        # handle V1?
+        map_id = job_info['cmd_args']['osm_vect_id']
+        download_url = job_info['extra_vars']['download_url']
+        size = job_info['extra_vars']['size']
+        maps_wip[map_id] = {"cmd":cmd, "action":action, "dest":dest, "source":source, "download_url":download_url, "size": size}
+
+    elif cmd in {"INST-SAT-AREA"}:
+        pass
+        # radius = job_info['extra_vars']['radius'] not much housekeeping to do
+
 def remove_wip(job_info):
     global zims_wip
     global oer2go_wip
+    global maps_wip
 
     #print job_info
     #print "in remove_wip"
@@ -507,6 +544,8 @@ def remove_wip(job_info):
         zims_wip.pop(job_info['cmd_args']['zim_id'], None)
     elif job_info['cmd'] in ["INST-OER2GO-MOD", "COPY-OER2GO-MOD"]:
         oer2go_wip.pop(job_info['cmd_args']['moddir'], None)
+    elif job_info['cmd'] in {"INST-OSM-VECT-SET"}:
+        maps_wip.pop(job_info['cmd_args']['osm_vect_id'], None)
 
 def start_job(job_id, job_info, status='STARTED'):
     global running_job_count
@@ -526,12 +565,11 @@ def start_job(job_id, job_info, status='STARTED'):
     job_info['status'] = status
     job_info['status_datetime'] = str(datetime.now())
     job_info['job_output'] = ""
-
-    #print job_info
+    #print (job_info)
     if job_id in prereq_jobs:
         prereq_jobs[job_id]['status'] = 'STARTED'
 
-    if job_info['cmd'] in ["RUN-ANSIBLE", "RESET-NETWORK"]:
+    if job_info['cmd'] in ANSIBLE_COMMANDS:
         ansible_running_flag = True
 
     if status == 'STARTED':
@@ -564,14 +602,18 @@ def end_job(job_id, job_info, status): # modify to use tail of job_output
 
     command = "tail " + output_file
     args = shlex.split(command)
-    job_output = subprocess.check_output(args)
+    job_output = subproc_check_output(args)
 
+    #print(job_output)
     # make html safe
     #job_output = escape_html(job_output)
 
     # remove non-printing chars as an alternative
-    job_output = filter(lambda x: x in string.printable, job_output)
 
+    job_output = job_output.encode('ascii', 'replace').decode()
+
+    #print(job_id)
+    tprint(job_output)
     jobs_running[job_id]['job_output'] = job_output
 
 
@@ -587,10 +629,13 @@ def end_job(job_id, job_info, status): # modify to use tail of job_output
     upd_job_finished(job_id, job_output, status)
     os.remove(output_file)
 
-    if job_info['cmd'] in ["RUN-ANSIBLE", "RESET-NETWORK"]:
+
+    if job_info['cmd'] in ANSIBLE_COMMANDS:
+        #if 1 == 1:
         ansible_running_flag = False
         #if status == "SUCCEEDED":
         read_iiab_ini_file() # reread ini file after running ansible
+        read_iiab_roles_stat() # refresh global iiab_roles_status
 
     running_job_count -= 1
     if running_job_count < 0:
@@ -633,7 +678,7 @@ def cmd_proc_thread(worker_data_url, worker_control_url, context=None):
     # control signals from main thread
     control_socket = context.socket(zmq.SUB)
     control_socket.connect(worker_control_url)
-    control_socket.setsockopt(zmq.SUBSCRIBE,"")
+    control_socket.setsockopt_string(zmq.SUBSCRIBE,"")
 
     poll = zmq.Poller()
     poll.register(data_socket, zmq.POLLIN)
@@ -647,13 +692,14 @@ def cmd_proc_thread(worker_data_url, worker_control_url, context=None):
         # process command
         if data_socket in sockets:
             ident, cmd_msg = data_socket.recv_multipart()
+            cmd_msg = cmd_msg.decode("utf8")
             tprint('sending message server received from client to worker %s id %s' % (cmd_msg, ident))
             cmd_resp = cmd_handler(cmd_msg)
             #print cmd_resp
             # 8/23/2015 added .encode() to response as list_library was giving unicode errors
             data_socket.send_multipart([ident, cmd_resp.encode()])
         if control_socket in sockets:
-            ctl_msg = control_socket.recv()
+            ctl_msg = control_socket.recv_string()
             tprint('got ctl msg %s in worker' % ctl_msg)
             if ctl_msg == "EXIT":
                 # stop loop in order to terminate thread
@@ -666,6 +712,10 @@ def cmd_proc_thread(worker_data_url, worker_control_url, context=None):
     #context.term()
     #sys.exit()
 
+########################################
+# cmdlist List of all Commands is Here #
+########################################
+
 def cmd_handler(cmd_msg):
 
     # List of recognized commands and corresponding routine
@@ -675,16 +725,17 @@ def cmd_handler(cmd_msg):
         "TEST": {"funct": do_test, "inet_req": False},
         "LIST-LIBR": {"funct": list_library, "inet_req": False},
         "WGET": {"funct": wget_file, "inet_req": True},
+        "GET-ADM-CONF": {"funct": get_adm_conf, "inet_req": False},
         "GET-ANS": {"funct": get_ans_facts, "inet_req": False},
         "GET-ANS-TAGS": {"funct": get_ans_tags, "inet_req": False},
         "GET-VARS": {"funct": get_install_vars, "inet_req": False},
         "GET-IIAB-INI": {"funct": get_iiab_ini, "inet_req": False},
-        "GET-CONF": {"funct": get_config_vars, "inet_req": False},
         "SET-CONF": {"funct": set_config_vars, "inet_req": False},
         "GET-MEM-INFO": {"funct": get_mem_info, "inet_req": False},
         "GET-SPACE-AVAIL": {"funct": get_space_avail, "inet_req": False},
         "GET-STORAGE-INFO": {"funct": get_storage_info_lite, "inet_req": False},
         "GET-EXTDEV-INFO": {"funct": get_external_device_info, "inet_req": False},
+        "GET-REM-DEV-LIST": {"funct": get_rem_dev_list, "inet_req": False},
         "GET-SYSTEM-INFO": {"funct": get_system_info, "inet_req": False},
         "GET-NETWORK-INFO": {"funct": get_network_info, "inet_req": False},
         "CTL-WIFI": {"funct": ctl_wifi, "inet_req": False},
@@ -693,6 +744,8 @@ def cmd_handler(cmd_msg):
         "CTL-VPN": {"funct": ctl_vpn, "inet_req": True},
         "REMOVE-USB": {"funct": umount_usb, "inet_req": False},
         "RUN-ANSIBLE": {"funct": run_ansible, "inet_req": False},
+        "RUN-ANSIBLE-ROLES": {"funct": run_ansible_roles, "inet_req": False},
+        "GET-ROLES-STAT": {"funct": get_roles_stat, "inet_req": False},
         "RESET-NETWORK": {"funct": run_ansible, "inet_req": False},
         "GET-JOB-STAT": {"funct": get_last_jobs_stat, "inet_req": False},
         "CANCEL-JOB": {"funct": cancel_job, "inet_req": False},
@@ -702,6 +755,7 @@ def cmd_handler(cmd_msg):
         "GET-INET-SPEED2": {"funct": get_inet_speed2, "inet_req": True},
         "GET-KIWIX-CAT": {"funct": get_kiwix_catalog, "inet_req": True},
         "GET-ZIM-STAT": {"funct": get_zim_stat, "inet_req": False},
+        "INST-PRESETS": {"funct": install_presets, "inet_req": True},
         "INST-ZIMS": {"funct": install_zims, "inet_req": True},
         "COPY-ZIMS": {"funct": copy_zims, "inet_req": False},
         "MAKE-KIWIX-LIB": {"funct": make_kiwix_lib, "inet_req": False}, # runs as job
@@ -714,12 +768,17 @@ def cmd_handler(cmd_msg):
         "INST-RACHEL": {"funct": install_rachel, "inet_req": True},
         "GET-OSM-VECT-CAT": {"funct": get_osm_vect_catalog, "inet_req": True},
         "INST-OSM-VECT-SET": {"funct": install_osm_vect_set, "inet_req": True},
+        "INST-SAT-AREA": {"funct": install_sat_area, "inet_req": True},
+        "GET-OSM-VECT-STAT": {"funct": get_osm_vect_stat, "inet_req": False},
+        "INST-KALITE": {"funct": install_kalite, "inet_req": True},
         "DEL-DOWNLOADS": {"funct": del_downloads, "inet_req": False},
         "DEL-MODULES": {"funct": del_modules, "inet_req": False},
         "GET-MENU-ITEM-DEF-LIST": {"funct": get_menu_item_def_list, "inet_req": False},
         "SAVE-MENU-DEF": {"funct": save_menu_def, "inet_req": False},
         "SAVE-MENU-ITEM-DEF": {"funct": save_menu_item_def, "inet_req": False},
         "SYNC-MENU-ITEM-DEFS": {"funct": sync_menu_item_defs, "inet_req": True},
+        "MOVE-UPLOADED-FILE": {"funct": move_uploaded_file, "inet_req": False},
+        "COPY-DEV-IMAGE": {"funct": copy_dev_image, "inet_req": False},
         "REBOOT": {"funct": reboot_server, "inet_req": False},
         "POWEROFF": {"funct": poweroff_server, "inet_req": False},
         #"REMOTE-ADMIN-CTL": {"funct": remote_admin_ctl, "inet_req": True}, #true/false
@@ -728,7 +787,7 @@ def cmd_handler(cmd_msg):
         }
 
     # Check for Duplicate Command
-    dup_cmd = next((job_id for job_id, active_cmd_msg in active_commands.items() if active_cmd_msg == cmd_msg), None)
+    dup_cmd = next((job_id for job_id, active_cmd_msg in list(active_commands.items()) if active_cmd_msg == cmd_msg), None)
     if dup_cmd != None:
         strip_cmd_msg = cmd_msg.replace('\"','')
         log(syslog.LOG_ERR, "Error: %s duplicates an Active Command." % strip_cmd_msg)
@@ -739,26 +798,14 @@ def cmd_handler(cmd_msg):
     cmd_rowid = insert_command(cmd_msg)
 
     # process the command
-
-    cmd_info = {}
-
-    # parse for arguments
-    cmd_parts = cmd_msg.split(' ',1)
-
-    cmd = cmd_parts[0]
-    if len(cmd_parts)>1:
-        try:
-            cmd_args = json.loads(cmd_parts[1])
-        except:
-            return cmd_malformed(cmd)
-    else:
-        cmd_args = {}
-
+    parse_failed, cmd_info = parse_cmd_msg(cmd_msg)
+    if parse_failed:
+        return cmd_malformed(cmd_info['cmd'])
 
     cmd_info['cmd_rowid'] = cmd_rowid
     cmd_info['cmd_msg'] = cmd_msg
-    cmd_info['cmd'] = cmd
-    cmd_info['cmd_args'] = cmd_args
+    cmd = cmd_info['cmd']
+
     #print (cmd_info)
 
     # commands that run scripts should check for malicious characters in cmd_arg_str and return error if found
@@ -784,8 +831,24 @@ def cmd_handler(cmd_msg):
     return (resp)
 
 # Helper functions
+def parse_cmd_msg(cmd_msg):
+    # convert string from client to cmd and cmd_args
+    cmd_dict = {}
+    parse_failed = False
+    parse = cmd_msg.split(' ')
+    cmd_dict['cmd'] = parse[0]
+    cmd_dict['cmd_args'] = {} # always have cmd_args
+    if len(parse) > 1:
+        try:
+            cmd_args_str = cmd_msg.split(cmd_dict['cmd'] + ' ')[1]
+            cmd_dict['cmd_args'] = json.loads(cmd_args_str)
+        except:
+            parse_failed = True
+    return parse_failed, cmd_dict
+
 def is_internet_avail():
-    return is_url_avail("www.google.com")
+    #return is_url_avail("www.google.com")
+    return is_url_avail("neverssl.com") # in case captive portal traps www.google.com
 
 def is_url_avail(url):
     try:
@@ -805,7 +868,7 @@ def do_test(cmd_info):
 
     #resp = cmd_success("TEST")
     #return (resp)
-    outp = subprocess.check_output(["scripts/test.sh"])
+    outp = subproc_check_output(["scripts/test.sh"])
     json_outp = json_array("TEST",outp)
     return (json_outp)
 
@@ -934,18 +997,39 @@ def del_modules(cmd_info): # includes zims
 
     return (resp)
 
+def run_command(command):
+    args = shlex.split(command)
+    try:
+        outp = subproc_check_output(args)
+    except: #skip things that don't work
+        outp = ''
+    outp = [_f for _f in outp.split('\n') if _f]
+    if len(outp) == 0:
+        outp = ['']
+    return outp
+
+# wrappers for adm_lib
 def subproc_cmd(cmdstr):
-    args = shlex.split(cmdstr)
-    outp = subprocess.check_output(args)
-    return (outp)
+    return (adm.subproc_cmd(cmdstr))
+
+def subproc_check_output(args, shell=False):
+    try:
+        outp = adm.subproc_check_output(args, shell)
+    except:
+        raise
+    return outp
 
 def get_ansible_version():
-    outp = subprocess.check_output(ansible_program + " --version | head -n1 | cut -f2 -d' '",shell=True)
+    outp = subproc_check_output(ansible_program + " --version | head -n1 | cut -f2 -d' '",shell=True)
     return outp
 
 def wget_file(cmd_info):
     resp = cmd_info['cmd'] + " done."
 
+    return (resp)
+
+def get_adm_conf(cmd_info):
+    resp = json.dumps(adm_conf)
     return (resp)
 
 def get_ans_facts(cmd_info):
@@ -959,19 +1043,13 @@ def get_ans_tags(cmd_info):
 
 def get_install_vars(cmd_info):
     # assumes default vars already read
-    resp = read_iiab_local_vars()
-    if resp == None: # no error
-        resp = json.dumps(effective_vars)
+    read_iiab_local_vars() # any errors are raised and caught above
+    resp = json.dumps(effective_vars)
     return (resp)
 
-def get_install_vars_init():
+def OBSOL_get_install_vars_init():
     # assumes default vars already read
-
-    resp = read_iiab_local_vars()
-    if resp != None: # error
-        tprint(resp)
-        log(syslog.LOG_INFO, "Init - " + resp)
-        raise
+    read_iiab_local_vars() # any errors are raised
 
 def get_iiab_ini(cmd_info):
     read_iiab_ini_file()
@@ -979,7 +1057,7 @@ def get_iiab_ini(cmd_info):
     return (resp)
 
 def get_mem_info(cmd_info):
-    outp = subprocess.check_output(["/usr/bin/free", "-h"])
+    outp = subproc_check_output(["/usr/bin/free", "-h"])
     json_outp = json_array("system_memory", outp)
     return (json_outp)
 
@@ -990,7 +1068,7 @@ def get_space_avail(cmd_info):
     #cmd = df_program + " -m" get size info in K not M
     cmd = df_program
     cmd_args = shlex.split(cmd)
-    outp = subprocess.check_output(cmd_args)
+    outp = subproc_check_output(cmd_args)
     dev_arr = outp.split('\n')
     for dev_str in dev_arr[1:-1]:
        dev_attr = dev_str.split()
@@ -1006,13 +1084,13 @@ def get_space_avail(cmd_info):
     return (resp)
 
 def get_storage_info_lite(cmd_info):
-    outp = subprocess.check_output([df_program, "-lh"])
+    outp = subproc_check_output([df_program, "-lh"])
     json_outp = json_array("system_fs", outp)
     return (json_outp)
 
 def get_external_device_info(cmd_info):
     extdev_info = {}
-    outp = subprocess.check_output("scripts/get_ext_devs.sh")
+    outp = subproc_check_output("scripts/get_ext_devs.sh")
     dev_arr = outp.split('\n')
 
     # dev_arr gets a dummy element due to final \n
@@ -1026,6 +1104,7 @@ def get_external_device_info(cmd_info):
             continue
         dev_name = dev_info[5]
         extdev_info[dev_name] = {}
+        extdev_info[dev_name]['device'] = dev_info[0]
         extdev_info[dev_name]['dev_size_k'] = dev_info[1]
         extdev_info[dev_name]['dev_used_k'] = dev_info[2]
         extdev_info[dev_name]['dev_sp_avail_k'] = dev_info[3]
@@ -1037,12 +1116,28 @@ def get_external_device_info(cmd_info):
 
         if os.path.exists(lib_dir):
             extdev_info[dev_name]['oer2go_modules'] = get_oer2go_installed_list(dev_name)
-            if iiab_ini['kiwix']: # if kiwix installed catalog zims
+            if iiab_ini.get('kiwix'): # if kiwix installed catalog zims
                 extdev_info[dev_name]['zim_modules'] = get_ext_zim_catalog(dev_name)
 
             # put local_content here
 
     resp = json.dumps(extdev_info)
+    return (resp)
+
+def get_rem_dev_list(cmd_info):
+    dev_list = {}
+    cmdstr = "lsblk -a -n -r -b -o 'PATH,TYPE,RM,SIZE,MOUNTPOINT'"
+    # ToDo check for iiab on partition of removable devices
+    outp = adm.subproc_cmd(cmdstr)
+    dev_arr = outp.split('\n')
+    for dev in dev_arr[:-1]:
+        dev_parts = dev.split()
+        # if disk and removable
+        if dev_parts[1] == 'disk':
+            if dev_parts[2] == '1':
+                if len(dev_parts) > 3: # some devices seem not to return size so skip them
+                    dev_list[dev_parts[0]] = dev_parts[3]
+    resp = json.dumps(dev_list)
     return (resp)
 
 def get_system_info(cmd_info):
@@ -1062,7 +1157,7 @@ def calc_network_info():
 
     # ip -br addr
     # ip route | grep default
-    # brctl show
+    # bridge -d link
     # systemctl is-active hostapd
     # systemctl is-active openvpn
     # /etc/iiab/uuid
@@ -1096,14 +1191,12 @@ def calc_network_info():
     else:
         net_stat["internet_access"] = False
 
-    outp = run_command("/sbin/brctl show")
+    outp = run_command("/sbin/bridge -d link")
     bridge_devs = []
+
     for line in outp:
-        bridge_props = line.split()
-        if bridge_props[0] == 'bridge':
-            continue # skip header
-        if len(bridge_props) >= 4:
-            bridge_devs.append(bridge_props[3])
+        if 'forwarding' in line:
+            bridge_devs.append(line.split(':')[1].strip())
 
     net_stat["bridge_devs"] = bridge_devs
 
@@ -1114,17 +1207,6 @@ def calc_network_info():
     net_stat["openvpn_handle"] = run_command("/bin/cat /etc/iiab/openvpn_handle")[0]
 
     return (net_stat)
-
-def run_command(command):
-    args = shlex.split(command)
-    try:
-        outp = subprocess.check_output(args)
-    except: #skip things that don't work
-        outp = ''
-    outp = filter(None, outp.split('\n'))
-    if len(outp) == 0:
-        outp = ['']
-    return outp
 
 def check_systemd_service_active(service):
     rc = systemctl_wrapper('status', service)
@@ -1142,7 +1224,7 @@ def systemctl_wrapper(verb, service):
     return rc
 
 def ctl_wifi(cmd_info):
-    if ansible_facts['ansible_local']['local_facts']['os'] != 'raspbian':
+    if not is_rpi:
         resp = cmd_error(cmd=cmd_info['cmd'], msg='Only supported on Raspberry Pi.')
         return (resp)
 
@@ -1182,20 +1264,33 @@ def ctl_wifi(cmd_info):
     return resp
 
 def set_wpa_credentials (cmd_info):
-    if ansible_facts['ansible_local']['local_facts']['os'] != 'raspbian':
+    if not is_rpi:
         resp = cmd_error(cmd=cmd_info['cmd'], msg='Only supported on Raspberry Pi.')
         return (resp)
 
-    print cmd_info
+    #print(cmd_info)
     if 'cmd_args' in cmd_info:
         connect_wifi_ssid = cmd_info['cmd_args']['connect_wifi_ssid']
         connect_wifi_password = cmd_info['cmd_args']['connect_wifi_password']
     else:
         return cmd_malformed(cmd_info['cmd'])
 
+    # this works for raspbian but maybe not for ubuntu
+    # may need to add file /etc/netplan/99-iiab-admin-access-points.yaml
+    # to make life easier when removing these access points from images
+
+    if ansible_facts['ansible_local']['local_facts']['os'] == 'raspbian':
+        write_wpa_supplicant_file(connect_wifi_ssid, connect_wifi_password)
+    if ansible_facts['ansible_local']['local_facts']['os'] == 'ubuntu':
+        write_netplan_wpa_file(connect_wifi_ssid, connect_wifi_password)
+
+    resp = cmd_success(cmd_info['cmd'])
+    return resp
+
+def write_wpa_supplicant_file(connect_wifi_ssid, connect_wifi_password):
+    wpa_sup_file = '/etc/wpa_supplicant/wpa_supplicant.conf'
     try:
-        with open('/etc/wpa_supplicant/wpa_supplicant.conf', 'r') as f:
-            wpa_txt = f.read()
+        with open(wpa_sup_file, 'r') as f: wpa_txt = f.read()
     except IOError: # for now patch missing file
         wpa_txt = 'ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1\ncountry=US\n'
 
@@ -1203,33 +1298,76 @@ def set_wpa_credentials (cmd_info):
     # if password != '' call wpa_passphrase
     # else set to static array
     # write lines
+    # no attempt to fix extra spaces or messed up network keyword from previous versions
 
-    print wpa_txt
-    if connect_wifi_ssid in wpa_txt:
-        ssid_loc = wpa_txt.index(connect_wifi_ssid)
-        network_start = wpa_txt.rindex("network={",0,ssid_loc)
-        network_end = wpa_txt.index('}', network_start) + 3
-        wpa_txt = wpa_txt.replace(wpa_txt[network_start:network_end], '')
+    # Outtakes
+    # stripped = ''.join(wpa_txt.split(' ')) - NO. can be space in ssid
+    # re.finditer(r'network.+?}.+?\n', wpa_txt, re.DOTALL):
+    # re.search(r'network\s*=\s*{\s*ssid\s*=\s*"Pluto-UniFl_RE"', wpa_txt)
 
-    wpa_lines = wpa_txt.split('\n')
+    # print(wpa_txt)
+
+    search_ssid = '"' + connect_wifi_ssid + '"'
+    output = wpa_txt
+
+    # check for ssid def in file stripped of whitespace
+    # stripped = ''.join(wpa_txt.split(' ')) - NO. can be space in ssid
+
+    if search_ssid in wpa_txt: # remove if found
+        for net in re.finditer('network.+?}\n', wpa_txt, re.DOTALL):
+            if search_ssid in net.group(0):
+                output = wpa_txt[:net.start()] + wpa_txt[net.end():]
+                break
+
+    wpa_lines = output.split('\n')
 
     if connect_wifi_password != '':
         network_lines = run_command("/usr/bin/wpa_passphrase '" + connect_wifi_ssid + "' " + connect_wifi_password)
     else:
         network_lines = ['network={', '\tssid="' + connect_wifi_ssid + '"', '\tkey_mgmt=NONE', '}']
-    print wpa_lines
-    print network_lines
+    # print(wpa_lines)
+    # print(network_lines)
 
     wpa_lines.extend(network_lines)
-    with open('/etc/wpa_supplicant/wpa_supplicant.conf', 'w') as f:
+    with open(wpa_sup_file, 'w') as f:
         for l in wpa_lines:
             if l != '':
                 f.write(l + '\n')
-    resp = cmd_success(cmd_info['cmd'])
-    return resp
+
+def write_netplan_wpa_file(connect_wifi_ssid, connect_wifi_password):
+    # This will get changed a lot, so just hard code here
+    netplan_wpa_yaml_file = '/etc/netplan/02-iiab-config.yaml'
+
+    netplan_wpa_yaml = {
+        'network':
+        {'version': '2',
+        'wifis':
+            {'wlan0':
+                {'dhcp4': True,
+                'access-points':
+                    {}
+                }
+            }
+        }
+    }
+
+    netplan_config = adm.read_yaml(netplan_wpa_yaml_file)
+
+    if 'wifis' not in netplan_config['network']:
+        netplan_config['network']['wifis'] = netplan_wpa_yaml['network']['wifis']
+    elif 'wlan0' not in netplan_config['network']['wifis']:
+        netplan_config['network']['wifis']['wlan0'] = netplan_wpa_yaml['network']['wifis']['wlan0']
+    elif 'access-points' not in netplan_config['network']['wifis']['wlan0']:
+        netplan_config['network']['wifis']['wlan0']['access-points'] = netplan_wpa_yaml['network']['wifis']['wlan0']['access-points']
+
+    netplan_config['network']['wifis']['wlan0']['access-points'][connect_wifi_ssid] = {}
+    netplan_config['network']['wifis']['wlan0']['access-points'][connect_wifi_ssid]['password'] = connect_wifi_password
+
+    with open(netplan_wpa_yaml_file, 'w') as f:
+        documents = yaml.dump(netplan_config, f)
 
 def ctl_bluetooth(cmd_info):
-    if ansible_facts['ansible_local']['local_facts']['os'] != 'raspbian':
+    if not is_rpi:
         resp = cmd_error(cmd=cmd_info['cmd'], msg='Only supported on Raspberry Pi.')
         return (resp)
 
@@ -1289,7 +1427,7 @@ def get_ext_zim_catalog(dev_name):
     command = "/usr/bin/iiab-make-kiwix-lib.py --no_tmp --device " + dev_name
     args = shlex.split(command)
     try:
-        outp = subprocess.check_output(args)
+        outp = subproc_check_output(args)
     except: #skip things that don't work
         pass
     usb_catalog = read_library_xml(kiwix_library_xml_tmp)
@@ -1321,7 +1459,7 @@ def get_ext_zim_catalog2(dev_name): # keeping for the moment, but not used
                 #print command
                 args = shlex.split(command)
                 try:
-                    outp = subprocess.check_output(args)
+                    outp = subproc_check_output(args)
                 except: #skip things that don't work
                     #print 'skipping ' + filename
                     pass
@@ -1360,10 +1498,20 @@ def umount_usb(cmd_info):
         resp = cmd_error(cmd="REMOVE-USB", msg="Device " + device + " has open files.")
         return resp
 
+    try:
+        os.remove(device + '/usb' + device[-1]) # remove bogus symlink
+    except OSError:
+        pass
     rc = subprocess.call(umount, shell=True) # 32 means not mounted
     if rc == 32:
         resp = cmd_error(cmd="REMOVE-USB", msg="Device " + device + " is not mounted.")
         return resp
+
+    # remove mount points for local content
+    try:
+        os.remove(adm.iiab.CONST.doc_root + '/local_content/USB' + device[-1])
+    except OSError:
+        pass
 
     resp = cmd_success(cmd_info['cmd'])
     return resp
@@ -1375,7 +1523,7 @@ def get_storage_info(cmd_info):
     system_storage = []
     cmd = "lsblk -aP -o NAME,FSTYPE,TYPE,SIZE,MOUNTPOINT,LABEL,UUID,PARTLABEL,PARTUUID,MODEL"
     cmd_args = shlex.split(cmd)
-    outp = subprocess.check_output(cmd_args)
+    outp = subproc_check_output(cmd_args)
     dev_arr = outp.split('\n')
     system_storage_idx = -1
     for item in dev_arr:
@@ -1413,7 +1561,7 @@ def get_storage_info_str2dict(str):
 def get_storage_info_parted(dev):
     dev_info = {'device':dev, 'desc':'', 'log_sect_size':'', 'part_tbl':'', 'phys_sect_size':'', 'size':'', 'type':'', 'blocks':[]}
     try:
-        parts = subprocess.check_output(["parted", dev, "-ms", "print", "free"])
+        parts = subproc_check_output(["parted", dev, "-ms", "print", "free"])
     except subprocess.CalledProcessError as e:
         #skip devices that cause problems
         pass
@@ -1472,7 +1620,7 @@ def get_storage_info_parted(dev):
 
 def get_storage_info_df(part_dev):
     part_prop = {}
-    outp = subprocess.check_output([df_program, part_dev, "-m"])
+    outp = subproc_check_output([df_program, part_dev, "-m"])
     str_array = outp.split('\n')
     part_prop = parse_df_str(str_array[1])
     #print part_prop
@@ -1494,12 +1642,12 @@ def parse_df_str(df_str, size_unit="megs"):
     return (dev_attr)
 
 def get_inet_speed(cmd_info):
-    outp = subprocess.check_output(["scripts/get_inet_speed"])
+    outp = subproc_check_output(["scripts/get_inet_speed"])
     json_outp = json_array("internet_speed", outp)
     return (json_outp)
 
 def get_inet_speed2(cmd_info):
-    outp = subprocess.check_output(["/usr/bin/speedtest-cli","--simple"])
+    outp = subproc_check_output(["/usr/bin/speedtest-cli","--simple"])
     json_outp = json_array("internet_speed", outp)
     return (json_outp)
 
@@ -1517,7 +1665,7 @@ def get_white_list(cmd_info):
 
 def set_white_list(cmd_info):
     whlist = cmd_info['cmd_args']['iiab_whitelist']
-    whlist = filter(None, whlist) # remove blank lines
+    whlist = [_f for _f in whlist if _f] # remove blank lines
     resp = cmd_success(cmd_info['cmd'])
     try:
         stream =  open(squid_whitelist, 'w')
@@ -1530,9 +1678,9 @@ def set_white_list(cmd_info):
     return (resp)
 
 def get_kiwix_catalog(cmd_info):
-    outp = subprocess.check_output(["scripts/get_kiwix_catalog"])
+    outp = subproc_check_output(["scripts/get_kiwix_catalog"])
     if outp == "SUCCESS":
-        read_kiwix_catalog()
+        read_kiwix_catalog
         resp = cmd_success("GET-KIWIX-CAT")
         return (resp)
     else:
@@ -1578,26 +1726,22 @@ def get_oer2go_catalog(cmd_info):
     "99":"Syntax Error"
     }
     try:
-        outp = subprocess.check_output(["scripts/get_oer2go_catalog"])
+        compl_proc = adm.subproc_run("scripts/get_oer2go_catalog")
+        if compl_proc.returncode !=0:
+            resp = cmd_error(cmd='GET-OER2GO-CAT', msg=err_msg[str(compl_proc.returncode)])
+            return resp
     except subprocess.CalledProcessError as e:
-        resp = cmd_error(cmd='GET-OER2GO-CAT', msg=err_msg[str(e.returncode)])
+        resp = cmd_error(cmd='GET-OER2GO-CAT', msg='Failed to read OER2go Catalog.')
         return resp
 
-    if outp == "SUCCESS":
-        read_oer2go_catalog()
-        resp = cmd_success("GET-OER2GO-CAT")
-        return (resp)
-    else:
-        return ('{"Error": "' + outp + '."}')
-
-def get_config_vars(cmd_info):
-    read_config_vars()
-    resp = json.dumps(config_vars)
+    # No Error
+    read_oer2go_catalog()
+    resp = cmd_success("GET-OER2GO-CAT")
     return (resp)
 
 def set_config_vars(cmd_info):
     config_vars = cmd_info['cmd_args']['config_vars']
-    write_iiab_local_vars(config_vars)
+    adm.write_iiab_local_vars(config_vars)
     #print config_vars
     resp = cmd_success(cmd_info['cmd'])
     return (resp)
@@ -1628,6 +1772,87 @@ def run_ansible(cmd_info): # create multiple jobs to run in succession
 
     resp = request_job(cmd_info, job_command)
     return resp
+
+def run_ansible_roles(cmd_info):
+    # calculate list of roles to run which have changes to enabled flag or install flag (only false to true)
+    # assemble /opt/iiab/iiab/run-roles-tmp.yml
+    # run it with ansible_playbook_program
+    # ToDo allow delta local vars as optional parameter
+
+    global ansible_running_flag
+    global jobs_requested
+
+    if ansible_running_flag:
+        return (cmd_error(msg="Ansible Command already Running."))
+
+    # refresh effective_vars
+    # assume default_vars is current
+    read_iiab_local_vars() # read local vars and compute effective vars
+    read_iiab_roles_stat() # into global iiab_roles_status
+
+    internet_avail = is_internet_avail()
+    changed_local_vars = {}
+
+     # get playbook preamble
+    with open('assets/run-roles-base.yml') as f:
+        lines = f.readlines()
+
+    role_cnt = 0
+    for role in iiab_roles_status:
+        if not local_vars.get(role + '_install'):
+            continue # for now skip unknown roles
+        install = effective_vars[role + '_install']
+        installed = iiab_roles_status[role]['installed']
+        enable = effective_vars[role + '_enabled']
+        # enabled = iiab_roles_status[role]['enabled'] # some services show enabled-runtime
+        enabled = iiab_roles_status[role]['active']
+        if install == installed and enable == enabled:
+            continue
+        if role in adm.CONST.iiab_roles_renamed:
+            run_role = adm.CONST.iiab_roles_renamed[role]
+        else:
+            run_role = role
+        if install != installed:
+            if install == True: # desired, not installed
+                if not internet_avail:
+                    resp = cmd_error(msg='Internet is Required to install a Service, but is Not Available.')
+                    return resp
+                else:
+                    lines.append('    - { role: ' + run_role + ' }\n')
+                    role_cnt += 1
+            else: # installed, but not desired. we can't uninstall
+                if enabled == True: # just disable it
+                    changed_local_vars[role + '_enabled'] = False
+                    lines.append('    - { role: ' + run_role + ' }\n')
+                    role_cnt += 1
+        else: # enabled status has changed
+            lines.append('    - { role: ' + run_role + ' }\n')
+            role_cnt += 1
+
+    if role_cnt == 0:
+        resp = cmd_error(msg='All Roles are already As Requested.')
+        return resp
+
+    # patch local vars
+    if len(changed_local_vars) > 0:
+        adm.write_iiab_local_vars(changed_local_vars)
+
+    # assemble playbook
+    with open(iiab_repo + '/adm-run-roles-tmp.yml', 'w') as f:
+        f.writelines(lines)
+
+    job_command = ansible_playbook_program + " -i " + iiab_repo + "/ansible_hosts " + iiab_repo + "/adm-run-roles-tmp.yml --connection=local"
+    resp = request_job(cmd_info, job_command)
+    return resp
+
+def get_roles_stat(cmd_info):
+    read_iiab_roles_stat() # into global iiab_roles_status
+    resp = json.dumps(iiab_roles_status)
+    return (resp)
+
+def read_iiab_roles_stat():
+    global iiab_roles_status
+    iiab_roles_status = adm.get_roles_status()
 
 def get_rachel_stat(cmd_info):
     # see if rachel installed from iiab_ini
@@ -1683,8 +1908,171 @@ def get_rachel_modules(module_dir, state):
 
     return (modules)
 
-def install_zims(cmd_info):
+def install_presets(cmd_info):
+    # first pass we will just call various command handlers and evaluate resp
+    # INST-PRESETS '{"cmd_args":{"preset_id":"test"}}'
+    # test with iiab-cmdsrv-ctl 'INST-PRESETS {"preset_id":"test"}'
 
+    #print(cmd_info)
+    presets_dir = 'presets/'
+    if 'cmd_args' not in cmd_info:
+        return cmd_malformed(cmd_info['cmd'])
+    else:
+        preset_id = cmd_info['cmd_args']['preset_id']
+        if not os.path.isdir(presets_dir + preset_id): # currently a preset is a directory in presets dir
+            return cmd_error(cmd='INST-PRESETS', msg='Preset ' + preset_id + ' not found.')
+
+    # get preset definition
+    src_dir = presets_dir + preset_id + '/'
+    try:
+        preset = adm.read_json(src_dir + 'preset.json')
+        menu = adm.read_json(src_dir + 'menu.json') # actually only need to cp the file
+        content = adm.read_json(src_dir + 'content.json')
+        vars = adm.read_yaml(src_dir + 'vars.yml')
+    except:
+        return cmd_error(cmd='INST-PRESETS', msg='Preset ' + preset_id + ' has errors in the json.')
+
+    # check for sufficient storage
+
+    # add roles needed by content but not requested
+
+    planned_vars = {**effective_vars, **vars}
+    zim_list = content['zims']
+    module_list = content['modules'] # service is web server which is always installed
+    map_list = content['maps']
+    kalite_vars = content['kalite']
+    needed_services = []
+
+    if len(zim_list) > 0:
+        if planned_vars['kiwix_install'] != True or planned_vars['kiwix_enabled'] != True:
+            needed_services.append('Kixix')
+            vars['kiwix_install'] = True
+            vars['kiwix_enabled'] = True
+    if len(map_list) > 0:
+        if planned_vars['osm_vector_maps_install'] != True or planned_vars['osm_vector_maps_enabled'] != True:
+            needed_services.append('OSM Vector Maps')
+            vars['osm_vector_maps_install'] = True
+            vars['osm_vector_maps_enabled'] = True
+    if len(kalite_vars) > 0:
+        if planned_vars['kalite_install'] != True or planned_vars['kalite_enabled'] != True:
+            needed_services.append('KA Lite')
+            vars['kalite_install'] = True
+            vars['kalite_enabled'] = True
+
+    services_needed_error = ', '.join(needed_services)
+
+    # add vars to local_vars and run roles
+    adm.write_iiab_local_vars(vars)
+    ansible_cmd_info = cmd_info
+    ansible_cmd_info['cmd'] ='RUN-ANSIBLE-ROLES'
+    ansible_cmd_info['cmd_args'] = {}
+
+    ansible_cmd_info = pseudo_cmd_handler(ansible_cmd_info, check_dup=False)
+    resp = run_ansible_roles(ansible_cmd_info)
+
+    # All roles installed also returns error "All Roles are already As Requested"
+    if 'Error' in resp:
+        resp_dict = json.loads(resp)
+        err_msg = resp_dict['Error']
+        if not 'All Roles are already As Requested' in err_msg: # pretty klugey
+            return cmd_error(cmd='INST-PRESETS', msg='Ansible install step failed. ' + err_msg)
+
+    # now do content areas
+    # will block if required service is not yet active
+
+    # don't start any jobs if ansible is running, lines 350ff
+    # but ansible failure will release remaining jobs
+    # ? add global ansible job no
+
+    # ? check to see if content already installed
+
+    # ZIMs
+    # create list of ids using most recent url
+
+    zim_list = content['zims']
+    perma_ref_idx = {}
+    for zim_id in kiwix_catalog:
+        if kiwix_catalog[zim_id]['perma_ref'] in zim_list:
+            perma_ref = kiwix_catalog[zim_id]['perma_ref']
+            url = kiwix_catalog[zim_id]['url'].split('.meta')[0]
+            #print (zim_id, perma_ref, url)
+            if perma_ref not in perma_ref_idx: # find most recent zim
+                perma_ref_idx[perma_ref] = {'id': zim_id, 'url': url}
+            else:
+                if url > perma_ref_idx[perma_ref]['url']:
+                    perma_ref_idx[perma_ref] = {'id': zim_id, 'url': url}
+
+    zim_cmd_info = cmd_info
+    for ref in perma_ref_idx:
+        zim_cmd_info['cmd'] ='INST-ZIM'
+        zim_cmd_info['cmd_args'] = {'zim_id': perma_ref_idx[ref]['id']}
+        zim_cmd_info = pseudo_cmd_handler(zim_cmd_info)
+        if zim_cmd_info:
+            resp = install_zims(zim_cmd_info)
+
+    # modules
+
+    module_cmd_info = cmd_info
+    module_list = content['modules']
+    for module in module_list:
+        module_cmd_info['cmd'] = 'INST-OER2GO-MOD'
+        module_cmd_info['cmd_args'] = {'moddir': module}
+        module_cmd_info = pseudo_cmd_handler(module_cmd_info)
+        if module_cmd_info:
+            resp = install_oer2go_mod(module_cmd_info)
+
+    # maps
+
+    map_cmd_info = cmd_info
+    map_list = content['maps']
+    for map in map_list:
+        map_cmd_info['cmd'] = 'INST-OSM-VECT-SET'
+        map_cmd_info['cmd_args'] = {'osm_vect_id': map}
+        map_cmd_info = pseudo_cmd_handler(map_cmd_info)
+        if map_cmd_info:
+            resp = install_osm_vect_set_v2(map_cmd_info)
+
+    # kalite
+
+    kalite_cmd_info = cmd_info
+    kalite_cmd_info['cmd'] = 'INST-KALITE'
+    kalite_cmd_info['cmd_args'] = content['kalite']
+    kalite_cmd_info = pseudo_cmd_handler(kalite_cmd_info)
+    if kalite_cmd_info:
+        resp = install_kalite(kalite_cmd_info)
+
+    if len(services_needed_error) > 0:
+        resp = cmd_error(cmd='INST-PRESETS', msg='WARNING: The following services were added - ' + services_needed_error)
+    else:
+        resp = cmd_success_msg('INST-PRESETS', "All jobs scheduled")
+    return resp
+
+def pseudo_cmd_handler(cmd_info, check_dup=True):
+    # do some of what cmd_handler does so can call cmd function directly
+    # create cmd_msg
+    # insert into db
+    # check if duplicate
+
+    cmd_args = cmd_info.get('cmd_args')
+    if cmd_args and len(cmd_args) > 0:
+        cmd_msg = cmd_info['cmd'] + ' ' + json.dumps(cmd_args)
+    else:
+        cmd_msg = cmd_info['cmd']
+
+    if check_dup: # ansible does it's own check
+        dup_cmd = next((job_id for job_id, active_cmd_msg in list(active_commands.items()) if active_cmd_msg == cmd_msg), None)
+        if dup_cmd != None:
+            print('Skipping already running command.')
+            return None
+
+    cmd_rowid = insert_command(cmd_msg)
+
+    cmd_info['cmd_rowid'] = cmd_rowid
+    cmd_info['cmd_msg'] = cmd_msg
+
+    return cmd_info
+
+def install_zims(cmd_info):
     global ansible_running_flag
     global jobs_requested
     global kiwix_catalog
@@ -1697,12 +2085,18 @@ def install_zims(cmd_info):
             resp = cmd_error(cmd='INST-ZIMS', msg='Zim ID not found in Command')
             return resp
 
+        if 'service_required' in cmd_info['cmd_args']: # allow caller to supply
+            cmd_info['service_required'] = cmd_info['cmd_args']['service_required']
+        else:
+            cmd_info['service_required'] = ['kiwix', 'active']
+
+
         downloadSrcFile = kiwix_catalog[zimId]['download_url']
-        print downloadSrcFile
+        #print(downloadSrcFile)
         try:
-            rc = urllib2.urlopen(downloadSrcFile)
+            rc = urllib.request.urlopen(downloadSrcFile)
             rc.close()
-        except (urllib2.URLError) as exc:
+        except (urllib.error.URLError) as exc:
             errmsg = str("Zim File " + zimFileRef + " not found in Cmd")
             resp = cmd_error(cmd='INST-ZIMS', msg=errmsg)
             return resp
@@ -1956,9 +2350,9 @@ def install_rachel(cmd_info):
     rachel_version = iiab_ini['rachel']['rachel_version']
 
     try:
-        rc = urllib2.urlopen(downloadSrcFile)
+        rc = urllib.request.urlopen(downloadSrcFile)
         rc.close()
-    except (urllib2.URLError) as exc:
+    except (urllib.error.URLError) as exc:
         errmsg = str("Can't access " + downloadSrcFile + " Cmd")
         resp = cmd_error(cmd='INST-RACHEL', msg=errmsg)
         return resp
@@ -1999,9 +2393,18 @@ def get_osm_vect_catalog(cmd_info):
     return cmd_malformed("DUMMY")
 
 def install_osm_vect_set(cmd_info):
+    if osm_version == 'V1':
+        return install_osm_vect_set_v1(cmd_info)
+    elif osm_version == 'V2':
+        return install_osm_vect_set_v2(cmd_info)
+    else:
+        resp = cmd_error(cmd='INST-OSM-VECT-SET', msg='OSM Vectors not installed or unknown version')
+        return resp
+
+
+def install_osm_vect_set_v1(cmd_info):
     global ansible_running_flag
     global jobs_requested
-
     if 'cmd_args' in cmd_info:
         map_id = cmd_info['cmd_args']['osm_vect_id']
         if map_id not in maps_catalog['regions']:
@@ -2009,8 +2412,6 @@ def install_osm_vect_set(cmd_info):
             return resp
     else:
         return cmd_malformed(cmd_info['cmd'])
-
-    # at this point we can create all the jobs
 
     download_url = maps_catalog['regions'][map_id]['url'] # https://archive.org/download/en-osm-omt_north_america_2017-07-03_v0.1/en-osm-omt_north_america_2017-07-03_v0.1.zip
     zip_name = download_url.split('/')[-1] # en-osm-omt_north_america_2017-07-03_v0.1.zip
@@ -2035,6 +2436,143 @@ def install_osm_vect_set(cmd_info):
 
     #print job_command
     resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=3, depend_on_job_id=job_id, has_dependent="N")
+
+    return resp
+
+def install_osm_vect_set_v2(cmd_info):
+    global ansible_running_flag
+    global jobs_requested
+    if 'cmd_args' in cmd_info:
+        map_id = cmd_info['cmd_args']['osm_vect_id']
+        if map_id not in maps_catalog:
+            resp = cmd_error(cmd='INST-OSM-VECT-SET', msg='Map Tile Set is not in catalog in Command')
+            return resp
+    else:
+        return cmd_malformed(cmd_info['cmd'])
+
+    if 'service_required' in cmd_info['cmd_args']: # allow caller to supply
+        cmd_info['service_required'] = cmd_info['cmd_args']['service_required']
+    else:
+        cmd_info['service_required'] = ['osm_vector_maps', 'active']
+
+    #download_url = maps_catalog[map_id]['detail_url']
+    # hard coding for now as the control vars don't make much sense
+    if maps_download_src == 'iiab.me':
+        download_url = 'http://timmoody.com/iiab-files/maps/' + map_id
+    elif maps_download_src == 'archive':
+        download_url = 'https://archive.org/download/' + map_id + '/' + map_id
+    elif maps_download_src == 'bittorrent':
+        download_url = maps_catalog[map_id]['bittorrent_url']
+        resp = cmd_error(cmd='INST-OSM-VECT-SET', msg='Not able to do bittorrent yet in Command')
+        return resp
+
+    download_file = maps_working_dir + map_id
+    tiles_path = vector_map_tiles_path + map_id
+
+    # see if already installed
+    if os.path.isfile(tiles_path) and os.path.getsize(tiles_path) == maps_catalog[map_id]['size']:
+        resp = cmd_error(cmd='INST-OSM-VECT-SET', msg=map_id + ' is already downloaded')
+        return resp
+
+    # save some values for later
+    cmd_info['extra_vars'] = {}
+    cmd_info['extra_vars']['download_url'] = download_url
+    cmd_info['extra_vars']['size'] = maps_catalog[map_id]['size']
+
+    # download mbtiles file
+    # unless already done
+    next_step = 1
+    job_id = -1
+
+    if not os.path.isfile(download_file) or os.path.getsize(download_file) != maps_catalog[map_id]['size']:
+        job_command = "/usr/bin/wget -c --progress=dot:giga " + download_url + " -O " + download_file
+        job_id = request_one_job(cmd_info, job_command, 1, -1, "Y")
+        next_step = 2
+        #print job_command
+
+    # move to location and clean up
+    job_command = "scripts/osm-vect_v2_install_step2.sh"
+    job_command +=  " " + map_id
+    job_id = request_one_job(cmd_info, job_command, next_step, job_id, "Y")
+
+    next_step += 1
+
+    # create maps idx
+    job_command = "scripts/osm-vect_v2_finish_install.py " + map_id
+    resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=next_step, depend_on_job_id=job_id, has_dependent="N")
+
+    return resp
+
+def install_sat_area(cmd_info):
+    global ansible_running_flag
+    global jobs_requested
+    if 'cmd_args' in cmd_info:
+        longitude = str(cmd_info['cmd_args']['longitude'])
+        latitude = str(cmd_info['cmd_args']['latitude'])
+        radius = str(cmd_info['cmd_args']['radius'])
+    else:
+        return cmd_malformed(cmd_info['cmd'])
+
+    job_command = "/usr/bin/iiab-extend-sat.py --lon " + longitude + " --lat " + latitude + " --radius " + radius
+    resp = request_job(cmd_info, job_command)
+    return resp
+
+def get_osm_vect_stat(cmd_info):
+    global osm_vect_installed
+
+    all_maps = {}
+    all_maps['WIP'] = maps_wip
+
+    all_maps['INSTALLED'] = {}
+    all_maps['tile_base_installed'] = False
+    all_maps['sat_base_installed'] = False
+
+    if os.path.exists(vector_map_tiles_path + maps_tiles_base):
+        all_maps['tile_base_installed'] = True
+
+    if os.path.exists(vector_map_tiles_path + maps_sat_base):
+        all_maps['sat_base_installed'] = True
+
+    # see what is installed
+    # in /library/www/osm-vector-maps/viewer/tiles
+    if os.path.exists(vector_map_tiles_path):
+        osm_vect_installed = os.listdir(vector_map_tiles_path)
+        for map in osm_vect_installed:
+            all_maps['INSTALLED'][map] = True
+
+    resp = json.dumps(all_maps)
+    return (resp)
+
+# def get_osm_vect_installed_list(device=""):
+#    osm_vect_installed = os.listdir(vector_map_tiles_path)
+
+def install_kalite(cmd_info):
+    global ansible_running_flag
+    global jobs_requested
+    if 'cmd_args' in cmd_info:
+        lang_code = cmd_info['cmd_args']['lang_code']
+        topics = cmd_info['cmd_args']['topics']
+    else:
+        return cmd_malformed(cmd_info['cmd'])
+
+    if 'service_required' in cmd_info['cmd_args']: # allow caller to supply
+        cmd_info['service_required'] = cmd_info['cmd_args']['service_required']
+    else:
+        cmd_info['service_required'] = ['kalite', 'active']
+
+    # validate topics (? or do in script)
+
+    # run kalite_install_lang.sh
+    next_step = 1
+    job_id = -1
+    job_command = "scripts/kalite_install_lang.sh " + lang_code
+    job_id = request_one_job(cmd_info, job_command, next_step, job_id, "Y")
+
+    next_step += 1
+
+    # run kalite_install_videos.py
+    job_command = "scripts/kalite_install_videos.py " + lang_code + " " + " ".join(topics)
+    resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=next_step, depend_on_job_id=job_id, has_dependent="N")
 
     return resp
 
@@ -2075,24 +2613,94 @@ def save_menu_def(cmd_info):
     #    return ('{"Error": "' + outp + '."}')
 
 def save_menu_item_def(cmd_info):
-    target_file = js_menu_dir + 'menu-files/menu-defs/' + cmd_info['cmd_args']['menu_item_name'] + '.json'
+    menu_item_def_name = cmd_info['cmd_args']['menu_item_name']
+    target_file = js_menu_dir + 'menu-files/menu-defs/' + menu_item_def_name + '.json'
     menu_item_def = cmd_info['cmd_args']['menu_item_def']
     menu_item_def['change_ref'] = 'admin_console - ' + cmd_info['cmd_args']['mode']
-    menu_item_def['change_date'] = str(date.today())
+    menu_item_def['edit_status'] = 'local_change'
+
+    # save values that format removes
+    upload_flag = menu_item_def['upload_flag']
+    download_flag = menu_item_def['download_flag']
+
+    menu_item_def = adm.format_menu_item_def(menu_item_def_name, menu_item_def)
+
+    menu_item_def['upload_flag'] = upload_flag
+    menu_item_def['download_flag'] = download_flag
 
     try:
-        write_json_file(menu_item_def, target_file)
+        adm.write_json_file(menu_item_def, target_file)
     except :
         resp = cmd_error(cmd_info['cmd'], msg='Error writing to Menu Item Definition File.')
         return (resp)
+
+    # this is a stub
+    if upload_flag:
+        try:
+            # get sha of file
+            # curl https://api.github.com/repos/iiab-share/js-menu-files-test/commits?path=menu-defs/es-kolibri_khan_es.json gets proper commitsha
+            # response = requests.get(menu_def_base_url + 'commits?path=' + path, headers=headers)
+            sha = '?'
+            # adm.put_menu_item_def(menu_item_def_name, menu_item_def, sha=sha)
+            # do we really want to send icon and extra html?
+        except :
+            resp = cmd_error(cmd_info['cmd'], msg='Error Uploading Menu Item Definition.')
+            return (resp)
+
+    # what if download_flag, retrieve; should the frontend load the new values?
 
     resp = cmd_success(cmd_info['cmd'])
     return (resp)
 
 def sync_menu_item_defs(cmd_info):
-    outp = subprocess.check_output(["scripts/sync_menu_defs.py"])
+    outp = subproc_check_output(["scripts/sync_menu_defs.py"])
     json_outp = json_array("sync_menu_item_defs", outp)
     return (json_outp)
+
+def move_uploaded_file(cmd_info):
+    src_path = content_base + '/working/uploads/'
+    dest_paths = {'icon' : content_base + '/www/html/js-menu/menu-files/images/'}
+    file_name = cmd_info['cmd_args']['file_name']
+    file_use = cmd_info['cmd_args']['file_use']
+    filter_array = cmd_info['cmd_args']['filter_array']
+    if file_use not in dest_paths:
+        return cmd_malformed(cmd_info['cmd'])
+    src = src_path + file_name
+    dst = dest_paths[file_use] + file_name
+    #print(src)
+    #print(dst)
+    if len(filter_array) > 0:
+        if imghdr.what(src) not in filter_array:
+            os.remove(src)
+            return cmd_error(cmd_info['cmd'], msg="File cannot be used as " + file_use + ".")
+    try:
+        shutil.copy(src, dst)
+        os.chmod(dst, 420) # stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH
+        shutil.chown(dst, 'www-data','www-data')
+        os.remove(src)
+    except:
+        return cmd_error(cmd_info['cmd'], msg="File can not be moved.")
+    return cmd_success(cmd_info['cmd'])
+
+def remove_uploaded_files():
+    files = glob(content_base + '/working/uploads/*')
+    for f in files:
+        os.remove(f)
+
+def copy_dev_image(cmd_info):
+    if not is_rpi:
+        resp = cmd_error(cmd_info['cmd'], msg='Image copy only supported on Raspberry Pi at this time.')
+        return (resp)
+
+    dest_dev = cmd_info['cmd_args']['dest_dev']
+    comp_proc = adm.subproc_run('ls ' + dest_dev)
+    if comp_proc.returncode != 0:
+        resp = cmd_error(cmd_info['cmd'], msg='Device ' + dest_dev + ' not found.')
+        return (resp)
+
+    job_command = "/usr/sbin/piclone_cmd " + dest_dev
+    resp = request_job(cmd_info, job_command)
+    return (resp)
 
 # Control Commands
 
@@ -2125,7 +2733,7 @@ def remote_admin_ctl(cmd_info):
         return cmd_malformed(cmd_info['cmd'])
 
 def get_remote_admin_status(cmd_info):
-    outp = subprocess.check_output(["scripts/get_remote_admin_status.sh"])
+    outp = subproc_check_output(["scripts/get_remote_admin_status.sh"])
     #resp = json_array("remote",outp)
     return (outp.strip())
 
@@ -2182,6 +2790,7 @@ def change_password(cmd_info):
     # create new password hash
     newhash = crypt.crypt(newpasswd, salt)
     pwinput = user + ':' + newhash + '\n'
+    pwinput = pwinput.encode() # convert to byte
 
     # finally change password
     p = subprocess.Popen(['chpasswd', '-e'], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -2200,9 +2809,9 @@ def isStrongPassword(password):
 
     try:
         cracklib.VeryFascistCheck(password)
-    except ValueError, e:
+    except ValueError as e:
         is_valid = False
-        message = e.message
+        message = str(e)
 
     return is_valid, message
 
@@ -2247,6 +2856,8 @@ def request_one_job(cmd_info, job_command, cmd_step_no, depend_on_job_id, has_de
     job_info['cmd_rowid'] = cmd_info['cmd_rowid']
     job_info['cmd'] = cmd_info['cmd']
     job_info['cmd_args'] = cmd_info['cmd_args']
+    job_info['extra_vars'] = cmd_info.get('extra_vars', None) # optional
+    job_info['service_required'] = cmd_info.get('service_required', None) # only some commands
 
     job_info['cmd_step_no'] = cmd_step_no
     job_info['depend_on_job_id'] = depend_on_job_id
@@ -2255,8 +2866,16 @@ def request_one_job(cmd_info, job_command, cmd_step_no, depend_on_job_id, has_de
     job_info['status'] = 'SCHEDULED'
     job_info['status_datetime'] = str(datetime.now())
 
+    opt_args = {}
+    if 'extra_vars' in job_info:
+        opt_args ['extra_vars'] = job_info['extra_vars']
+    if 'service_required' in job_info:
+        opt_args ['service_required'] = job_info['service_required']
+
+    opt_args_json = json.dumps(opt_args)
+
     jobs_requested[job_id] = job_info
-    insert_job(job_id, cmd_info['cmd_rowid'], job_command, cmd_step_no, depend_on_job_id, has_dependent)
+    insert_job(job_id, cmd_info['cmd_rowid'], job_command, opt_args_json, cmd_step_no, depend_on_job_id, has_dependent)
 
     if has_dependent == "Y":
         prereq_info ['status'] = job_info['status']
@@ -2293,7 +2912,7 @@ def get_last_jobs_stat(cmd_info):
         cur = conn.execute ("SELECT jobs.rowid, job_command, job_output, job_status, strftime('%m-%d %H:%M', jobs.create_datetime), strftime('%s', jobs.create_datetime), strftime('%s',last_update_datetime), strftime('%s','now', 'localtime'), cmd_msg FROM jobs, commands where cmd_rowid = commands.rowid ORDER BY jobs.rowid DESC LIMIT 30")
         status_jobs = cur.fetchall()
         conn.close()
-    except sqlite3.Error, e:
+    except sqlite3.Error as e:
         tprint ("Error %s:" % e.args[0])
         log(syslog.LOG_ERR, "Sql Lite3 Error %s:" % e.args[0])
     finally:
@@ -2329,7 +2948,7 @@ def get_last_jobs_stat(cmd_info):
 
                 command = "tail " + output_file
                 args = shlex.split(command)
-                job_output = subprocess.check_output(args)
+                job_output = subproc_check_output(args)
                 status_job['job_output'] = job_output
 
                 #print "job output" + job_output
@@ -2344,7 +2963,7 @@ def get_jobs_running(cmd_info): # Not used
     today = str(date.today())
     job_stat = {}
     cur_jobs = {}
-    for job, job_info in jobs_running.iteritems():
+    for job, job_info in jobs_running.items():
         if today in job_info['status_datetime'] or jobinfo['status'] in ['SCHEDULED','STARTED']:
             job_stat['status'] = job_info['status']
             job_stat['job_command'] = job_info['job_command']
@@ -2361,7 +2980,7 @@ def json_array(name, str):
         str_array = str.split('\n')
         str_json = json.dumps(str_array)
         json_resp = '{ "' + name + '":' + str_json + '}'
-    except StandardError:
+    except Exception:
         json_resp = cmd_error()
     return (json_resp)
 
@@ -2425,7 +3044,7 @@ def insert_command(cmd_msg):
         conn.execute ("INSERT INTO commands (rowid, cmd_msg, create_datetime) VALUES (?,?,?)", (cmd_id, cmd_msg, now))
         conn.commit()
         conn.close()
-    except sqlite3.Error, e:
+    except sqlite3.Error as e:
         tprint ("Error %s:" % e.args[0])
         log(syslog.LOG_ERR, "Sql Lite3 Error %s:" % e.args[0])
     finally:
@@ -2435,7 +3054,7 @@ def insert_command(cmd_msg):
 
     return (cmd_id)
 
-def insert_job(job_id, cmd_rowid, job_command, cmd_step_no, depend_on_job_id, has_dependent):
+def insert_job(job_id, cmd_rowid, job_command, opt_args_json, cmd_step_no, depend_on_job_id, has_dependent):
     #print "in insert job"
     now = datetime.now()
     job_pid=0
@@ -2445,12 +3064,12 @@ def insert_job(job_id, cmd_rowid, job_command, cmd_step_no, depend_on_job_id, ha
     db_lock.acquire()
     try:
         conn = sqlite3.connect(cmdsrv_dbpath)
-        conn.execute ("INSERT INTO jobs (rowid, cmd_rowid, cmd_step_no, depend_on_job_id, has_dependent, job_command, job_pid, job_output, job_status, create_datetime, last_update_datetime) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-                      (job_id, cmd_rowid, cmd_step_no, depend_on_job_id, has_dependent, job_command, job_pid, job_output, job_status, now, now))
+        conn.execute ("INSERT INTO jobs (rowid, cmd_rowid, cmd_step_no, depend_on_job_id, has_dependent, job_command, opt_args_json, job_pid, job_output, job_status, create_datetime, last_update_datetime) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+                      (job_id, cmd_rowid, cmd_step_no, depend_on_job_id, has_dependent, job_command, opt_args_json, job_pid, job_output, job_status, now, now))
 
         conn.commit()
         conn.close()
-    except sqlite3.Error, e:
+    except sqlite3.Error as e:
         tprint ("Error %s:" % e.args[0])
         log(syslog.LOG_ERR, "Sql Lite3 Error %s:" % e.args[0])
     finally:
@@ -2467,7 +3086,7 @@ def upd_job_started(job_id, job_pid, job_status="STARTED"):
         conn.execute ("UPDATE jobs SET job_pid = ?, job_status = ?, last_update_datetime = ? WHERE rowid = ?", (job_pid, job_status, now, job_id))
         conn.commit()
         conn.close()
-    except sqlite3.Error, e:
+    except sqlite3.Error as e:
         tprint ("Error %s:" % e.args[0])
         log(syslog.LOG_ERR, "Sql Lite3 Error %s:" % e.args[0])
     finally:
@@ -2484,7 +3103,7 @@ def upd_job_finished(job_id, job_output, job_status="FINISHED"):
         conn.execute ("UPDATE jobs SET job_status = ?, job_output = ?, last_update_datetime = ? WHERE rowid = ?", (job_status, job_output, now, job_id))
         conn.commit()
         conn.close()
-    except sqlite3.Error, e:
+    except sqlite3.Error as e:
         tprint ("Error %s:" % e.args[0])
         log(syslog.LOG_ERR, "Sql Lite3 Error %s:" % e.args[0])
     finally:
@@ -2501,7 +3120,7 @@ def upd_job_cancelled(job_id, job_status="CANCELLED"):
         conn.execute ("UPDATE jobs SET job_status = ?, last_update_datetime = ? WHERE rowid = ?", (job_status, now, job_id))
         conn.commit()
         conn.close()
-    except sqlite3.Error, e:
+    except sqlite3.Error as e:
         tprint ("Error %s:" % e.args[0])
         log(syslog.LOG_ERR, "Sql Lite3 Error %s:" % e.args[0])
     finally:
@@ -2524,31 +3143,50 @@ def get_job_id():
 def escape_html(text):
     """escape strings for display in HTML"""
     return cgi.escape(text, quote=True).\
-           replace(u'\n', u'<br />').\
-           replace(u'\t', u'&emsp;').\
-           replace(u'  ', u' &nbsp;')
+           replace('\n', '<br />').\
+           replace('\t', '&emsp;').\
+           replace('  ', ' &nbsp;')
 
 def init():
     global last_command_rowid
     global last_job_rowid
+    global is_rpi
 
     # Read application variables from config files
     app_config()
 
     # Read vars from ansible file into global vars
-    read_iiab_vars()
-    get_install_vars_init()
+    read_iiab_default_vars()
+    read_iiab_local_vars()
+    # REMOVE OBSOLETE
+    # read_iiab_vars()
+    # get_install_vars_init()
     read_iiab_ini_file()
+    read_iiab_roles_stat() # into global iiab_roles_status
 
     # Get ansible facts for localhost
     get_ansible_facts()
+
+     # Compute variables derived from all of the above
+    compute_vars()
+
     #get_ansible_tags()
     read_kiwix_catalog()
     read_oer2go_catalog()
     read_maps_catalog()
 
-    # Compute variables derived from all of the above
-    compute_vars()
+    # Clean up any failed uploads
+    remove_uploaded_files()
+
+    if ansible_facts['ansible_local']['local_facts']['rpi_model'] != 'none':
+        is_rpi = True # convenience
+    else:
+        is_rpi = False
+
+    # record sdcard params for rpi
+    # take it out until we need it and have a better algorithm
+    # or maybe later add a config switch
+    #    write_sdcard_params()
 
     # See if queue.db exists and create if not
     # Opening a connection creates if not exist
@@ -2559,7 +3197,7 @@ def init():
         conn = sqlite3.connect(cmdsrv_dbpath)
         conn.execute ("CREATE TABLE commands (cmd_msg text, create_datetime text)")
         conn.commit()
-        conn.execute ("CREATE TABLE jobs (cmd_rowid integer, cmd_step_no integer, depend_on_job_id integer, has_dependent text, job_command text, job_pid integer, job_output text, job_status text, create_datetime text, last_update_datetime text)")
+        conn.execute ("CREATE TABLE jobs (cmd_rowid integer, cmd_step_no integer, depend_on_job_id integer, has_dependent text, job_command text, opt_args_json text, job_pid integer, job_output text, job_status text, create_datetime text, last_update_datetime text)")
         conn.commit()
         conn.close()
     else:
@@ -2579,20 +3217,15 @@ def init():
 
         get_incomplete_jobs()
 
-def read_config_vars():
-    global config_vars
-
-    stream = open(config_vars_file, 'r')
-    config_vars = yaml.load(stream)
-    stream.close()
-    if config_vars == None:
-        config_vars = {} # try to make the ajax call happy
+def write_sdcard_params():
+    cmd = 'scripts/wr-sdcard-params.sh'
+    adm.subproc_cmd(cmd)
 
 def read_iiab_ini_file():
     global iiab_ini
     iiab_ini_tmp = {}
 
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     config.read(iiab_ini_file)
     for section in config.sections():
         iiab_ini_sec = {}
@@ -2604,160 +3237,44 @@ def read_iiab_ini_file():
 
     iiab_ini = iiab_ini_tmp
 
-def write_config_vars():
-    global config_vars
-
-    lock.acquire() # will block if lock is already held
-
-    try:
-        stream =  open(config_vars_file, 'w')
-        stream.write('# DO NOT MODIFY THIS FILE.\n')
-        stream.write('# IT IS AUTOMATICALLY GENERATED.\n')
-        for key in config_vars:
-             if isinstance(config_vars[key], (int, float)): # boolean is int
-                 value = str(config_vars[key])
-             else:
-                 value = '"' + config_vars[key] + '"'
-             entry = key + ': ' + value
-             stream.write(entry + '\n')
-        stream.close()
-    finally:
-        lock.release() # release lock, no matter what
-
-def write_iiab_local_vars(config_vars): # from George Hunt
-    local_vars_lines = []
-    found_vars = []
-    separator_found = False
-
-    with open(iiab_local_vars_file) as f:
-        local_vars_lines = f.readlines()
-
-    # accumulate new local_vars.yml into outstr
-    outstr = ""
-    for line in local_vars_lines:
-        # copy blank lines
-        if line.strip() == "":
-            outstr += line
-            continue
-
-        # if commented out, check for disagreement in value
-        hash = line.find("#")
-        if hash == 0:
-            m = re.match('# *([a-zA-Z0-9_]*) *: *([a-zA-Z0-9\'\"\.]*) *(#.*)*',line)
-            if m:
-                if m.group(1) in config_vars:
-                    if m.group(1) not in default_vars or config_vars[m.group(1)] != default_vars[m.group(1)]:
-                        vardec = m.group(1) + ": " + str(config_vars[m.group(1)]) + "  \n"
-                        if m.group(3):
-                            vardec =  vardec.strip() + "   " + m.group(3) + "\n"
-                        outstr += vardec
-                    found_vars.append(m.group(1))
-            else:
-                outstr += line
-            if line.startswith("# IIAB"):
-                separator_found = True
-            continue
-
-        # change value if there is disagreement, trailing comments are unchanged
-        m = re.match(' *([a-zA-Z0-9_]*) *: *([a-zA-Z0-9\'\"\.]*) *(#.*)*',line)
-        if m and m.group(1) in config_vars:
-            if config_vars[m.group(1)] != m.group(2):
-                if isinstance(config_vars[m.group(1)], unicode) and config_vars[m.group(1)].find(" ") != -1:
-                    vardec = m.group(1) + ": \"" + str(config_vars[m.group(1)]) + "\"\n"
-                else:
-                    vardec = m.group(1) + ": " + str(config_vars[m.group(1)]) + "\n"
-                    if m.group(3):
-                        vardec = vardec.strip() + "   " + m.group(3) + "\n"
-                outstr += vardec
-            else:
-                outstr += line
-            found_vars.append(m.group(1))
-        else:
-            print("no match for: %s"%line)
-            outstr += line
-
-    # put any variables not already found in local_vars.yml
-    if not separator_found:
-        outstr +="\n\n############################################################################\n"
-        outstr +="# IIAB -- following variables are first set by browser via the Admin Console\n"
-        outstr +="#  They may be changed via text editor, or by the Admin Console.\n\n"
-    for variable_name in config_vars:
-        if variable_name not in found_vars:
-            if str(config_vars[variable_name]).find(" ") == -1:
-                outstr += variable_name + ": " + str(config_vars[variable_name]) + "\n"
-            else:
-                outstr += variable_name + ": \"" + str(config_vars[variable_name]) + "\"\n"
-
-    with open(iiab_local_vars_file, "w") as f:
-        f.write(outstr)
-
 def read_iiab_local_vars():
     global local_vars
-    local_vars_error = None
-
     try:
-        with open(iiab_local_vars_file) as f:
-            local_vars = yaml.load(f)
+        vars_dict = adm.read_yaml(iiab_local_vars_file)
+        local_vars = adm.jinja2_subst(vars_dict, dflt_dict=default_vars)
+        merge_effective_vars()
     except Exception as e:
         local_vars_error = "Error in " + iiab_local_vars_file
         if hasattr(e, 'problem_mark'):
             mark = e.problem_mark
-            local_vars_error += " on line %s"%str(mark.line+1)
-
-    if local_vars_error == None: # no error
-        merge_effective_vars()
-    return local_vars_error
+            local_vars_error = "Error " + mark
+        log(syslog.LOG_INFO, local_vars_error)
+        raise
 
 def merge_effective_vars():
+    # assumes default_vars was read in init()
+    # assumes adm.jinja2_subst() has done substitutions on both
     # combine vars with local taking precedence
-    # exclude derived vars marked by {
+    # OK. a little simpler than before
+    global effective_vars
 
-    for key in default_vars:
-        if isinstance(default_vars[key], str):
-            findpos = default_vars[key].find("{")
-            if findpos == -1:
-                effective_vars[key] = default_vars[key]
-        else:
-            effective_vars[key] = default_vars[key]
-
-    for key in local_vars:
-        if isinstance(local_vars[key], str):
-            findpos = local_vars[key].find("{")
-            if findpos == -1:
-                effective_vars[key] = local_vars[key]
-        else:
-            effective_vars[key] = local_vars[key]
-
-def merge_config_vars(config_vars):
-    # put config vars in effective vars on write
-
-    for key in config_vars:
-        if isinstance(config_vars[key], str):
-            findpos = config_vars[key].find("{")
-            if findpos == -1:
-                effective_vars[key] = config_vars[key]
-        else:
-            effective_vars[key] = config_vars[key]
+    effective_vars = {**default_vars , **local_vars}
 
 def read_iiab_default_vars():
     global default_vars
+    vars_dict = adm.read_yaml(iiab_repo + "/vars/default_vars.yml")
+    default_vars = adm.jinja2_subst(vars_dict)
 
-    stream = open(iiab_repo + "/vars/default_vars.yml", 'r')
-    default_vars = yaml.load(stream)
-    stream.close()
-
-def read_iiab_vars():
+def OBSOL_read_iiab_vars():
+    # retain for alternate ansible variable logic
+    # assumes default_vars was read in init()
+    # and role status
     global default_vars
     global local_vars
     global effective_vars
 
-    stream = open(iiab_repo + "/vars/default_vars.yml", 'r')
-    default_vars = yaml.load(stream)
-    stream.close()
-
-    stream = open(iiab_local_vars_file, 'r')
-    local_vars = yaml.load(stream)
-    stream.close()
+    default_vars = adm.read_yaml(iiab_repo + "/vars/default_vars.yml")
+    local_vars = adm.read_yaml(iiab_local_vars_file)
 
     if local_vars == None:
         local_vars = {}
@@ -2786,7 +3303,7 @@ def get_ansible_facts():
 
     command = ansible_program + " localhost -i " + iiab_repo + "/ansible_hosts  -m setup -o  --connection=local"
     args = shlex.split(command)
-    outp = subprocess.check_output(args)
+    outp = subproc_check_output(args)
     if (get_ansible_version() < '2'):
         splitter = 'success >> '
     else:
@@ -2807,7 +3324,7 @@ def get_ansible_tags():
 
     args = shlex.split(command)
     try:
-        outp = subprocess.check_output(args)
+        outp = subproc_check_output(args)
     except subprocess.CalledProcessError as e:
         outp = e.output
 
@@ -2848,9 +3365,22 @@ def read_maps_catalog():
     global maps_catalog
     global init_error
 
+    if osm_version == 'V2':
+        fname = adm_maps_catalog_file
+    else:
+        fname = maps_catalog_file
     try:
-        stream = open (maps_catalog_file,"r")
-        maps_catalog = json.load(stream)
+        stream = open (fname,"r")
+        catalog = json.load(stream)
+        if osm_version == 'V1':
+            maps_catalog = catalog
+
+        # for v2 flatten the catalog to put maps and base in same
+        # uses adm-maps-catalog.json
+        if osm_version == 'V2':
+            maps_catalog = catalog['maps']
+            maps_catalog.update(catalog['base'])
+
         stream.close()
     except:
         init_error = True
@@ -2858,17 +3388,16 @@ def read_maps_catalog():
         pass
     #print maps_catalog
 
-def write_json_file(dict, target_file):
-    str_json = json.dumps(dict, indent=2) # puts unicode in format \uxxxx
-    str_uni = str_json.decode('unicode-escape') # removes that
-    str_utf8 = str_uni.encode('utf-8') # converts to utf-8
-
-    try:
-        with open(target_file, 'wb') as outfile:
-            outfile.write(str_utf8)
-
-    except OSError as e:
-        raise
+# moved to iiab.adm_lib.py
+#def write_json_file(dict, target_file):
+#    str_json = json.dumps(dict, indent=2) # puts unicode in format \uxxxx
+#    str_uni = str_json.decode('unicode-escape') # removes that
+#    str_utf8 = str_uni.encode('utf-8') # converts to utf-8
+#    try:
+#        with open(target_file, 'wb') as outfile:
+#            outfile.write(str_utf8)
+#    except OSError as e:
+#        raise
 
 def get_incomplete_jobs():
     global jobs_requested
@@ -2888,14 +3417,14 @@ def get_incomplete_jobs():
 
     # get jobs from database that didn't finish, group by command in desc order so we only done the last one
     conn = sqlite3.connect(cmdsrv_dbpath)
-    sql = "SELECT jobs.rowid, cmd_rowid, cmd_step_no, depend_on_job_id, has_dependent, job_command, job_pid, job_output, job_status, jobs.create_datetime, cmd_msg from commands, jobs "
+    sql = "SELECT jobs.rowid, cmd_rowid, cmd_step_no, depend_on_job_id, has_dependent, job_command, opt_args_json, job_pid, job_output, job_status, jobs.create_datetime, cmd_msg from commands, jobs "
     sql += "WHERE commands.rowid = jobs.cmd_rowid and job_status IN ('STARTED', 'RESTARTED', 'SCHEDULED') ORDER BY job_command, jobs.rowid DESC"
     cur = conn.execute(sql)
 
     last_command = ""
 
     for row in cur.fetchall():
-        job_id, cmd_rowid, cmd_step_no, depend_on_job_id, has_dependent, job_command, job_pid, job_output, job_status, create_datetime, cmd_msg = row
+        job_id, cmd_rowid, cmd_step_no, depend_on_job_id, has_dependent, job_command, opt_args_json, job_pid, job_output, job_status, create_datetime, cmd_msg = row
 
         job_created_time = datetime.strptime(create_datetime, "%Y-%m-%d %H:%M:%S.%f") # create_datetime to datetime type
 
@@ -2916,14 +3445,9 @@ def get_incomplete_jobs():
             except OSError:
                 pass
 
-        job_info = {}
-        parse = cmd_msg.split(' ')
-        job_info['cmd'] = parse[0]
-
-        try:
-            job_info['cmd_args'] = json.loads(parse[1])
-        except IndexError:
-           job_info['cmd_args'] =  {}
+        parse_failed, job_info = parse_cmd_msg(cmd_msg)
+        if parse_failed:
+            log(syslog.LOG_ERR, "Error: Unexpected error in when restarting Command %s." % job_info['cmd'])
 
         job_info['cmd_rowid'] = cmd_rowid
         job_info['job_command'] = job_command
@@ -2934,6 +3458,14 @@ def get_incomplete_jobs():
         job_info['status'] = job_status
         job_info['create_datetime'] = create_datetime
         job_info['status_datetime'] = str(datetime.now())
+
+        opt_args = json.loads(opt_args_json)
+
+        # break out special attributes
+        if 'extra_vars' in opt_args:
+            job_info['extra_vars'] = opt_args['extra_vars']
+        if 'service_required' in opt_args:
+            job_info['service_required'] = opt_args['service_required']
 
         # only restart if we haven't already seen this command
         # we assume that we can always use the highest numbered job for a given command
@@ -2980,6 +3512,7 @@ def get_incomplete_jobs():
     conn.close()
 
 def app_config():
+    global adm_conf
     global iiab_base
     global iiab_repo
     global iiab_config_dir
@@ -3014,7 +3547,13 @@ def app_config():
     global maps_working_dir
     global maps_catalog_url
     global maps_catalog_file
+    global maps_catalog_url_v2
+    global adm_maps_catalog_file
     global vector_map_path
+    global maps_tiles_base
+    global vector_map_tiles_path
+    global maps_sat_base
+    global maps_download_src
     global modules_dir
     global js_menu_dir
     global ansible_playbook_program
@@ -3028,7 +3567,9 @@ def app_config():
     stream = open (cmdsrv_config_file,"r")
     inp = json.load(stream)
     stream.close()
+
     conf = inp['cmdsrv_conf']
+    adm_conf = conf
 
     iiab_base = conf['iiab_base']
     iiab_repo = conf['iiab_repo']
@@ -3065,7 +3606,13 @@ def app_config():
     maps_working_dir = conf['maps_working_dir']
     maps_catalog_url  = conf['maps_catalog_url']
     maps_catalog_file  = conf['maps_catalog_file']
+    #maps_catalog_url_v2  = conf['maps_catalog_url_v2']
+    adm_maps_catalog_file  = conf['adm_maps_catalog_file']
     vector_map_path  = conf['vector_map_path']
+    vector_map_tiles_path  = conf['vector_map_tiles_path']
+    maps_tiles_base  = conf['maps_tiles_base']
+    maps_sat_base  = conf['maps_sat_base']
+    maps_download_src  = conf['maps_download_src']
     js_menu_dir = conf['js_menu_dir']
     squid_service = conf['squid_service']
     squid_whitelist = "/etc/%s/sites.whitelist.txt" % squid_service
@@ -3074,20 +3621,31 @@ def app_config():
     apache_user = conf['apache_user']
     df_program = conf['df_program']
 
-# These two were taken from the OLPC idmgr application
 
 def compute_vars():
-    # nothing to do at this point
+    global adm_conf
+    global osm_version
+    # only support the older version of vector maps if is in local_vars
+    # calculate osm version
+    if 'osm_version' in local_vars:
+        adm_conf['osm_version'] = local_vars['osm_version']
+    #elif os.path.exists(vector_map_path + '/installer'):
+    #    adm_conf['osm_version'] = 'V2'
+    #elif os.path.exists(vector_map_path):
+    #    adm_conf['osm_version'] = 'V1'
+    else:
+        adm_conf['osm_version'] = 'V2'
+    osm_version = adm_conf['osm_version']
     return
 
 def set_ready_flag(on_off):
     if on_off == "ON":
         try:
-            ready_file = open( cmdsrv_ready_file, "w" );
-            ready_file.write( "ready" );
-            ready_file.write( "\n" );
-            ready_file.close();
-        except OSError, e:
+            ready_file = open( cmdsrv_ready_file, "w" )
+            ready_file.write( "ready" )
+            ready_file.write( "\n" )
+            ready_file.close()
+        except OSError as e:
             syslog.openlog( 'iiab_cmdsrv', 0, syslog.LOG_USER )
             syslog.syslog( syslog.LOG_ALERT, "Writing Ready file: %s [%d]" % (e.strerror, e.errno) )
             syslog.closelog()
@@ -3095,7 +3653,7 @@ def set_ready_flag(on_off):
     else:
         try:
             os.remove(cmdsrv_ready_file)
-        except OSError, e:
+        except OSError as e:
             syslog.openlog( 'iiab_cmdsrv', 0, syslog.LOG_USER )
             syslog.syslog( syslog.LOG_ALERT, "Removing Ready file: %s [%d]" % (e.strerror, e.errno) )
             syslog.closelog()
@@ -3121,7 +3679,7 @@ def createDaemon(pidfilename):
                 pidfile.write( str( pid ) );
                 pidfile.write( "\n" );
                 pidfile.close();
-            except OSError, e:
+            except OSError as e:
                 syslog.openlog( 'iiab_cmdsrv', 0, syslog.LOG_USER )
                 syslog.syslog( syslog.LOG_ALERT, "Writing PID file: %s [%d]" % (e.strerror, e.errno) )
                 syslog.closelog()
@@ -3137,6 +3695,8 @@ def createDaemon(pidfilename):
     #
     import resource     # Resource usage information.
     maxfd = resource.getrlimit(resource.RLIMIT_NOFILE)[1]
+
+    # This is a bug, but no idea what the value of MAXFD should be
     if (maxfd == resource.RLIM_INFINITY):
         maxfd = MAXFD
 
@@ -3178,7 +3738,7 @@ if __name__ == "__main__":
             pidfile.write( str( 0 ) );
             pidfile.write( "\n" );
             pidfile.close();
-        except OSError, e:
+        except OSError as e:
             syslog.openlog( 'iiab_cmdsrv', 0, syslog.LOG_USER )
             syslog.syslog( syslog.LOG_ALERT, "Writing PID file: %s [%d]" % (e.strerror, e.errno) )
             syslog.closelog()

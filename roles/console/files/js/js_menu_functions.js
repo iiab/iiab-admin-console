@@ -20,7 +20,7 @@ var jsMenuTypeTargets =
     "html" : "moddir",
     //"webroot" : "moddir",
     //"kalite"  : "",
-    //"kolibri"  : "",
+    "kolibri"  : "kolibri_channel_id",
     //"cups"  : "",
     //"nodered"  : "",
     //"calibre"  : "",
@@ -89,7 +89,7 @@ function getContentMenuToEdit(currentJsMenuToEditUrl){ // passed by button click
 	return resp;
 }
 
-function saveContentMenuDef() {
+function saveContentMenuDef(readForm=true, callback=genericCmdHandler) {
     var command = "SAVE-MENU-DEF";
     var cmd_args = {};
     var menu_url = gEBI('content_menu_url').value;
@@ -97,15 +97,17 @@ function saveContentMenuDef() {
     	alert ("Menu Folder must not include '.' or '/'");
     	return false;
     }
-    getContentMenuToEditFormValues ();
-    if (!Array.isArray(currentJsMenuToEdit.menu_items_1) || !currentJsMenuToEdit.menu_items_1.length){
-    	alert ("List of Menu Items is empty. Load before Saving.");
-    	return false;
+    if (readForm){
+      getContentMenuToEditFormValues ();
+      if (!Array.isArray(currentJsMenuToEdit.menu_items_1) || !currentJsMenuToEdit.menu_items_1.length){
+        alert ("List of Menu Items is empty. Load before Saving.");
+        return false;
+      }
     }
     cmd_args['menu_url'] = menu_url;
     cmd_args['menu_def'] = currentJsMenuToEdit;
     cmd = command + " " + JSON.stringify(cmd_args);
-    sendCmdSrvCmd(cmd, genericCmdHandler);
+    sendCmdSrvCmd(cmd, callback);
     alert ("Saving Content Menu Definition.");
     return true;
   }
@@ -142,6 +144,11 @@ function setContentMenuToEditFormChecked (fieldName, screenName='') {
 }
 
 function getContentMenuToEditFormValues (){
+  getContentMenuToEditFormParamValues ()
+  getContentMenuToEditItemList ();
+}
+
+function getContentMenuToEditFormParamValues (){
   getContentMenuToEditFormValue('mobile_header_font');
   getContentMenuToEditFormChecked('mobile_incl_description');
   getContentMenuToEditFormChecked('mobile_incl_extra_description');
@@ -158,8 +165,6 @@ function getContentMenuToEditFormValues (){
   getContentMenuToEditFormChecked('allow_server_time_update');
   getContentMenuToEditFormChecked('allow_poweroff');
   getContentMenuToEditFormValue('poweroff_prompt');
-
-  getContentMenuToEditItemList ();
 }
 
 function getContentMenuToEditFormValue (fieldName, screenName='') {
@@ -552,8 +557,18 @@ function menuItemAddDnDHandlers(elem) {
 
 function saveContentMenuItemDef() {
     var command = "SAVE-MENU-ITEM-DEF";
-    var cmdArgs = getEditMenuItemFormValues();
-    //var callbackFunction = genContentMenuItemDefCallback(command, cmdArgs);
+    var formVars = getEditMenuItemFormValues(); // also validates
+    var validFlag = formVars.validFlag;
+    var cmdArgs = formVars.menuDefArgs;
+
+    if (!validFlag) // message issued in called function
+      return false;
+
+    // warn if will overwrite central repo
+    if (cmdArgs.menu_item_def.upload_flag)
+      if (!confirm("These changes will be uploaded for everyone to use.\nAre you certain you want this?"))
+        return false;
+
     var callbackFunction = genSendCmdSrvCmdCallback(command, cmdArgs, 'updateContentMenuItemDef');
 
     cmd = command + " " + JSON.stringify(cmdArgs);
@@ -575,11 +590,38 @@ function updateContentMenuItemDef (command, cmdArgs) {
   drawMenuItemDef (menuItemName, menuItemDefPrefixes.all);
   drawMenuItemDef (menuItemName, menuItemDefPrefixes.current);
   drawMenuItemSelectListItem (menuItemName, menuItemDefPrefixes.select);
+  // take out of clone mode
+  lockMenuItemHeader(true);
+  menuItemEditMode = 'edit';
+  // make sure menu item is in menu
+  if (! currentJsMenuToEdit.menu_items_1.includes(menuItemName)){
+    var lastDefOnMenu = currentJsMenuToEdit.menu_items_1.pop();
+    if (lastDefOnMenu.includes('credits')){ // keep credits as last entry
+      currentJsMenuToEdit.menu_items_1.push(menuItemName);
+      currentJsMenuToEdit.menu_items_1.push(lastDefOnMenu);
+    }
+    else {
+      currentJsMenuToEdit.menu_items_1.push(lastDefOnMenu);
+      currentJsMenuToEdit.menu_items_1.push(menuItemName);
+    }
+    getContentMenuToEditFormParamValues();
+    saveContentMenuDef(readForm=false, callback=refreshContentMenuToEdit);
+    drawMenuItemSelectList();
+    // master list and menu.json list will get refreshed when those items are accessed
+  }
+  // what about master list of menu defs
+  // delayedProcCurrentMenuItemDefList (5000, currentJsMenuToEdit.menu_items_1, menuItemDefPrefixes.current);
+  // getMenuItemDefList();
+}
+
+function refreshContentMenuToEdit(){
+  var currentJsMenuToEditUrl = $("#content_menu_url").val();
+  getContentMenuToEdit(currentJsMenuToEditUrl);
 }
 
 function handleEditMenuItemClick (menuItem, action){
   setEditMenuItemTopFormValues (menuItem);
-  setEditMenuItemBottomFormValues (menuItem);
+  setEditMenuItemBottomFormValues (menuItem, action);
   menuItemEditMode = action;
   if (action == 'edit')
     lockMenuItemHeader(true);
@@ -612,17 +654,44 @@ function setEditMenuItemTopFormValues (menuItem, menuDef){
   setFormValue ('menu_item_content_target', targetFieldNameValue);
 }
 
-function setEditMenuItemBottomFormValues (menuItem, menuDef){
-	if (typeof(menuDef) === 'undefined')
-	  var menuDef = menuItemDefs[menuItem];
+function setEditMenuItemBottomFormValues (menuItem, action, menuDef){
+  var noUploadDefs = ['en-sample', 'en-oob', 'en-credits'] // protected menu defs
 
-  setEditMenuItemFormValue (menuDef, 'title', screenName='menu_item_title');
+  if (typeof(menuDef) === 'undefined')
+    var menuDef = menuItemDefs[menuItem];
+
+  var title = menuDef.title;
+  if (action == 'clone'){
+    title = 'CLONE: ' + menuDef.title;
+  }
+
+  // set flag defaults for first edit not to share
+  if (menuDef.edit_status != 'local_change')  {
+    menuDef.upload_flag = false;
+    menuDef.download_flag = false;
+  }
+  // block certain menu defs from upload
+  if (noUploadDefs.includes(menuItem)) {
+    $('#menu_item_upload_flag').attr('disabled', true);
+    $('#menu_item_upload_flag_on').hide();
+    $('#menu_item_upload_flag_off').show();
+    menuDef.upload_flag = false;
+  } else {
+    $('#menu_item_upload_flag').attr('disabled', false);
+    $('#menu_item_upload_flag_on').show();
+    $('#menu_item_upload_flag_off').hide();
+  }
+
+  // setEditMenuItemFormValue (menuDef, 'title', screenName='menu_item_title');
+  setFormValue ('title', title, screenName='menu_item_title') // override title for clones
   setEditMenuItemFormValue (menuDef, 'logo_url', screenName='menu_item_icon_name');
   setEditMenuItemFormValue (menuDef, 'start_url', screenName='menu_item_start_url');
   setEditMenuItemFormValue (menuDef, 'description', screenName='menu_item_description');
   setEditMenuItemFormValue (menuDef, 'extra_description', screenName='menu_item_extra_description');
   setEditMenuItemFormValue (menuDef, 'extra_html', screenName='menu_item_extra_html');
   setEditMenuItemFormValue (menuDef, 'footnote', screenName='menu_item_footnote');
+  setEditMenuItemFormChecked (menuDef, 'upload_flag', screenName='menu_item_upload_flag');
+  setEditMenuItemFormChecked (menuDef, 'download_flag', screenName='menu_item_download_flag');
 }
 
 function setEditMenuItemFormValue (menuDef, fieldName, screenName='') {
@@ -636,13 +705,32 @@ function setEditMenuItemFormValue (menuDef, fieldName, screenName='') {
   setFormValue (fieldName, fieldValue, screenName)
 }
 
-function getEditMenuItemFormValues (){
-	var menuDefArgs = {}
-	var menuDef = {};
+function setEditMenuItemFormChecked (menuDef, fieldName, screenName='') {
+  var fieldValue = "";
+  console.log(fieldName)
+  console.log(menuDef)
+  if (screenName == '')
+	  screenName = fieldName;
+	if (menuDef.hasOwnProperty(fieldName))
+	  fieldValue = menuDef[fieldName];
+  setFormChecked (fieldName, fieldValue, screenName)
+}
 
-	var menuItemName = getFormValue ('menu_item_name');
-	var suffix = getFormValue ('menu_item_name_suffix');
-	var content_target = getFormValue ('menu_item_content_target');
+function getEditMenuItemFormValues (){
+  // also validates and returns validFlag
+
+	var menuDefArgs = {}
+  var menuDef = {};
+  var validFlag = true;
+
+  var menuItemCode = getFormValue ('menu_item_name');
+  var suffix = getFormValue ('menu_item_name_suffix');
+  var menuItemName = menuItemCode
+
+  if (suffix != '')
+    menuItemName = menuItemCode + '-' + suffix
+
+   var content_target = getFormValue ('menu_item_content_target');
 
   menuDef['intended_use'] = getFormValue ('intended_use', screenName='menu_item_type');
   menuDef['lang'] = getFormValue ('lang', screenName='menu_item_lang');
@@ -664,6 +752,8 @@ function getEditMenuItemFormValues (){
   menuDef['extra_description'] = getEscapedFormValue ('extra_description', screenName='menu_item_extra_description');
   menuDef['extra_html'] = getFormValue ('extra_html', screenName='menu_item_extra_html');
   menuDef['footnote'] = getEscapedFormValue ('footnote', screenName='menu_item_footnote');
+  menuDef['upload_flag'] = getFormChecked ('upload_flag', screenName='menu_item_upload_flag');
+  menuDef['download_flag'] = getFormChecked ('download_flag', screenName='menu_item_download_flag');
 
   // calc menu item def name
 
@@ -672,45 +762,62 @@ function getEditMenuItemFormValues (){
   //else if use in zim, html, webroot, download =  lang - target - suffix
   //else 	= lang - intended use
 
-  //report if duplicate
-
   menuDefArgs['menu_item_name'] = menuItemName;
   menuDefArgs['mode'] = menuItemEditMode;
   menuDefArgs['menu_item_def'] = menuDef;
 
-  return menuDefArgs;
+  validFlag = validateMenuItemDef(menuItemName, menuDef);
+
+  return {
+    validFlag,
+    menuDefArgs
+  };
 }
 
-function valEditMenuItemFormValues (screenName){
-	var fieldValue = getFormValue (screenName);
+function validateMenuItemDef(menuItemName, menuDef){
+  if (menuItemEditMode == 'clone')
+    if (!validateMenuItemName(menuItemName, menuDef))
+      return false;
 
-	// ************* WTF
-
-	switch (screenName) {
-    case 'menu_item_icon_name':
-      console.log('Oranges are $0.59 a pound.');
-      break;
-    case 'menu_item_extra_html':
-
-    default:
-      console.log('Sorry, we are out of ' + expr + '.');
+  if (menuDef['title'] == ''){
+    alert('Title may not be left blank.');
+    return false;
   }
-	var menuDef = {};
 
-	var menuItem = getFormValue ('menu_item_name');
-	var suffix = getFormValue ('menu_item_name_suffix');
-	var content_target = getFormValue ('menu_item_content_target');
+  if (menuDef['description'] == ''){
+    alert('Description may not be left blank.');
+    return false;
+  }
+  return true;
+}
 
-  menuDef['intended_use'] = getFormValue ('intended_use', screenName='menu_item_type');
-  menuDef['lang'] = getFormValue ('lang', screenName='lang');
+function validateMenuItemName(menuItemName, menuDef){
+  //console.log(menuItemName)
+  // mode is clone and is duplicate
+  if (menuItemEditMode == 'clone' && menuItemDefList.includes(menuItemName)){
+    alert('This Menu Item Definition already exists. Please use a different Menu Item Code and Suffix when cloning.');
+    return false;
+  }
+  // has lang code
+  var nameParts = menuItemName.split('-');
+  if (nameParts[1] == ''){
+    alert('The Menu Item Code and Suffix together must be a name of the form <language code>-<content indicator text>-<suffix>. For Zims and Modules it should reference the target content.');
+    return false;
+  }
+  var lang = nameParts[0];
+  if (!langCodesXRef.hasOwnProperty(lang)){
+    alert('The Menu Item Code must start with a valid language code. Use the dropdown to chose one.');
+    return false;
+  }
+  // restrict characters in name
+  var re = /^[A-Z\-a-z_0-9]+$/g;
+  // var re = /^[a-z_0-9]+$/g;
+  if(!re.test(menuItemName)){
+    alert('The Menu Item Code can only contain the upper and lower case characters a-z, 0-9, hyphen, and underscore.');
+    return false;
+  }
 
-  menuDef['title'] = getEscapedFormValue ('title', screenName='menu_item_title');
-  menuDef['logo_url'] = getFormValue ('logo_url', screenName='menu_item_icon_name');
-  menuDef['start_url'] = getFormValue ('start_url', screenName='menu_item_start_url');
-  menuDef['description'] = getEscapedFormValue ('description', screenName='menu_item_description');
-  menuDef['extra_description'] = getEscapedFormValue ('extra_description', screenName='menu_item_extra_description');
-  menuDef['extra_html'] = getFormValue ('extra_html', screenName='menu_item_extra_html');
-  menuDef['footnote'] = getEscapedFormValue ('footnote', screenName='menu_item_footnote');
+  return true;
 }
 
 function setFormValue (fieldName, fieldValue, screenName='') {
@@ -722,7 +829,7 @@ function setFormValue (fieldName, fieldValue, screenName='') {
 function setFormChecked (fieldName, fieldValue, screenName='') {
 	if (screenName == '')
 	  screenName = fieldName;
-  gEBI(fieldName).checked = fieldValue;
+  gEBI(screenName).checked = fieldValue;
 }
 
 function getFormValue (fieldName, screenName='') {
@@ -826,17 +933,22 @@ function setMenuItemIconName(e) {
   $('#menuIconsModal').modal('hide')
 }
 
+// leave this for future, but doesn't work with nginx (unlike with apache)
 function uploadMenuItemIcon() {
 	var formData = new FormData();
-  var files = $('#UPLOAD-MENU-ITEM-ICON')[0].files[0];
-  formData.append('file',files);
+  var file = $('#menuIconsUploadFileName')[0].files[0];
+  var fileName = file.name
+  formData.append('file',file);
 
 	$.ajax({
   url: "upload-image.php", // Url to which the request is send
+  //url: "icon_uploader.php",
+  //url: "/admin/upload2.php",
   type: "POST",            // Type of request to be send, called as method
   data: formData,          // Data sent to server, a set of key/value pairs (i.e. form fields and values)
   //dataType: "json",
   cache : false,
+  contentType: false,
   processData: false
   })
   .done(function(dataResp, textStatus, jqXHR) {
@@ -845,16 +957,13 @@ function uploadMenuItemIcon() {
   	  alert ("Error uploading image");
   	  }
   	else {
-  		$("#menu_item_icon_name").val(files['name']);
-  		alert ("File Uploaded");
+      $("#menu_item_icon_name").val(fileName);
+      // try to move file to js-menu images
+      moveUploadedFile(fileName, 'icon', ['jpeg', 'gif', 'png']);
   	}
   })
   .fail(function (jqXHR, textStatus, errorThrown){
-		if (errorThrown == 'Not Found'){
-		  alert ('Error uploading image file.');
-		}
-		else
-		  jsonErrhandler (jqXHR, textStatus, errorThrown); // probably a json error
+    alert ('Error uploading image file - ' + errorThrown);
 	});
 }
 

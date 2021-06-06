@@ -52,6 +52,19 @@
   with_fileglob:
         - menu-files/services/*
 
+- name: Copy a dummy file
+  copy: src=security/index.html
+        dest={{ item }}
+        mode=0644
+        owner=root
+        group=root
+  with_items:
+    - "{{ js_menu_dir }}"
+    - "{{ js_menu_dir }}menu-files"
+    - "{{ js_menu_dir }}menu-files/css"
+    - "{{ js_menu_dir }}menu-files/js"
+    - "{{ js_menu_dir }}menu-files/html"
+    - "{{ js_menu_dir }}menu-files/services"
 
 - name: Copy a dummy module for oob menu
   copy: src=en-test_mod/index.html
@@ -103,21 +116,24 @@
 
 - name: Make web server user owner of images after copying
   file: path="{{ js_menu_dir }}menu-files/images/"
-        mode=0755
+        mode=u=rwX,g=rX,o=rX
         owner="{{ apache_user }}"
         group="{{ apache_user }}"
         state=directory
         recurse=true
 
-- name: Add any IIAB roles that are installed to home/menu.js
-  shell: "{{ cmdsrv_dir }}/scripts/iiab_update_menus.py"
+#- name: Make sure iiab-make-kiwix-lib has been run
+#  shell: "/usr/bin/iiab-make-kiwix-lib"
+
+#- name: Add any IIAB roles that are installed to home/menu.js
+#  shell: "{{ cmdsrv_dir }}/scripts/iiab_update_menus.py"
 
 # Enable or Disable menu client setting server time
 - name: Give {{ apache_user }} permission to set time
   template:
     src: 021_apache_set_time.j2
     dest: /etc/sudoers.d/021_apache_set_time
-    mode: 0644
+    mode: 0440
   when: apache_allow_sudo
 
 - name: Remove above
@@ -126,37 +142,9 @@
     state: absent
   when: not apache_allow_sudo
 
-# For Osm Vector Maps
-# If not enabled install empty files
-# Otherwise run /usr/bin/iiab-update-map
+- name: Create Feedback Database
+  shell: ./setup-feedback
 
-- name: Copy Osm Vector Maps dummy files
-  copy:
-    src: map/{{ item }}
-    dest: "{{ doc_root }}/common/assets/{{ item }}"
-    owner: root
-    group: root
-    mode: 0644
-    force: yes
-
-  with_items:
-    - regions.json
-    - vector-map-idx.json
-  when: not osm_vector_maps_enabled
-
-- name: Remove region.json dummy file if osm_vector_maps_enabled
-  file:
-    path: "{{ doc_root }}/common/assets/regions.json"
-    state: absent
-  when: osm_vector_maps_enabled
-
-- name: Create a link to osm catalog in /common/assets
-  file:
-    src: "{{ vector_map_path }}/maplist/assets/regions.json"
-    dest: "{{ doc_root }}/common/assets/regions.json"
-    state: link
-  when: osm_vector_maps_enabled
-
-- name: Add any MAPS that are installed to home/menu.js
-  shell: /usr/bin/iiab-update-map
-  when: osm_vector_maps_enabled
+#- name: Add any MAPS that are installed to home/menu.json
+#  shell: "{{ cmdsrv_dir }}/scripts/iiab-update-map.py"
+#  when: osm_vector_maps_enabled

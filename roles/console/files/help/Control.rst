@@ -21,3 +21,12 @@ Starting Application
 Displays a log of the commands used to start up the Admin Console and whether they succeeded or not.
 
 Errors are displayed if the server is not available or the command server is not running or not ready.
+
+Raspberry Pi Only
+-----------------
+
+On a Raspberry Pi several other links appear:
+
+* Wifi Control - Use this to switch the builtin WiFi between a hostspot and connection to another router
+* Bluetooth Control - Use this to turn network over Bluetooth on and off. You can run Admin Console over Bluetooth.
+* VPN Control - Use this to turn the IIAB Support VPN on and off.

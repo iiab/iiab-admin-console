@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import zmq
 import os, sys
@@ -8,18 +8,19 @@ cmdsrv_pid_file = "{{ cmdsrv_pid_file }}"
 cmdsrv_ready_file = "{{ cmdsrv_ready_file }}"
 
 if not os.path.exists(cmdsrv_pid_file):
-      print 'iiab-cmdsrv is not running. Perhaps has not started yet.'
+      print ('iiab-cmdsrv is not running. Perhaps has not started yet.')
       sys.exit(1)
 
 if not os.path.exists(cmdsrv_ready_file):
-      print 'iiab-cmdsrv is running, but is not yet ready to accept commands.'
+      print ('iiab-cmdsrv is running, but is not yet ready to accept commands.')
       sys.exit(1)
 
 REQUEST_TIMEOUT = 60000
 seconds_polled = 0
 
 if  len(sys.argv) == 1 or len(sys.argv) > 3:
-    print 'usage: cmdsrv-ctl "<command>" "<optional json argument>"'
+    print ('usage: cmdsrv-ctl "<command>" "<optional json argument>"')
+    # iiab-cmdsrv-ctl 'LIST-LIBR {"sub_dir":"zims"}' works
     sys.exit(1)
 
 cmd = sys.argv[1]
@@ -31,18 +32,18 @@ if  len(sys.argv) == 3:
     cmd_args = sys.argv[2]
     send_msg += ' ' +  cmd_args
 
-print "message to send: ", send_msg
+print ("message to send: ", send_msg)
 
 ipc_sock = "/run/cmdsrv_sock"
 
 context = zmq.Context()
-print "Connecting to server..."
+print ("Connecting to server...")
 socket = context.socket(zmq.DEALER)
 socket.connect ("ipc://%s" % ipc_sock)
 poll = zmq.Poller()
 poll.register(socket, zmq.POLLIN)
 
-socket.send (send_msg)
+socket.send_string (send_msg)
 
 continue_poll = True
 
@@ -53,12 +54,12 @@ while continue_poll:
     if socket in socks and socks[socket] == zmq.POLLIN:
     #if socket_poll.get(socket) == zmq.POLLIN:
         #  Get the reply
-        reply_msg = socket.recv()
-        print "Received reply: ", reply_msg
+        reply_msg = socket.recv_string()
+        print ("Received reply: ", reply_msg)
         continue_poll = False
     else:
         seconds_polled = time.time() - start_ms
-        print 'No Response from IIAB-CMDSRV in ' + str(seconds_polled) + ' seconds'
+        print ('No Response from IIAB-CMDSRV in ' + str(seconds_polled) + ' seconds')
         resp = raw_input('Hit Enter to wait another ' + str(REQUEST_TIMEOUT/1000) + ' seconds (anything else to stop): ')
         if resp != '':
             continue_poll = False

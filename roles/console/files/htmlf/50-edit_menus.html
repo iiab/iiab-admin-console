@@ -260,13 +260,15 @@
                                 <button id="SELECT-MENU-ITEM-ICON" type="button" class="btn btn-primary" data-toggle="modal" data-target="#menuIconsModal">
                                   Select Icon
                                 </button>
-                                <label class="btn btn-primary">Upload Icon<input type="file" style="display: none;" id="UPLOAD-MENU-ITEM-ICON" onchange="javascript:uploadMenuItemIcon();"></label>
-                                <!-- Modal -->
+                                <button id="UPLOAD-MENU-ITEM-ICON" type="button" class="btn btn-primary" data-toggle="modal" data-target="#menuIconsUploadModal">
+                                  Upload Icon
+                                </button>
+                                <!-- Modal for Icon File Selection-->
                                 <div class="modal fade" hasLoaded="false" id="menuIconsModal" tabindex="-1" role="dialog" aria-labelledby="menuIconsModalTitle" aria-hidden="true">
                                   <div class="modal-dialog modal-dialog-centered" role="document">
                                     <div class="modal-content">
                                       <div class="modal-header">
-                                        <h5 class="modal-title" id="menuIconsModalTitle">Select Your Icon</h5>
+                                        <apan class="modal-title-4" id="menuIconsModalTitle">Select Your Icon</span>
                                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                           <span aria-hidden="true">&times;</span>
                                         </button>
@@ -275,7 +277,26 @@
                                       </div>
                                     </div>
                                   </div>
-                                </div> <!-- End Modal -->
+                                </div> <!-- End Modal for Icon File Selection -->
+                                <!-- Modal for Icon File Upload -->
+                                <div class="modal fade" hasLoaded="false" id="menuIconsUploadModal" tabindex="-1" role="dialog" aria-labelledby="menuIconsUploadModal" aria-hidden="true">
+                                  <div class="modal-dialog modal-dialog-centered" role="document">
+                                    <div class="modal-content">
+                                      <div class="modal-header">
+                                        <span class="modal-title-4" id="menuIconsUploadModalTitle">Select Menu Item Icon File to Upload</span>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                          <span aria-hidden="true">&times;</span>
+                                        </button>
+                                      </div>
+                                      <div class="modal-body">
+                                        <!-- <form name="icon_uploader" method="post" action="" enctype="multipart/form-data">  causes 405 error-->
+                                          <input type="file" name="menuIconsUploadFileName" id="menuIconsUploadFileName"><br><br>
+                                          <button id="UPLOAD-MENU-ITEM-ICON-SUBMIT" class="btn btn-primary">Upload Image</button>
+                                        <!-- </form> -->
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div> <!-- End Modal for Icon File Upload -->
                               </div>
                             </div>
                           </div>
@@ -298,6 +319,21 @@
                           <div class="form-group">
                             <label for="menu_item_footnote">Optional Footnote - Things like size or number of items go here.</label>
                             <input type="text" name="menu_item_footnote" class="form-control" id="menu_item_footnote">
+                          </div>
+                          <div class="form-group">
+                            <label>Sharing this Menu Item Definition</label>
+                            <div class="checkbox">
+                              <label>
+                                <input type="checkbox" name="menu_item_upload_flag" id="menu_item_upload_flag">
+                                <span id="menu_item_upload_flag_on">Upload My Changes to the Central Repository</span>
+                                <span id="menu_item_upload_flag_off" style="display:none">This Definition can not be Uploaded to the Central Repository</span>
+                              </label>
+                            </div>
+                            <div class="checkbox">
+                              <label>
+                                <input type="checkbox" name="menu_item_download_flag" id="menu_item_download_flag">Download Updates of Others from the Central Repository
+                              </label>
+                            </div>
                           </div>
                           <div class="form-group">
                             <button id="UPDATE-MENU-ITEM-DEF" type="button" class="btn btn-primary">Update Menu Item Definition</button>

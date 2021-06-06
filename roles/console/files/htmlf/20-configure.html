@@ -14,7 +14,7 @@
 				<li><a href="#confHostapd">Internal Wi-Fi AP</a></li>
 				<li><a href="#confPortal">Server Portal</a></li>
 				<li><a href="#confServices">Services Enabled</a></li>
-				<li><a href="#confWhitelist">Edit Permitted URLs</a></li>
+				<li><a href="#confWhitelist" call-after="getWhitelist">Edit Permitted URLs</a></li>
 			</ul>
 			<h2>Actions</h2>
 			<div class="action-buttons">
@@ -75,16 +75,17 @@
 						</div>
 					</form>
 				</div> <!--  network pane -->
+				<!-- MOVE THIS DOWN TO 2ND TO END OR JUST IN MENU  -->
 				<div class="tab-pane" id="confNetFilter"> <!-- Start Configure Network Filter Pane -->
 					<h2>Internet Caching/Filtering</h2>
 					<p><b>Please Note:</b> These parameters only take effect when you have selected the Gateway Role on the previous screen and have the necessary Network Adapters.</p>
 					<form role="form" id="confNetFilterForm">
-						<div class="checkbox">
+						<div class="checkbox squid_service">
 							<label>
 								<input type="checkbox" name="squid_enabled" id="squid_enabled">Check to Enable local Web Page storage for later fast access (Squid cache)
 							</label>
 						</div>
-						<div class="checkbox">
+						<div class="checkbox squid_service">
 							<label>
 								<input type="checkbox" name="gw_squid_whitelist" id="xo-gw_squid_whitelist">Check to Restrict Web Page Access to a Specific List of Sites (Permitted URLs)
 							</label>
@@ -94,7 +95,7 @@
 								<input type="checkbox" name="gw_block_https" id="xo-gw_block_https">Check to Block all HTTPS Access to Web Page
 							</label>
 						</div>
-						<div class="checkbox">
+						<div class="checkbox dansguardian_service">
 							<label>
 								<input type="checkbox" name="dansguardian_enabled" id="dansguardian_enabled">Check to Restrict Web Page Access according to Words in the Content (DansGuardian)
 							</label>
@@ -126,7 +127,7 @@
 						</div>
 						<div class="checkbox">
 							<label>
-								<input type="checkbox" name="dokuwiki_enabled" id="dokuwiki_enabled">Check to Enable DokuWiki.
+								<input type="checkbox" name="mediawiki_enabled" id="mediawiki_enabled">Check to Enable MediaWiki.
 							</label>
 						</div>
 						<h3>Select Server Home Page</h3>
@@ -142,6 +143,13 @@
 						<div class="radio">
 							<label><input type="radio" name="gui_desired_home_url" id="gui_desired_home_url-wiki" value="wiki">/wiki</label>
 						</div>
+						<h3>Captive Portal</h3>
+						<div class="checkbox">
+							<label>
+							  <input type="checkbox" name="captiveportal_enabled" id="captiveportal_enabled">Check to Enable Captive Portal
+						  </label>
+						</div>
+
 					</form>
 				</div> <!--  Configure Server Portal pane -->
 				<div class="tab-pane" id="confServices"> <!--  Start Configure Services Pane -->
@@ -178,9 +186,24 @@
 								<input type="checkbox" name="kalite_cron_enabled" id="kalite_cron_enabled">The KA Lite Downloader.  You can turn this off if you don't plan to download videos.
 							</label>
 						</div>
-						<div class="checkbox osm_service">
+						<div class="checkbox kolibri_service">
 							<label>
-								<input type="checkbox" name="osm_enabled" id="osm_enabled">OpenStreetMap from the original Internet-in-a-Box.  You must also install content.
+							  <input type="checkbox" name="kolibri_enabled" id="kolibri_enabled">Kolibri, which provides offline access to a wide range of quality, openly licensed educational content.
+						  </label>
+						</div>
+						<div class="checkbox internetarchive_service">
+							<label>
+							  <input type="checkbox" name="internetarchive_enabled" id="internetarchive_enabled">Internet Archive Decentralized Web that helps you create your own offline digital library e.g. from http://dweb.archive.org
+						  </label>
+						</div>
+						<div class="checkbox osm_vector_maps_service">
+							<label>
+								<input type="checkbox" name="osm_vector_maps_enabled" id="osm_vector_maps_enabled">IIAB vector maps are based upon OpenStreetMap Data.  You must also install content.
+							</label>
+						</div>
+						<div class="checkbox calibreweb_service">
+							<label>
+								<input type="checkbox" name="calibreweb_enabled" id="calibreweb_enabled">Calibre Web, a browser based version of Calibre, an E-Book Platform. You must also install content.
 							</label>
 						</div>
 						<div class="checkbox calibre_service">
@@ -197,6 +220,11 @@
 							<label>
 								<input type="checkbox" name="sugarizer_enabled" id="sugarizer_enabled">Sugarizer provides Sugar Labs activities directly on the server.
 							</label>
+						</div>
+						<div class="checkbox minetest_service">
+							<label>
+							  <input type="checkbox" name="minetest_enabled" id="minetest_enabled">Minetest, an open source, educational computer game.
+						  </label>
 						</div>
 						<h3>Media Sharing and Printing</h3>
 						<div class="checkbox elgg_service">
@@ -222,6 +250,43 @@
 						<div class="checkbox cups_service">
 							<label>
 								<input type="checkbox" name="cups_enabled" id="cups_enabled">CUPS provides support for printers.
+							</label>
+						</div>
+						<div class="checkbox usb_lib_service">
+							<label>
+							  <input type="checkbox" name="usb_lib_enabled" id="usb_lib_enabled">USB based content libraries.
+						  </label>
+						</div>
+						<div class="checkbox exFAT_service">
+							<label>
+							  <input type="checkbox" name="exFAT_enabled" id="exFAT_enabled">exFat formated USB drives.
+						  </label>
+						</div>
+
+						<h3>Communications and Computer Lab</h3>
+						<div class="checkbox azuracast_service">
+							<label>
+							  <input type="checkbox" name="azuracast_enabled" id="azuracast_enabled">AzuraCase,a self-hosted web radio management suite.
+						  </label>
+						</div>
+						<div class="checkbox lokole_service">
+							<label>
+							  <input type="checkbox" name="lokole_enabled" id="lokole_enabled">Lokole Email, Offline email that can transmit (and receive) a local community's emails every night.
+						  </label>
+						</div>
+						<div class="checkbox pbx_service">
+							<label>
+							  <input type="checkbox" name="pbx_enabled" id="pbx_enabled">PBX a network base local phone system.
+						  </label>
+						</div>
+						<div class="checkbox gitea_service">
+							<label>
+								<input type="checkbox" name="gitea_enabled" id="gitea_enabled">Gitea is a local git repository server.
+							</label>
+						</div>
+						<div class="checkbox nodered_service">
+							<label>
+								<input type="checkbox" name="nodered_enabled" id="nodered_enabled">Node-RED enables electronics projects with a flow-based development tool for visual programming.
 							</label>
 						</div>
 
@@ -286,7 +351,7 @@
 				<div class="tab-pane" id="confWhitelist"> <!-- Start Configure Whitelist Pane -->
 					<h2>Edit Permitted URLs</h2>
 					<p><b>Please Note:</b> These parameters only take effect when you have Checked Server should act as a Gateway to the Internet the previous screen.</p>
-					<form role="form" id="confNetFilterForm">
+					<form role="form" id="confWhiteListForm">
 						<div class="form-group">
 							<label for="iiab_whitelist">Permitted URLs</label>
 							<textarea rows="20" name="iiab_whitelist" class="form-control" id="iiab_whitelist" placeholder="Enter a list of permitted URLs."></textarea>

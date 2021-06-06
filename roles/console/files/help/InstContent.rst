@@ -134,6 +134,24 @@ You can also click **Refresh Display** to update the tags beside items is variou
 
 Before pulling the USB device out please selected it with the device radio button if there is more than one and then clicking **Remove USB from Server**
 
+Clone IIAB Server
+-----------------
+
+This menu options allows you to make an identical copy of your running Internet in a Box Server.
+
+Please note the **WARNING** that everything on the target device will be overwritten.
+
+Please also note that everything on the server will be copied including usage statistics and the data for all content applications.
+
+If no USB device is listed click **Find USB Device** to search for attached devices.
+
+Make sure that the device is large enough to hold the entire server. The space required and the size of each device is displayed.
+
+When you are ready click **Clone IIAB**. This can take as much as two hours if there is a lot of content.
+
+Check Utilities -> Job Status to see what percent of the copy is complete and when the copy is finished.
+
+
 Actions
 -------
 

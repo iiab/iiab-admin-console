@@ -1,14 +1,17 @@
 // admin_console.js
-// copyright 2019 Tim Moody
+// copyright 2021 Tim Moody
 
 var today = new Date();
 var dayInMs = 1000*60*60*24;
 
 var iiabContrDir = "/etc/iiab/";
 var consoleJsonDir = "/common/assets/";
-var iiabCmdService = "/cmd-service";
+var iiabCmdService = "/iiab-cmd-service/cmd";
+var iiabAuthService = "/iiab-cmd-service/auth";
+var adminConfig = {}; // cmdsrv config values
 var ansibleFacts = {};
 var ansibleTagsStr = "";
+var ansibleRolesStatus = {};
 var effective_vars = {};
 var config_vars = {}; // working variable, no long separate from local vars
 var iiab_ini = {};
@@ -26,7 +29,8 @@ var externalZimCatalog = {}; // catalog of zims on an external device
 var oer2goCatalog = {}; // catalog of rachel/oer2go modules, read from file downloaded from rachel
 var oer2goCatalogDate = new Date; // date of download, stored in json file
 var oer2goCatalogFilter = ["html"] // only manage these types as OER2GO; catalog can contain zims and kalite that we do elsewhere
-var mapCatalog = {}; // map regions specified by bounding boxes, downloadable
+var mapCatalog = {}; // catalog by map id
+var mapRegionIdx = {}; // index of catalog by region
 var rachelStat = {}; // installed, enabled and whether content is installed and which is enabled
 
 var zimsInstalled = []; // list of zims already installed
@@ -39,6 +43,8 @@ var oer2goDownloading = []; // list of Oer2go items being downloaded
 var oer2goCopying = []; // list of Oer2go items being copied
 var oer2goExternal = []; // list of Oer2go items on external device
 var downloadedFiles = {};
+var mapStat = {}; // source of most of the lists below
+var vectorMapIdx = {} // save this and other stat though there is overlap
 var mapDownloading = []; // list of Map items being downloaded
 var mapWip = []; // list of copying, downloading, exporting
 var mapInstalled = []; // list of map regions already installed
@@ -54,6 +60,7 @@ var selectedOer2goItems = [];
 var selectedMapItems = [];
 var manContSelections = {};
 var selectedUsb = null;
+var removableDevices = {};
 
 var sysStorage = {};
 sysStorage.root = {};
@@ -66,6 +73,10 @@ sysStorage.library.partition = false; // no separate library partition
 
 // defaults for ip addr of server and other info returned from server-info.php
 var serverInfo = {"iiab_server_ip":"","iiab_client_ip":"","iiab_server_found":"TRUE","iiab_cmdsrv_running":"FALSE"};
+var authData = {};
+authData['keepLogin'] = true; // don't allow closing of login form
+var is_rpi = false;
+var undef = undefined; // convenience variable
 var initStat = {};
 var cmdsrvWorkingModalCount = 0;
 
@@ -81,7 +92,7 @@ function main() {
   //});
 
 // declare generic ajax error handler called by all .fail events
- $( document ).ajaxError(ajaxErrhandler);
+ //$( document ).ajaxError(ajaxErrhandler); 2020-05-18 took this out. Maybe was never needed?
 
 // get default help
   getHelp("Overview.rst");
@@ -118,10 +129,18 @@ function navButtonsEvents() {
       console.log(' no call-after');
   });
   // Special Cases
-  if (ansibleFacts.ansible_local.local_facts.os == "raspbian"){
+  if (is_rpi){
+    if (!config_vars.wifi_up_down){ //wifi_up_down is false or undefined
+      $("#controlWifiUpDown").hide();
+      $("#controlWifiNotUpDown").show();
+    }
     $("#controlWifiLink").show();
     $("#controlBluetoothLink").show();
     $("#controlVPNLink").show();
+  }
+  var platform = ansibleFacts.ansible_machine;
+  if (platform == "armv7l" || platform == "aarch64"){ // not on W
+    $("#instConCloneLink").show();
   }
 }
 
@@ -130,11 +149,26 @@ function navButtonsEvents() {
 // Control Buttons
 
 function controlButtonsEvents() {
-	$("#WIFI-CTL").click(function(){
+	$('#ADMIN-CONSOLE-LOGIN').click(function(){
+    cmdServerLoginSubmit();
+  });
+
+  $('#iiabAdminLoginForm').keydown(function(e) {
+    var key = e.which;
+    if (key == 13) {
+    // As ASCII code for ENTER key is "13"
+    $('#ADMIN-CONSOLE-LOGIN').click();
+    }
+  });
+
+  $("#WIFI-CTL").click(function(){
     controlWifi();
   });
 
 	$("#WIFI-CREDENTIALS").click(function(){
+    setWpaCredentials();
+  });
+  $("#WIFI-CREDENTIALS-UD").click(function(){
     setWpaCredentials();
   });
 
@@ -143,6 +177,10 @@ function controlButtonsEvents() {
   });
 	$("#VPN-CTL").click(function(){
     controlVpn();
+  });
+
+  $("#LOGOUT").click(function(){
+    logOutUser();
   });
 
   $("#REBOOT").click(function(){
@@ -280,43 +318,25 @@ function instContentButtonsEvents() {
     make_button_disabled("#INST-MODS", false);
   });
 
-  $("#INST-MAP").click(function(){
-    var map_id;
-    make_button_disabled("#INST-MAP", true);
-    selectedMapItems = []; // items no longer selected as are being installed
-    $('#mapRegionSelectList input').each( function(){
-      if (this.type == "checkbox")
-        if (this.checked){
-          var skip_map = false;
-          map_id = this.name
-          $.when(readMapIdx()).then(function(){
-          var region = get_region_from_url(map_id);
-          for (var installed_region in mapInstalled){
-             if (mapInstalled[installed_region] &&
-               mapInstalled[installed_region].hasOwnProperty('region') &&
-               mapInstalled[installed_region].region === region){
-                  // Does installed map have same basename (ignores .zip)
-                  var basename = mapCatalog[region].url.replace(/.*\//, '');
-                  // Clip off .zip
-                  basename = basename.replace(/\.zip/, '');
-                  if (basename === mapInstalled[installed_region].file_name)
-                     skip_map = true;
-                  break;
-               }
-             }
-             if (skip_map || mapWip.indexOf(map_id) != -1){
-               consoleLog("Skipping installed Module " + map_id);
-               alert ("Selected Map Region is already installed.\n");
+  consoleLog("adminConfig.osm_version " + adminConfig.osm_version);
 
-             } else {
-               instMapItem(map_id);
-               alert ("Selected Map Region scheduled to be installed.\n\nPlease view Utilities->Display Job Status to see the results.");
-            }
-          })
-        }
-      })
-    //getOer2goStat();
-    make_button_disabled("#INST-MAP", false);
+  // Only support V2 of maps
+  $("#INST-MAP").click(function(){
+    consoleLog("in inst map click");
+
+    if(adminConfig.osm_version == 'V1')
+      alert('Your version of maps is no longer supported in Admin Console\n\nPlease either upgrade maps or downgrade Admin Console.');
+    else
+      instMaps()
+  });
+
+  $("#INST-SAT").click(function(){
+    consoleLog("in inst sat click");
+
+    if(adminConfig.osm_version == 'V1')
+      alert('Your version of maps is no longer supported in Admin Console\n\nPlease either upgrade maps or downgrade Admin Console.');
+    else
+    instSatArea()
   });
 
   $("#launchKaliteButton").click(function(){
@@ -394,6 +414,17 @@ function instContentButtonsEvents() {
     	alert ("No USB is attached.");
   });
 
+  $("#FIND-REM-DEV").click(function(){
+  	getIiabCloneStats();
+  });
+
+  $("#COPY-DEV-IMAGE").click(function(){
+    // clone iiab server
+    make_button_disabled("#COPY-DEV-IMAGE", true);
+  	copyDevImage();
+    make_button_disabled("#COPY-DEV-IMAGE", false);
+  });
+
 }
 
   // Content Menu Buttons
@@ -402,8 +433,9 @@ function contentMenuButtonsEvents() {
   $("#LOAD-CONTENT-MENU").click(function(){
     var currentJsMenuToEditUrl = $("#content_menu_url").val();
     getContentMenuToEdit(currentJsMenuToEditUrl);
-  	var currentJsMenuToEditUrl = $("#content_menu_url").val();
-    getContentMenuToEdit(currentJsMenuToEditUrl);
+    // why was this here twice?
+    // var currentJsMenuToEditUrl = $("#content_menu_url").val();
+    // getContentMenuToEdit(currentJsMenuToEditUrl);
   });
   $("#SAVE-CONTENT-MENU").click(function(){
     saveContentMenuDef();
@@ -423,7 +455,8 @@ function contentMenuButtonsEvents() {
   $("#SELECT-MENU-ITEM-ICON").one("click", function(){
     selectMenuItemIcon();
   });
-  $("#UPLOAD-MENU-ITEM-ICON").one("click", function(){
+  //  doesn't work with nginx
+  $("#UPLOAD-MENU-ITEM-ICON-SUBMIT").on("click", function(){
     uploadMenuItemIcon();
   });
   attachMenuItemDefNameCalc(); // attach events to fields
@@ -634,7 +667,8 @@ function staticIpVal(fieldId) {
 }
 
 
-// Common functions
+// Common Functions
+
 function activateTooltip() {
     $('[data-toggle="tooltip"]').tooltip({
       animation: true,
@@ -670,6 +704,14 @@ function genericCmdHandler (data)
   return true;
 }
 
+function getAdminConfig (data)
+{
+  //alert ("in getAnsibleFacts");
+  consoleLog(data);
+  adminConfig = data;
+  return true;
+}
+
 function getAnsibleFacts (data)
 {
   //alert ("in getAnsibleFacts");
@@ -678,6 +720,12 @@ function getAnsibleFacts (data)
   var jstr = JSON.stringify(ansibleFacts, undefined, 2);
   var html = jstr.replace(/\n/g, "<br>").replace(/[ ]/g, "&nbsp;");
   $( "#ansibleFacts" ).html(html);
+  // set convenience variable
+  if (ansibleFacts.ansible_local.local_facts.rpi_model != 'none')
+    is_rpi = true;
+  else
+    is_rpi = false;
+
   //consoleLog(jqXHR);
   return true;
 }
@@ -706,7 +754,7 @@ function getAnsibleTags (data)
   return true;
 }
 
-// Control Functions
+// Control Menu Functions
 
 function getSystemInfo(){
   var command = "GET-SYSTEM-INFO";
@@ -723,21 +771,26 @@ function procNetworkInfo(data){
 }
 
 function procSystemInfo(data){
+  // This will only be called if we have an rpi
+  // So device names are for now hard coded
+  // We will revisit after ap0 is merged and ubuntu 20.04 released
+
   var systemInfo = data;
   Object.keys(systemInfo).forEach(function(key) {
   	serverInfo[key] = systemInfo[key];
   });
   // hostapd
+  $("#hotspotStateUD").html(serverInfo.hostapd_status);
   $("#hotspotState").html(serverInfo.hostapd_status);
-  $("#WIFI-CTL").html('Turn Hotspot Access ON');
-  make_button_disabled('#WIFI-CTL', true); // disable
+  //$("#WIFI-CTL").html('Turn Hotspot Access ON');
+  // make_button_disabled('#WIFI-CTL', true); // disable
 
   if (serverInfo.hostapd_status == 'ON'){
-    $("#WIFI-CTL").html('Use Wifi to Connect');
+    $("#WIFI-CTL").html('Switch Wifi to Connect to Router');
     make_button_disabled('#WIFI-CTL', false); // enable
   }
   else if (serverInfo.hostapd_status == 'OFF'){
-  	$("#WIFI-CTL").html('Turn Hotspot Access ON');
+  	$("#WIFI-CTL").html('Switch Wifi to IIAB Hotspot');
     make_button_disabled('#WIFI-CTL', false); // enable
   }
 
@@ -756,7 +809,10 @@ function procSystemInfo(data){
   html += '<div class="col-sm-4">';
   html += '<div>' + serverInfo.bt_pan_status + '</div>';
   html += '<div>' + serverInfo.openvpn_status + '</div>';
-  html += '<div>' + serverInfo.eth0.addr + '</div>';
+  if (serverInfo.hasOwnProperty('eth0'))
+    html += '<div>' + serverInfo.eth0.addr + '</div>';
+  else
+    html+= '<div>null </div>';
   html += '<div>' + serverInfo.wlan0.addr + '</div>';
   html += '<div>' + serverInfo.internet_access + '</div>';
   html += '<div>' + serverInfo.gateway_addr + '</div>';
@@ -765,6 +821,7 @@ function procSystemInfo(data){
   html += '<div>' + serverInfo.admin_passwd_known + '</div>';
   html += '</div>';
 
+  $("#currentNetworkStateUD").html(html);
   $("#currentNetworkState").html(html);
 
   // bluetooth
@@ -815,8 +872,13 @@ function controlWifi(){
 function setWpaCredentials(){
   var cmd_args = {};
 
-  cmd_args['connect_wifi_ssid'] = gEBI('connect_wifi_ssid').value;
-  cmd_args['connect_wifi_password'] = gEBI('connect_wifi_password').value;
+  if (config_vars.wifi_up_down){
+    cmd_args['connect_wifi_ssid'] = gEBI('connect_wifi_ssid_UD').value;
+    cmd_args['connect_wifi_password'] = gEBI('connect_wifi_password_UD').value;
+  } else {
+    cmd_args['connect_wifi_ssid'] = gEBI('connect_wifi_ssid').value;
+    cmd_args['connect_wifi_password'] = gEBI('connect_wifi_password').value;
+  }
   var len = cmd_args['connect_wifi_password'].length
 
   if (len != 0 && (len < 8 || len > 63)){
@@ -856,7 +918,7 @@ function controlVpn(){
   return sendCmdSrvCmd(command, getSystemInfo);
 }
 
-// Configure Functions
+// Configure Menu Functions
 
 function getInstallVars (data)
 {
@@ -867,7 +929,9 @@ function getInstallVars (data)
   //consoleLog(jqXHR);
   return true;
 }
-function getConfigVars (data) // not used
+// NOT USED
+// retain for rewrite of loading vars including iiab_state
+function getConfigVars (data)
 {
   //alert ("in getConfigVars");
   consoleLog(data);
@@ -942,6 +1006,9 @@ function initConfigVars()
       // || $.isEmptyObject(config_vars) is empty the first time
       ){
       consoleLog("initConfigVars found empty data");
+      consoleLog(ansibleFacts);
+      consoleLog(iiab_ini);
+      consoleLog(effective_vars);
       displayServerCommandStatus ("initConfigVars found empty data")
       return;
     }
@@ -988,33 +1055,140 @@ function initStaticWanVars() {
   }
 }
 
-function setConfigVars ()
-{
-  var cmd_args = {}
+function setConfigVars () {
   //alert ("in setConfigVars");
-  config_vars = {} // reset data then read fields
+  var cmd_args = {};
+  var changed_vars = {} // now we only send deltas to back end
+  var thisVar = '';
   $('#Configure input').each( function(){
-    if (this.type == "checkbox") {
-      if (this.checked)
-      config_vars[this.name] = true; // must be true not True
-      else
-        config_vars[this.name] = false;
+    if ($('#'+ this.name).is(":visible")){ // install false and undefined are not visible
+      if (this.type == "checkbox") {
+        if (this.checked)
+          thisVar = true; // must be true not True
+        else
+          thisVar = false;
       }
+
       if (this.type == "text")
-      config_vars[this.name] = $(this).val();
+        thisVar = $(this).val();
+
       if (this.type == "radio"){
-        fieldName = this.name;
-        fieldName = "input[name=" + this.name + "]:checked"
-        //consoleLog(fieldName);
-        config_vars[this.name] = $(fieldName).val();
+          fieldName = this.name;
+          fieldName = "input[name=" + this.name + "]:checked"
+          //consoleLog(fieldName);
+          thisVar = $(fieldName).val();
       }
-    });
-    cmd_args['config_vars'] = config_vars;
-    var cmd = "SET-CONF " + JSON.stringify(cmd_args);
-    sendCmdSrvCmd(cmd, genericCmdHandler);
-    alert ("Saving Configuration.");
-    return true;
+      if (thisVar != config_vars[this.name]){
+        config_vars[this.name] = thisVar;
+        changed_vars[this.name] = thisVar;
+      }
+    }
+  });
+  cmd_args['config_vars'] = changed_vars;
+  var cmd = "SET-CONF " + JSON.stringify(cmd_args);
+  sendCmdSrvCmd(cmd, genericCmdHandler);
+  alert ("Saving Configuration.");
+  return true;
+}
+
+function getServerPublicKey(){
+  $.get( iiabAuthService + '/get_pubkey', function( data ) {
+    authData['serverPKey'] = nacl.util.decodeBase64(data);
+    //consoleLog(data, typeof data);
+  })
+  .fail(getServerPublicKeyError);
+  return true;
+}
+
+function getServerPublicKeyError (jqXHR, textStatus, errorThrown){
+  jsonErrhandler (jqXHR, textStatus, errorThrown); //check for json errors
+  authData['serverPKey'] = '';
+  consoleLog("Connection to Uwsgi Server failed.");
+  displayServerCommandStatus('Connection to Uwsgi Server <span style="color:red">FAILED</span>.');
+  alert ("Connection to Uwsgi Server failed.\n Please make sure your network settings are correct,\n that the server is turned on,\n and that the web server is running.");
+  init();
+}
+
+async function getServerNonceAsync(){
+  try{
+    let response = await fetch(iiabAuthService + '/get_nonce');
+    return await response.text(); // should be base64
+  }catch(err){
+    console.error(err);
+    // Handle errors here
   }
+}
+
+function launchcmdServerLoginForm(loginMsg){
+  authData.keepLogin = true; // prevent closing of form until logged in
+  $('#adminConsoleLoginModal').on('hide.bs.modal', onHideLoginModalEvent);
+  $('#adminConsoleLoginError').html(loginMsg);
+  $('#adminConsoleLoginModal').modal('show');
+}
+
+function onHideLoginModalEvent(e){
+  //consoleLog(authData.keepLogin)
+  if (authData.keepLogin == true) // uglier than I would prefer
+    e.preventDefault();
+}
+
+function cmdServerLoginSubmit(){
+  var credentials = $('#iiabAdminUserName').val() + ':' + $('#iiabAdminUserPassword').val();
+  //$('#adminConsoleLoginModal').modal('hide');
+  authData['credentials'] = credentials;
+  cmdServerLogin(credentials);
+}
+
+async function cmdServerLogin(credentials){
+  //credentials = "iiab-admin:g0adm1n";
+  // ? kill token
+
+  var nonce64 = await getServerNonceAsync();
+  consoleLog(nonce64)
+  var encryptedCredentials64 = naclEncryptText(credentials, nonce64);
+  $.ajax({
+    type: 'GET',
+    cache: false,
+    global: false, // don't trigger global error handler
+    url: iiabAuthService + '/login',
+    headers: {"X-IIAB-Credentials": encryptedCredentials64,
+              "X-IIAB-Nonce": nonce64,
+              "X-IIAB-ClientKey": authData.clientPubKey64}
+    //dataType: 'json'
+  })
+  .done(function( data ) {
+    consoleLog(data);
+    authData['token'] = data;
+    authData.keepLogin = false; // now allow form to close
+    $('#adminConsoleLoginModal').modal('hide');
+    make_button_disabled("#LOGOUT", false);
+    if (!initStat.complete)
+      initPostLogin();
+
+  }).fail(function(data, textStatus, xhr) {
+    $('#adminConsoleLoginError').html('Invalid Login');
+    //This shows status code eg. 403
+    console.log("error", data.status);
+    //This shows status message eg. Forbidden
+    console.log("STATUS: " + xhr);
+  });
+}
+
+function naclEncryptText(text, nonce64){ // nacl
+  //var clientKeyPair = nacl.box.keyPair();
+  var message = nacl.util.decodeUTF8(text);
+  var nonce = nacl.util.decodeBase64(nonce64);
+  //var serverPKey = nacl.util.decodeUTF8(authData.serverPKey);
+  var box = nacl.box(message, nonce, authData.serverPKey, authData.clientKeyPair.secretKey);
+  var encrypted64 = nacl.util.encodeBase64(box);
+  //var cmd_args = {}
+  //cmd_args['encrypted64'] = encrypted64;
+  //cmd_args['client_public_key64'] = nacl.util.encodeBase64(clientKeyPair.publicKey);
+  //cmd_args['nonce64'] = nacl.util.encodeBase64(nonce);
+  //consoleLog(cmd_args['client_public_key64'])
+  //var cmd = "AUTH-AUTHORIZE " + JSON.stringify(cmd_args);
+  return encrypted64;
+}
 
 function changePassword ()
 {
@@ -1032,14 +1206,17 @@ function changePassword ()
   cmd_args['newpasswd'] = $("#iiab_admin_new_password").val();
 
   var cmd = "CHGPW " + JSON.stringify(cmd_args);
-  sendCmdSrvCmd(cmd, changePasswordSuccess, "CHGPW");
+  sendCmdSrvCmd(cmd, changePasswordSuccess, "CHGPW", undef, undef, encryptFlag = true);
   //alert ("Changing Password.");
   return true;
 }
 
 function changePasswordSuccess ()
 {
-  alert ("Password Changed.");
+  $("#iiab_admin_new_password").val('');
+  $("#iiab_admin_new_password2").val('');
+  alert ("Password Changed. Please Sign in again.");
+  logOutUser();
   return true;
 }
   function getXsceIni ()
@@ -1059,12 +1236,37 @@ function changePasswordSuccess ()
     $( "#iiabIni" ).html(html);
     //consoleLog(jqXHR);
 
-    // Set Password Fields
-    $( "#iiab_admin_user").val(iiab_ini['iiab-admin']['iiab_admin_user']);
     return true;
   }
-  function getWhitelist (data)
-  {
+
+function getRolesStat () {
+    //alert ("in getRolesStat");
+    sendCmdSrvCmd("GET-ROLES-STAT", procRolesStat);
+    return true;
+ }
+
+function procRolesStat(data) {
+  ansibleRolesStatus = data;
+}
+
+/* this works, but is limited in parameter passing
+function getRolesStat(data) { // try php style function
+  //alert ("in getRolesStat");
+  if (typeof(data) === 'undefined') {
+    sendCmdSrvCmd("GET-ROLES-STAT", getRolesStat);
+  } else {
+    ansibleRolesStatus = data;
+  }
+}
+*/
+
+
+
+  function getWhitelist (data)  {
+    sendCmdSrvCmd("GET-WHLIST", procWhitelist);
+  }
+
+  function procWhitelist (data)  {
     //alert ("in getWhitelist");
     //consoleLog(data);
     var whlist_array = data['iiab_whitelist'];
@@ -1110,564 +1312,7 @@ function changePasswordSuccess ()
     return true;
   }
 
-  // Install Content functions
-
-function getLangCodes() {
-  //alert ("in sendCmdSrvCmd(");
-  //consoleLog ('ran sendCmdSrvCmd');
-  //if (asyncFlag === undefined) asyncFlag = false;
-
-  var resp = $.ajax({
-    type: 'GET',
-    url: consoleJsonDir + 'lang_codes.json',
-    dataType: 'json'
-  })
-  .done(function( data ) {
-    langCodes = data;
-    var xrefLang;
-    for (var lang in langCodes){
-      if (lang in langGroups)
-        xrefLang = langGroups[lang]; // en and fr are used interchangeably with eng and fra
-      else
-      	xrefLang = lang;
-      langCodesXRef[langCodes[xrefLang].iso2] = xrefLang;
-    }
-    //consoleLog(langCodes);
-  })
-  .fail(jsonErrhandler);
-
-  return resp;
-}
-
-function getSelectedLangs() {
-  // get list of selected langcodes
-  selectedLangs = [];
-  $('#selectLangCodes input').each( function(){
-    if (this.checked) {
-      selectedLangs.push(this.name);
-    }
-  });
-}
-
-function procContentLangs() {
-
-  var html = '';
-  var topHtml = '';
-  var bottomHtml = '';
-  var langPickerTopHtml = "";
-  var langPickerBottomHtml = "";
-  var selectName = "";
-
-  selectedLangsDefaults(); // make sure the langs of any downloaded content is selected
-
-  for (var i in langNames){
-    html = '<span class="lang-codes"><label><input type="checkbox" name="' + langNames[i].code + '"';
-    if (selectedLangs.indexOf(langNames[i].code) != -1)
-      html += ' checked';
-    html += '>&nbsp;&nbsp;<span>' + langNames[i].locname + '</span><span> (' + langNames[i].engname + ') [' + langNames[i].code + ']</span></label></span>';
-
-    if (topNames.indexOf(langNames[i].code) >= 0 || selectedLangs.indexOf(langNames[i].code) != -1) {
-      topHtml += html;
-    }
-    else {
-      bottomHtml += html;
-    }
-  }
-
-  $( "#ContentLanguages" ).html(topHtml);
-  $( "#ContentLanguages2" ).html(bottomHtml);
-
-  if ($("#js_menu_lang").html() == ""){ // calc and insert language pickers if not previously done
-    for (i in langNames){
-    	selectName = langNames[i].locname + ' [' + langCodes[langNames[i].code].iso2 + ']';
-    	if (langNames[i].locname != langNames[i].engname)
-    		selectName += ' (' + langNames[i].engname + ')';
-
-      html = '<option value="' + langCodes[langNames[i].code].iso2 + '">' + selectName + '</option>';
-
-      if (topNames.indexOf(langNames[i].code) >= 0) {
-        langPickerTopHtml += html;
-      }
-      else {
-        langPickerBottomHtml += html;
-      }
-    }
-    $( "#js_menu_lang" ).html(langPickerTopHtml+langPickerBottomHtml);
-    $( "#menu_item_lang" ).html(langPickerTopHtml+langPickerBottomHtml);
-
-  }
-}
-
-function selectedLangsDefaults() {
-  if (selectedLangs.length == 0)
-    selectedLangs.push (defaultLang); // default
-  // make sure languages for all installed content are selected
-
-  for (var id in installedZimCatalog['INSTALLED']){
-    lang = installedZimCatalog['INSTALLED'][id]['language'];
-    if (lang in langGroups)
-      lang = langGroups[lang]; // some locally generated zims use wrong code for EN and FR
-    if (selectedLangs.indexOf(lang) == -1) // automatically select any language for which zim is installed
-      selectedLangs.push (lang);
-  }
-  for (var id in installedZimCatalog['WIP']){
-  	var zim = lookupZim(id);
-    lang = zim.language;
-    if (lang in langGroups)
-      lang = langGroups[lang]; // some locally generated zims use wrong code for EN and FR
-    if (selectedLangs.indexOf(lang) == -1) // automatically select any language for which zim is being installed
-      selectedLangs.push (lang);
-  }
-  for (var idx in oer2goInstalled){ // this is an array
-    lang = langCodesXRef[oer2goCatalog[oer2goInstalled[idx]]['lang']];
-    if (selectedLangs.indexOf(lang) == -1) // automatically select any language for which oer2go item is installed
-      selectedLangs.push(lang);
-  }
-  for (var id in oer2goWip){ // this is an object
-    lang = langCodesXRef[oer2goCatalog[id]['lang']];
-    if (selectedLangs.indexOf(lang) == -1) // automatically select any language for which oer2go item is wip
-      selectedLangs.push(lang);
-  }
-}
-
-function procSelectedLangs() { // redraw various lists using newly selected language codes
-	var topMenu = $("#iiab-top-nav .nav-tabs .active a")[0].hash; // get active top level menu selected
-	var contentContext = $(topMenu + " .tab-pane.active").attr("id"); // get active menu option for that menu
-
-	//consoleLog ("in procSelectedLangs " + contentContext);
-	if (contentContext == "instConZims") // download zims
-	  procZimGroups();
-	else if (contentContext == "instConOer2go") // download oer2go modules
-		renderOer2goCatalog();
-	else if (contentContext == "menusDefineMenu") // edit current menu
-		redrawAllMenuItemList();
-}
-
-function readableSize(kbytes) {
-  if (kbytes == 0)
-  return "0";
-  var bytes = 1024 * kbytes;
-  var s = ['bytes', 'kB', 'MB', 'GB', 'TB', 'PB'];
-  var e = Math.floor(Math.log(bytes) / Math.log(1024));
-  return (bytes / Math.pow(1024, e)).toFixed(2) + " " + s[e];
-}
-
-// **************************************
-// Put zim_functions here
-// **************************************
-
-// **************************************
-// Put oer2go_functions here
-// **************************************
-
-function manageContentInit(){
-	refreshAllInstalledList();
-	refreshExternalList();
-}
-
-function getExternalDevInfo(){
-var command = "GET-EXTDEV-INFO";
-  return sendCmdSrvCmd(command, procExternalDevInfo, "FIND-USB");
-}
-
-function procExternalDevInfo(data){
-  externalDeviceContents = data;
-  externalZimCatalog = {};
-  zimsExternal = [];
-  oer2goExternal = [];
-  var haveUsb = calcExtUsb(); // also sets selectedUsb
-  setCopyContentButtonText();
-
-  if (haveUsb){
-    externalZimCatalog = externalDeviceContents[selectedUsb].zim_modules;
-    zimsExternal = Object.keys(externalZimCatalog);
-    oer2goExternal = externalDeviceContents[selectedUsb].oer2go_modules;
-    make_button_disabled("#COPY-CONTENT", false);
-    make_button_disabled("#REMOVE-USB", false);
-    $.each(Object.keys(externalDeviceContents).sort(), function(index, dev) {
-  		initManContSelections(dev);
-      });
-    $("#instManageContentUsbTab").show();
-  }
-  else{
-  	$("#instManageContentUsbTab").hide();
-  	make_button_disabled("#COPY-CONTENT", true);
-  	make_button_disabled("#REMOVE-USB", true);
-  }
-}
-
-function calcExtUsb(){ // checks if any usb devices are attached and selects the one to display
-	if (Object.keys(externalDeviceContents).length > 0){
-	  if (Object.keys(externalDeviceContents).indexOf(selectedUsb)== -1)
-      selectedUsb = Object.keys(externalDeviceContents)[0];
-    return true;
-  }
-  else {
-    selectedUsb = null;
-    return false;
-  }
-}
-
-function setCopyContentButtonText(){
-  var activeDev = calcManContentDevice();
-  var text = "Copy Unavailable"; // for selectedUsb is null
-  if (selectedUsb != null){
-  	if (activeDev == "internal")
-  	  text = "Copy Installed to " + selectedUsb;
-    else
-      text = "Copy " + selectedUsb + " to Installed";
-  }
-  $("#COPY-CONTENT").text(text);
-}
-
-function procDnldList(){
-
-  $("#downloadedFilesRachel").html(calcDnldListHtml(downloadedFiles.rachel.file_list));
-  $("#downloadedFilesZims").html(calcDnldListHtml(downloadedFiles.zims.file_list));
-  //console.log("in procDnldList");
-}
-
-
-
-// Not currently used
-function getRachelStat(){
-  var command = "GET-RACHEL-STAT";
-  sendCmdSrvCmd(command, procRachelStat);
-  return true;
-}
-
-function procRachelStat(data) {
-  rachelStat = data;
-
-  setRachelDiskSpace();
-  var html = "";
-  var htmlNo = "<b>NO</b>";
-  var htmlYes = "<b>YES</b>";
-  var installedHtml = htmlNo;
-  var enabledHtml = htmlNo;
-  var contentHtml = htmlNo;
-
-  if (rachelStat["status"] == "INSTALLED")
-    installedHtml = htmlYes;
-
-  if (rachelStat["status"] == "ENABLED"){
-    installedHtml = htmlYes;
-    enabledHtml = htmlYes;
-  }
-
-  if (rachelStat["content_installed"] == true)
-    contentHtml = htmlYes;
-
-  $("#rachelInstalled").html(installedHtml);
-  $("#rachelEnabled").html(enabledHtml);
-  $("#rachelContentFound").html(contentHtml);
-
-  var moduleList = [];
-
-  if (rachelStat["content_installed"] == true){
-    for (var title in rachelStat.enabled) {
-      moduleList.push(title);
-    }
-
-    moduleList.sort();
-
-    for (var idx in moduleList) {
-    	html += '<tr><td>' + moduleList[idx] + '</td><td>';
-    	if (rachelStat.enabled[moduleList[idx]].enabled == true)
-    	  html += htmlYes + '</td></tr>'
-    	else
-    		html += htmlNo + '</td></tr>'
-    }
-    $("#rachelModules tbody").html(html);
-    $("#rachelModules").show();
-  }
-  else
-  	$("#rachelModules").hide();
-}
-
-function getDownloadList(){
-	var zimCmd = 'LIST-LIBR {"sub_dir":"downloads/zims"}';
-	var rachelCmd = 'LIST-LIBR {"sub_dir":"downloads/rachel"}';
-	displaySpaceAvail();
-	$.when(sendCmdSrvCmd(zimCmd, procDnldZimList), sendCmdSrvCmd(rachelCmd, procDnldRachelList)).done(procDnldList);
-
-  return true;
-}
-
-function procDnldZimList(data){
-	downloadedFiles['zims'] = data;
-}
-
-function procDnldRachelList(data){
-	downloadedFiles['rachel'] = data;
-}
-
-function procDnldList(){
-
-  $("#downloadedFilesRachel").html(calcDnldListHtml(downloadedFiles.rachel.file_list));
-  $("#downloadedFilesZims").html(calcDnldListHtml(downloadedFiles.zims.file_list));
-  //console.log("in procDnldList");
-}
-
-function calcDnldListHtml(list) {
-	var html = "";
-	list.forEach(function(entry) {
-    //console.log(entry);
-    html += '<tr>';
-    html += "<td>" + entry['filename'] + "</td>";
-    html += "<td>" + entry['size'] + "</td>";
-    html +=  '<td><input type="checkbox" name="' + entry['filename'] + '" id="' + entry['filename'] + '">' + "</td>";
-    html +=  '</tr>';
-  });
-  return html;
-}
-
-function copyContent(){
-  var device = calcManContentDevice();
-  var source = "internal";
-  var dest = "internal";
-  var cmd_args = {};
-  var modList = [];
-  if (device == "internal")
-  	dest = selectedUsb;
-  else
-  	source = selectedUsb;
-
-  cmd_args['source'] = source;
-  cmd_args['dest'] = dest;
-
-  // Zims
-
-  modList = getCopyList(device, "zims");
-  modList.forEach( function(item) {
-    cmd_args['zim_id'] = item.id;
-    cmd_args['file_ref'] = item.file_ref;
-    cmd = "COPY-ZIMS " + JSON.stringify(cmd_args);
-  	sendCmdSrvCmd(cmd, genericCmdHandler);
-  });
-
-  // OER2GO
-
-  modList = getCopyList(device, "modules");
-  modList.forEach( function(item) {
-    cmd_args['moddir'] = item.id;
-    cmd_args['file_ref'] = item.file_ref;
-    cmd = "COPY-OER2GO-MOD " + JSON.stringify(cmd_args);
-  	sendCmdSrvCmd(cmd, genericCmdHandler);
-  });
-
-  clearManContSelections(device, reset=true);
-}
-
-function rmContent() {
-	var device = calcManContentDevice();
-	var clearFunction = clearRmSelections(device, reset=true);
-	var refreshFunction = refreshRemovePanel(device);
-	var calls =[delModules(device, "zims"),
-              delModules(device, "modules")];
-	if (device == "internal"){
-		calls.push(delDownloadedFileList("downloadedFilesRachel", "zims"));
-		calls.push(delDownloadedFileList("downloadedFilesRachel", "rachel"));
-	}
-
-  $.when.apply($, calls)
-    //delDownloadedFileList("downloadedFilesRachel", "rachel"),
-    //delDownloadedFileList("downloadedFilesZims", "zims"),
-    //delModules("installedZimModules", "zims"),
-    //delModules("installedOer2goModules", "modules"))
-    .done(clearFunction, refreshFunction);
-}
-
-function calcManContentDevice(){
-	var tab = $("ul#instManageContentTabs li.active a").attr('href');
-	var device = tab.split("Content")[1].toLowerCase();
-
-  if (device != "internal")
-    device = selectedUsb;
-  return device;
-}
-
-function clearRmSelections(dev, reset){
-  return function() {
-    initManContSelections(dev, reset);
-  }
-}
-
-function refreshRemovePanel(dev){
-	if (dev == "internal")
-    return refreshAllInstalledList;
-  else
-  	return refreshExternalList;
-}
-
-function clearManContSelections(dev, reset=false){
-  initManContSelections(dev, reset);
-  if (dev == "internal"){
-    renderZimInstalledList();
-    renderOer2goInstalledList();
-  }
-  else {
-    renderExternalList();
-  }
-}
-
-function refreshAllContentPanels() {
-	$.when(getDownloadList(), getOer2goStat(), getZimStat(), getExternalDevInfo())
-	.done(renderZimInstalledList, renderOer2goInstalledList, renderExternalList, refreshDiskSpace);
-}
-
-function refreshAllInstalledList() {
-	$.when(getDownloadList(), getOer2goStat(), getZimStat())
-	.done(renderZimInstalledList, renderOer2goInstalledList, refreshDiskSpace);
-}
-
-function refreshExternalList() {
-	$.when(getExternalDevInfo())
-	.done(renderExternalList, refreshDiskSpace);
-}
-
-function renderExternalList() {
-	if (selectedUsb != null){ // only render content if we have some
-	  $("#instManageContentUsbTab").text("Content on " + selectedUsb);
-	  setCopyContentButtonText();
-	  renderExternalZimList();
-	  renderExternalOer2goModules();
-	  renderZimInstalledList(); // update ON USB messages
-  }
-}
-
-function delDownloadedFileList(id, sub_dir) {
-  var delArgs = {}
-	var fileList = [];
-  $("#" + id + " input").each(function() {
-    if (this.type == "checkbox") {
-      if (this.checked)
-      fileList.push(this.name);
-    }
-  });
-
-  if (fileList.length == 0)
-    return;
-
-  delArgs['sub_dir'] = sub_dir;
-  delArgs['file_list'] = fileList;
-
-  var delCmd = 'DEL-DOWNLOADS ' + JSON.stringify(delArgs);
-  return sendCmdSrvCmd(delCmd, genericCmdHandler);
-}
-
-function delModules(device, mod_type) {
-  var delArgs = {}
-	var modList = [];
-
-  modList = getRmList(device, mod_type);
-  if (modList.length == 0)
-    return;
-
-  delArgs['device'] = device;
-  delArgs['mod_type'] = mod_type;
-  delArgs['mod_list'] = modList;
-
-  var delCmd = 'DEL-MODULES ' + JSON.stringify(delArgs);
-  return sendCmdSrvCmd(delCmd, genericCmdHandler);
-}
-
-function getCopyList(device, mod_type){
-  var modList = [];
-	var params;
-	var id;
-	var item = {};
-	var zim_path;
-	var zim_file;
-
-	// compute jquery selector
-	// we only allow one external usb at a time
-
-	params = getRmCopyListParams(device, mod_type);
-
-  console.log(params.selectorId);
-  $("#" + params.selectorId + " input").each(function() {
-    if (this.type == "checkbox") {
-      if (this.checked){
-        item = {};
-        item['id'] = this.name;
-        item['file_ref'] = this.name; // no separate id for modules
-        if (mod_type == "zims"){
-        	zim_path = params.catalog[this.name].path;
-        	zim_file = zim_path.split('/').pop(); // take only file name
-        	item['file_ref'] = zim_file.split('.zim')[0]; // remove .zim
-        }
-        modList.push(item);
-      }
-    }
-  });
-  console.log(modList);
-  return modList;
-}
-
-function getRmList(device, mod_type){
-	var modList = []; // just needs path
-	var params;
-	//var selectorId;
-	//var catalog = {};
-	var zim_path;
-	var zim_file;
-
-	// compute jquery selector
-	// we only allow one external usb at a time
-
-	params = getRmCopyListParams(device, mod_type);
-
-  console.log(params.selectorId);
-  $("#" + params.selectorId + " input").each(function() {
-    if (this.type == "checkbox") {
-      if (this.checked)
-        if (mod_type == "zims"){
-        	zim_path = params.catalog[this.name].path;
-        	zim_file = zim_path.split('/').pop(); // take only file name
-        	zim_file = zim_file.split('.zim')[0]; // remove .zim
-          modList.push(zim_file);
-        }
-        else
-        	modList.push(this.name);
-    }
-  });
-  console.log(modList);
-  return modList;
-}
-
-function getRmCopyListParams(device, mod_type){
-  // compute jquery selector
-	// we only allow one external usb at a time
-
-	var params = {};
-  if (device == "internal"){
-	  params.selectorId = "installed";
-	  params.catalog = installedZimCatalog.INSTALLED;
-	}
-	else{
-		params.selectorId = "external";
-		params.catalog = externalZimCatalog;
-	}
-	if (mod_type == "zims")
-		params.selectorId += "ZimModules";
-  else if (mod_type == "modules")
-    params.selectorId += "Oer2goModules";
-  return params;
-}
-
-function removeUsb(){
-  make_button_disabled("#REMOVE-USB", true);
-  var cmd = ""
-  var cmd_args = {}
-  cmd_args['device'] = selectedUsb;
-  cmd = "REMOVE-USB " + JSON.stringify(cmd_args);
-  $.when(sendCmdSrvCmd(cmd, genericCmdHandler))
-  .done(getExternalDevInfo);
-  return true;
-}
-
-// Utility Menu functions
+// Utility Menu Functions
 
 function getJobStat()
 {
@@ -1689,8 +1334,9 @@ function procJobStat(data)
     //var job_info = {};
 
     //job_info['job_no'] = entry[0];
-    html += "<td>" + statusJob.job_id + "<BR>"; // job number
-    html +=  '<input type="checkbox" id="' + statusJob.job_id + '">';
+    html += "<td>";
+    html += '<input type="checkbox" id="' + statusJob.job_id + '">';
+    html += '<span style="vertical-align: text-bottom;">&nbsp;&nbsp;' + statusJob.job_id + '</span>';
     html += "</td>";
     html += '<td style="overflow: hidden; text-overflow: ellipsis">' + statusJob.job_command + "</td>";
 
@@ -1714,13 +1360,20 @@ function procJobStat(data)
 
     html += "</tr>";
 
+    // To Do
+    // insert cmd and cmd_args into commands when job created
+    // changes schema
+
     // there should be one or two parts - ? still need this; for cancel
-    var cmd_parse = statusJob.cmd_msg.split(" ");
-    statusJob['cmd_verb'] = cmd_parse[0];
-    if(cmd_parse.length == 0 || typeof cmd_parse[1] === 'undefined')
-      statusJob['cmd_args'] = ""
-    else
-      statusJob['cmd_args'] = JSON.parse(cmd_parse[1]);
+    // manual commands through iiab-cmdsrv-cti can introduce extra spaces and break this
+    // breaks on install kalite
+
+    //var cmd_parse = statusJob.cmd_msg.split(" ");
+    //statusJob['cmd_verb'] = cmd_parse[0];
+    //if(cmd_parse.length == 0 || typeof cmd_parse[1] === 'undefined')
+    //  statusJob['cmd_args'] = ""
+    //else
+    //  statusJob['cmd_args'] = JSON.parse(cmd_parse[1]);
 
     consoleLog(statusJob);
     job_status[statusJob.job_id] = statusJob;
@@ -1867,9 +1520,13 @@ function getSpaceAvail (){
 
 function procSpaceAvail (data){
   sysStorage.library_on_root = data.library_on_root; // separate library partition (T/F)
-	sysStorage.root = data.root;
-	if (! sysStorage.library_on_root)
+  sysStorage.root = data.root;
+  sysStorage.imageSizeInK = data.root.size_in_k - data.root.avail_in_k + 262144;
+	if (! sysStorage.library_on_root){
     sysStorage.library = data.library;
+    sysStorage.imageSizeInK += data.library.size_in_k - data.library.avail_in_k;
+  }
+  $("#cloneImageSize").html(readableSize(sysStorage.imageSizeInK));
 }
 
 function displaySpaceAvail(){
@@ -1879,7 +1536,8 @@ function displaySpaceAvail(){
 	var availableSpace = 0;
 	var usedSpace = 0;
 	var internalContentSelected = 0;
-	var internalSpace = calcLibraryDiskSpace();
+  var internalSpace = calcLibraryDiskSpace();
+  var html = '';
 	availableSpace = internalSpace.availableSpace;
 	usedSpace = internalSpace.usedSpace;
 
@@ -1891,17 +1549,24 @@ function displaySpaceAvail(){
 	if (allocatedSpace / availableSpace > .85)
 	  warningStyle = 'style="color: red;"';
 
-	var html = "Library Space Available : <b>";
+  if (window.innerWidth > 1400) // make this responsive
+    html = "Library Space Available : <b>";
+  else
+    html = "Space Available : <b>";
   html += readableSize(availableSpace) + "</b><BR>";
 
   $( "#dnldDiskSpace" ).html(html);
 
-  html += "Estimated Space Required: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+  if (window.innerWidth > 1400) // make this responsive
+    html += "Estimated Space Required: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+  else
+    html += "Space Required: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
   html += '<b><span ' + warningStyle + '>' + readableSize(allocatedSpace) + '</span</b>';
 
   $( "#zimDiskSpace" ).html(html);
   $( "#oer2goDiskSpace" ).html(html);
   $( "#mapDiskSpace" ).html(html);
+  $( "#mapDiskSpace2" ).html(html);
 
   // calc internalContentSelected
 
@@ -1932,7 +1597,6 @@ function manContUsbStat(dev){
 	var html = "";
 	var usedSpace = externalDeviceContents[dev].dev_size_k - externalDeviceContents[dev].dev_sp_avail_k;
 	var checked = (dev == selectedUsb) ? "checked" : "";
-	//var status = (age >= 18) ? 'adult' : 'minor';
 
   html += '<tr>';
   html += '<td><input type="radio" name="usbList" value="' + dev + '"' + checked + '></td>';
@@ -1952,7 +1616,7 @@ function calcAllocatedSpace(){
 	totalSpace += sumAllocationList(selectedOer2goItems, 'oer2go');
 	totalSpace += sumOer2goWip();
 	totalSpace += sumAllocationList(selectedMapItems, 'map');
-	totalSpace += sumMapWip();
+	// totalSpace += sumMapWip(); selectedMapItems also holds wip as they are still selected
 	return totalSpace;
 }
 
@@ -1969,7 +1633,7 @@ function sumAllocationList(list, type){
     else if (type == "oer2go")
       totalSpace += parseInt(oer2goCatalog[id].ksize);
     else if (type == "map")
-      totalSpace += parseInt(mapCatalog[id].size / 1000);
+      totalSpace += parseInt(mapCatalog[id].size / 1024);
 
   }
   // sysStorage.oer2go_selected_size = totalSpace;
@@ -1997,14 +1661,25 @@ function sumOer2goWip(){
   return totalSpace;
 }
 
+function sumMapWipV1(){ // save for now
+  var totalSpace = 0;
+
+  for (var idx in mapWip){
+   var url =  mapWip[idx];
+   var region = get_region_from_url(url);
+  	totalSpace += parseInt(mapCatalog[region].osm_size) + parseInt(mapCatalog[region].sat_size);
+  }
+  return totalSpace/1024;
+}
+
 function sumMapWip(){
   var totalSpace = 0;
 
-  for (var url in mapWip){
-   var region = get_region_from_url(url);
-  	totalSpace += parseInt(mapCatalog[region].size);
-  }
-  return totalSpace;
+  mapWip.forEach(function (mapId, index) {
+    totalSpace += parseInt(mapCatalog[mapId].size);
+  });
+
+  return totalSpace/1024;
 }
 
 function calcLibraryDiskSpace(){
@@ -2110,6 +1785,25 @@ function updateManContSelectedSpace(id, contType, catalog, dev, checked){
   displaySpaceAvail();
 }
 
+function moveUploadedFile(fileName, fileUse, filterArray=[]) {
+
+  var cmdArgs = {}
+  cmdArgs['file_name'] = fileName;
+  cmdArgs['file_use'] = fileUse;
+  cmdArgs['filter_array'] = filterArray;
+
+  var cmd = 'MOVE-UPLOADED-FILE ' + JSON.stringify(cmdArgs);
+  return sendCmdSrvCmd(cmd, moveUploadedFileSucceeded, '', moveUploadedFileFailed);
+}
+
+function moveUploadedFileSucceeded(){
+  alert ('Upload Succeeded');
+}
+
+function moveUploadedFileFailed(){
+  alert ('Upload Failed');
+}
+
 function getInetSpeed(){
   var command = "GET-INET-SPEED";
   sendCmdSrvCmd(command, procInetSpeed, "GET-INET-SPEED");
@@ -2149,6 +1843,13 @@ function procInetSpeed2(data){
   //consoleLog(jqXHR);
 }
 
+function logOutUser(){
+  authData.credentials = ':';
+  authData.token = ''; // possible future use
+  $('#iiabAdminUserName').val('');
+  $('#iiabAdminUserPassword').val('');
+  init();
+}
 
 function rebootServer()
 {
@@ -2239,6 +1940,8 @@ function secondsToDuration(seconds){
   return ('0' + h).slice(-2) + ":" + ('0' + m).slice(-2) + ":" + ('0' + s).slice(-2);
 }
 
+// Command Functions
+
 function formCommand(cmd_verb, args_name, args_obj)
 {
   var cmd_args = {}
@@ -2248,10 +1951,7 @@ function formCommand(cmd_verb, args_name, args_obj)
 
   return command;
 }
-
-// monitor for awhile and use version if no problems present
-
-function sendCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArgs) {
+async function sendCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArgs, encryptFlag = false) {
   // takes following arguments:
   //   command - Command to send to cmdsrv
   //   callback - Function to call on success
@@ -2271,15 +1971,23 @@ function sendCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArgs) {
   //	return deferredObject.reject();
   //}
 
+  var nonce64 = await getServerNonceAsync();
+  var encryptedCredentials64 = naclEncryptText(authData.credentials, nonce64);
   var cmdVerb = command.split(" ")[0];
   // the ajax call escapes special characters, but converts space to plus sign
   // convert space to %20
 
   // var enCommand = encodeURIComponent(command); - perhaps preferred in future if it can be made to work
   // var enCommand = command.replace(" ", "%20"); - only does the first one
-  var enCommand = command.replace(/ /g, "%20");
-  //consoleLog ("command: " + command);
+  var encodedCommand = command.replace(/ /g, "%20");
+  var encryptedCommand = null;
+  //coleonsLog ("command: " + command);
   //consoleLog ("enCommand: " + enCommand);
+  var payload = {command: encodedCommand};
+  if (encryptFlag){
+    encryptedCommand = naclEncryptText(encodedCommand, nonce64);
+    payload = {encrypted_command: encryptedCommand};
+  }
 
   logServerCommands (cmdVerb, "sent");
 
@@ -2290,9 +1998,10 @@ function sendCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArgs) {
   var resp = $.ajax({
     type: 'POST',
     url: iiabCmdService,
-    data: {
-      command: enCommand
-    },
+    headers: {"X-IIAB-Credentials": encryptedCredentials64,
+            "X-IIAB-Nonce": nonce64,
+            "X-IIAB-ClientKey": authData.clientPubKey64},
+    data: payload,
     dataType: 'json',
     buttonId: buttonId
   })
@@ -2314,7 +2023,16 @@ function sendCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdArgs) {
   	  logServerCommands (cmdVerb, "succeeded", "", dataResp.Resp_time);
   	}
   })
-  .fail(jsonErrhandler)
+  .fail(async function(jqXHR, textStatus, errorThrown) {
+    consoleLog('in sendAuthCmdSrvCmd .fail');
+    if (jqXHR.status == 403){ // not logged in
+      // probably need to reinitialize
+      init ('Server Password Reset. Please Sign in Again');
+
+    } else {
+      jsonErrhandler(jqXHR, textStatus, errorThrown);
+    }
+    })
   .always(function() {
   	setCmdsrvWorkingModalOff();
   	if (this.buttonId != "")
@@ -2451,11 +2169,14 @@ function displayServerCommandStatus (msg)
     $(initSelector).prepend(now.toLocaleString() + ": " + msg + "<BR>");
 }
 
-function init ()
+// Init Functions
+
+function init (loginMsg='')
 {
   //$('#initDataModal').modal('show');
 
   initStat["active"] = true;
+  initStat["complete"] = false;
   initStat["error"] = false;
   initStat["alerted"] = {};
 
@@ -2463,22 +2184,81 @@ function init ()
 
   getServerInfo(); // see if we can connect
 
-  initVars();
+  // generate client public/private keys
+  authData['clientKeyPair'] = nacl.box.keyPair();
+  authData['clientPubKey64'] = nacl.util.encodeBase64(authData.clientKeyPair.publicKey);
+  authData['credentials'] = ':';
+  authData.keepLogin = true;
 
+  getServerPublicKey();
+  launchcmdServerLoginForm(loginMsg) //force login
+  // on success will continue with initPostLogin()
+}
+
+function initPostLogin(){
+
+  // this is all conditional on successful login
+  // invoked by login.done
   $.when(
-    //sendCmdSrvCmd("GET-ANS-TAGS", getAnsibleTags),
-    sendCmdSrvCmd("GET-WHLIST", getWhitelist),
-    $.when(sendCmdSrvCmd("GET-VARS", getInstallVars), sendCmdSrvCmd("GET-ANS", getAnsibleFacts),sendCmdSrvCmd("GET-IIAB-INI", procXsceIni)).done(initConfigVars),
-    $.when(getLangCodes(),readKiwixCatalog(),sendCmdSrvCmd("GET-ZIM-STAT", procZimStatInit)).done(procZimCatalog),
-    getOer2goStat(),
-    initMap(),
-    getSpaceAvail(),
-    getExternalDevInfo())
-    .done(initDone)
+    sendCmdSrvCmd("GET-ADM-CONF", getAdminConfig))
+    .then(initPostLogin2)
     .fail(function () {
     	displayServerCommandStatus('<span style="color:red">Init Failed</span>');
     	consoleLog("Init failed");
     	})
+}
+
+function initPostLogin2(){
+  initGetHtml();
+  initGetData();
+}
+
+function initGetHtml(){
+  $.when(
+			$.get('htmlf/20-configure.html', function (data) {
+				$('#Configure').html(data);
+				configButtonsEvents();
+			}),
+			$.get('htmlf/40-install_content.html', function (data) {
+				$('#InstallContent').html(data);
+				instContentButtonsEvents();
+			}),
+			$.get('htmlf/50-edit_menus.html', function (data) { // this should be conditional on js_menu_install: True
+				$('#ContentMenus').html(data);
+        contentMenuButtonsEvents();
+			}),
+			$.get('htmlf/70-utilities.html', function (data) {
+				$('#Util').html(data);
+				utilButtonsEvents();
+			})
+		).done(function () {
+      initVars();
+		});
+}
+
+function initGetData(){
+  $.when(
+    getLangCodes(),
+    readKiwixCatalog(),
+    sendCmdSrvCmd("GET-VARS", getInstallVars),
+    sendCmdSrvCmd("GET-ANS", getAnsibleFacts),
+    sendCmdSrvCmd("GET-IIAB-INI", procXsceIni),
+    sendCmdSrvCmd("GET-ZIM-STAT", procZimStatInit),
+    getOer2goStat(),
+    readMapCatalog(),
+    readMapIdx(),
+    getOsmVectStat(),
+    getSpaceAvail(),
+    getExternalDevInfo())
+    .then(initDone)
+    .fail(function () {
+    	displayServerCommandStatus('<span style="color:red">Init Failed</span>');
+    	consoleLog("Init failed");
+    	})
+}
+
+function kixixInitStatus(msg){
+  consoleLog(msg);
 }
 
 function initVars(){
@@ -2498,22 +2278,31 @@ function initManContSelections(dev, reset=false){
   }
 }
 
-function initDone ()
-{
-	if (initStat["error"] == false){
-	  consoleLog("Init Finished Successfully");
-	  displayServerCommandStatus('<span style="color:green">Init Finished Successfully</span>');
+function initDone (){
+	if (initStat.error == false){
+    consoleLog("starting initConfigVars");
+    initConfigVars();
+    consoleLog("starting procZimCatalog");
+    procZimCatalog();
+    displayServerCommandStatus('<span style="color:green">Init Finished Successfully</span>');
 	  //selectedLangsDefaults(); // any installed or wip content plus default language
 	  displaySpaceAvail(); // display on various panels
 	  // now turn on navigation
-	  navButtonsEvents();
-	  //$('#initDataModal').modal('hide');
+    navButtonsEvents();
+    //$('#initDataModal').modal('hide');
+
+    // Set Password Change Fields
+    var user = authData.credentials.split(':')[0]
+    $( "#iiab_admin_user").val(user);
+
+    consoleLog("Init Finished Successfully");
   } else {
     consoleLog("Init Failed");
     displayServerCommandStatus('<span style="color:red">Init Failed</span>');
     //$('#initDataModalResult').html("<b>There was an error on the Server.</b>");
   }
-  initStat["active"] = false;
+  initStat.complete = true;
+  initStat.active = false;
 }
 
 function waitDeferred(msec) {

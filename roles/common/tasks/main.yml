@@ -1,3 +1,62 @@
+# Stop if nginx not enabled
+- block:
+    - name: "End Installation if nginx not enabled"
+      debug:
+        msg: "Ending Admin Console Installation - Please make sure nginx is installed and enabled."
+    - meta: end_play
+  when: not nginx_enabled
+
+- name: Install dependencies
+  package:
+    name:
+      - python3-requests
+    state: present
+
+# Duplicates IIAB, but we are never able to change that, and these are all used by Admin Console
+- name: Create required Directories
+  file:
+    path: "{{ item }}"
+    # owner: root
+    # group: root
+    # mode: '0755'
+    state: directory
+  with_items:
+    #- "{{ content_base }}/downloads"    # /library/downloads auto-created just below
+    - "{{ content_base }}/downloads/zims"
+    - "{{ content_base }}/downloads/maps"
+    - "{{ content_base }}/downloads/rachel"    # STILL USED OR NOT?
+    #- "{{ content_base }}/working"    # /library/working auto-created just below
+    - "{{ content_base }}/working/zims"
+    - "{{ content_base }}/working/maps"
+    - "{{ content_base }}/working/rachel"    # STILL USED OR NOT?
+    - "{{ iiab_zim_path }}/content"    # /library/zims
+    - "{{ iiab_zim_path }}/index"
+    - "{{ doc_root }}/local_content"    # /library/www/html
+    - "{{ doc_root }}/modules"
+    - "{{ doc_root }}/common/css"
+    - "{{ doc_root }}/common/js"
+    - "{{ doc_root }}/common/fonts"
+    - "{{ doc_root }}/common/html"
+    - "{{ doc_root }}/common/images"
+    - "{{ doc_root }}/common/assets"
+    - "{{ doc_root }}/common/services"
+
+- name: Create required Directories Owned by web-server user
+  file:
+    path: "{{ item }}"
+    owner: "{{ apache_user }}"
+    group: "{{ apache_user }}"
+    mode: '0755'
+    state: directory
+  with_items:
+    - "{{ content_base }}/working/uploads"
+
+- name: File Layout - Symlink {{ doc_root }}/common/webfonts -> {{ doc_root }}/common/fonts
+  file:
+    src: "{{ doc_root }}/common/fonts"    # /library/www/html
+    path: "{{ doc_root }}/common/webfonts"
+    state: link
+
 - name: Create admin directory
   file: path={{ item }}
         mode=0755
@@ -7,19 +66,16 @@
   with_items:
     - "{{ admin_install_base }}"
 
-- name: Create python lib directory
-  file: path='{{ iiab_python_lib }}/iiab'
-        mode=0644
-        owner=root
-        group=root
-        state=directory
-
-- name: Copy adm_lib library
-  template: src=adm_lib.py.j2
-            dest='{{ iiab_python_lib }}/iiab/adm_lib.py'
-            mode=0644
-            owner=root
-            group=root
+- name: Install admin lib files
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - { src: 'adm_const.py.j2', dest: '{{ py3_dist_path }}/iiab/adm_const.py' }
+    - { src: 'adm_lib.py', dest: '{{ py3_dist_path }}/iiab/adm_lib.py' }
 
 # Duplicate iiab test for internet
 - name: Test for Internet access ({{ iiab_download_url }}/heart-beat.txt)
@@ -38,3 +94,70 @@
   file:
     path: /tmp/heart-beat.txt
     state: absent
+
+# For Osm Vector Maps
+# If not enabled install empty files
+# If enabled install empty idx file if no file exists
+# Otherwise run /usr/bin/iiab-update-map
+#  Done in js-menu after the script has been installed in cmdsrv but only if js-menu is enabled
+
+# Make sure these files exist and reset in the case of osm enabled changed to false
+
+- name: Copy dummy Osm Vector Maps vector-map-idx.json file if osm_vector_maps not enabled
+  copy:
+    src: map/vector-map-idx.json
+    dest: "{{ doc_root }}/common/assets/vector-map-idx.json"
+    owner: root
+    group: root
+    mode: 0644
+    force: yes
+  when: not osm_vector_maps_enabled
+
+- name: Copy dummy Osm Vector Maps regions.json file if osm_vector_maps not enabled
+  copy:
+    src: map/regions.json
+    dest: "{{ iiab_etc_path }}/regions.json"
+    owner: root
+    group: root
+    mode: 0644
+    force: yes
+  when: not osm_vector_maps_enabled
+
+# Put dummy idx file in place only if it does not already exist and until calculated in js-menu if osm_vector_maps is enabled
+- name: Copy dummy Osm Vector Maps vector-map-idx.json file if not exist
+  copy:
+    src: map/vector-map-idx.json
+    dest: "{{ doc_root }}/common/assets/vector-map-idx.json"
+    owner: root
+    group: root
+    mode: 0644
+    force: no
+  when: osm_vector_maps_enabled
+
+# Copy Map Catalog used by Admin Console
+- name: Copy Map Catalog used by Admin Console ({{ adm_maps_catalog_file }})
+  copy:
+    src: map/adm-map-catalog.json
+    dest: "{{ doc_root }}/common/assets/{{ adm_maps_catalog_file }}"
+    owner: root
+    group: root
+    mode: 0644
+    force: yes
+  # when: osm_vector_maps_enabled - always install so cmdsrv has it
+
+# Put dummy regions file in place only if it does not already exist (should have been put there when osm installed)
+- name: Copy dummy Osm Vector Maps regions.json file if not exist
+  copy:
+    src: map/regions.json
+    dest: "{{ iiab_etc_path }}/regions.json"
+    owner: root
+    group: root
+    mode: 0644
+    force: no
+  when: osm_vector_maps_enabled
+
+- name: Create a link to osm catalog in /common/assets
+  file:
+    src: "{{ iiab_etc_path }}/regions.json"
+    dest: "{{ doc_root }}/common/assets/regions.json"
+    state: link
