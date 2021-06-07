@@ -1509,7 +1509,7 @@ def umount_usb(cmd_info):
 
     # remove mount points for local content
     try:
-        os.remove(adm.iiab.CONST.doc_root + '/local_content/USB' + device[-1])
+        os.remove(doc_root + '/local_content/USB' + device[-1])
     except OSError:
         pass
 
@@ -2043,7 +2043,7 @@ def install_presets(cmd_info):
             resp = install_kalite(kalite_cmd_info)
 
     # copy menu.json
-    shutil.copyfile(src_dir + 'menu.json', iiab.CONST.doc_root + '/home/menu.json')
+    shutil.copyfile(src_dir + 'menu.json', doc_root + '/home/menu.json')
 
     if len(services_needed_error) > 0:
         resp = cmd_warning(cmd='INST-PRESETS', msg='WARNING: The following services were added - ' + services_needed_error)
