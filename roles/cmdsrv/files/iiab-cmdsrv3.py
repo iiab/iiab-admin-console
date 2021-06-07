@@ -3188,6 +3188,7 @@ def init():
 
     if ansible_facts['ansible_local']['local_facts']['rpi_model'] != 'none':
         is_rpi = True # convenience
+        cmdsrv_max_concurrent_jobs = adm_conf['cmdsrv_max_rpi_jobs'] # lower max concurrent jobs if rpi
     else:
         is_rpi = False
 
@@ -3590,7 +3591,7 @@ def app_config():
     cmdsrv_dbpath = cmdsrv_dir + "/" + cmdsrv_dbname
     cmdsrv_no_workers = conf['cmdsrv_no_workers']
     cmdsrv_job_poll_sleep_interval = conf['cmdsrv_job_poll_sleep_interval']
-    cmdsrv_max_concurrent_jobs = conf['cmdsrv_max_concurrent_jobs']
+    cmdsrv_max_concurrent_jobs = conf['cmdsrv_max_concurrent_jobs'] # subsequently set to conf['cmdsrv_max_rpi_jobs'] if is_rpi
     cmdsrv_lower_job_priority_flag = conf['cmdsrv_lower_job_priority_flag']
     cmdsrv_lower_job_priority_str = conf['cmdsrv_lower_job_priority_str']
     cmdsrv_pid_file = conf['cmdsrv_pid_file']
