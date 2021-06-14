@@ -1988,6 +1988,10 @@ def install_presets(cmd_info):
 
     # ZIMs
     # create list of ids using most recent url
+    # check if zim already installed
+
+    lib_xml_file = zim_dir + "/library.xml"
+    zims_installed = read_library_xml(lib_xml_file)
 
     zim_list = content['zims']
     perma_ref_idx = {}
@@ -2004,6 +2008,9 @@ def install_presets(cmd_info):
 
     zim_cmd_info = cmd_info
     for ref in perma_ref_idx:
+        if perma_ref_idx[ref]['id'] in zims_installed:
+            print('Skipping already installed ' + ref)
+            continue # skip already installed zims
         zim_cmd_info['cmd'] ='INST-ZIM'
         zim_cmd_info['cmd_args'] = {'zim_id': perma_ref_idx[ref]['id']}
         zim_cmd_info = pseudo_cmd_handler(zim_cmd_info)

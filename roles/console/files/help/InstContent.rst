@@ -5,6 +5,20 @@ The options on this menu allow you to download and install content onto Internet
 
 These options are aimed at people who plan to set up the server in a location where there is a relatively high bandwidth connection and then deploy it where there is little or no connectivity.
 
+Quick Pick
+----------
+
+This option offers a shortcut to a full implementation. These collections are those commonly used by implementers in the listed circumstances.
+
+Select one of the collections of content listed and the following will be performed:
+
+* All required services will be installed and enabled
+* The home menu will be configured
+* Any listed ZIMs will be downloaded and installed
+* Any listed OER2Go modules will be downloaded and installed
+* Any listed OSM map packs will be downloaded and installed
+* Any listed KA-list topics will be downloaded and installed
+
 Get ZIM Files from Kiwix
 ------------------------
 
