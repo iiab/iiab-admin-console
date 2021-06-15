@@ -34,7 +34,7 @@ Configure
 Install Content
 ---------------
 
-* Get Started
+* Quick Pick
 * Get ZIM Files from Kiwix
 * Get OER2Go(RACHEL) Modules
 * Download Khan Academy Videos
