@@ -127,7 +127,10 @@ for menu_item_def_name in local_menu_item_defs:
                     # Upload any extra_html
                     if 'extra_html' in menu_item_def and menu_item_def['extra_html'] != '':
                         extra_html_file = menu_item_def['extra_html']
-                        extra_html_sha = menu_def_repo_data['html'][extra_html_file].get('sha', None)
+                        try:
+                            extra_html_sha = menu_def_repo_data['html'][extra_html_file].get('sha', None)
+                        except:    # 2021-06-06: Above line was failing when extra_html file does not yet exist in repo, preventing the user from uploading to fix the situation, and leading to error message below ('Skipping malformed Menu Item Definition')
+                            extra_html_sha = None
                         adm.put_extra_html_file(extra_html_file, sha=extra_html_sha)
 
                     # Now do menu item def
