@@ -1,0 +1,8 @@
+{
+  "name": "French Speaking School",
+  "description": "",
+  "default_lang": "fr",
+  "location": "Optional location this was installed",
+  "size_in_gb": 98,
+  "last_modified": "2021-05-01"
+}

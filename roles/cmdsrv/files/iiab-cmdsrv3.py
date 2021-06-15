@@ -1509,7 +1509,7 @@ def umount_usb(cmd_info):
 
     # remove mount points for local content
     try:
-        os.remove(adm.iiab.CONST.doc_root + '/local_content/USB' + device[-1])
+        os.remove(doc_root + '/local_content/USB' + device[-1])
     except OSError:
         pass
 
@@ -1680,7 +1680,7 @@ def set_white_list(cmd_info):
 def get_kiwix_catalog(cmd_info):
     outp = subproc_check_output(["scripts/get_kiwix_catalog"])
     if outp == "SUCCESS":
-        read_kiwix_catalog
+        read_kiwix_catalog()
         resp = cmd_success("GET-KIWIX-CAT")
         return (resp)
     else:
@@ -1988,6 +1988,10 @@ def install_presets(cmd_info):
 
     # ZIMs
     # create list of ids using most recent url
+    # check if zim already installed
+
+    lib_xml_file = zim_dir + "/library.xml"
+    zims_installed = read_library_xml(lib_xml_file)
 
     zim_list = content['zims']
     perma_ref_idx = {}
@@ -2004,6 +2008,9 @@ def install_presets(cmd_info):
 
     zim_cmd_info = cmd_info
     for ref in perma_ref_idx:
+        if perma_ref_idx[ref]['id'] in zims_installed:
+            print('Skipping already installed ' + ref)
+            continue # skip already installed zims
         zim_cmd_info['cmd'] ='INST-ZIM'
         zim_cmd_info['cmd_args'] = {'zim_id': perma_ref_idx[ref]['id']}
         zim_cmd_info = pseudo_cmd_handler(zim_cmd_info)
@@ -2034,15 +2041,19 @@ def install_presets(cmd_info):
 
     # kalite
 
-    kalite_cmd_info = cmd_info
-    kalite_cmd_info['cmd'] = 'INST-KALITE'
-    kalite_cmd_info['cmd_args'] = content['kalite']
-    kalite_cmd_info = pseudo_cmd_handler(kalite_cmd_info)
-    if kalite_cmd_info:
-        resp = install_kalite(kalite_cmd_info)
+    if len(kalite_vars) > 0:
+        kalite_cmd_info = cmd_info
+        kalite_cmd_info['cmd'] = 'INST-KALITE'
+        kalite_cmd_info['cmd_args'] = content['kalite']
+        kalite_cmd_info = pseudo_cmd_handler(kalite_cmd_info)
+        if kalite_cmd_info:
+            resp = install_kalite(kalite_cmd_info)
+
+    # copy menu.json
+    shutil.copyfile(src_dir + 'menu.json', doc_root + '/home/menu.json')
 
     if len(services_needed_error) > 0:
-        resp = cmd_error(cmd='INST-PRESETS', msg='WARNING: The following services were added - ' + services_needed_error)
+        resp = cmd_warning(cmd='INST-PRESETS', msg='WARNING: The following services were added - ' + services_needed_error)
     else:
         resp = cmd_success_msg('INST-PRESETS', "All jobs scheduled")
     return resp
@@ -3018,6 +3029,10 @@ def cmd_success(cmd):
 def cmd_success_msg(cmd, msg):
    return ('{"Success": "' + cmd + " " + msg + '."}')
 
+def cmd_warning(cmd="", msg="WARNING: Success, but Some Exceptions may have occured."):
+    log(syslog.LOG_ERR, "Warning: %s %s." % (msg, cmd))
+    return ('{"Warning": "' + msg + ' ' + cmd + '."}')
+
 def cmd_error(cmd="", msg="Internal Server Error processing Command"):
     log(syslog.LOG_ERR, "Error: %s %s." % (msg, cmd))
     return ('{"Error": "' + msg + ' ' + cmd + '."}')
@@ -3180,6 +3195,7 @@ def init():
 
     if ansible_facts['ansible_local']['local_facts']['rpi_model'] != 'none':
         is_rpi = True # convenience
+        cmdsrv_max_concurrent_jobs = adm_conf['cmdsrv_max_rpi_jobs'] # lower max concurrent jobs if rpi
     else:
         is_rpi = False
 
@@ -3336,7 +3352,6 @@ def get_ansible_tags():
 def read_kiwix_catalog():
     global kiwix_catalog
     global init_error
-
     try:
         stream = open (kiwix_catalog_file,"r")
         kiwix_catalog_with_date = json.load(stream)
@@ -3583,7 +3598,7 @@ def app_config():
     cmdsrv_dbpath = cmdsrv_dir + "/" + cmdsrv_dbname
     cmdsrv_no_workers = conf['cmdsrv_no_workers']
     cmdsrv_job_poll_sleep_interval = conf['cmdsrv_job_poll_sleep_interval']
-    cmdsrv_max_concurrent_jobs = conf['cmdsrv_max_concurrent_jobs']
+    cmdsrv_max_concurrent_jobs = conf['cmdsrv_max_concurrent_jobs'] # subsequently set to conf['cmdsrv_max_rpi_jobs'] if is_rpi
     cmdsrv_lower_job_priority_flag = conf['cmdsrv_lower_job_priority_flag']
     cmdsrv_lower_job_priority_str = conf['cmdsrv_lower_job_priority_str']
     cmdsrv_pid_file = conf['cmdsrv_pid_file']

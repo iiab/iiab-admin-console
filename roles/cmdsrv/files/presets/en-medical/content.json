@@ -1,0 +1,29 @@
+{
+  "zims": [
+    "wikipedia_en_medicine",
+    "statpearls_en_all_maxi",
+    "nih_rarediseases_en_all_maxi",
+    "fitness.stackexchange.com_en_all",
+    "health.stackexchange.com_en_all",
+    "tedmed_en_all"
+  ],
+  "modules": [
+    "en-wikem",
+    "en-stanford_em",
+    "en-healthphone",
+    "en-medline_plus",
+    "en-hesperian_health",
+    "en-asst_medical",
+    "en-infonet",
+    "en-cdc",
+    "en-practical_action"
+  ],
+  "maps": [
+  ],
+  "kalite": {
+    "lang_code": "en",
+    "topics": [
+      "khan/science/health-and-medicine/"
+    ]
+  }
+}

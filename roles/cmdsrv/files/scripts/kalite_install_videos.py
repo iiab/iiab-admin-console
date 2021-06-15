@@ -27,6 +27,8 @@ LANG_LIST = ['en', 'es', 'fr', 'hi', 'pt-BR', 'pt-PT']
 VIDEO_EXT = '.mp4'
 IMAGE_EXT = '.png'
 
+not_downloaded = []
+
 def main ():
     global REMOTE_URL
 
@@ -67,10 +69,16 @@ def main ():
             print('Error getting downloads. Exiting.')
             sys.exit(1)
 
+    if len(not_downloaded) > 0:
+        print ('The following were not downloaded:')
+        print (not_downloaded)
+
     # do video scan with kalite manage
 
+    print ('Starting videoscan')
     cmd = 'kalite manage videoscan -l' + lang_code
     adm.subproc_cmd(cmd)
+    print ('Videoscan complete')
 
     # exit 0 when complete
 
@@ -87,14 +95,16 @@ def get_topic_videos(video_list):
                 download_file(f)
 
 def download_file(file):
+    global not_downloaded
     cmd = 'wget -O /tmp/' + file + ' ' + REMOTE_URL + file
     try:
         adm.subproc_cmd(cmd)
         shutil.move('/tmp/' + file, KALITEDIR + '/content/')
     except Exception as e:
         print('Error downloading ' + file)
-        print(e)
-        raise
+        print('Skipping ' + file)
+        not_downloaded.append(file)
+        #raise
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Install KA Lite Videos by Category.")

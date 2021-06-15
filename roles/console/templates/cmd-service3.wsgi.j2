@@ -17,7 +17,7 @@ cmdsrv_ready_file = "{{ cmdsrv_ready_file }}"
 iiab_cmd_service = "{{ iiab_cmd_service_url }}"
 admin_console_group = "{{ admin_console_group }}"
 valid_group_list = ['sudo', admin_console_group]
-
+REQUEST_TIMEOUT = {{ iiab_cmd_service_timeout }}
 
 # for testing
 #cmdsrv_pid_file = "/run/iiab-cmdsrv.pid"
@@ -236,9 +236,7 @@ def dump(environ):
     return response_body
 
 def send_command(cmd, start_ms):
-    REQUEST_TIMEOUT = 30000
     send_msg = cmd
-
     ipc_sock = "/run/cmdsrv_sock"
 
     try:
