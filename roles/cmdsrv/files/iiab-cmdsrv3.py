@@ -2537,6 +2537,7 @@ def get_osm_vect_stat(cmd_info):
     all_maps['INSTALLED'] = {}
     all_maps['tile_base_installed'] = False
     all_maps['sat_base_installed'] = False
+    all_maps['maps_active'] = iiab_roles_status['osm_vector_maps']['active']
 
     if os.path.exists(vector_map_tiles_path + maps_tiles_base):
         all_maps['tile_base_installed'] = True
