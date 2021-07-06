@@ -40,6 +40,36 @@
     mode: '0700'
   when: ansible_architecture == "armv7l" or ansible_architecture == "aarch64"
 
+- name: Install rclone for wasabi
+  shell: curl -s https://rclone.org/install.sh | bash -
+  args:
+    warn: no
+    creates: /usr/bin/rclone
+
+- name: Configure rclone
+  ini_file:
+    path: "/root/.config/rclone/rclone.conf"
+    section: wasabi-iiab
+    option: "{{ item.option }}"
+    value: "{{ item.value | string }}"
+  with_items:
+    - option: type
+      value: s3
+    - option: provider
+      value: Wasabi
+    - option: region
+      value: us-east-2
+    - option: endpoint
+      value: s3.us-east-2.wasabisys.com
+    - option: acl
+      value: private
+    - option: env_auth
+      value: false
+    - option: access_key_id
+      value: HAPCKJFF9FZGQLJ6TOIY
+    - option: secret_access_key
+      value: nAa73UNVVBWUtKdv72LXHeCjJeDFLi3v6aLRh8st
+
 - name: Create cmdsrv directory
   file: path={{ item }}
         mode=0700
