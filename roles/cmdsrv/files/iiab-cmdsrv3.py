@@ -1727,7 +1727,9 @@ def get_oer2go_catalog(cmd_info):
     }
     try:
         compl_proc = adm.subproc_run("scripts/get_oer2go_catalog")
-        if compl_proc.returncode !=0:
+        if compl_proc.returncode == 1: # if oer2go offline we use local version of catalog
+            read_oer2go_catalog() # our catalog could have changed
+        if compl_proc.returncode !=0: # but we still report the error
             resp = cmd_error(cmd='GET-OER2GO-CAT', msg=err_msg[str(compl_proc.returncode)])
             return resp
     except subprocess.CalledProcessError as e:
