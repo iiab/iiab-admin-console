@@ -1727,7 +1727,9 @@ def get_oer2go_catalog(cmd_info):
     }
     try:
         compl_proc = adm.subproc_run("scripts/get_oer2go_catalog")
-        if compl_proc.returncode !=0:
+        if compl_proc.returncode == 1: # if oer2go offline we use local version of catalog
+            read_oer2go_catalog() # our catalog could have changed
+        if compl_proc.returncode !=0: # but we still report the error
             resp = cmd_error(cmd='GET-OER2GO-CAT', msg=err_msg[str(compl_proc.returncode)])
             return resp
     except subprocess.CalledProcessError as e:
@@ -2246,26 +2248,31 @@ def install_oer2go_mod(cmd_info):
 
     if 'cmd_args' in cmd_info:
         moddir = cmd_info['cmd_args']['moddir']
-        if moddir in oer2go_catalog: # not really necessary as we compute the link
+        if moddir in oer2go_catalog:
             refresh_oer2go_installed() # check to make sure it didn't get installed manually
             if moddir in oer2go_installed:
                 resp = cmd_error(cmd='INST-OER2GO-MOD', msg='Module already installed in Command')
                 return resp
-            else:
-                oer2go_download_src = oer2go_catalog[moddir]['rsync_url']
-                #oer2go_download_src = oer2go_mods_url + moddir
         else:
             resp = cmd_error(cmd='INST-OER2GO-MOD', msg='Module not in catalog in Command')
             return resp
-
-        targetDir = rachel_working_dir
     else:
         return cmd_malformed(cmd_info['cmd'])
 
     # at this point we can create all the jobs
 
-    # rsync module files
-    job_command = "/usr/bin/rsync -Pavz --size-only " + oer2go_download_src + " " + targetDir
+    # there are two sources:
+    #   wasabi - contains rclone attribute
+    #   oer2go_download_src - everything else
+
+    targetDir = rachel_working_dir # /library/working/rachel/
+
+    if 'rclone' in oer2go_catalog[moddir]:
+        job_command = "/usr/bin/rclone -v sync " + oer2go_catalog[moddir]['rclone'] + " " + targetDir + moddir
+    else:
+        oer2go_download_src = oer2go_catalog[moddir]['rsync_url']
+        job_command = "/usr/bin/rsync -Pavz --size-only " + oer2go_download_src + " " + targetDir
+
     job_id = request_one_job(cmd_info, job_command, 1, -1, "Y")
     #print job_command
 
