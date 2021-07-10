@@ -111,6 +111,8 @@ Actions
 
 **Sync Menu Defs** synchronizes changes to this Menu Item Definition with the central repository (https://github.com/iiab-share/js-menu-files).
 
+**Update Home Menu** adds any missing zim, services, or modules to the menu on the Home Page.
+
 ### Sync Menu Defs Rules
 
 The following rules are applied when synchronizing Menu Item Definitions between the local server and the central repository.
