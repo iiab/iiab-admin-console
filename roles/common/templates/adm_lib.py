@@ -345,6 +345,15 @@ def get_github_all_commits(repo_base_url=CONST.menu_def_base_url):
 # create oer2go_catalog.json, mark downloaded with flag, mark blacklisted duplicates
 # need to track which version of content was downloaded - new version attribute added 6/9/2017
 
+def get_module_list(module_dir):
+    exclude = ['en-test_mod']
+    modules = []
+    dir_list = [o for o in os.listdir(module_dir) if os.path.isdir(os.path.join(module_dir,o))]
+    for dir in dir_list:
+        if dir not in exclude:
+            modules.append(dir)
+    return modules
+
 def get_module_status(module, verbose=False):
     # if the module is downloaded and there is no menu def return true else false
     is_downloaded = False
