@@ -774,6 +774,7 @@ def cmd_handler(cmd_msg):
         "DEL-DOWNLOADS": {"funct": del_downloads, "inet_req": False},
         "DEL-MODULES": {"funct": del_modules, "inet_req": False},
         "GET-MENU-ITEM-DEF-LIST": {"funct": get_menu_item_def_list, "inet_req": False},
+        "UPDATE-HOME-MENU": {"funct": update_home_menu, "inet_req": False},
         "SAVE-MENU-DEF": {"funct": save_menu_def, "inet_req": False},
         "SAVE-MENU-ITEM-DEF": {"funct": save_menu_item_def, "inet_req": False},
         "SYNC-MENU-ITEM-DEFS": {"funct": sync_menu_item_defs, "inet_req": True},
@@ -2605,6 +2606,11 @@ def get_menu_item_def_list(cmd_info):
         menu_item_defs.append(menu_item_def)
 
     resp = json.dumps(sorted(menu_item_defs))
+    return (resp)
+
+def update_home_menu(cmd_info):
+    adm.subproc_run('iiab-update-menus')
+    resp = cmd_success(cmd_info['cmd'])
     return (resp)
 
 def save_menu_def(cmd_info):
