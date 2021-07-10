@@ -452,6 +452,9 @@ function contentMenuButtonsEvents() {
   $("#SYNC-MENU-ITEM-DEFS").click(function(){
     syncMenuItemDefs();
   });
+  $("#UPDATE-HOME-MENU").click(function(){
+    updateHomeMenu();
+  });
   $("#CREATE-MENU-ITEM-DEF").click(function(){
     saveContentMenuItemDef();
   });

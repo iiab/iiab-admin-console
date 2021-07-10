@@ -381,6 +381,22 @@ function checkMenuDone(){
 	}
 }
 
+function updateHomeMenu(){
+  var command = "UPDATE-HOME-MENU";
+  var cmd_args = {};
+
+  cmd = command + " " + JSON.stringify(cmd_args);
+  sendCmdSrvCmd(cmd, updateHomeMenuDone, "UPDATE-HOME-MENU");
+  return true;
+}
+
+function updateHomeMenuDone(){
+  if (homeMenuLoaded) {
+		getContentMenuToEdit('home'); // refresh home menu
+  }
+  alert ("Home Page Menu Updated.");
+}
+
 function syncMenuItemDefs(){
   var command = "SYNC-MENU-ITEM-DEFS";
   var cmd_args = {};
