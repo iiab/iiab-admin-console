@@ -31,7 +31,7 @@ import iiab.adm_lib as adm
 verbose = False
 download_flag = True
 
-oer2go_duplicates = {'en': [5, 6, 17, 19, 20, 23, 44, 50, 60, 65, 68, 86, 88, 93, 122, 139],
+oer2go_duplicates = {'en': [5, 6, 17, 19, 20, 23, 44, 50, 60, 65, 68, 86, 88, 93, 122, 139, 205],
   'es': [26, 49, 51, 53, 58, 59, 61, 63, 66, 69, 72, 75, 94],
   'fr': [],
   'misc': [98,114]}
