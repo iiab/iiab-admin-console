@@ -89,7 +89,7 @@ def main ():
         local_oer2go_catalog = adm.read_json(adm.CONST.oer2go_catalog_file)
         oer2go_catalog = local_oer2go_catalog['modules']
 
-    # merge iiab_catalog.json
+    # start with iiab_catalog.json
     for item in iiab_catalog:
         moddir = item['moddir']
         id = item['module_id']
@@ -114,20 +114,26 @@ def main ():
             continue
 
         menu_item_name = moddir
-        if module_id not in dup_list:
-            is_downloaded, has_menu_def = adm.get_module_status (module)
-            if args.menu and is_downloaded:
-                if not has_menu_def:
-                    menu_item_name = adm.create_module_menu_def(module, working_dir, incl_extra_html = False)
-                    msg = "Generating menu files"
-                    if verbose:
-                        print("%s %s %s" % (msg, module_id, moddir))
-                adm.update_menu_json(menu_item_name) # only adds if not already in menu
-        else:
+
+        if module_id in dup_list:
             msg = "Skipping module not needed by Internet in a Box"
             if verbose:
                 print("%s %s %s" % (msg, module_id, moddir))
             continue
+        if module.get('type') != 'html':
+            continue
+    
+        is_downloaded, has_menu_def = adm.get_module_status (module)
+        #if args.menu and is_downloaded:
+        if args.menu:
+            if not has_menu_def:
+                menu_item_name = adm.create_module_menu_def(module, working_dir, incl_extra_html = False)
+                msg = "Generating menu files"
+                if verbose:
+                    print("%s %s %s" % (msg, module_id, moddir))
+            if is_downloaded:
+                adm.update_menu_json(menu_item_name) # only adds if not already in menu
+        
         iiab_oer2go_catalog[moddir] = module
 
     # write catalog even if not downloaded as our could have changed

@@ -387,7 +387,7 @@ def create_module_menu_def(module, working_dir, incl_extra_html=False):
     menu_item_name = module.get('moddir')
     menu_def = generate_module_menu_def(module)
 
-    menu_def['logo_url'] = download_module_logo(module)
+    menu_def['logo_url'] = download_module_logo(module, working_dir)
     if incl_extra_html:
         htmlfile = generate_module_extra_html(module, working_dir)
         menu_def['extra_htm'] = htmlfile
@@ -422,32 +422,63 @@ def generate_module_menu_def(module):
 
     return menu_def
 
-def download_module_logo(module):
+def download_module_logo(module, working_dir):
+    moddir = module['moddir']
+    our_logo_file_name_base = moddir +'_logo.'
     # get logo if there is one
     moddir = module['moddir']
+    logo_file_name = None
+    got_logo = False
     if 'logo_url' in module and module['logo_url'] != None:
         logo_download_url = module['logo_url']
-        logo = module['logo_url']
-        logo_ext = logo.split('/')[-1].split('.')[-1]
-        logo = module['moddir'] + '.' + logo_ext
-        if not os.path.isfile(CONST.iiab_menu_files + "images/" + logo):
-            cmdstr = "wget -O " + CONST.iiab_menu_files + "images/" + logo + " " + logo_download_url
-            args = shlex.split(cmdstr)
-            outp = subprocess.check_output(args)
-        logo_file_name = logo
-    else:
+        #logo = module['logo_url']
+        logo_ext = logo_download_url.split('/')[-1].split('.')[-1]
+        our_logo_file_name = our_logo_file_name_base + logo_ext
+        #logo = module['moddir'] + '.' + logo_ext
+        if not os.path.isfile(CONST.iiab_menu_files + "images/" + our_logo_file_name):
+            cmdstr = "wget -O " + CONST.iiab_menu_files + "images/" + our_logo_file_name + " " + logo_download_url            
+            try:
+                rc = subproc_run(cmdstr)
+                logo_file_name = our_logo_file_name
+                got_logo = True
+            except:
+                pass
+
+    if not got_logo and os.path.isdir(CONST.iiab_modules_dir + moddir): # if downloaded   
         # look for logo in root of module
-        module['logo_url'] = None
+        #module['logo_url'] = None
         os.chdir(CONST.iiab_modules_dir + moddir)
         for filename in os.listdir('.'):
             if fnmatch.fnmatch(filename, '*.png')  or\
                 fnmatch.fnmatch(filename, '*.gif')  or\
                 fnmatch.fnmatch(filename, '*.jpg')  or\
                 fnmatch.fnmatch(filename, '*.jpeg'):
-                if not os.path.isfile(CONST.iiab_menu_files + "images/" + moddir + filename):
+                logo_ext = filename.split('/')[-1].split('.')[-1]
+                our_logo_file_name = our_logo_file_name_base + logo_ext
+                if not os.path.isfile(CONST.iiab_menu_files + "images/" + our_logo_file_name):
                     shutil.copyfile(CONST.iiab_modules_dir + moddir + '/' + filename,
-                                    CONST.iiab_menu_files + "images/" + moddir +'_'+ filename)
-                logo_file_name = moddir + '_' + filename
+                                    CONST.iiab_menu_files + "images/" + our_logo_file_name)
+                logo_file_name = our_logo_file_name
+                got_logo = True
+    if not got_logo:
+        # try to download it
+        cmdstr = "rsync -Pavz " + module['rsync_url'] + "/logo.* " + working_dir
+        try:
+            rc = subproc_run(cmdstr)        
+            os.chdir(working_dir)
+            for filename in os.listdir('.'):
+                if fnmatch.fnmatch(filename, '*.png')  or\
+                    fnmatch.fnmatch(filename, '*.gif')  or\
+                    fnmatch.fnmatch(filename, '*.jpg')  or\
+                    fnmatch.fnmatch(filename, '*.jpeg'):
+                    logo_ext = filename.split('/')[-1].split('.')[-1]
+                    our_logo_file_name = our_logo_file_name_base + logo_ext
+                    if not os.path.isfile(CONST.iiab_menu_files + "images/" + our_logo_file_name):
+                        shutil.copyfile(working_dir + filename,
+                                        CONST.iiab_menu_files + "images/" + our_logo_file_name)
+                        logo_file_name = our_logo_file_name                    
+        except:
+            pass
 
     return logo_file_name
 
