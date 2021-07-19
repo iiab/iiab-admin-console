@@ -2279,7 +2279,7 @@ def install_oer2go_mod(cmd_info):
 
     # move to location and clean up
     #job_command = "mv " + targetDir + moddir + " " + modules_dir
-    job_command = "scripts/oer2go_install_move.sh " + moddir
+    job_command = "scripts/oer2go_install_step2.py " + moddir
     #print job_command
     resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=2, depend_on_job_id=job_id, has_dependent="N")
 
