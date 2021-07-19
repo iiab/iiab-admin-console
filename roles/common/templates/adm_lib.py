@@ -974,6 +974,16 @@ def merge_local_vars(target_vars_file, delta_vars, strip_comments=False, strip_d
 
     return output_lines
 
+def read_json_file(file_path):
+    try:
+        with open(file_path, 'r') as json_file:
+            readstr = json_file.read()
+            json_dict = json.loads(readstr)
+        return json_dict
+    except OSError as e:
+        print('Unable to read url json file', e)
+        raise
+    
 # duplicates cmdsrv - but now revised
 
 def write_json_file(src_dict, target_file, sort_keys=False):
