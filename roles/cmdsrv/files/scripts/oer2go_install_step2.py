@@ -30,6 +30,7 @@ def main ():
     if not has_menu_def:
         print('Generating Menu Definition')
         working_dir = adm.CONST.rachel_working_dir + str(uuid.uuid4()) + "/"
+        os.mkdir(working_dir)
         menu_item_name = adm.create_module_menu_def(oer2go_mod, working_dir, incl_extra_html = False)
         shutil.rmtree(working_dir)
 
