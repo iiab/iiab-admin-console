@@ -1,6 +1,8 @@
 // content_functions.js
 // copyright 2020 Tim Moody
 
+var presetList = {};
+
 // Install Content Functions
 
 function getLangCodes() {
@@ -144,6 +146,32 @@ function readableSize(kbytes) {
 }
 
 // Install Preset Functions
+
+function getPresetList(){
+  if ($("#PresetList").html() != '') // only populate if empty
+    return;
+  var command = "GET-PRESET-LIST";
+  var cmd_args = {};
+  cmd = command + " " + JSON.stringify(cmd_args);
+  return sendCmdSrvCmd(cmd, procPresetList);
+}
+
+function procPresetList(data){
+  presetList = data;
+  var html = '';
+  checked = ' checked';
+
+  for (var id in presetList){
+    html += '<div class="radio">';
+    html += '<label><input type="radio" name="content-preset" id="';
+    html += id + '" value="' + id + '"' + checked + '>';
+    checked = '' // only first one
+    html += '<b>' + presetList[id].name + '</b>: ' + presetList[id].description;
+    html += '</label><div>';
+
+    $("#PresetList").html(html);
+  }
+}
 
 function installPreset(presetId){
   var command = "INST-PRESETS";
