@@ -1,6 +1,6 @@
 {
   "name": "French Speaking School",
-  "description": "",
+  "description": "Content and Features often used by a School with instruction in French",
   "default_lang": "fr",
   "location": "Optional location this was installed",
   "size_in_gb": 98,

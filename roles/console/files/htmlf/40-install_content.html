@@ -14,7 +14,7 @@
       <h2>Installation Tasks</h2>
       <ul id="installContentMenu" class="nav nav-pills nav-stacked">
         <!-- Start XXX Sub Level Menu -->
-        <li class="active"><a href="#instConPresets">Quick Pick</a></li>
+        <li class="active"><a href="#instConPresets" call-after="getPresetList">Quick Pick</a></li>
         <!-- <li class="active"><a href="#instConStart">Get Started</a></li> -->
         <li><a href="#instConZims" call-after="checkKiwixCatalogDate">Get ZIM Files from Kiwix</a></li>
         <li><a href="#instConOer2go" call-after="oer2goMenuOption">Get OER2Go(RACHEL) Modules</a></li>
@@ -76,21 +76,7 @@
           </span>
           -->
 
-          <div class="radio">
-            <label><input type="radio" name="content-preset" id="en-school" value="en-school" checked>School with Instruction in English</label>
-          </div>
-          <div class="radio">
-            <label><input type="radio" name="content-preset" id="es-school" value="es-school">School with Instruction in Spanish</label>
-          </div>
-          <div class="radio">
-            <label><input type="radio" name="content-preset" id="fr-school" value="fr-school">School with Instruction in French</label>
-          </div>
-          <div class="radio">
-            <label><input type="radio" name="content-preset" id="en-medical" value="en-medical">Medical Practitioners using English</label>
-          </div>
-          <div class="radio">
-            <label><input type="radio" name="content-preset" id="test" value="test">Test</label>
-          </div>
+          <div id = "PresetList"></div>
 
           <button id="INST-CONTENT-PRESET" type="button" class="btn btn-lg btn-primary">Install Selected Collection</button>
 

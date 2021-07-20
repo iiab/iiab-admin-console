@@ -755,6 +755,7 @@ def cmd_handler(cmd_msg):
         "GET-INET-SPEED2": {"funct": get_inet_speed2, "inet_req": True},
         "GET-KIWIX-CAT": {"funct": get_kiwix_catalog, "inet_req": True},
         "GET-ZIM-STAT": {"funct": get_zim_stat, "inet_req": False},
+        "GET-PRESET-LIST": {"funct": get_preset_list, "inet_req": False},
         "INST-PRESETS": {"funct": install_presets, "inet_req": True},
         "INST-ZIMS": {"funct": install_zims, "inet_req": True},
         "COPY-ZIMS": {"funct": copy_zims, "inet_req": False},
@@ -1910,6 +1911,21 @@ def get_rachel_modules(module_dir, state):
         modules[title] = module
 
     return (modules)
+
+def get_preset_list(cmd_info):
+    preset_dict = {}
+    top_list = ['en-school', 'es-school', 'fr-school', 'en-medical']
+    for item in top_list: # put these at the top
+        preset_dict[item] = {}
+
+    preset_list = glob("presets/*")
+    for preset in preset_list:
+        preset_id = preset.split('/')[-1]
+        preset_info = adm.read_json_file(preset + '/preset.json')
+        preset_dict[preset_id] = preset_info
+
+    resp = json.dumps(preset_dict)
+    return (resp)
 
 def install_presets(cmd_info):
     # first pass we will just call various command handlers and evaluate resp
