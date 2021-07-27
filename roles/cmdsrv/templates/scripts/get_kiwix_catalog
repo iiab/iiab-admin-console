@@ -17,10 +17,14 @@ if len(sys.argv) > 1:
 
 WWROOT = "{{ doc_root }}"
 jsonPath = "{{ iiab_config_dir }}"
+iiab_zim_cat_url = "{{ iiab_zim_cat_url }}"
+
+kiwix_include_zimit = False # check for tag _sw:yes
 
 # for testing
 #WWROOT = "/library/www/html"
 #jsonPath = "/etc/iiab"
+#iiab_zim_cat_url = 'https://raw.githubusercontent.com/iiab-share/iiab-content/main/catalogs/iiab-zim-cat.json'
 
 # timeframe inclusion of videos
 magicDate = "2017-07"
@@ -41,7 +45,6 @@ kiwixLibUrl = 'http://download.kiwix.org/library/library.xml'
 kiwixZimLibUrl = 'http://download.kiwix.org/library/library_zim.xml'
 zimKiwixUrl = "http://download.kiwix.org/portable/"
 zimKiwixPrefix = "kiwix-0.9+"
-iiab_zim_cat_url = "{{ iiab_zim_cat_url }}"
 
 # output files
 
@@ -109,9 +112,13 @@ def main():
     zim_dict = {}
     for child in zim_tree.getroot():
         attr = child.attrib
-        if 'id' in attr and 'language' in attr and 'creator' in attr:
+        if 'id' in attr and 'language' in attr:
+            zim_attr = parse_attr_new(attr)
+            if zim_attr['uses_socket_workers'] and not kiwix_include_zimit: # skip service workers for now
+                continue
+
             zimCount += 1
-            zim_dict[attr['id']] = parse_attr(attr)
+            zim_dict[attr['id']] = zim_attr
 
     # now merge our own zim catalog
     if verbose:
@@ -154,6 +161,97 @@ def xml_to_dict(root):
         if 'id' in attr and 'language' in attr and 'creator' in attr:
             zim_dict[attr['id']] = attr
     return zim_dict
+
+def parse_attr_new(attributes):
+
+    zimAttr = {}
+    has_embedded_index = False
+    has_details = False
+    has_pictures = False
+    has_videos = False
+    uses_socket_workers = False
+    source = "zims"
+
+    lang = attributes['language']
+
+    tags = attributes['tags'].split(';') if 'tags' in attributes else []
+    tag_dict = {}
+    for tag in tags:
+        pair = tag.split(':')
+        tag_dict[pair[0]] = pair[1] if len(pair) == 2 else None
+
+    # messy to have tags and tag_dict, but makes parsing easier
+
+    if '_ftindex:yes' in tags:
+        has_embedded_index = True
+
+    if '_pictures:yes' in tags:
+        has_pictures = True
+
+    if '_videos:yes' in tags:
+        has_videos = True
+
+    if '_details:yes' in tags:
+        has_details = True
+
+    if attributes['date'] < magicDate:
+        has_videos = False
+
+    if '_sw:yes' in tags:
+        uses_socket_workers = True
+
+    url = attributes['url']
+    urlSlash = url.split('/')
+    urlEnd = urlSlash[-1] # last element
+    fileRef = urlEnd.split('.zim')[0] # true for both internal and external index
+    permaRefParts = urlEnd.split('_')
+    permaRefParts = permaRefParts[0:len(permaRefParts) - 1]
+    permaRef = permaRefParts[0]
+    for part in permaRefParts[1:]:
+       if not part.isdigit():
+          permaRef += "_" + part
+
+    category = tag_dict.get('_category')
+    if not category:
+        category = urlSlash[4].replace('_',' ')
+    if category:
+        category = category.title()
+
+    # category = attributes['creator'] not a good choice now
+
+    sequence = 8 - (4 * has_videos + 2 * has_pictures + 1 * has_details)
+
+    if url in problemUrlMap:
+        downloadUrl = problemUrlMap[url]
+    else:
+        # if there is a builtin index get from zims directory else from portable if it is in portable
+        downloadUrl = url.replace(".zim.meta4", ".zim")
+        # there have not been external indices for some time
+        #if not has_embedded_index:
+        #    if attributes['id'] in portable_list:
+        #        source = "portable"
+        #        downloadUrl = url.replace("/zim/", "/portable/")
+        #        downloadUrl = downloadUrl.replace(urlEnd, zimKiwixPrefix + urlEnd)
+        #        downloadUrl = downloadUrl.replace(".zim.meta4", ".zip") # urlEnd still has zim.meta4
+
+    # print zimCount, attributes['language'], attributes['title'], attributes['description']
+    for key in attributes:
+        if key not in ['id','favicon','faviconMimeType']:
+            zimAttr[key] = attributes[key]
+    if 'description' in zimAttr:
+        zimAttr['description'] = zimAttr['description'].replace('"', '&quot;') # replace quotes that break parsing
+    zimAttr['download_url'] = downloadUrl
+    zimAttr['file_ref'] = fileRef
+    zimAttr['perma_ref'] = permaRef
+    zimAttr['category'] = category
+    zimAttr['sequence'] = sequence
+    zimAttr['has_embedded_index'] = has_embedded_index
+    zimAttr['has_details'] = has_details
+    zimAttr['has_pictures'] = has_pictures
+    zimAttr['has_videos'] = has_videos
+    zimAttr['uses_socket_workers'] = uses_socket_workers
+    zimAttr['source'] = source
+    return(zimAttr)
 
 def parse_attr(attributes):
 
