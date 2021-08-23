@@ -151,7 +151,7 @@ def main ():
 
 def get_oer2go_cat():
     err_num = 0
-    err_str = None
+    err_str = "SUCCESS"
     oer2go_catalog = None
     try:
         url_handle = urllib.request.urlopen(adm.CONST.oer2go_cat_url)
