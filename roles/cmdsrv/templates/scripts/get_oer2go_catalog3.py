@@ -122,7 +122,7 @@ def main ():
             continue
         if module.get('type') != 'html':
             continue
-    
+
         is_downloaded, has_menu_def = adm.get_module_status (module)
         #if args.menu and is_downloaded:
         if args.menu:
@@ -133,7 +133,7 @@ def main ():
                     print("%s %s %s" % (msg, module_id, moddir))
             if is_downloaded:
                 adm.update_menu_json(menu_item_name) # only adds if not already in menu
-        
+
         iiab_oer2go_catalog[moddir] = module
 
     # write catalog even if not downloaded as our could have changed
@@ -162,7 +162,7 @@ def get_oer2go_cat():
         err_num = 1
 
     # now try to parse
-    if oer2go_catalog:
+    if oer2go_catalog_json:
         try:
             oer2go_catalog = json.loads(oer2go_catalog_json)
         except:
