@@ -177,8 +177,8 @@ def auth_login(credentials64, client_public_key64, nonce64): # candidate for adm
     # if calcpasswd != readpasswd:
     
     # 2021-09-26: Works with all hashes in /etc/shadow (SHA-512, yescrypt, etc) for #2985
-    hashpasswd = subprocess.run(['perl', '-e', f"print crypt('{password}', '{readpasswd}')"], capture_output=True, text=True).stdout
-    if hashpasswd != readpasswd:
+    calcpasswd = subprocess.run(['perl', '-e', f"print crypt('{password}', '{readpasswd}')"], capture_output=True, text=True).stdout
+    if calcpasswd != readpasswd:
         print('Bad Password')
         return False
     else:
