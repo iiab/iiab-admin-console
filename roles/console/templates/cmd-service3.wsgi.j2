@@ -7,6 +7,7 @@ import pwd
 import spwd
 import grp
 import secrets
+import subprocess
 import base64
 import nacl.utils
 from nacl.public import PrivateKey, PublicKey, Box
@@ -164,16 +165,19 @@ def auth_login(credentials64, client_public_key64, nonce64): # candidate for adm
         return False
 
     # check password - N.B. allows password guessing
-    readpasswd = spwddb[1]
-    pwparts = readpasswd.split('$')
-    if len(pwparts) < 4:
-        salt = ''
-        print('No Password Salt')
-    else:
-        salt = '$' + pwparts[1] + '$' +  pwparts[2] +'$'
-    calcpasswd = crypt.crypt(password, salt)
-
-    if calcpasswd != readpasswd:
+    # readpasswd = spwddb[1]
+    # pwparts = readpasswd.split('$')
+    # if len(pwparts) < 4:
+    #     salt = ''
+    #     print('No Password Salt')
+    # else:
+    #     salt = '$' + pwparts[1] + '$' +  pwparts[2] +'$'
+    # calcpasswd = crypt.crypt(password, salt)
+    #
+    # if calcpasswd != readpasswd:
+    
+    # 2021-09-26: Works with all hashes in /etc/shadow (SHA-512, yescrypt, etc) for #2985
+    if subprocess.run(['perl', '-e', f"print crypt('{password}', '{spwddb[1]}')"], capture_output=True, text=True).stdout != spwddb[1]:
         print('Bad Password')
         return False
     else:
