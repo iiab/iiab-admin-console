@@ -177,12 +177,12 @@ def auth_login(credentials64, client_public_key64, nonce64): # candidate for adm
     # if calcpasswd != readpasswd:
     
     # 2021-09-26: Works with all hashes in /etc/shadow (SHA-512, yescrypt, etc) for #2985
-    readhashstr = spwddb[1]
+    read_pw_hash = spwddb[1]
     try:
-        calchashstr = subprocess.run(['perl', '-e', f"print crypt('{password}', '{readhashstr}')"], capture_output=True, text=True).stdout
+        calc_pw_hash = subprocess.run(['perl', '-e', f"print crypt('{password}', '{read_pw_hash}')"], capture_output=True, text=True).stdout
     except:
-        calchashstr = None
-    if calchashstr != readhashstr:
+        calc_pw_hash = None
+    if calc_pw_hash != read_pw_hash:
         print('Bad Password')
         return False
     else:
