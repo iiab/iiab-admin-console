@@ -408,7 +408,7 @@ def generate_module_menu_def(module):
     menu_def['description'] = module.get('description', '')
     menu_def['extra_description'] = ''
 
-    size = float(module.get('ksize', '0')) * 1000.0
+    size = float(module.get('ksize', '0')) * 1024.0
     size = iiab.human_readable(size)
 
     files = module.get('file_count', 'undefined')
