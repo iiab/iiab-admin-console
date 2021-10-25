@@ -418,7 +418,7 @@ def generate_module_menu_def(module):
     if age == None:
         age = ''
 
-    menu_def['footnote'] = "Size: " + size + ', Files: ' + files + ', Age: ' + age
+    menu_def['footnote'] = "Size: " + size + ', Files: ' + str(files) + ', Age: ' + age
 
     return menu_def
 
@@ -436,7 +436,7 @@ def download_module_logo(module, working_dir):
         our_logo_file_name = our_logo_file_name_base + logo_ext
         #logo = module['moddir'] + '.' + logo_ext
         if not os.path.isfile(CONST.iiab_menu_files + "images/" + our_logo_file_name):
-            cmdstr = "wget -O " + CONST.iiab_menu_files + "images/" + our_logo_file_name + " " + logo_download_url            
+            cmdstr = "wget -O " + CONST.iiab_menu_files + "images/" + our_logo_file_name + " " + logo_download_url
             try:
                 rc = subproc_run(cmdstr)
                 logo_file_name = our_logo_file_name
@@ -444,7 +444,7 @@ def download_module_logo(module, working_dir):
             except:
                 pass
 
-    if not got_logo and os.path.isdir(CONST.iiab_modules_dir + moddir): # if downloaded   
+    if not got_logo and os.path.isdir(CONST.iiab_modules_dir + moddir): # if downloaded
         # look for logo in root of module
         #module['logo_url'] = None
         os.chdir(CONST.iiab_modules_dir + moddir)
@@ -464,7 +464,7 @@ def download_module_logo(module, working_dir):
         # try to download it
         cmdstr = "rsync -Pavz " + module['rsync_url'] + "/logo.* " + working_dir
         try:
-            rc = subproc_run(cmdstr)        
+            rc = subproc_run(cmdstr)
             os.chdir(working_dir)
             for filename in os.listdir('.'):
                 if fnmatch.fnmatch(filename, '*.png')  or\
@@ -476,7 +476,7 @@ def download_module_logo(module, working_dir):
                     if not os.path.isfile(CONST.iiab_menu_files + "images/" + our_logo_file_name):
                         shutil.copyfile(working_dir + filename,
                                         CONST.iiab_menu_files + "images/" + our_logo_file_name)
-                        logo_file_name = our_logo_file_name                    
+                        logo_file_name = our_logo_file_name
         except:
             pass
 
@@ -983,7 +983,7 @@ def read_json_file(file_path):
     except OSError as e:
         print('Unable to read url json file', e)
         raise
-    
+
 # duplicates cmdsrv - but now revised
 
 def write_json_file(src_dict, target_file, sort_keys=False):
