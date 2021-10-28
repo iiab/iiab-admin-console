@@ -2950,7 +2950,9 @@ def get_last_jobs_stat(cmd_info):
     db_lock.acquire() # will block if lock is already held
     try:
         conn = sqlite3.connect(cmdsrv_dbpath)
-        cur = conn.execute ("SELECT jobs.rowid, job_command, job_output, job_status, strftime('%m-%d %H:%M', jobs.create_datetime), strftime('%s', jobs.create_datetime), strftime('%s',last_update_datetime), strftime('%s','now', 'localtime'), cmd_msg FROM jobs, commands where cmd_rowid = commands.rowid ORDER BY jobs.rowid DESC LIMIT 30")
+        sql_cmd = "SELECT jobs.rowid, job_command, job_output, job_status, strftime('%m-%d %H:%M', jobs.create_datetime), strftime('%s', jobs.create_datetime)"
+        sql_cmd += ", strftime('%s',last_update_datetime), strftime('%s','now', 'localtime'), cmd_msg FROM jobs, commands where cmd_rowid = commands.rowid ORDER BY jobs.rowid DESC LIMIT 50"
+        cur = conn.execute (sql_cmd)
         status_jobs = cur.fetchall()
         conn.close()
     except sqlite3.Error as e:
