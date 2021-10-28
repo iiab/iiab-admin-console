@@ -2947,11 +2947,27 @@ def cancel_job(cmd_info):
 
 def get_last_jobs_stat(cmd_info):
     # make changes to cut down on volumn of data
+
+    # ToDo add logic to get more, previous results
+    # get last_rowid
+
+    print(cmd_info)
+    try:
+        last_rowid = int(cmd_info['cmd_args'].get('last_rowid'))
+    except:
+        last_rowid = 10000
+
+    if last_rowid == 1:
+        last_rowid = 10000 # wrap to refresh
+
+    sql_cmd = "SELECT jobs.rowid, job_command, job_output, job_status, strftime('%m-%d %H:%M', jobs.create_datetime), "
+    sql_cmd += "strftime('%s', jobs.create_datetime), strftime('%s',last_update_datetime), strftime('%s','now', 'localtime'), cmd_msg "
+    sql_cmd += "FROM jobs, commands where cmd_rowid = commands.rowid AND jobs.rowid < " + str(last_rowid)
+    sql_cmd += " ORDER BY jobs.rowid DESC LIMIT 50"
+
     db_lock.acquire() # will block if lock is already held
     try:
         conn = sqlite3.connect(cmdsrv_dbpath)
-        sql_cmd = "SELECT jobs.rowid, job_command, job_output, job_status, strftime('%m-%d %H:%M', jobs.create_datetime), strftime('%s', jobs.create_datetime)"
-        sql_cmd += ", strftime('%s',last_update_datetime), strftime('%s','now', 'localtime'), cmd_msg FROM jobs, commands where cmd_rowid = commands.rowid ORDER BY jobs.rowid DESC LIMIT 50"
         cur = conn.execute (sql_cmd)
         status_jobs = cur.fetchall()
         conn.close()

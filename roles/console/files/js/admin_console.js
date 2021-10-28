@@ -15,7 +15,8 @@ var ansibleRolesStatus = {};
 var effective_vars = {};
 var config_vars = {}; // working variable, no long separate from local vars
 var iiab_ini = {};
-var job_status = {};
+var allJobsStatus = {};
+var jobStatusLastRowid = 1 // trigger refresh
 var langCodes = {}; // iso code, local name and English name for all languages we support, read from file
 var langCodesXRef = {}; // lookup langCodes key by iso2
 var zimCatalog = {}; // working composite catalog of kiwix, installed, and wip zims
@@ -480,8 +481,15 @@ function utilButtonsEvents() {
 
   $("#JOB-STATUS-REFRESH").click(function(){
   	make_button_disabled("#JOB-STATUS-REFRESH", true);
+    jobStatusLastRowid = 1 // trigger refresh
     getJobStat();
     make_button_disabled("#JOB-STATUS-REFRESH", false);
+  });
+
+  $("#JOB-STATUS-MORE").click(function(){
+  	make_button_disabled("#JOB-STATUS-MORE", true);
+    getJobStat();
+    // make_button_disabled("#JOB-STATUS-MORE", false); // will turn on or off depending on data
   });
 
   $("#CANCEL-JOBS").click(function(){
@@ -495,8 +503,8 @@ function utilButtonsEvents() {
 
           // cancelJobFunc returns the function to call not the result as needed by array.push()
           cmdList.push(cancelJobFunc(job_id));
-          if (job_status[job_id]["cmd_verb"] == "INST-ZIMS"){
-          	var zim_id = job_status[job_id]["cmd_args"]["zim_id"];
+          if (allJobsStatus[job_id]["cmd_verb"] == "INST-ZIMS"){
+          	var zim_id = allJobsStatus[job_id]["cmd_args"]["zim_id"];
           	//consoleLog (zim_id);
           	if (zim_id in installedZimCatalog['WIP']){
               delete installedZimCatalog['WIP'][zim_id];
@@ -1326,16 +1334,21 @@ function getRolesStat(data) { // try php style function
 function getJobStat()
 {
   var command = "GET-JOB-STAT"
-  sendCmdSrvCmd(command, procJobStat);
+  var cmd_args = {};
+
+  cmd_args['last_rowid'] = jobStatusLastRowid;
+  cmd = command + " " + JSON.stringify(cmd_args);
+  sendCmdSrvCmd(cmd, procJobStat);
   return true;
 }
 
 function procJobStat(data)
 {
-  job_status = {};
+  allJobsStatus = {};
+  jobStatusLastRowid = 1
+
   var html = "";
   var html_break = '<br>';
-
 
   data.forEach(function(statusJob) {
     //console.log(statusJob);
@@ -1385,7 +1398,8 @@ function procJobStat(data)
     //  statusJob['cmd_args'] = JSON.parse(cmd_parse[1]);
 
     consoleLog(statusJob);
-    job_status[statusJob.job_id] = statusJob;
+    allJobsStatus[statusJob.job_id] = statusJob;
+    jobStatusLastRowid = statusJob.job_id // save lowest rowid seen
 
   });
   $( "#jobStatTable tbody" ).html(html);
@@ -1394,6 +1408,11 @@ function procJobStat(data)
   });
   today = new Date();
   $( "#statusJobsRefreshTime" ).html("Last Refreshed: <b>" + today.toLocaleString() + "</b>");
+  if (jobStatusLastRowid == 1)
+    make_button_disabled("#JOB-STATUS-MORE", true);
+  else
+    make_button_disabled("#JOB-STATUS-MORE", false);
+
 }
 
 function cancelJob(job_id)
