@@ -1,8 +1,8 @@
 {
-  "name": "English speaking School",
+  "name": "English speaking School 128G Sampler",
   "description": "Content and Features often used by a School with instruction in English",
   "default_lang": "en",
-  "location": "Optional location this was installed",
+  "location": "Generic",
   "size_in_gb": 115,
-  "last_modified": "2021-05-29"
+  "last_modified": "2021-11-14"
 }

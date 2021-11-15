@@ -1,0 +1,12 @@
+awstats_install: True
+awstats_enabled: True
+kiwix_install: True
+kiwix_enabled: True
+kalite_install: True
+kalite_enabled: True
+calibreweb_install: True
+calibreweb_enabled: True
+nextcloud_install: True
+nextcloud_enabled: True
+osm_vector_maps_install: True
+osm_vector_maps_enabled: True
