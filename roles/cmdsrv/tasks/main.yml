@@ -185,9 +185,9 @@
             - utilities/iiab-install-oer2go-mod
             - utilities/iiab-sync-menu-defs
 
-- name: Copy default kiwix_catalog.json
+- name: Copy default kiwix_catalog.json to {{ content_base }}/info/kiwix_catalog.json
   copy: src="json/kiwix_catalog.json"
-        dest="/etc/iiab/kiwix_catalog.json"
+        dest="{{ content_base }}/info/kiwix_catalog.json"
         mode=0644
         force=no
         owner=root
@@ -199,9 +199,9 @@
 
 #- debug: var=kiwix_cat.stdout_lines
 
-- name: Copy default oer2go_catalog.json
+- name: Copy default oer2go_catalog.json to {{ content_base }}/info/oer2go_catalog.json
   copy: src="json/oer2go_catalog.json"
-        dest="/etc/iiab/oer2go_catalog.json"
+        dest="{{ content_base }}/info/oer2go_catalog.json"
         mode=0644
         force=no
         owner=root
@@ -211,16 +211,30 @@
 #  shell: "iiab-get-oer2go-cat"
 #  register: oer2go_cat
 
-- name: Create symlink from /common/assets to kiwix_catalog.json
-  file: src=/etc/iiab/kiwix_catalog.json
+- name: Create symlink from {{ doc_root }}/common/assets/kiwix_catalog.json -> {{ content_base }}/info/kiwix_catalog.json
+  file: src={{ content_base }}/info/kiwix_catalog.json
         dest={{ doc_root }}/common/assets/kiwix_catalog.json
         owner=root
         group=root
         state=link
 
-- name: Create symlink from /common/assets to oer2go_catalog.json
-  file: src=/etc/iiab/oer2go_catalog.json
+- name: Create symlink from {{ doc_root }}/common/assets/oer2go_catalog.json -> {{ content_base }}/info/oer2go_catalog.json
+  file: src={{ content_base }}/info/oer2go_catalog.json
         dest={{ doc_root }}/common/assets/oer2go_catalog.json
+        owner=root
+        group=root
+        state=link
+
+- name: Create symlink from {{ content_base }}/info/kiwix_catalog.json -> {{ iiab_etc_path }}/kiwix_catalog.json
+  file: src={{ content_base }}/info/kiwix_catalog.json
+        dest={{ iiab_etc_path }}/kiwix_catalog.json
+        owner=root
+        group=root
+        state=link
+
+- name: Create symlink from {{ content_base }}/info/oer2go_catalog.json -> {{ iiab_etc_path }}/oer2go_catalog.json
+  file: src={{ content_base }}/info/oer2go_catalog.json
+        dest={{ iiab_etc_path }}/oer2go_catalog.json
         owner=root
         group=root
         state=link
