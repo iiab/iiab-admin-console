@@ -24,7 +24,7 @@
     # mode: '0755'
     state: directory
   loop:
-    - "{{ content_base }}/info"
+    - "{{ content_info }}"
     - "{{ content_base }}/downloads/zims"
     - "{{ content_base }}/downloads/maps"
     - "{{ content_base }}/downloads/rachel"    # STILL USED OR NOT?
