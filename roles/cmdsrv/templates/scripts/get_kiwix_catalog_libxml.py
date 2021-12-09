@@ -16,7 +16,7 @@ if len(sys.argv) > 1:
         verbose = True
 
 WWROOT = "{{ doc_root }}"
-jsonPath = "{{ iiab_config_dir }}"
+jsonPath = "{{ content_info }}"
 iiab_zim_cat_url = "{{ iiab_zim_cat_url }}"
 
 kiwix_include_zimit = False # check for tag _sw:yes
