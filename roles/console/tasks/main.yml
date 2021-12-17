@@ -50,7 +50,7 @@
 
 - name: Install admin-console config file for web server (now only supports nginx)
   template: src=admin-console-nginx.conf.j2
-            dest=/etc/nginx/conf.d/admin-console.conf
+            dest={{ nginx_conf_dir }}/admin-console.conf
             owner=root
             group=root
             mode=0644
