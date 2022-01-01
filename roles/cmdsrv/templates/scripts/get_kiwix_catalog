@@ -26,6 +26,10 @@ kiwix_include_zimit = False # check for tag _sw:yes
 #jsonPath = "/etc/iiab"
 #iiab_zim_cat_url = 'https://raw.githubusercontent.com/iiab-share/iiab-content/main/catalogs/iiab-zim-cat.json'
 
+# As of Jan 1, 2022
+# no zims were observed not to have _videos tag, so magic date logic no longer needed
+# some zims were observed not to have date attribute
+
 # timeframe inclusion of videos
 magicDate = "2017-07"
 
@@ -184,21 +188,31 @@ def parse_attr_new(attributes):
 
     if '_ftindex:yes' in tags:
         has_embedded_index = True
+    else:
+        has_embedded_index = False
 
     if '_pictures:yes' in tags:
         has_pictures = True
+    else:
+        has_pictures = False
 
     if '_videos:yes' in tags:
         has_videos = True
+    else:
+        has_videos = False
 
     if '_details:yes' in tags:
         has_details = True
+    else:
+        has_details = False
 
-    if attributes['date'] < magicDate:
-        has_videos = False
+    # if attributes['date'] < magicDate: # no longer needed 1/1/2022
+    #    has_videos = False
 
     if '_sw:yes' in tags:
         uses_socket_workers = True
+    else:
+        uses_socket_workers = False
 
     url = attributes['url']
     urlSlash = url.split('/')
