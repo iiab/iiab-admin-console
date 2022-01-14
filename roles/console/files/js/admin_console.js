@@ -2239,13 +2239,13 @@ function initPostLogin(){
 
   // this is all conditional on successful login
   // invoked by login.done
+
+  $('#help-tip').show()
+
   $.when(
     sendCmdSrvCmd("GET-ADM-CONF", getAdminConfig))
     .then(initPostLogin2)
-    .fail(function () {
-    	displayServerCommandStatus('<span style="color:red">Init Failed</span>');
-    	consoleLog("Init failed");
-    	})
+    .fail(initFailed)
 }
 
 function initPostLogin2(){
@@ -2291,11 +2291,9 @@ function initGetData(){
     getSpaceAvail(),
     getExternalDevInfo())
     .then(initDone)
-    .fail(function () {
-    	displayServerCommandStatus('<span style="color:red">Init Failed</span>');
-    	consoleLog("Init failed");
-    	})
+    .fail(initFailed)
 }
+
 
 function kixixInitStatus(msg){
   consoleLog(msg);
@@ -2336,13 +2334,19 @@ function initDone (){
     $( "#iiab_admin_user").val(user);
 
     consoleLog("Init Finished Successfully");
+    $('#help-tip').hide()
   } else {
-    consoleLog("Init Failed");
-    displayServerCommandStatus('<span style="color:red">Init Failed</span>');
+    initFailed()
     //$('#initDataModalResult').html("<b>There was an error on the Server.</b>");
   }
   initStat.complete = true;
   initStat.active = false;
+}
+
+function initFailed(){
+  $('#help-tip').hide()
+  displayServerCommandStatus('<span style="color:red">Init Failed</span>');
+  consoleLog("Init failed");
 }
 
 function waitDeferred(msec) {
