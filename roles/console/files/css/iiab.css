@@ -32,6 +32,17 @@
 font-size: medium;
 }
 
+.nav-flash {
+    animation: nav-flash 5s ease-in-out infinite;
+}
+
+@keyframes nav-flash {
+    50% {
+        color: #f04394;
+        text-shadow: 0 0 40px #555;
+    }
+}
+
 .action-buttons {
 /* width: 70%; */
 margin-bottom: 1.5em;
@@ -87,6 +98,32 @@ border-radius: 8px 8px 0 0;
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+/* Control */
+
+#help-tip {
+  z-index: 2000;
+  position: fixed;
+  top: 400px;
+  left: 50%;
+  /* bring your own prefixes */
+  transform: translate(-50%, -50%);
+  width:550px;
+  height:300px;
+  padding-top: 20px;
+  border: black;
+  border-radius: 8px;
+  background-color: #E5CF87;
+}
+
+#help-tip h1 {
+text-align: center;
+}
+
+#help-tip p {
+  font-size: 18px;
+}
+/* Configure */
 
 /* Install Content styles */
 
