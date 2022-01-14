@@ -33,12 +33,13 @@ font-size: medium;
 }
 
 .nav-flash {
-    animation: nav-flash 3s ease-in-out infinite;
+    animation: nav-flash 5s ease-in-out infinite;
 }
 
 @keyframes nav-flash {
     50% {
-        color: #cd43f0;
+        color: #f04394;
+        text-shadow: 0 0 40px #555;
     }
 }
 
@@ -103,15 +104,15 @@ border-radius: 8px 8px 0 0;
 #help-tip {
   z-index: 2000;
   position: fixed;
-  top: 50%;
+  top: 400px;
   left: 50%;
   /* bring your own prefixes */
   transform: translate(-50%, -50%);
-  width:500px;
-  height:400px;
-  padding: 20px;
+  width:550px;
+  height:300px;
+  padding-top: 20px;
   border: black;
-  border-radius: 5px;
+  border-radius: 8px;
   background-color: #E5CF87;
 }
 
