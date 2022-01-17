@@ -40,6 +40,36 @@
     mode: '0700'
   when: ansible_architecture == "armv7l" or ansible_architecture == "aarch64"
 
+- name: Install rclone for wasabi
+  shell: curl -s https://rclone.org/install.sh | bash -
+  args:
+    warn: no
+    creates: /usr/bin/rclone
+
+- name: Configure rclone
+  ini_file:
+    path: "/root/.config/rclone/rclone.conf"
+    section: wasabi-iiab-share
+    option: "{{ item.option }}"
+    value: "{{ item.value | string }}"
+  with_items:
+    - option: type
+      value: s3
+    - option: provider
+      value: Wasabi
+    - option: region
+      value: us-east-2
+    - option: endpoint
+      value: s3.us-east-2.wasabisys.com
+    - option: acl
+      value: private
+    - option: env_auth
+      value: false
+    - option: access_key_id
+      value: HAPCKJFF9FZGQLJ6TOIY
+    - option: secret_access_key
+      value: nAa73UNVVBWUtKdv72LXHeCjJeDFLi3v6aLRh8st
+
 - name: Create cmdsrv directory
   file: path={{ item }}
         mode=0700
@@ -49,6 +79,8 @@
   with_items:
     - "{{ cmdsrv_dir }}"
     - "{{ cmdsrv_dir }}/scripts"
+    - "{{ cmdsrv_dir }}/assets"
+    - "{{ cmdsrv_dir }}/presets"
 
 - name: Install Command Server Executable
   copy: src=iiab-cmdsrv3.py
@@ -100,6 +132,22 @@
     - { src: 'scripts/iiab-update-map3.py', dest: '{{ cmdsrv_dir }}/scripts/iiab-update-map.py'}
 
 
+- name: Copy assets
+  copy: src={{ item }}
+            dest="{{ cmdsrv_dir }}/assets"
+            mode=0755
+            owner=root
+            group=root
+  with_fileglob:
+            - assets/*
+
+- name: Copy presets recursively
+  copy: src=presets
+            dest="{{ cmdsrv_dir }}"
+            mode=0755
+            owner=root
+            group=root
+
 - name: Allow running iiab_update_menus from the command line
   file: src="{{ cmdsrv_dir }}/scripts/iiab_update_menus.py"
         dest="/usr/bin/iiab-update-menus"
@@ -125,11 +173,11 @@
         owner=root
         group=root
 
-- name: Create fresh kiwix_catalog.json
-  shell: "iiab-get-kiwix-cat -v"
-  register: kiwix_cat
+#- name: Create fresh kiwix_catalog.json
+#  shell: "iiab-get-kiwix-cat -v"
+#  register: kiwix_cat
 
-- debug: var=kiwix_cat.stdout_lines
+#- debug: var=kiwix_cat.stdout_lines
 
 - name: Copy default oer2go_catalog.json
   copy: src="json/oer2go_catalog.json"
@@ -139,9 +187,9 @@
         owner=root
         group=root
 
-- name: Create fresh oer2go_catalog.json
-  shell: "iiab-get-oer2go-cat"
-  register: oer2go_cat
+#- name: Create fresh oer2go_catalog.json
+#  shell: "iiab-get-oer2go-cat"
+#  register: oer2go_cat
 
 - name: Create symlink from /common/assets to kiwix_catalog.json
   file: src=/etc/iiab/kiwix_catalog.json

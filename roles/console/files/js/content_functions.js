@@ -1,6 +1,8 @@
 // content_functions.js
 // copyright 2020 Tim Moody
 
+var presetList = {};
+
 // Install Content Functions
 
 function getLangCodes() {
@@ -141,6 +143,43 @@ function readableSize(kbytes) {
   var s = ['bytes', 'kB', 'MB', 'GB', 'TB', 'PB'];
   var e = Math.floor(Math.log(bytes) / Math.log(1024));
   return (bytes / Math.pow(1024, e)).toFixed(2) + " " + s[e];
+}
+
+// Install Preset Functions
+
+function getPresetList(){
+  if ($("#PresetList").html() != '') // only populate if empty
+    return;
+  var command = "GET-PRESET-LIST";
+  var cmd_args = {};
+  cmd = command + " " + JSON.stringify(cmd_args);
+  return sendCmdSrvCmd(cmd, procPresetList);
+}
+
+function procPresetList(data){
+  presetList = data;
+  var html = '';
+  checked = ' checked';
+
+  for (var id in presetList){
+    html += '<div class="radio">';
+    html += '<label><input type="radio" name="content-preset" id="';
+    html += id + '" value="' + id + '"' + checked + '>';
+    checked = '' // only first one
+    html += '<b>' + presetList[id].name + '</b>: ' + presetList[id].description;
+    html += '</label><div>';
+
+    $("#PresetList").html(html);
+  }
+}
+
+function installPreset(presetId){
+  var command = "INST-PRESETS";
+  var cmd_args = {};
+  cmd_args['preset_id'] = presetId;
+  cmd = command + " " + JSON.stringify(cmd_args);
+  return sendCmdSrvCmd(cmd, genericCmdHandler, "INST-CONTENT-PRESET");
+
 }
 
 // Manage Content Functions
@@ -395,8 +434,8 @@ function clearManContSelections(dev, reset=false){
 }
 
 function refreshAllContentPanels() {
-	$.when(getDownloadList(), getOer2goStat(), getZimStat(), getExternalDevInfo())
-	.done(renderZimInstalledList, renderOer2goInstalledList, renderExternalList, refreshDiskSpace);
+	$.when(getDownloadList(), getOer2goStat(), getZimStat(), getExternalDevInfo(), getOsmVectStat())
+	.done(renderZimInstalledList, renderOer2goInstalledList, renderExternalList, renderRegionList, refreshDiskSpace);
 }
 
 function refreshAllInstalledList() {

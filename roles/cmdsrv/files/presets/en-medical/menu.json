@@ -1,0 +1,43 @@
+{
+  "debug": false,
+  "menu_lang": "en",
+  "force_mobile_layout": false,
+  "mobile_header_font": "Open Sans",
+  "mobile_incl_description": false,
+  "mobile_incl_extra_description": false,
+  "mobile_incl_extra_html": false,
+  "mobile_incl_footnote": false,
+  "desktop_header_font": "Open Sans",
+  "desktop_incl_description": true,
+  "desktop_incl_extra_description": true,
+  "desktop_incl_extra_html": true,
+  "desktop_incl_footnote": true,
+  "allow_kiwix_search": true,
+  "allow_poweroff": false,
+  "poweroff_prompt": "Power Off",
+  "autoupdate_menu": true,
+  "allow_server_time_update": true,
+  "multi_tab": false,
+  "tab_names": [
+    "Main"
+  ],
+  "menu_items_1": [
+    "en-mdwiki_en_all",
+    "en-wikem",
+    "en-statpearls_en_all_maxi",
+    "en-nih_rarediseases_en_all_maxi",
+    "en-stanford_em",
+    "en-healthphone",
+    "en-medline_plus",
+    "en-hesperian_health",
+    "en-asst_medical",
+    "en-fitness_stackexchange_com_en_all",
+    "en-health_stackexchange_com_en_all",
+    "en-infonet",
+    "en-kalite_health",
+    "en-tedmed_en_all",
+    "en-cdc",
+    "en-practical_action",
+    "en-credits"
+  ]
+}

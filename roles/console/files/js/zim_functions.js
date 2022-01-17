@@ -253,7 +253,7 @@ function genZimTooltip(zim) {
 
   zimToolTip += 'With:<ul>';
   zimToolTip += zim.has_embedded_index ? '<li>Internal Full Text Index</li>' : '';
-  zimToolTip += zim.has_video ? '<li>Videos</li>' : '';
+  zimToolTip += zim.has_videos ? '<li>Videos</li>' : '';
   zimToolTip += zim.has_pictures ? '<li>Images</li>' : '';
   zimToolTip += zim.has_details ? '<li>Complete Articles</li>' : '';
   //zimToolTip += '<table><tr><td>Full Text Index</td><td>' + zim.has_video ? "&#10003;" : "X";

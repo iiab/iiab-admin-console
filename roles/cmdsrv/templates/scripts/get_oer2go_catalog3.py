@@ -29,8 +29,9 @@ import iiab.iiab_lib as iiab
 import iiab.adm_lib as adm
 
 verbose = False
+download_flag = True
 
-oer2go_duplicates = {'en': [5, 6, 17, 19, 20, 23, 44, 50, 60, 65, 68, 86, 88, 93, 122, 139],
+oer2go_duplicates = {'en': [5, 6, 17, 19, 20, 23, 44, 50, 60, 65, 68, 86, 88, 93, 122, 139, 205],
   'es': [26, 49, 51, 53, 58, 59, 61, 63, 66, 69, 72, 75, 94],
   'fr': [],
   'misc': [98,114]}
@@ -45,13 +46,18 @@ iiab_oer2go_catalog = {}
 php_parser = re.compile('\<\?php echo .+? \?>')
 
 def main ():
-
     global verbose
+    global download_flag
+
     oer2go_catalog = {}
+    err_num = 0
+    err_str = "SUCCESS"
 
     args = parse_args()
     if args.verbose:
         verbose = True
+    if args.no_download:
+        download_flag = False
 
     # make sure we have menu js_menu_dir if args.menu true
     if args.menu:
@@ -60,53 +66,42 @@ def main ():
             sys.stdout.flush()
             sys.exit(99)
 
+    # always get our catalog
+    # failure is fatal
+    try:
+        url_handle = urllib.request.urlopen(adm.CONST.iiab_module_cat_url)
+        iiab_catalog_json = url_handle.read()
+        url_handle.close()
+        iiab_catalog = json.loads(iiab_catalog_json)
+    except (urllib.error.URLError) as exc:
+        sys.stdout.write("GET-OER2GO-CAT ERROR - " + str(exc.reason) +'\n')
+        sys.stdout.flush()
+        sys.exit(2)
+
     # for now we will assume that old modules are still in the current catalog
     # get new oer2go catalog unless told not to
 
-    if not args.no_download:
-        try:
-            url_handle = urllib.request.urlopen(adm.CONST.oer2go_cat_url)
-            oer2go_catalog_json = url_handle.read()
-            url_handle.close()
-        except (urllib.error.URLError) as exc:
-            sys.stdout.write("GET-OER2GO-CAT ERROR - " + str(exc.reason) +'\n')
-            sys.stdout.flush()
-            sys.exit(1)
-        try:
-            url_handle = urllib.request.urlopen(adm.CONST.iiab_cat_url)
-            iiab_catalog_json = url_handle.read()
-            url_handle.close()
-        except (urllib.error.URLError) as exc:
-            sys.stdout.write("GET-OER2GO-CAT ERROR - " + str(exc.reason) +'\n')
-            sys.stdout.flush()
-            sys.exit(2)
-
-        # now try to parse
-        try:
-            oer2go_catalog = json.loads(oer2go_catalog_json)
-            iiab_catalog = json.loads(iiab_catalog_json)
-        except:
-            sys.stdout.write("GET-OER2GO-CAT ERROR - " + str(sys.exc_info()[0]) + "," +  str(sys.exc_info()[1])  + '\n')
-            sys.stdout.flush()
-            sys.exit(3)
-
-        # merge iiab_catalog.json if was downloaded otherwise assume was previously merged
-        for item in iiab_catalog:
-            moddir = item['moddir']
-            id = item['module_id']
-            module = item
-            iiab_oer2go_catalog[moddir] = module
-
-    else:
+    if download_flag:
+        err_num, err_str, oer2go_catalog = get_oer2go_cat()
+        if err_num != 0:
+            download_flag = False
+    if not download_flag: # get local copy
         local_oer2go_catalog = adm.read_json(adm.CONST.oer2go_catalog_file)
         oer2go_catalog = local_oer2go_catalog['modules']
+
+    # start with iiab_catalog.json
+    for item in iiab_catalog:
+        moddir = item['moddir']
+        id = item['module_id']
+        module = item
+        iiab_oer2go_catalog[moddir] = module
 
     working_dir = adm.CONST.rachel_working_dir + str(uuid.uuid4()) + "/"
     os.mkdir(working_dir)
     #os.mkdir(iiab_menu_download_dir)
 
     for item in oer2go_catalog: # structure of local and remote catalogs is different
-        if args.no_download: # local
+        if not download_flag: # local
             moddir = item
             module = oer2go_catalog[moddir]
             module_id = module['module_id']
@@ -119,36 +114,62 @@ def main ():
             continue
 
         menu_item_name = moddir
-        if module_id not in dup_list:
-            is_downloaded, has_menu_def = adm.get_module_status (module)
-            if args.menu and is_downloaded:
-                if not has_menu_def:
-                    menu_item_name = adm.create_module_menu_def(module, working_dir, incl_extra_html = False)
-                    msg = "Generating menu files"
-                    if verbose:
-                        print("%s %s %s" % (msg, module_id, moddir))
-                adm.update_menu_json(menu_item_name) # only adds if not already in menu
-        else:
+
+        if module_id in dup_list:
             msg = "Skipping module not needed by Internet in a Box"
             if verbose:
                 print("%s %s %s" % (msg, module_id, moddir))
             continue
+        if module.get('type') != 'html':
+            continue
+
+        is_downloaded, has_menu_def = adm.get_module_status (module)
+        #if args.menu and is_downloaded:
+        if args.menu:
+            if not has_menu_def:
+                menu_item_name = adm.create_module_menu_def(module, working_dir, incl_extra_html = False)
+                msg = "Generating menu files"
+                if verbose:
+                    print("%s %s %s" % (msg, module_id, moddir))
+            if is_downloaded:
+                adm.update_menu_json(menu_item_name) # only adds if not already in menu
+
         iiab_oer2go_catalog[moddir] = module
 
-    # no need to write catalog if not downloaded as we don't need wip and other extra menu def fields
-    if not args.no_download:
-        dated_oer2go_cat = {}
-        dated_oer2go_cat['download_date'] = time.strftime("%Y-%m-%d.%H:%M:%S")
-        dated_oer2go_cat['modules'] = iiab_oer2go_catalog
+    # write catalog even if not downloaded as our could have changed
+    dated_oer2go_cat = {}
+    dated_oer2go_cat['download_date'] = time.strftime("%Y-%m-%d.%H:%M:%S")
+    dated_oer2go_cat['modules'] = iiab_oer2go_catalog
 
-        with open(adm.CONST.oer2go_catalog_file, 'w') as outfile:
-            json.dump(dated_oer2go_cat, outfile, indent=2)
+    adm.write_json_file(dated_oer2go_cat, adm.CONST.oer2go_catalog_file)
 
     shutil.rmtree(working_dir)
 
-    sys.stdout.write("SUCCESS")
+    sys.stdout.write(err_str)
     sys.stdout.flush()
-    sys.exit(0)
+    sys.exit(err_num)
+
+def get_oer2go_cat():
+    err_num = 0
+    err_str = "SUCCESS"
+    oer2go_catalog = None
+    try:
+        url_handle = urllib.request.urlopen(adm.CONST.oer2go_cat_url)
+        oer2go_catalog_json = url_handle.read()
+        url_handle.close()
+    except (urllib.error.URLError) as exc:
+        err_str = "GET-OER2GO-CAT ERROR - " + str(exc.reason) +'\n'
+        err_num = 1
+
+    # now try to parse
+    if oer2go_catalog_json:
+        try:
+            oer2go_catalog = json.loads(oer2go_catalog_json)
+        except:
+            err_str = "GET-OER2GO-CAT ERROR - " + str(sys.exc_info()[0]) + "," +  str(sys.exc_info()[1])  + '\n'
+            err_num = 3
+
+    return err_num, err_str, oer2go_catalog
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Get Rachel/OER2Go catalog. Create menu defs if not found.")

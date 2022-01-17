@@ -1,0 +1,8 @@
+{
+  "name": "English speaking School 256G Starter",
+  "description": "Full English Wikipedia, Project Gutenberg, Khan Academy, and more",
+  "default_lang": "en",
+  "location": "Generic",
+  "size_in_gb": 205,
+  "last_modified": "2021-11-14"
+}

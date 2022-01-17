@@ -1,0 +1,17 @@
+{
+  "zims": [
+    "wikipedia_en_all_maxi",
+    "gutenberg_en_all"
+  ],
+  "modules": [
+    "en-scale-of-universe-2"
+  ],
+  "maps": [
+    "satellite_z0-z9_v3.mbtiles",
+    "planet_z0-z6_2019.mbtiles"
+  ],
+  "kalite": {
+    "lang_code": "en",
+    "topics": ["khan/"]
+  }
+}

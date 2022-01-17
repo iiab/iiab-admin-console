@@ -3,9 +3,11 @@ import os.path
 import time
 import urllib.request, urllib.error, urllib.parse
 import crypt
+import pwd
 import spwd
 import grp
 import secrets
+import subprocess
 import base64
 import nacl.utils
 from nacl.public import PrivateKey, PublicKey, Box
@@ -14,6 +16,9 @@ from nacl.encoding import Base64Encoder
 cmdsrv_pid_file = "{{ cmdsrv_pid_file }}"
 cmdsrv_ready_file = "{{ cmdsrv_ready_file }}"
 iiab_cmd_service = "{{ iiab_cmd_service_url }}"
+admin_console_group = "{{ admin_console_group }}"
+valid_group_list = ['sudo', admin_console_group]
+REQUEST_TIMEOUT = {{ iiab_cmd_service_timeout }}
 
 # for testing
 #cmdsrv_pid_file = "/run/iiab-cmdsrv.pid"
@@ -135,27 +140,49 @@ def auth_login(credentials64, client_public_key64, nonce64): # candidate for adm
     # see if user exists
     try:
         spwddb = spwd.getspnam(user)
+        user_info = pwd.getpwnam(user)
     except:
         print('Bad User')
         return False
 
-    # must be in sudo group
-    grplist = grp.getgrnam('sudo')
-    if user not in grplist.gr_mem:
+    # must be in one of valid_group_list
+    group_valid = False
+    for group in valid_group_list:
+        try:
+            grp_info = grp.getgrnam(group)
+            if user in grp_info.gr_mem:
+                group_valid = True
+                break
+
+            if grp_info.gr_gid == user_info.pw_gid:
+                group_valid = True
+                break
+
+        except:
+            continue
+    if not group_valid:
         print('Bad Group')
         return False
 
     # check password - N.B. allows password guessing
-    readpasswd = spwddb[1]
-    pwparts = readpasswd.split('$')
-    if len(pwparts) < 4:
-        salt = ''
-        print('No Password Salt')
-    else:
-        salt = '$' + pwparts[1] + '$' +  pwparts[2] +'$'
-    calcpasswd = crypt.crypt(password, salt)
-
-    if calcpasswd != readpasswd:
+    # readpasswd = spwddb[1]
+    # pwparts = readpasswd.split('$')
+    # if len(pwparts) < 4:
+    #     salt = ''
+    #     print('No Password Salt')
+    # else:
+    #     salt = '$' + pwparts[1] + '$' +  pwparts[2] +'$'
+    # calcpasswd = crypt.crypt(password, salt)
+    #
+    # if calcpasswd != readpasswd:
+    
+    # 2021-09-26: Works with all hashes in /etc/shadow (SHA-512, yescrypt, etc) for #2985
+    read_pw_hash = spwddb[1]
+    try:
+        calc_pw_hash = subprocess.run(['perl', '-e', f"print crypt('{password}', '{read_pw_hash}')"], capture_output=True, text=True).stdout
+    except:
+        calc_pw_hash = None
+    if calc_pw_hash != read_pw_hash:
         print('Bad Password')
         return False
     else:
@@ -218,9 +245,7 @@ def dump(environ):
     return response_body
 
 def send_command(cmd, start_ms):
-    REQUEST_TIMEOUT = 30000
     send_msg = cmd
-
     ipc_sock = "/run/cmdsrv_sock"
 
     try:
@@ -243,7 +268,7 @@ def send_command(cmd, start_ms):
                     elapsed_ms = cur_ms - start_ms
                     reply_msg = '{"Data": ' + reply_msg + ',"Resp_time": "' + str(elapsed_ms) + '"}'
             else:
-                reply_msg = '{"Error": "No Response from CMDSRV in ' + str(REQUEST_TIMEOUT) + ' milliseconds"' + alert_param
+                reply_msg = '{"Error": "Jeez! CMDSRV did not respond in ' + str(REQUEST_TIMEOUT) + ' milliseconds. Probably too busy to pick up the phone. Please try again later."' + alert_param
 
             socket.setsockopt(zmq.LINGER, 0)
         finally:

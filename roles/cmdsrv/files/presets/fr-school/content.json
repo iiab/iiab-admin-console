@@ -1,0 +1,33 @@
+{
+    "zims": [
+      "wikipedia_fr_all_maxi",
+      "vikidia_fr_all_maxi",
+      "wiktionary_fr_all_maxi",
+      "wikiquote_fr_all_maxi",
+      "wikistage_fr_all",
+      "wikiversity_fr_all_maxi",
+      "wikivoyage_fr_all_maxi",
+      "wikibooks_fr_all_maxi",
+      "gutenberg_fr_all",
+      "phet_fr",
+      "wikimooc_fr_all",
+      "les-fondamentaux_fr_all",
+      "jaimelire_fr",
+      "japprendsalire_fr",
+      "biologie-tout-compris_fr_all",
+      "deus-ex-silicium_fr_all",
+      "dirtybiology_fr_all",
+      "e-penser_fr_all"
+    ],
+    "modules": [],
+    "maps": [
+      "satellite_z0-z9_v3.mbtiles",
+      "osm-planet_z0-z10_2019.mbtiles"
+    ],
+    "kalite": {
+      "lang_code": "fr",
+      "topics": [
+        "khan/"
+      ]
+    }
+  }

@@ -1,0 +1,14 @@
+kiwix_install: True
+kiwix_enabled: True
+kalite_install: True
+kalite_enabled: True
+calibreweb_install: True
+calibreweb_enabled: True
+nextcloud_install: True
+nextcloud_enabled: True
+osm_vector_maps_install: True
+osm_vector_maps_enabled: True
+sugarizer_install: True
+sugarizer_enabled: True
+wordpress_install: True
+wordpress_enabled: True

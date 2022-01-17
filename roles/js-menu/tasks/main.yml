@@ -122,15 +122,18 @@
         state=directory
         recurse=true
 
-- name: Add any IIAB roles that are installed to home/menu.js
-  shell: "{{ cmdsrv_dir }}/scripts/iiab_update_menus.py"
+#- name: Make sure iiab-make-kiwix-lib has been run
+#  shell: "/usr/bin/iiab-make-kiwix-lib"
+
+#- name: Add any IIAB roles that are installed to home/menu.js
+#  shell: "{{ cmdsrv_dir }}/scripts/iiab_update_menus.py"
 
 # Enable or Disable menu client setting server time
 - name: Give {{ apache_user }} permission to set time
   template:
     src: 021_apache_set_time.j2
     dest: /etc/sudoers.d/021_apache_set_time
-    mode: 0644
+    mode: 0440
   when: apache_allow_sudo
 
 - name: Remove above
@@ -142,6 +145,6 @@
 - name: Create Feedback Database
   shell: ./setup-feedback
 
-- name: Add any MAPS that are installed to home/menu.json
-  shell: "{{ cmdsrv_dir }}/scripts/iiab-update-map.py"
-  when: osm_vector_maps_enabled
+#- name: Add any MAPS that are installed to home/menu.json
+#  shell: "{{ cmdsrv_dir }}/scripts/iiab-update-map.py"
+#  when: osm_vector_maps_enabled

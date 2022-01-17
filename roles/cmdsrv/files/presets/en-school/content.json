@@ -1,0 +1,25 @@
+{
+  "zims": [
+    "wikipedia_en_top_maxi",
+    "wikipedia_en_for_schools_maxi",
+    "wikispecies_en_all_maxi",
+    "raspberrypi.stackexchange.com_en_all",
+    "chemistry.stackexchange.com_en_all",
+    "wiktionary_en_simple_all_maxi",
+    "phet_en"
+  ],
+  "modules": [
+    "en-infonet",
+    "en-practical_action",
+    "en-wikem",
+    "en-ebooks"
+  ],
+  "maps": [
+    "satellite_z0-z9_v3.mbtiles",
+    "planet_z0-z6_2019.mbtiles"
+  ],
+  "kalite": {
+    "lang_code": "en",
+    "topics": ["khan/"]
+  }
+}

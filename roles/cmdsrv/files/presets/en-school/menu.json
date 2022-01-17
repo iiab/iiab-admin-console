@@ -1,0 +1,41 @@
+{
+  "debug": false,
+  "menu_lang": "en",
+  "force_mobile_layout": false,
+  "mobile_header_font": "Open Sans",
+  "mobile_incl_description": false,
+  "mobile_incl_extra_description": false,
+  "mobile_incl_extra_html": false,
+  "mobile_incl_footnote": false,
+  "desktop_header_font": "Finger Paint",
+  "desktop_incl_description": true,
+  "desktop_incl_extra_description": true,
+  "desktop_incl_extra_html": true,
+  "desktop_incl_footnote": true,
+  "allow_kiwix_search": true,
+  "allow_poweroff": false,
+  "poweroff_prompt": "Power Off",
+  "autoupdate_menu": true,
+  "allow_server_time_update": true,
+  "multi_tab": false,
+  "tab_names": [
+    "Main"
+  ],
+  "menu_items_1": [
+      "en-wikipedia_en_top_maxi",
+      "en-wikipedia_en_for_schools_maxi",
+      "en-kalite",
+      "en-osm_viewer_v2",
+      "en-wikispecies_en_all_maxi",
+      "en-infonet",
+      "en-practical_action",
+      "en-wikem",
+      "en-ebooks",
+      "en-raspberrypi_stackexchange_com_en_all",
+      "en-chemistry_stackexchange_com_en_all",
+      "en-phet_en",
+      "en-wiktionary_en_simple_all_maxi",
+      "en-usb",
+      "en-credits"
+    ]
+}

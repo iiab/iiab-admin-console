@@ -16,6 +16,7 @@ import re
 import shutil
 import requests
 import yaml
+import jinja2
 
 import iiab.iiab_lib as iiab
 import iiab.iiab_const as IIAB_CONST
@@ -94,8 +95,12 @@ def get_all_menu_defs():
 def get_substitution_data(perma_ref, zim_versions, zims_installed, path_to_id_map):
     #reconstruct the path in the id map
     path = 'content/' + zim_versions[perma_ref]['file_name'] + '.zim'
-    zim_id = path_to_id_map[path]
-    item = zims_installed[zim_id]
+    try:
+        zim_id = path_to_id_map[path]
+        item = zims_installed[zim_id]
+    except:
+        print("Zim files and library.xml are out of sync. Please run iiab-make-kiwix-lib.")
+        sys.exit(1)
 
     if len(item) != 0 or perma_ref == 'test':
         mediacount = item.get('mediaCount', '')
@@ -340,6 +345,15 @@ def get_github_all_commits(repo_base_url=CONST.menu_def_base_url):
 # create oer2go_catalog.json, mark downloaded with flag, mark blacklisted duplicates
 # need to track which version of content was downloaded - new version attribute added 6/9/2017
 
+def get_module_list(module_dir):
+    exclude = ['en-test_mod']
+    modules = []
+    dir_list = [o for o in os.listdir(module_dir) if os.path.isdir(os.path.join(module_dir,o))]
+    for dir in dir_list:
+        if dir not in exclude:
+            modules.append(dir)
+    return modules
+
 def get_module_status(module, verbose=False):
     # if the module is downloaded and there is no menu def return true else false
     is_downloaded = False
@@ -373,7 +387,7 @@ def create_module_menu_def(module, working_dir, incl_extra_html=False):
     menu_item_name = module.get('moddir')
     menu_def = generate_module_menu_def(module)
 
-    menu_def['logo_url'] = download_module_logo(module)
+    menu_def['logo_url'] = download_module_logo(module, working_dir)
     if incl_extra_html:
         htmlfile = generate_module_extra_html(module, working_dir)
         menu_def['extra_htm'] = htmlfile
@@ -394,7 +408,7 @@ def generate_module_menu_def(module):
     menu_def['description'] = module.get('description', '')
     menu_def['extra_description'] = ''
 
-    size = float(module.get('ksize', '0')) * 1000.0
+    size = float(module.get('ksize', '0')) * 1024.0
     size = iiab.human_readable(size)
 
     files = module.get('file_count', 'undefined')
@@ -404,36 +418,67 @@ def generate_module_menu_def(module):
     if age == None:
         age = ''
 
-    menu_def['footnote'] = "Size: " + size + ', Files: ' + files + ', Age: ' + age
+    menu_def['footnote'] = "Size: " + size + ', Files: ' + str(files) + ', Age: ' + age
 
     return menu_def
 
-def download_module_logo(module):
+def download_module_logo(module, working_dir):
+    moddir = module['moddir']
+    our_logo_file_name_base = moddir +'_logo.'
     # get logo if there is one
     moddir = module['moddir']
+    logo_file_name = None
+    got_logo = False
     if 'logo_url' in module and module['logo_url'] != None:
         logo_download_url = module['logo_url']
-        logo = module['logo_url']
-        logo_ext = logo.split('/')[-1].split('.')[-1]
-        logo = module['moddir'] + '.' + logo_ext
-        if not os.path.isfile(CONST.iiab_menu_files + "images/" + logo):
-            cmdstr = "wget -O " + CONST.iiab_menu_files + "images/" + logo + " " + logo_download_url
-            args = shlex.split(cmdstr)
-            outp = subprocess.check_output(args)
-        logo_file_name = logo
-    else:
+        #logo = module['logo_url']
+        logo_ext = logo_download_url.split('/')[-1].split('.')[-1]
+        our_logo_file_name = our_logo_file_name_base + logo_ext
+        #logo = module['moddir'] + '.' + logo_ext
+        if not os.path.isfile(CONST.iiab_menu_files + "images/" + our_logo_file_name):
+            cmdstr = "wget -O " + CONST.iiab_menu_files + "images/" + our_logo_file_name + " " + logo_download_url
+            try:
+                rc = subproc_run(cmdstr)
+                logo_file_name = our_logo_file_name
+                got_logo = True
+            except:
+                pass
+
+    if not got_logo and os.path.isdir(CONST.iiab_modules_dir + moddir): # if downloaded
         # look for logo in root of module
-        module['logo_url'] = None
+        #module['logo_url'] = None
         os.chdir(CONST.iiab_modules_dir + moddir)
         for filename in os.listdir('.'):
             if fnmatch.fnmatch(filename, '*.png')  or\
                 fnmatch.fnmatch(filename, '*.gif')  or\
                 fnmatch.fnmatch(filename, '*.jpg')  or\
                 fnmatch.fnmatch(filename, '*.jpeg'):
-                if not os.path.isfile(CONST.iiab_menu_files + "images/" + moddir + filename):
+                logo_ext = filename.split('/')[-1].split('.')[-1]
+                our_logo_file_name = our_logo_file_name_base + logo_ext
+                if not os.path.isfile(CONST.iiab_menu_files + "images/" + our_logo_file_name):
                     shutil.copyfile(CONST.iiab_modules_dir + moddir + '/' + filename,
-                                    CONST.iiab_menu_files + "images/" + moddir +'_'+ filename)
-                logo_file_name = moddir + '_' + filename
+                                    CONST.iiab_menu_files + "images/" + our_logo_file_name)
+                logo_file_name = our_logo_file_name
+                got_logo = True
+    if not got_logo:
+        # try to download it
+        cmdstr = "rsync -Pavz " + module['rsync_url'] + "/logo.* " + working_dir
+        try:
+            rc = subproc_run(cmdstr)
+            os.chdir(working_dir)
+            for filename in os.listdir('.'):
+                if fnmatch.fnmatch(filename, '*.png')  or\
+                    fnmatch.fnmatch(filename, '*.gif')  or\
+                    fnmatch.fnmatch(filename, '*.jpg')  or\
+                    fnmatch.fnmatch(filename, '*.jpeg'):
+                    logo_ext = filename.split('/')[-1].split('.')[-1]
+                    our_logo_file_name = our_logo_file_name_base + logo_ext
+                    if not os.path.isfile(CONST.iiab_menu_files + "images/" + our_logo_file_name):
+                        shutil.copyfile(working_dir + filename,
+                                        CONST.iiab_menu_files + "images/" + our_logo_file_name)
+                        logo_file_name = our_logo_file_name
+        except:
+            pass
 
     return logo_file_name
 
@@ -781,6 +826,47 @@ def extract_region_from_filename(fname):
 
 # Misc
 
+def get_roles_status():
+    roles_status = {}
+    state = read_yaml(IIAB_CONST.iiab_state_file)
+    for role in CONST.iiab_roles:
+        roles_status[role] = {}
+        roles_status[role]['installed'] = state.get(role + '_installed', False)
+        stat_src = CONST.iiab_roles[role].get('stat_src')
+        if stat_src == 'service':
+            roles_status[role]['enabled'] = is_role_service_enabled(role)
+            roles_status[role]['active'] = is_role_service_active(role)
+        elif stat_src == 'nginx':
+            roles_status[role]['enabled'] = is_role_nginx_enabled(role)
+            roles_status[role]['active'] = roles_status[role]['enabled'] # assumes nginx is running
+        elif stat_src == 'install':
+            roles_status[role]['enabled'] = roles_status[role]['installed']
+            roles_status[role]['active'] = roles_status[role]['enabled']
+        elif stat_src == 'apache':
+            roles_status[role]['enabled'] = False # for now we don't install apache
+            roles_status[role]['active'] = False
+    return roles_status
+
+def is_role_service_enabled(role):
+    rc = subproc_run('systemctl is-enabled ' + CONST.iiab_roles[role]['stat_arg'])
+    if rc.returncode:
+        return False
+    else:
+        return True
+
+def is_role_service_active(role):
+    rc = subproc_run('systemctl is-active ' + CONST.iiab_roles[role]['stat_arg'])
+    if rc.returncode:
+        return False
+    else:
+        return True
+
+def is_role_nginx_enabled(role):
+    if os.path.exists('/etc/nginx/conf.d/' + CONST.iiab_roles[role]['stat_arg']):
+        return True
+    else:
+        return False
+
 def pcgvtd9():
     global headers
     global git_committer_handle
@@ -888,6 +974,16 @@ def merge_local_vars(target_vars_file, delta_vars, strip_comments=False, strip_d
 
     return output_lines
 
+def read_json_file(file_path):
+    try:
+        with open(file_path, 'r') as json_file:
+            readstr = json_file.read()
+            json_dict = json.loads(readstr)
+        return json_dict
+    except OSError as e:
+        print('Unable to read url json file', e)
+        raise
+
 # duplicates cmdsrv - but now revised
 
 def write_json_file(src_dict, target_file, sort_keys=False):
@@ -902,9 +998,28 @@ def read_yaml(file_name, loader=yaml.SafeLoader):
     try:
         with open(file_name, 'r') as f:
             y = yaml.load(f, Loader=loader)
+            if y == None: # file is empty
+                y = {}
             return y
     except:
         raise
+
+def jinja2_subst(src_dict, dflt_dict=None):
+    # assumes all substitution variables are in src_dict or dflt
+    # if not substitution will be a zero length string
+    dest_dict = {}
+    if not dflt_dict:
+        lookup_dict = src_dict
+    else:
+        lookup_dict = {**dflt_dict,**src_dict}
+
+    for k, v in src_dict.items():
+        try:
+            t = jinja2.Template(v)
+            dest_dict[k] = t.render(lookup_dict)
+        except:
+            dest_dict[k] = v
+    return dest_dict
 
 def subproc_run(cmdstr, shell=False, check=False):
     args = shlex.split(cmdstr)

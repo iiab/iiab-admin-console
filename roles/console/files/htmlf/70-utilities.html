@@ -48,9 +48,18 @@
 				<div class="tab-pane" id="utilJobs"> <!-- Start Status statusJobs Submenu Option Pane -->
 					<h2>Job Status</h2><br>
 					<div class="row">
+						<!--
 						<div class="col-sm-3"><button id="CANCEL-JOBS" type="button" class="btn btn-lg btn-primary">Cancel Checked Jobs</button></div>
 						<div class="col-sm-5"><span id="statusJobsRefreshTime" >Last Refreshed: </span></div>
 						<div class="col-sm-2"><button id="JOB-STATUS-REFRESH" type="button" class="btn btn-lg btn-primary">Refresh Status</button></div>
+						-->
+
+						<div class="col-sm-3"><button id="CANCEL-JOBS" type="button" class="btn btn-lg btn-primary">Cancel Checked Jobs</button></div>
+						<div class="col-sm-4"><span id="statusJobsRefreshTime">Last Refreshed: <b>10/28/2021, 8:00:10 AM</b></span></div>
+						<div class="col-sm-3">
+							<button id="JOB-STATUS-REFRESH" type="button" class="btn btn-lg btn-primary">Refresh Status</button>
+							<button id="JOB-STATUS-MORE" type="button" class="btn btn-lg btn-primary">More Jobs</button>
+						</div>
 					</div>
 					<div id=jobStatTable> <!--  Start jobStatTable -->
 						<table class="jobTable table-striped table-bordered">

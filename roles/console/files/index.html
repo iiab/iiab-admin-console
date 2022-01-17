@@ -9,6 +9,7 @@
 
 	<!-- Bootstrap -->
 	<link href="/common/css/bootstrap.min.css" rel="stylesheet">
+	<link href="/common/css/ol.css" rel="stylesheet">
 	<!-- <link href="css/iiab.css" rel="stylesheet"> -->
 	<link href="css/iiab.css" rel="stylesheet">
 	<link rel="stylesheet" href="/common/css/font-faces.css" />
@@ -34,11 +35,11 @@
 				<ul class="nav nav-tabs">
 					<li class="active"><a href="#ControlServer">Control</a></li>
 					<li><a href="#Configure">Configure</a></li>
-					<li><a href="#InstallContent">Install Content</a></li>
+					<li><a href="#InstallContent" call-after="getPresetList">Install Content</a></li>
 					<li><a href="#ContentMenus" call-after="getMenuItemDefLists">Content Menus</a></li>
 					<!--  <li><a href="#Future">Assemble Content</a></li> -->
 					<li><a href="#Util">Utilities</a></li>
-					<li><a href="#Help">Help</a></li>
+					<li><a href="#Help"><span class="nav-flash">Help</span></a></li>
 					<li><a href="#About" call-after="showAboutSummary">About</a></li>
 					<!--  <li><a href="#Test">Tests</a></li> -->
 				</ul>
@@ -383,6 +384,19 @@
 				</div>
 			</div>
 		</div>
+
+		<!-- Help Promotional Overlay-->
+		<div id="help-tip" style="display:none">
+			<h1>Help Tip</h1>
+			<div style="width: 80%; margin: auto">
+				<br>
+				<p>New to IIAB and wonder what that BUTTON does?</p>
+				<p>Can't remember how something works?</p>
+				<br>
+				<p><b>Help</b> is available. <span class="nav-flash"><b>Just look UP.</b></span> </p>
+			</div>
+		</div>
+
 		<!-- Send Command to Server Working Modal -->
 		<div id="sendCmdsrvWorkingModal" class="modal">
 			<div class="modal-dialog modal-sm" style="margin-top:200px;">
@@ -430,42 +444,21 @@
 	<script src="/common/js/Markdown.Sanitizer.js"></script>
 	<script src="/common/js/nacl-fast.min.js"></script>
 	<script src="/common/js/nacl-util.min.js"></script>
+	<script src="/common/js/ol.js"></script>
+	<script src="/common/js/olms.js"></script>
 	<script src="js/content_functions.js"></script>
 	<script src="js/zim_functions.js"></script>
 	<script src="js/oer2go_functions.js"></script>
 	<script src="js/map_functions.js"></script>
 	<script src="js/js_menu_functions.js"></script>
 	<script src="js/admin_console.js"></script>
-	<!-- Declare a target for map. Will be redirected when real target exists -->
-	<div id="temp_map" style='display:none'></div>
-	<script src="map/main.js"></script>
+
 	<script>
 		controlButtonsEvents(); // make first page active before others in case want to reboot or shutdown
 		make_button_disabled("#REBOOT", false);
 		make_button_disabled("#POWEROFF", false);
 		console.log("Starting dynamic pages");
-		// N.B we can preassemble the html fragments with ansible assemble module so browser caches a single file
-		// We can still set up Control panel before the others
-		$.when(
-			$.get('htmlf/20-configure.html', function (data) {
-				$('#Configure').html(data);
-				configButtonsEvents();
-			}),
-			$.get('htmlf/40-install_content.html', function (data) {
-				$('#InstallContent').html(data);
-				instContentButtonsEvents();
-			}),
-			$.get('htmlf/50-edit_menus.html', function (data) { // this should be conditional on js_menu_install: True
-				$('#ContentMenus').html(data);
-				contentMenuButtonsEvents();
-			}),
-			$.get('htmlf/70-utilities.html', function (data) {
-				$('#Util').html(data);
-				utilButtonsEvents();
-			})
-		).done(function () {
-			main();
-		});
+		main();
 	</script>
 </body>
 

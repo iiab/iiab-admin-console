@@ -58,6 +58,6 @@
       name: js-menu
     when: js_menu_install
 
-  - name: final
-    include_role:
-      name: final
+#  - name: final
+#    include_role:
+#      name: final

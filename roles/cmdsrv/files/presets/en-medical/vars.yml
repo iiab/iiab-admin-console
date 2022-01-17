@@ -1,0 +1,11 @@
+awstats_install: True
+awstats_enabled: True
+captiveportal_install: True
+captiveportal_enabled: True
+kiwix_install: True
+kiwix_enabled: True
+kiwix_incl_apk: True
+mediawiki_install: True
+mediawiki_enabled: True
+vnstat_install: True
+vnstat_enabled: True
