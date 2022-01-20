@@ -147,8 +147,10 @@ function procPage() {
     if (!menuParams.allow_poweroff) {
         gEBI("poweroffLink").style.display = "none";
     }
-    else
+    else {
         gEBI("poweroffLink").innerHTML = "<strong>" + menuParams.poweroff_prompt + "</strong>";
+        gEBI("poweroffLink").style.display = "block";
+    }
 
     if (isMobile) {
         $('#headerMobile').css('display', 'flex');
