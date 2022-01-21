@@ -13,7 +13,7 @@
   "desktop_incl_extra_html" : true,
   "desktop_incl_footnote": true,
   "allow_kiwix_search" : true,
-  "allow_poweroff" : true,
+  "allow_poweroff" : false,
   "poweroff_prompt" : "Power Off",
   "autoupdate_menu": true,
   "allow_server_time_update" : true,
