@@ -112,7 +112,7 @@
             owner=root
             group=root
   with_items:
-            - scripts/get_kiwix_catalog
+            # scripts/get_kiwix_catalog
             # scripts/get_oer2go_catalog
             - scripts/constants.sh
             #- scripts/iiab_update_menus.py
@@ -127,6 +127,8 @@
             group=root
             mode=0755
   with_items:
+    #- { src: 'scripts/get_kiwix_catalog_libxml.py', dest: '{{ cmdsrv_dir }}/scripts/get_kiwix_catalog'}
+    - { src: 'scripts/get_kiwix_catalog_rootxml.py', dest: '{{ cmdsrv_dir }}/scripts/get_kiwix_catalog'}
     - { src: 'scripts/get_oer2go_catalog3.py', dest: '{{ cmdsrv_dir }}/scripts/get_oer2go_catalog'}
     - { src: 'scripts/iiab_update_menus3.py', dest: '{{ cmdsrv_dir }}/scripts/iiab_update_menus.py'}
     - { src: 'scripts/iiab-update-map3.py', dest: '{{ cmdsrv_dir }}/scripts/iiab-update-map.py'}

@@ -107,7 +107,7 @@
   register: menu_defs_dir
 
 - name: Include copying of menu defs
-  include: install_menu_defs.yml
+  include_tasks: install_menu_defs.yml
   when: not menu_defs_dir.stat.exists
 
 - name: Otherwise sync local menu defs with repo

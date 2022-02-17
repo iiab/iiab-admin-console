@@ -54,14 +54,20 @@
           </ul>
         </div> <!--  End instConStart Submenu Option Pane -->
         <div class="tab-pane active" id="instConPresets">
-          <!-- Start instConStart Submenu Option Pane -->
+          <!-- Start instConPresets Submenu Option Pane -->
           <h2>Quick Pick</h2>
           <p>To install one of these curated content collections<sup><b>*</b></sup>, your IIAB storage (e.g., SD card) must be <b>128GB</b> or larger (some require 256GB!).
             If any content requires a particular service, it will be installed and enabled automatically if not already present.
             After the content collection is done installing, you can add more/specific content, using other Install Content menu options.</p>
           <p></p>
-          <p><b>Note: </b>If any content fails to download due to an Internet problem, please come back here after all jobs are completed, and try again. 
+          <p><b>Note: </b>If any content fails to download due to an Internet problem, please come back here after all jobs are completed, and try again.
             Trying again should fix this relatively quicky (e.g., if your IIAB home page has broken links due to failed content downloads).</p>
+          <p></p>
+          <div class="row">
+            <div class="col-sm-2"><span id="presetTotalDiskSpace">Total Storage: </span></div>
+            <div class="col-sm-2"><span id="presetAvailDiskSpace">Available Storage: </span></div>
+            <div class="col-sm-2"><span id="presetReqdDiskSpace">Storage for Preset: </span></div>
+          </div>
           <p></p>
           <p><b>To begin, please select a Content Collection:</b></p>
           <!--
@@ -80,11 +86,11 @@
           <b>*</b> Some content in these collections may have more restrictive licenses than you'd prefer.
           If so, select the specific content you need using other Install Content menu options.
           Alternatively, you can remove content that was automatically installed.
-        </div> 
-        
-        
+        </div>
+
+
         <!--  End instConPresets Submenu Option Pane -->
-       
+
         <div class="tab-pane" id="instConZims">
           <!-- Start instConZims Submenu Option Pane -->
           <h2>Install Kiwix ZIM Files</h2>
@@ -98,7 +104,7 @@
           </div>
           <div id="ZimDownload"> </div>
         </div> <!--  End instConZims Submenu Option Pane -->
-        
+
         <div class="tab-pane" id="instConOer2go">
           <!-- Start instConOer2go Submenu Option Pane -->
           <h2>Install OER2Go Modules</h2>
@@ -117,7 +123,7 @@
 
           <div id="Oer2goDownload"> </div>
         </div> <!--  End instConOer2go Submenu Option Pane -->
-        
+
         <div class="tab-pane" id="instOsmRegion">
           <!-- Start instOsmRegion Submenu Option Pane -->
           <h2>Install Map Regions</h2>
@@ -133,7 +139,7 @@
             <div id='mapRegionSelectList'></div>
           </div>
         </div> <!--  End instOsmRegion Submenu Option Pane -->
-       
+
         <div class="tab-pane" id="instOsmAddons">
           <!-- Start instOsmAddons Submenu Option Pane -->
           <h2>Install OSM Addons</h2>
@@ -169,7 +175,7 @@
             <p>Coming Soon</p>
           </div>
         </div> <!--  End instOsmAddons Submenu Option Pane -->
-        
+
         <div class="tab-pane" id="instConKAlite">
           <!-- Start instConKAlite Submenu Option Pane -->
           <h2>Download Khan Academy Videos</h2>
@@ -178,7 +184,7 @@
           <p>Click the Button below to launch it.</p>
           <button id="launchKaliteButton" type="button" class="btn btn-lg btn-success">Launch KA Lite</button>
         </div> <!--  End instConKAlite Submenu Option Pane -->
-        
+
         <div class="tab-pane" id="instManageContent">
           <!-- Start instManageContent Submenu Option Pane -->
           <h2>Manage Content</h2>
@@ -278,7 +284,7 @@
             </div>
           </div>
         </div> <!--  End instManageContent Submenu Option Pane -->
-        
+
         <div class="tab-pane" id="instCloneServer">
           <!-- Start instCloneServer Submenu Option Pane -->
           <h2>Clone IIAB Server</h2>
