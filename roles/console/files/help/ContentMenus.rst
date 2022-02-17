@@ -89,7 +89,7 @@ You can edit the Title and other parts of the Menu Items that are on the current
 * Title - Put a short, one line name for the item here. Ideally it would be unique and way shorter than this text.
 * Name of Icon File - This is an image file in /library/www/html/js-menu/menu-files/images. At present we don't validate it. There are **buttons** to select an image file and to upload a new one.
 * Description - Put a fuller description of the item here, but not more than one paragraph.
-* Start URL (Optional) - Only change this if the the blank default doesn't work.
+* Start URL (Optional) - Only change this if the blank default doesn't work.
 * Extra_description - If there is more description, put it here.
 * Sub Menu Html File (Optional) - This is an html file in /library/www/html/js-menu/menu-files/menu-defs. At present we don't validate it.
 * Footnote - You can put catalog type information here like number of pdfs or size. Also you can use the ##SIZE## and other substitution fields for zims.
