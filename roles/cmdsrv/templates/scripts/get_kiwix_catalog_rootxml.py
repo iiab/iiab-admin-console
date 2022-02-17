@@ -10,6 +10,7 @@ import requests
 import urllib.request, urllib.error, urllib.parse
 from bs4 import BeautifulSoup
 import time
+import decimal
 
 # requires
 # pip3 install beautifulsoup4
@@ -209,6 +210,8 @@ def parse_root_attr(entity):
           permaRef += "_" + part
 
     size = zim.find('link', type = "application/x-zim")['length']
+    # size = str(round(int(size) / 1024)) # size in K - not sure if fits in 32 bit OS
+    size = str(round(decimal.Decimal(size) / 1024)) # size in K
 
     # not sure what is the best source for category - explicit element or tags
 
