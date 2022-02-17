@@ -160,6 +160,8 @@ def parse_root_attr(entity):
     for attr in ['language', 'name', 'publisher', 'flavour']:
         zim_attr[attr] = zim.find(attr).text.strip()
 
+    zim_attr['date'] = zim.find('updated').text.strip().split('T')[0]
+
     tags = zim.find('tags').text.split(';')
     tag_dict = {}
     for tag in tags:
