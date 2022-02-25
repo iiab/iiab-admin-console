@@ -528,31 +528,35 @@ def put_iiab_enabled_into_menu_json():
             update_menu_json(CONST.iiab_menu_items[iiab_option], no_lang=True) # accept same item in a different language
 
 def update_menu_json(new_item, no_lang=False):
-    with open(CONST.menu_json_path, "r") as menu_fp:
-        reads = menu_fp.read()
-        data = json.loads(reads)
-        autoupdate_menu = data.get('autoupdate_menu', False)
-        if not autoupdate_menu: # only update if allowed
+    data = read_json_file(CONST.menu_json_path)
+    autoupdate_menu = data.get('autoupdate_menu', False)
+    if not autoupdate_menu: # only update if allowed
+        return
+    all_menu_defs = get_all_menu_defs()
+    if new_item not in all_menu_defs:
+        return
+    for item in data['menu_items_1']:
+        if item == new_item: # already there
             return
-
-        for item in data['menu_items_1']:
-            if item == new_item: # already there
-                return
-            if no_lang:
-                if new_item[3:] in item:
-                    return # accept same item in a different language
-        # new_item does not exist in list
-        print("Adding %s to Menu"%new_item)
-        last_item = data['menu_items_1'].pop()
-        # always keep credits last
-        if last_item.find('credits') == -1:
-            data['menu_items_1'].append(last_item)
-            data['menu_items_1'].append(new_item)
-        else:
-            data['menu_items_1'].append(new_item)
-            data['menu_items_1'].append(last_item)
-    with open(CONST.menu_json_path, "w") as menu_fp:
-        menu_fp.write(json.dumps(data, indent=2))
+        if no_lang:
+            if new_item[3:] in item:
+                return # accept same item in a different language
+    # new_item does not exist in list
+    print("Adding %s to Menu"%new_item)
+    last_item = data['menu_items_1'].pop()
+    # always keep credits last
+    if last_item.find('credits') == -1:
+        data['menu_items_1'].append(last_item)
+        data['menu_items_1'].append(new_item)
+    else:
+        data['menu_items_1'].append(new_item)
+        data['menu_items_1'].append(last_item)
+    # now remove any non-existent menu defs
+    item_list = data['menu_items_1']
+    for item in item_list:
+        if item not in all_menu_defs:
+            data['menu_items_1'].remove(item)
+    write_json_file(data, CONST.menu_json_path)
 
 def put_kiwix_enabled_into_menu_json():
     # steps:
@@ -880,13 +884,18 @@ def fetch_menu_json_value(key):
     menu_json = read_json(CONST.menu_json_file)
     return menu_json.get(key, '')
 
-def read_json(file_path):
+def read_json(file_path): # alias
+    return read_json_file(file_path)
+
+def read_json_file(file_path, verbose=False):
     try:
         with open(file_path, 'r') as json_file:
             readstr = json_file.read()
             json_dict = json.loads(readstr)
         return json_dict
     except OSError as e:
+        if verbose:
+            print('Unable to read json file', e)
         raise
 
 def write_iiab_local_vars(delta_vars, strip_comments=False, strip_defaults=False):
@@ -973,16 +982,6 @@ def merge_local_vars(target_vars_file, delta_vars, strip_comments=False, strip_d
         output_lines.append(line)
 
     return output_lines
-
-def read_json_file(file_path):
-    try:
-        with open(file_path, 'r') as json_file:
-            readstr = json_file.read()
-            json_dict = json.loads(readstr)
-        return json_dict
-    except OSError as e:
-        print('Unable to read url json file', e)
-        raise
 
 # duplicates cmdsrv - but now revised
 
