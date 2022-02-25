@@ -115,7 +115,7 @@ def main ():
 
         menu_item_name = moddir
 
-        if module_id in dup_list:
+        if str(module_id) in dup_list:
             msg = "Skipping module not needed by Internet in a Box"
             if verbose:
                 print("%s %s %s" % (msg, module_id, moddir))
