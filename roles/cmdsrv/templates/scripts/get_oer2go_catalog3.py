@@ -157,7 +157,8 @@ def get_oer2go_cat():
         url_handle = urllib.request.urlopen(adm.CONST.oer2go_cat_url)
         oer2go_catalog_json = url_handle.read()
         url_handle.close()
-    except (urllib.error.URLError) as exc:
+    #except (urllib.error.URLError) as exc:
+    except (Exception) as exc:
         err_str = "GET-OER2GO-CAT ERROR - " + str(exc.reason) +'\n'
         err_num = 1
 
