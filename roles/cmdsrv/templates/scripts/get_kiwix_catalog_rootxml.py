@@ -198,6 +198,7 @@ def parse_root_attr(entity):
 
 
     url = zim.find('link', type = "application/x-zim")['href']
+    zim_attr['url'] = url
 
     urlSlash = url.split('/')
     urlEnd = urlSlash[-1] # last element
