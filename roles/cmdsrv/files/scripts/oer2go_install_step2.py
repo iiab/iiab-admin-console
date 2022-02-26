@@ -23,7 +23,7 @@ def main ():
         print('Module working directory not found. Exiting.')
         sys.exit(1)
 
-    if not os.path.isdir(mv_dest): # only mv is target not exist
+    if not os.path.isdir(mv_dest): # only mv if target not exist
         shutil.move(mv_src, mv_dest)
 
     is_downloaded, has_menu_def = adm.get_module_status (oer2go_mod)
