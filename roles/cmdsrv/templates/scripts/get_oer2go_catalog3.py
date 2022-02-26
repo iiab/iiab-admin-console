@@ -157,9 +157,16 @@ def get_oer2go_cat():
         url_handle = urllib.request.urlopen(adm.CONST.oer2go_cat_url)
         oer2go_catalog_json = url_handle.read()
         url_handle.close()
-    #except (urllib.error.URLError) as exc:
-    except (Exception) as exc:
+    except (urllib.error.URLError) as exc:
         err_str = "GET-OER2GO-CAT ERROR - " + str(exc.reason) +'\n'
+        err_num = 1
+
+    # except (RemoteDisconnected) as exc: # where do I import this exception?
+    #    err_str = "GET-OER2GO-CAT ERROR - Remote end closed connection without response\n"
+    #    err_num = 1
+
+    except (Exception) as exc:
+        err_str = "GET-OER2GO-CAT ERROR - Unable to download catalog\n"
         err_num = 1
 
     # now try to parse
@@ -182,3 +189,13 @@ def parse_args():
 if __name__ == "__main__":
     # Now run the main routine
     main()
+
+
+try:
+    url_handle = urllib.request.urlopen(adm.CONST.oer2go_cat_url)
+    oer2go_catalog_json = url_handle.read()
+    url_handle.close()
+except (RemoteDisconnected) as exc:
+    err_str = "GET-OER2GO-CAT ERROR - \n"
+    err_num = 1
+
