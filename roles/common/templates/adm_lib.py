@@ -532,7 +532,18 @@ def update_menu_json(new_item, no_lang=False):
     autoupdate_menu = data.get('autoupdate_menu', False)
     if not autoupdate_menu: # only update if allowed
         return
+
+    # see what menu defs we have
     all_menu_defs = get_all_menu_defs()
+
+    # remove any non-existent menu defs as a repair
+    item_list = data['menu_items_1']
+    for item in item_list:
+        if item not in all_menu_defs:
+            data['menu_items_1'].remove(item)
+    write_json_file(data, CONST.menu_json_path)
+
+    # try to add new item
     if new_item not in all_menu_defs:
         return
     for item in data['menu_items_1']:
@@ -541,6 +552,7 @@ def update_menu_json(new_item, no_lang=False):
         if no_lang:
             if new_item[3:] in item:
                 return # accept same item in a different language
+
     # new_item does not exist in list
     print("Adding %s to Menu"%new_item)
     last_item = data['menu_items_1'].pop()
@@ -551,11 +563,7 @@ def update_menu_json(new_item, no_lang=False):
     else:
         data['menu_items_1'].append(new_item)
         data['menu_items_1'].append(last_item)
-    # now remove any non-existent menu defs
-    item_list = data['menu_items_1']
-    for item in item_list:
-        if item not in all_menu_defs:
-            data['menu_items_1'].remove(item)
+
     write_json_file(data, CONST.menu_json_path)
 
 def put_kiwix_enabled_into_menu_json():
