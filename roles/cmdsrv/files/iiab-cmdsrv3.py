@@ -2808,9 +2808,9 @@ def change_password(cmd_info):
 
     # check old password - N.B. allows password guessing
     read_pw_hash = spwddb[1]
-    calc_passwd_hash = get_password_hash(oldpasswd, read_pw_hash)
+    calculated_passwd_hash = calc_passwd_hash(oldpasswd, read_pw_hash)
 
-    if calc_passwd_hash != read_pw_hash:
+    if calculated_passwd_hash != read_pw_hash:
         resp = cmd_error(cmd=cmd_info['cmd'], msg='Old Password Incorrect.')
         return resp
 
@@ -2827,7 +2827,7 @@ def change_password(cmd_info):
         return resp
 
     # create new password hash
-    newhash = get_password_hash(newpasswd, read_pw_hash)
+    newhash = calc_passwd_hash(newpasswd, read_pw_hash)
     if not newhash:
         resp = cmd_error(cmd=cmd_info['cmd'], msg='Failed to hash New Password.')
         return resp
@@ -2868,13 +2868,13 @@ def check_password_match(user, password):
 
     # check old password - N.B. allows password guessing
     passwd_hash = spwddb[1]
-    calc_passwd_hash = get_password_hash(password, passwd_hash)
-    if calc_passwd_hash != passwd_hash:
+    calculated_passwd_hash = calc_passwd_hash(password, passwd_hash)
+    if calculated_passwd_hash != passwd_hash:
         return False
     else:
         return True
 
-def get_password_hash(password, existing_hash):
+def calc_passwd_hash(password, existing_hash):
     # return calculated hash
     try:
        return subprocess.run(['perl', '-e', f"print crypt('{password}', '{existing_hash}')"], capture_output=True, text=True).stdout
