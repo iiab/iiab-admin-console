@@ -11,6 +11,7 @@
     - python3-cracklib
     - python3-nacl
     - python3-bs4
+    - python3-lxml
     - uuid
   tags:
     - download
