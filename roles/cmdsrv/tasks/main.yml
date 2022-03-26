@@ -5,6 +5,7 @@
   package: name={{ item }}
            state=present
   with_items:
+    - php-pear
     - python3-systemd
     - python3-zmq
     - python3-yaml
