@@ -11,15 +11,16 @@
     - python3-cracklib
     - python3-nacl
     - python3-bs4
+    - python3-lxml
     - uuid
   tags:
     - download
   when: is_debuntu
 
-- name: Set the pear download_dir
-  shell: "pear config-set download_dir {{ iiab_base }}"
-  tags:
-    - download2
+# - name: Set the pear download_dir
+#   shell: "pear config-set download_dir {{ iiab_base }}"
+#   tags:
+#     - download2
 
 - name: Download speedtest-cli
   command: "pip3 download --dest {{ pip_packages_dir }} speedtest-cli"
