@@ -958,6 +958,7 @@ function getConfigVars (data)
 
 function assignConfigVars (data)
 {
+  var hideList = ['pathagar', 'owncloud']
   // If config_vars has a value use it
   // Otherwise if effective_vars has a value use it
   $('#Configure input').each( function(){
@@ -991,6 +992,9 @@ function assignConfigVars (data)
       }
       else
       	  $(service_id).hide();
+      // hide if in hideList or not in effective_vars
+      if(hideList.indexOf(service) == -1) // replaces the above
+        $(service_id).show();
     }
     if (this.type == "text")
     this.value = config_vars[this.name];
