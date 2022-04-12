@@ -1745,6 +1745,24 @@ def get_oer2go_catalog(cmd_info):
 
 def set_config_vars(cmd_info):
     config_vars = cmd_info['cmd_args']['config_vars']
+    # adjust install state as necessary
+    # front end only sends enabled
+    # for user settable service roles
+    # if enabled true set install to true
+    # if enabled false and rolestatus install false set install to false
+    read_iiab_roles_stat()
+    fix_install = {}
+    for var in config_vars:
+        if '_enabled' in var:
+            role = var.split('_enabled')[0]
+            if role in iiab_roles_status: # settable role
+                if config_vars[var]: # enabled is true
+                    fix_install[role + '_install'] = True # enabled so install is implied
+                else: # enabled false
+                    if not iiab_roles_status[role]['active']: # not active so assume not installed
+                        fix_install[role + '_install'] = False
+
+    config_vars = {**config_vars, **fix_install}
     adm.write_iiab_local_vars(config_vars)
     #print config_vars
     resp = cmd_success(cmd_info['cmd'])
@@ -1782,9 +1800,15 @@ def run_ansible_roles(cmd_info):
     # assemble /opt/iiab/iiab/run-roles-tmp.yml
     # run it with ansible_playbook_program
     # ToDo allow delta local vars as optional parameter
+    # Allow network as optional role
 
     global ansible_running_flag
     global jobs_requested
+
+    add_network = False
+
+    if 'cmd_args' in cmd_info:
+        add_network = cmd_info['cmd_args']['add_network'] # force network role to run
 
     if ansible_running_flag:
         return (cmd_error(msg="Ansible Command already Running."))
@@ -1832,6 +1856,10 @@ def run_ansible_roles(cmd_info):
         else: # enabled status has changed
             lines.append('    - { role: ' + run_role + ' }\n')
             role_cnt += 1
+
+    if add_network:
+        lines.append('    - { role: network }\n')
+        role_cnt += 1
 
     if role_cnt == 0:
         resp = cmd_error(msg='All Roles are already As Requested.')

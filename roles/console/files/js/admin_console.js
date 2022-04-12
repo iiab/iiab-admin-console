@@ -14,6 +14,7 @@ var ansibleTagsStr = "";
 var ansibleRolesStatus = {};
 var effective_vars = {};
 var config_vars = {}; // working variable, no long separate from local vars
+var servicesToHide = [] // use this to block services that have gone out of fashion but have not been removed
 var iiab_ini = {};
 var allJobsStatus = {};
 var jobStatusLastRowid = 1 // trigger refresh
@@ -225,8 +226,9 @@ function configButtonsEvents() {
 
   $("#RUN-ANSIBLE").click(function(){
     make_button_disabled("#RUN-ANSIBLE", true);
-    runAnsible("ALL-TAGS");
+    //runAnsible("ALL-TAGS");
     //runAnsible("addons");
+    runAnsibleRoles();
     make_button_disabled("#RUN-ANSIBLE", false);
   });
 
@@ -958,7 +960,6 @@ function getConfigVars (data)
 
 function assignConfigVars (data)
 {
-  var hideList = ['pathagar', 'owncloud']
   // If config_vars has a value use it
   // Otherwise if effective_vars has a value use it
   $('#Configure input').each( function(){
@@ -984,20 +985,27 @@ function assignConfigVars (data)
       var service = this.name.split("_enabled")[0];
       var service_install = service + "_install";
       var service_id = "." + service + "_service";
-      if (effective_vars.hasOwnProperty(service_install)){
-      	if (effective_vars[service_install])
-      	  $(service_id).show();
-      	else
-      	  $(service_id).hide();
+      //if (effective_vars.hasOwnProperty(service_install)){
+      //	if (effective_vars[service_install])
+      //	  $(service_id).show();
+      //	else
+      //	  $(service_id).hide();
+      //}
+      //else
+      //	  $(service_id).hide();
+
+      // hide if in servicesToHide or not in effective_vars
+      if (effective_vars.hasOwnProperty(service_install)){ // known service
+        if(servicesToHide.indexOf(service) == -1) // not to be hidden
+          $(service_id).show();
+        else
+          $(service_id).hide();
       }
       else
-      	  $(service_id).hide();
-      // hide if in hideList or not in effective_vars
-      if(hideList.indexOf(service) == -1) // replaces the above
-        $(service_id).show();
+        $(service_id).hide();
     }
     if (this.type == "text")
-    this.value = config_vars[this.name];
+      this.value = config_vars[this.name];
     if (this.type == "radio"){
       // this will get called once for each button, but should only check one of the set
       setRadioButton(this.name, config_vars[this.name]);
@@ -1082,27 +1090,26 @@ function setConfigVars () {
   var changed_vars = {} // now we only send deltas to back end
   var thisVar = '';
   $('#Configure input').each( function(){
-    if ($('#'+ this.name).is(":visible")){ // install false and undefined are not visible
-      if (this.type == "checkbox") {
-        if (this.checked)
-          thisVar = true; // must be true not True
-        else
-          thisVar = false;
-      }
+    if (this.type == "checkbox") {
+      if (this.checked)
+        thisVar = true; // must be true not True
+      else
+        thisVar = false;
+    }
+    if (this.type == "text")
+      thisVar = $(this).val();
 
-      if (this.type == "text")
-        thisVar = $(this).val();
-
-      if (this.type == "radio"){
-          fieldName = this.name;
-          fieldName = "input[name=" + this.name + "]:checked"
-          //consoleLog(fieldName);
-          thisVar = $(fieldName).val();
-      }
-      if (thisVar != config_vars[this.name]){
-        config_vars[this.name] = thisVar;
-        changed_vars[this.name] = thisVar;
-      }
+    if (this.type == "radio"){
+        fieldName = this.name;
+        fieldName = "input[name=" + this.name + "]:checked"
+        //consoleLog(fieldName);
+        thisVar = $(fieldName).val();
+    }
+    if (thisVar != config_vars[this.name]){
+      config_vars[this.name] = thisVar;
+      changed_vars[this.name] = thisVar;
+      // change of enabled status could cause change of install status
+      // we will do this on the backend
     }
   });
   cmd_args['config_vars'] = changed_vars;
@@ -1281,8 +1288,6 @@ function getRolesStat(data) { // try php style function
 }
 */
 
-
-
   function getWhitelist (data)  {
     sendCmdSrvCmd("GET-WHLIST", procWhitelist);
   }
@@ -1316,6 +1321,17 @@ function getRolesStat(data) { // try php style function
   function runAnsible (tags)
   {
     var command = formCommand("RUN-ANSIBLE", "tags", tags);
+    //alert ("in runAnsible");
+    consoleLog(command);
+    sendCmdSrvCmd(command, genericCmdHandler);
+    alert ("Scheduling Ansible Run.");
+    return true;
+  }
+
+  function runAnsibleRoles ()
+  {
+    // var command = "RUN-ANSIBLE-ROLES";
+    var command = formCommand("RUN-ANSIBLE-ROLES", "add_network", true);
     //alert ("in runAnsible");
     consoleLog(command);
     sendCmdSrvCmd(command, genericCmdHandler);

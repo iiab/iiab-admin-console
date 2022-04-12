@@ -135,9 +135,6 @@
 							<label><input type="radio" name="gui_desired_home_url" id="gui_desired_home_url-home" value="home">/home</label>
 						</div>
 						<div class="radio">
-							<label><input type="radio" name="gui_desired_home_url" id="gui_desired_home_url-xs-portal" value="xs-portal">/xs-portal</label>
-						</div>
-						<div class="radio">
 							<label><input type="radio" name="gui_desired_home_url" id="gui_desired_home_url-wordpress" value="wordpress">/wordpress</label>
 						</div>
 						<div class="radio">
@@ -154,23 +151,9 @@
 				</div> <!--  Configure Server Portal pane -->
 				<div class="tab-pane" id="confServices"> <!--  Start Configure Services Pane -->
 					<h2>Check Each Service to Enable</h2>
+					<p>Services not already installed will be installed.</p>
 					<form role="form" id="confServicesForm">
 						<h3>For Students</h3>
-						<div class="checkbox xo_services_service">
-							<label>
-								<input type="checkbox" name="xo_services_enabled" id="xo_services_enabled">Services for XO Laptops such as Registration, Backup, and the Activity Server
-							</label>
-						</div>
-						<div class="checkbox ejabberd_service">
-							<label>
-								<input type="checkbox" name="ejabberd_enabled" id="ejabberd_enabled">Chat and Collaboration Server for XO Laptops and Others.
-							</label>
-						</div>
-						<div class="checkbox moodle_service">
-							<label>
-								<input type="checkbox" name="moodle_enabled" id="moodle_enabled">Moodle, a Courseware Manager and E-Learning Platform.
-							</label>
-						</div>
 						<div class="checkbox kiwix_service">
 							<label>
 								<input type="checkbox" name="kiwix_enabled" id="kiwix_enabled">Kiwix, serves Wikipediae and other content from sources below.  You must also install content.
@@ -181,24 +164,21 @@
 								<input type="checkbox" name="kalite_enabled" id="kalite_enabled">KA Lite, serves Khan Academy videos and Exercises.  You must also install content.
 							</label>
 						</div>
-						<div class="checkbox kalite_cron_service">
-							<label>
-								<input type="checkbox" name="kalite_cron_enabled" id="kalite_cron_enabled">The KA Lite Downloader.  You can turn this off if you don't plan to download videos.
-							</label>
-						</div>
+
 						<div class="checkbox kolibri_service">
 							<label>
 							  <input type="checkbox" name="kolibri_enabled" id="kolibri_enabled">Kolibri, which provides offline access to a wide range of quality, openly licensed educational content.
 						  </label>
 						</div>
-						<div class="checkbox internetarchive_service">
-							<label>
-							  <input type="checkbox" name="internetarchive_enabled" id="internetarchive_enabled">Internet Archive Decentralized Web that helps you create your own offline digital library e.g. from http://dweb.archive.org
-						  </label>
-						</div>
+
 						<div class="checkbox osm_vector_maps_service">
 							<label>
 								<input type="checkbox" name="osm_vector_maps_enabled" id="osm_vector_maps_enabled">IIAB vector maps are based upon OpenStreetMap Data.  You must also install content.
+							</label>
+						</div>
+						<div class="checkbox moodle_service">
+							<label>
+								<input type="checkbox" name="moodle_enabled" id="moodle_enabled">Moodle, a Courseware Manager and E-Learning Platform.
 							</label>
 						</div>
 						<div class="checkbox calibreweb_service">
@@ -211,11 +191,19 @@
 								<input type="checkbox" name="calibre_enabled" id="calibre_enabled">Calibre, an E-Book Platform. You must also install content.
 							</label>
 						</div>
-						<div class="checkbox pathagar_service">
+
+						<div class="checkbox jupyterhub_service">
 							<label>
-								<input type="checkbox" name="pathagar_enabled" id="pathagar_enabled">Pathagar, another E-Book Platform. You must also install content.
-							</label>
+							  <input type="checkbox" name="jupyterhub_enabled" id="jupyterhub_enabled">Jupiter Hub interactive blogging, graphing, and Python programming
+						  </label>
 						</div>
+
+						<div class="checkbox internetarchive_service">
+							<label>
+							  <input type="checkbox" name="internetarchive_enabled" id="internetarchive_enabled">Internet Archive Decentralized Web that helps you create your own offline digital library e.g. from http://dweb.archive.org
+						  </label>
+						</div>
+
 						<div class="checkbox sugarizer_service">
 							<label>
 								<input type="checkbox" name="sugarizer_enabled" id="sugarizer_enabled">Sugarizer provides Sugar Labs activities directly on the server.
@@ -226,17 +214,23 @@
 							  <input type="checkbox" name="minetest_enabled" id="minetest_enabled">Minetest, an open source, educational computer game.
 						  </label>
 						</div>
+						<div class="checkbox xo_services_service">
+							<label>
+								<input type="checkbox" name="xo_services_enabled" id="xo_services_enabled">Services for XO Laptops such as Registration, Backup, and the Activity Server
+							</label>
+						</div>
+						<div class="checkbox ejabberd_service">
+							<label>
+								<input type="checkbox" name="ejabberd_enabled" id="ejabberd_enabled">Chat and Collaboration Server for XO Laptops and Others.
+							</label>
+						</div>
 						<h3>Media Sharing and Printing</h3>
 						<div class="checkbox elgg_service">
 							<label>
 								<input type="checkbox" name="elgg_enabled" id="elgg_enabled">Elgg, a Social Networking Platform for Student Blogging, File Sharing, and Collaboration.
 							</label>
 						</div>
-						<div class="checkbox owncloud_service">
-							<label>
-								<input type="checkbox" name="owncloud_enabled" id="owncloud_enabled">OwnCloud is a local server-based facility for sharing files, photos, contacts, calendars, etc.
-							</label>
-						</div>
+
 						<div class="checkbox nextcloud_service">
 							<label>
 								<input type="checkbox" name="nextcloud_enabled" id="nextcloud_enabled">Nextcloud is a local server-based facility for sharing files, photos, contacts, calendars, etc.
@@ -266,7 +260,7 @@
 						<h3>Communications and Computer Lab</h3>
 						<div class="checkbox azuracast_service">
 							<label>
-							  <input type="checkbox" name="azuracast_enabled" id="azuracast_enabled">AzuraCase,a self-hosted web radio management suite.
+							  <input type="checkbox" name="azuracast_enabled" id="azuracast_enabled">AzuraCast,a self-hosted web radio management suite.
 						  </label>
 						</div>
 						<div class="checkbox lokole_service">
@@ -291,26 +285,8 @@
 						</div>
 
 						<h3>For Monitoring and Administration</h3>
-						<div class="checkbox schooltool_service">
-							<label>
-								<input type="checkbox" name="schooltool_enabled" id="schooltool_enabled">SchoolTool is a School Administration System.
-							</label>
-						</div>
-						<div class="checkbox xovis_service">
-							<label>
-								<input type="checkbox" name="xovis_enabled" id="xovis_enabled">XO Visualization&mdash;Graphs of Student Usage Statistics.
-							</label>
-						</div>
-						<div class="form-group xovis_service">
-							<label for="xovis_chart_heading">Title to Appear on XO Visualization Charts</label>
-							<input type="text" name="xovis_chart_heading" class="form-control" id="xovis_chart_heading" placeholder="Enter chart heading.">
-						</div>
-						<div class="checkbox sugar_stats_service">
-							<label>
-								<input type="checkbox" name="sugar_stats_enabled" id="sugar_stats_enabled">Collect statistics on the use of Sugar Activities.
-							</label>
-						</div>
-						<!--  removed ajenti -->
+
+						<!--  removed ajenti and others-->
 						<div class="checkbox monit_service">
 							<label>
 								<input type="checkbox" name="monit_enabled" id="monit_enabled">Monit watches critical applications and restarts them if they fail.
@@ -341,11 +317,16 @@
 								<input type="checkbox" name="openvpn_enabled" id="openvpn_enabled">OpenVPN allows a secure connection between servers over the Internet for remote maintenance.
 							</label>
 						</div>
-						<div class="checkbox teamviewer_service">
+						<div class="checkbox remoteit_service">
 							<label>
-								<input type="checkbox" name="teamviewer_enabled" id="teamviewer_enabled">TeamViewer provides a secure connection for Remote Support and Online Meetings.
+								<input type="checkbox" name="remoteit_enabled" id="remoteit_enabled">RemoteIt another way to connect to external sources of support.
 							</label>
 						</div>
+						<!--
+							To Add
+
+						mosquitto_enabled
+						-->
 					</form>
 				</div> <!--  services pane -->
 				<div class="tab-pane" id="confWhitelist"> <!-- Start Configure Whitelist Pane -->
