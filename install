@@ -37,6 +37,11 @@ export ANSIBLE_LOG_PATH="$IIAB_ADMIN_DIR/admin-install.log"
 #ansible-playbook -i $INVENTORY $PLAYBOOK --extra-vars "${ARGS}" --connection=local
 ansible-playbook -i $INVENTORY $PLAYBOOK --connection=local
 
+# Start CMDSRV
+echo "(Re)Starting CMDSRV"
+systemctl enable iiab-cmdsrv
+systemctl restart iiab-cmdsrv
+
 if [[ "$1" ==  "-n" ]]; then
   echo "WARNING: THIS CAN CAUSE PROBLEMS"
   echo "Only do this if a full install has already completed"
@@ -47,11 +52,14 @@ else
 
   iiab-get-kiwix-cat -v
   iiab-get-oer2go-cat
+  if [ -f /usr/bin/iiab-make-kiwix-lib ]
+  then
+    iiab-make-kiwix-lib
+  fi
   iiab-make-kiwix-lib
   iiab-update-menus
 fi
 
-# Start CMDSRV
-echo "(Re)Starting CMDSRV"
-systemctl enable iiab-cmdsrv
+# Restart CMDSRV
+echo "(Restarting CMDSRV"
 systemctl restart iiab-cmdsrv
