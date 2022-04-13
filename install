@@ -56,7 +56,6 @@ else
   then
     iiab-make-kiwix-lib
   fi
-  iiab-make-kiwix-lib
   iiab-update-menus
 fi
 
