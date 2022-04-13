@@ -64,10 +64,25 @@
 						<div class="row"><label class="col-md-3">Static WAN Gateway</label><div class="col-md-3"><input type="text" class="form-control" name="gui_static_wan_gateway" id="gui_static_wan_gateway"></div></div>
 						<div class="row"><label class="col-md-3">Static WAN Name Server</label><div class="col-md-3"><input type="text" class="form-control" name="gui_static_wan_nameserver" id="gui_static_wan_nameserver"></div></div>
 
-						<h3>Internet Access for Installations</h3>
-						<p><b>Please Note:</b> This parameter will only be rarely changed.</p>
-						<div class="checkbox">
-							<label><input type="checkbox" name="use_cache" id="use_cache" >Check to force cache use even when online</label>
+						<h3>Firewall</h3>
+						<p><b>Please Note:</b> This parameter will only rarely be changed and may require reboot to take effect.</p>
+						<div class="radio">
+							<label><input type="radio" name="ports_externally_visible" id="ports_externally_visible-0" value="0">No Ports Externally Visible.</label>
+						</div>
+						<div class="radio">
+							<label><input type="radio" name="ports_externally_visible" id="ports_externally_visible-1" value="1">Only the SSH Port is Externally Visible.</label>
+						</div>
+						<div class="radio">
+							<label><input type="radio" name="ports_externally_visible" id="ports_externally_visible-2" value="2">Add http-or-https Ports Externally Visible.</label>
+						</div>
+						<div class="radio">
+							<label><input type="radio" name="ports_externally_visible" id="ports_externally_visible-3" value="3">Add Common IIAB Services Ports Externally Visible.</label>
+						</div>
+						<div class="radio">
+							<label><input type="radio" name="ports_externally_visible" id="ports_externally_visible-4" value="4">Add Samba Port Externally Visible.</label>
+						</div>
+						<div class="radio">
+							<label><input type="radio" name="ports_externally_visible" id="ports_externally_visible-5" value="5">All Ports Except Database Externally Visible.</label>
 						</div>
 					</form>
 				</div> <!--  network pane -->
@@ -206,7 +221,7 @@
 								<input type="checkbox" name="sugarizer_enabled" id="sugarizer_enabled">Sugarizer provides Sugar Labs activities directly on the server.
 							</label>
 						</div>
-
+						<!--
 						<div class="checkbox xo_services_service">
 							<label>
 								<input type="checkbox" name="xo_services_enabled" id="xo_services_enabled">Services for XO Laptops such as Registration, Backup, and the Activity Server
@@ -217,6 +232,7 @@
 								<input type="checkbox" name="ejabberd_enabled" id="ejabberd_enabled">Chat and Collaboration Server for XO Laptops and Others.
 							</label>
 						</div>
+						-->
 
 						<h3>Portals</h3>
 						<div class="checkbox">
@@ -260,11 +276,6 @@
 						<div class="checkbox usb_lib_service">
 							<label>
 							  <input type="checkbox" name="usb_lib_enabled" id="usb_lib_enabled">USB based content libraries.
-						  </label>
-						</div>
-						<div class="checkbox exFAT_service">
-							<label>
-							  <input type="checkbox" name="exFAT_enabled" id="exFAT_enabled">exFat formated USB drives.
 						  </label>
 						</div>
 						<div class="checkbox minetest_service">
