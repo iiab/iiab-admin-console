@@ -9,11 +9,12 @@
 		<div class="col-md-3 iiab-left-nav">
 			<h2>Configuration</h2>
 			<ul class="nav nav-pills nav-stacked">
-				<li class="active"><a href="#confNetwork">Network Parameters</a></li>
+				<li class="active"><a href="#confServices">Services Enabled</a></li>
+				<li><a href="#confNetwork">Network Parameters</a></li>
 				<li><a href="#confNetFilter">Internet Caching/Filtering</a></li>
 				<li><a href="#confHostapd">Internal Wi-Fi AP</a></li>
-				<li><a href="#confPortal">Server Portal</a></li>
-				<li><a href="#confServices">Services Enabled</a></li>
+				<!-- <li><a href="#confPortal">Server Portal</a></li>
+				<li><a href="#confServices">Services Enabled</a></li> -->
 				<li><a href="#confWhitelist" call-after="getWhitelist">Edit Permitted URLs</a></li>
 			</ul>
 			<h2>Actions</h2>
@@ -26,7 +27,7 @@
 		</div> <!-- left column -->
 		<div class="col-md-9"> <!-- right column -->
 			<div class="tab-content">
-				<div class="tab-pane active" id="confNetwork"> <!-- Start Configure Network Pane -->
+				<div class="tab-pane" id="confNetwork"> <!-- Start Configure Network Pane -->
 					<h2>Network Parameters</h2>
 					<p><b>WARNING:</b> If you change the Hostname or Domain Name, you will need to refresh the browser after clicking Install Configured Options.</p>
 					<form role="form" class="form-horizontal" id="confNetworkForm">
@@ -67,11 +68,6 @@
 						<p><b>Please Note:</b> This parameter will only be rarely changed.</p>
 						<div class="checkbox">
 							<label><input type="checkbox" name="use_cache" id="use_cache" >Check to force cache use even when online</label>
-						</div>
-						<h3>Admin Console Security</h3>
-						<p><b>Please Note:</b> This program is password protected, so this only needs to be changed if you are worried that there could be people listening on your network.</p>
-						<div class="checkbox">
-							<label><input type="checkbox" name="adm_cons_force_ssl" id="adm_cons_force_ssl" >Check to force https (TLS/SSL) access to this program.</label>
 						</div>
 					</form>
 				</div> <!--  network pane -->
@@ -114,10 +110,15 @@
 						<div class="row"><label class="col-md-3">Internal Wi-Fi Access Point Name</label><div class="col-md-3"><input type="text" class="form-control" name="host_ssid" id="host_ssid"></div></div>
 						<div class="row"><label class="col-md-3">Internal Wi-Fi Access Point Mode</label><div class="col-md-3"><input type="text" class="form-control" name="host_wifi_mode" id="host_wifi_mode"></div></div>
 						<div class="row"><label class="col-md-3">Internal Wi-Fi Access Point Channel</label><div class="col-md-3"><input type="text" class="form-control" name="host_channel" id="host_channel"></div></div>
+						<div class="checkbox">
+							<label>
+							  <input type="checkbox" name="captiveportal_enabled" id="captiveportal_enabled">Check to Enable Captive Portal
+						  </label>
+						</div>
 					</form>
 				</div> <!--  Configure Hostapd pane -->
 				<div class="tab-pane" id="confPortal"> <!-- Start Configure Server Portal Pane -->
-					<h2>Server Portal</h2>
+					<h2>Server Portal - REMOVE</h2>
 					<p><b>Please Note:</b> The selected Portal Page will only work if the corresponding software is Enabled.</p>
 					<form role="form" id="confPortalForm">
 						<div class="checkbox">
@@ -149,11 +150,11 @@
 
 					</form>
 				</div> <!--  Configure Server Portal pane -->
-				<div class="tab-pane" id="confServices"> <!--  Start Configure Services Pane -->
+				<div class="tab-pane active" id="confServices"> <!--  Start Configure Services Pane -->
 					<h2>Check Each Service to Enable</h2>
 					<p>Services not already installed will be installed.</p>
 					<form role="form" id="confServicesForm">
-						<h3>For Students</h3>
+						<h3>Content Apps</h3>
 						<div class="checkbox kiwix_service">
 							<label>
 								<input type="checkbox" name="kiwix_enabled" id="kiwix_enabled">Kiwix, serves Wikipediae and other content from sources below.  You must also install content.
@@ -176,11 +177,7 @@
 								<input type="checkbox" name="osm_vector_maps_enabled" id="osm_vector_maps_enabled">IIAB vector maps are based upon OpenStreetMap Data.  You must also install content.
 							</label>
 						</div>
-						<div class="checkbox moodle_service">
-							<label>
-								<input type="checkbox" name="moodle_enabled" id="moodle_enabled">Moodle, a Courseware Manager and E-Learning Platform.
-							</label>
-						</div>
+
 						<div class="checkbox calibreweb_service">
 							<label>
 								<input type="checkbox" name="calibreweb_enabled" id="calibreweb_enabled">Calibre Web, a browser based version of Calibre, an E-Book Platform. You must also install content.
@@ -209,11 +206,7 @@
 								<input type="checkbox" name="sugarizer_enabled" id="sugarizer_enabled">Sugarizer provides Sugar Labs activities directly on the server.
 							</label>
 						</div>
-						<div class="checkbox minetest_service">
-							<label>
-							  <input type="checkbox" name="minetest_enabled" id="minetest_enabled">Minetest, an open source, educational computer game.
-						  </label>
-						</div>
+
 						<div class="checkbox xo_services_service">
 							<label>
 								<input type="checkbox" name="xo_services_enabled" id="xo_services_enabled">Services for XO Laptops such as Registration, Backup, and the Activity Server
@@ -224,7 +217,25 @@
 								<input type="checkbox" name="ejabberd_enabled" id="ejabberd_enabled">Chat and Collaboration Server for XO Laptops and Others.
 							</label>
 						</div>
-						<h3>Media Sharing and Printing</h3>
+
+						<h3>Portals</h3>
+						<div class="checkbox">
+							<label>
+								<input type="checkbox" name="wordpress_enabled" id="wordpress_enabled">Check to Enable WordPress.
+							</label>
+						</div>
+						<div class="checkbox">
+							<label>
+								<input type="checkbox" name="mediawiki_enabled" id="mediawiki_enabled">Check to Enable MediaWiki.
+							</label>
+						</div>
+						<div class="checkbox moodle_service">
+							<label>
+								<input type="checkbox" name="moodle_enabled" id="moodle_enabled">Moodle, a Courseware Manager and E-Learning Platform.
+							</label>
+						</div>
+
+						<h3>Media Sharing, Printing, and Games</h3>
 						<div class="checkbox elgg_service">
 							<label>
 								<input type="checkbox" name="elgg_enabled" id="elgg_enabled">Elgg, a Social Networking Platform for Student Blogging, File Sharing, and Collaboration.
@@ -254,6 +265,11 @@
 						<div class="checkbox exFAT_service">
 							<label>
 							  <input type="checkbox" name="exFAT_enabled" id="exFAT_enabled">exFat formated USB drives.
+						  </label>
+						</div>
+						<div class="checkbox minetest_service">
+							<label>
+							  <input type="checkbox" name="minetest_enabled" id="minetest_enabled">Minetest, an open source, educational computer game.
 						  </label>
 						</div>
 
