@@ -66,6 +66,7 @@
 
 						<h3>Firewall</h3>
 						<p><b>Please Note:</b> This parameter will only rarely be changed and may require reboot to take effect.</p>
+						<h3>Inbound</h3>
 						<div class="radio">
 							<label><input type="radio" name="ports_externally_visible" id="ports_externally_visible-0" value="0">No Ports Externally Visible.</label>
 						</div>
@@ -83,6 +84,12 @@
 						</div>
 						<div class="radio">
 							<label><input type="radio" name="ports_externally_visible" id="ports_externally_visible-5" value="5">All Ports Except Database Externally Visible.</label>
+						</div>
+						<h3>Outbound</h3>
+						<div class="checkbox">
+							<label>
+								<input type="checkbox" name="iiab_gateway_enabled" id="iiab_gateway_enabled">Check to Enable traffic from LAN to WAN
+							</label>
 						</div>
 					</form>
 				</div> <!--  network pane -->
