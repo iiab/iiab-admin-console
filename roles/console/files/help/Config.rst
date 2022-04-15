@@ -54,13 +54,9 @@ Note some services listed below may not be installed and will not have a checkbo
 
 ### Media Sharing, Printing and Games
 
-* **Elgg** - A Social Networking Platform for Student Blogging, File Sharing, and Collaboration.
-
 * **Nextcloud** - A local server-based facility for sharing files, photos, contacts, calendars, etc.
 
 * **Samba** - Provides Network File Sharing.
-
-    There is some overlap between these three.  **Elgg** allows blogging and other forms of social media.  Students and Teachers can use it to collaborate on projects or for journaling.  **Nextcloud** is great for sharing media. It has apps for phones and tablets that make it easy to drop photos and other materials onto the server for sharing. **Samba** gives you the ability to share directories on the server that can be accessed by Teachers and Students as if they were local to their laptops.
 
 * **CUPS** - Provides support for **Printers** either directly attached to the server or on the network.
 
@@ -162,8 +158,6 @@ Internet Caching/Filtering
 * Restrict Web Page Access to a Specific List of Sites (Permitted URLs)
 
 * Block all HTTPS Access to Web Page
-
-* Restrict Web Page Access according to Words in the Content (DansGuardian)
 
 When the Server acts as a **Gateway** between users and the Internet it can provide two main types of services.  The first is that it can make the connection to the Internet more efficient by caching or storing responses on the server so that the next request does not need to go to the Internet. You will usually want this.
 
