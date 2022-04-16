@@ -163,10 +163,6 @@ When the Server acts as a **Gateway** between users and the Internet it can prov
 
 In addition, it can filter the sites that students are permitted to access in three ways.  The first is to only allow pages in the **Permitted URLs** list to be accessed; see below.  The second is that all sites accessed with https security can be blocked to prevent users from by-passing the previous filter.
 
-The last filter is based not on URLs, but on **Words in the Content**.
-
-Use your local policy to decide which of these filters to enable.
-
 ## Internal Wi-Fi Appliance
 
 * Set various hotspot parameters
