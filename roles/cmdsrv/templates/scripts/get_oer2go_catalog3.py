@@ -160,6 +160,7 @@ def get_oer2go_cat():
     except (urllib.error.URLError) as exc:
         err_str = "GET-OER2GO-CAT ERROR - " + str(exc.reason) +'\n'
         err_num = 1
+        oer2go_catalog_json = None
 
     # except (RemoteDisconnected) as exc: # where do I import this exception?
     #    err_str = "GET-OER2GO-CAT ERROR - Remote end closed connection without response\n"
