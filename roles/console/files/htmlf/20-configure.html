@@ -139,39 +139,7 @@
 						</div>
 					</form>
 				</div> <!--  Configure Hostapd pane -->
-				<div class="tab-pane" id="confPortal"> <!-- Start Configure Server Portal Pane -->
-					<h2>Server Portal - REMOVE</h2>
-					<p><b>Please Note:</b> The selected Portal Page will only work if the corresponding software is Enabled.</p>
-					<form role="form" id="confPortalForm">
-						<div class="checkbox">
-							<label>
-								<input type="checkbox" name="wordpress_enabled" id="wordpress_enabled">Check to Enable WordPress.
-							</label>
-						</div>
-						<div class="checkbox">
-							<label>
-								<input type="checkbox" name="mediawiki_enabled" id="mediawiki_enabled">Check to Enable MediaWiki.
-							</label>
-						</div>
-						<h3>Select Server Home Page</h3>
-						<div class="radio">
-							<label><input type="radio" name="gui_desired_home_url" id="gui_desired_home_url-home" value="home">/home</label>
-						</div>
-						<div class="radio">
-							<label><input type="radio" name="gui_desired_home_url" id="gui_desired_home_url-wordpress" value="wordpress">/wordpress</label>
-						</div>
-						<div class="radio">
-							<label><input type="radio" name="gui_desired_home_url" id="gui_desired_home_url-wiki" value="wiki">/wiki</label>
-						</div>
-						<h3>Captive Portal</h3>
-						<div class="checkbox">
-							<label>
-							  <input type="checkbox" name="captiveportal_enabled" id="captiveportal_enabled">Check to Enable Captive Portal
-						  </label>
-						</div>
 
-					</form>
-				</div> <!--  Configure Server Portal pane -->
 				<div class="tab-pane active" id="confServices"> <!--  Start Configure Services Pane -->
 					<h2>Check Each Service to Enable</h2>
 					<p>Services not already installed will be installed.</p>
@@ -205,12 +173,6 @@
 								<input type="checkbox" name="calibreweb_enabled" id="calibreweb_enabled">Calibre Web, a browser based version of Calibre, an E-Book Platform. You must also install content.
 							</label>
 						</div>
-						<div class="checkbox calibre_service">
-							<label>
-								<input type="checkbox" name="calibre_enabled" id="calibre_enabled">Calibre, an E-Book Platform. You must also install content.
-							</label>
-						</div>
-
 						<div class="checkbox jupyterhub_service">
 							<label>
 							  <input type="checkbox" name="jupyterhub_enabled" id="jupyterhub_enabled">Jupiter Hub interactive blogging, graphing, and Python programming

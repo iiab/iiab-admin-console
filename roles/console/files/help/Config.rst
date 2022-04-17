@@ -34,7 +34,7 @@ Note some services listed below may not be installed and will not have a checkbo
 
 * **IIAB Vector Maps ** - From OpenStreetMap these are maps of the world and specific regions from 10 to 16 levels of zoom depending on the tiles you install.
 
-* **Calibre** - An E-Book Platform. You must also install content.
+* **Calibre Web** - A browser based version of Calibre, an E-Book Platform. You must also install content.
 
 * **Jupiter Hub** -  A mix between a bloggin and text creation environment and an interactive Python programming environment.
 
