@@ -32,7 +32,7 @@ Note some services listed below may not be installed and will not have a checkbo
 
 **Kolibri** - Multiple channels from many sources that provide offline access to a wide range of quality, openly licensed educational content.
 
-* **IIAB Vector Maps ** - From OpenStreetMap these are maps of the world and specific regions from 10 to 16 levels of zoom depending on the tiles you install.
+* **IIAB Vector Maps** - From OpenStreetMap these are maps of the world and specific regions from 10 to 16 levels of zoom depending on the tiles you install.
 
 * **Calibre Web** - A browser based version of Calibre, an E-Book Platform. You must also install content.
 
