@@ -7,10 +7,11 @@
 
 # these should be soft coded
 
-PREVIEW_SAT=satellite_z0-z6_v3.mbtiles
-PREVIEW_OSM=planet_z0-z6_2019.mbtiles
-PROD_SAT=satellite_z0-z9_v3.mbtiles
-PROD_OSM=osm-planet_z0-z10_2019.mbtiles
+PREVIEW_OSM=planet_z0-z6_2020.mbtiles
+PREVIEW_SAT=satellite_z0-z6_2020.mbtiles
+
+PROD_OSM=osm-planet_z0-z10_2020.mbtiles
+PROD_SAT=satellite_z0-z9_2020.mbtiles
 
 download_dir='/library/working/maps'
 tiles_dir='/library/www/osm-vector-maps/viewer/tiles'
