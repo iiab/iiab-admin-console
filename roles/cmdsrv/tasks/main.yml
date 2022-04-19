@@ -48,7 +48,7 @@
     warn: no
     creates: /usr/bin/rclone
 
-- name: Configure rclone
+- name: Configure rclone wasabi-iiab-share
   ini_file:
     path: "/root/.config/rclone/rclone.conf"
     section: wasabi-iiab-share
@@ -71,6 +71,24 @@
       value: HAPCKJFF9FZGQLJ6TOIY
     - option: secret_access_key
       value: nAa73UNVVBWUtKdv72LXHeCjJeDFLi3v6aLRh8st
+
+- name: Configure rclone contabo
+  ini_file:
+    path: "/root/.config/rclone/rclone.conf"
+    section: contabo
+    option: "{{ item.option }}"
+    value: "{{ item.value | string }}"
+  with_items:
+    - option: type
+      value: s3
+    - option: provider
+      value: Ceph
+     - option: endpoint
+      value: usc1.contabostorage.com
+    - option: access_key_id
+      value: ed2d3ff38aa940e7b2834c40fe2fcbc4
+    - option: secret_access_key
+      value: 2045d93fc26405d48ac409cb78bd0133
 
 - name: Create cmdsrv directory
   file: path={{ item }}

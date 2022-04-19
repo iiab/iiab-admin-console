@@ -2518,23 +2518,36 @@ def install_osm_vect_set_v2(cmd_info):
     else:
         cmd_info['service_required'] = ['osm_vector_maps', 'active']
 
-    #download_url = maps_catalog[map_id]['detail_url']
-    # hard coding for now as the control vars don't make much sense
-    if maps_download_src == 'iiab.me':
-        download_url = 'http://timmoody.com/iiab-files/maps/' + map_id
-    elif maps_download_src == 'archive':
-        download_url = 'https://archive.org/download/' + map_id + '/' + map_id
-    elif maps_download_src == 'bittorrent':
-        download_url = maps_catalog[map_id]['bittorrent_url']
-        resp = cmd_error(cmd='INST-OSM-VECT-SET', msg='Not able to do bittorrent yet in Command')
-        return resp
-
     download_file = maps_working_dir + map_id
     tiles_path = vector_map_tiles_path + map_id
 
     # see if already installed
     if os.path.isfile(tiles_path) and os.path.getsize(tiles_path) == maps_catalog[map_id]['size']:
         resp = cmd_error(cmd='INST-OSM-VECT-SET', msg=map_id + ' is already downloaded')
+        return resp
+
+    #download_url = maps_catalog[map_id]['detail_url']
+    # hard coding for now as the control vars don't make much sense
+    wget_cmd = "/usr/bin/wget -c --progress=dot:giga "
+
+    if maps_download_src == 'iiab.me':
+        download_url = 'http://timmoody.com/iiab-files/maps/' + map_id
+        job_command = wget_cmd + download_url + " -O " + download_file
+
+    elif maps_download_src == 'archive':
+        download_url = 'https://archive.org/download/' + map_id + '/' + map_id
+        job_command = wget_cmd + download_url + " -O " + download_file
+
+    elif maps_download_src == 'contabo':
+        download_url = 'contabo:iiab-maps/' + map_id
+        job_command = "rclone -P copy " + download_url + " " + maps_working_dir
+
+    elif maps_download_src == 'bittorrent':
+        download_url = maps_catalog[map_id]['bittorrent_url']
+        resp = cmd_error(cmd='INST-OSM-VECT-SET', msg='Not able to do bittorrent yet in Command')
+        return resp
+    else:
+        resp = cmd_error(cmd='INST-OSM-VECT-SET', msg='Unknown Map Source ' + maps_download_src)
         return resp
 
     # save some values for later
@@ -2548,7 +2561,7 @@ def install_osm_vect_set_v2(cmd_info):
     job_id = -1
 
     if not os.path.isfile(download_file) or os.path.getsize(download_file) != maps_catalog[map_id]['size']:
-        job_command = "/usr/bin/wget -c --progress=dot:giga " + download_url + " -O " + download_file
+        # job_command = "/usr/bin/wget -c --progress=dot:giga " + download_url + " -O " + download_file
         job_id = request_one_job(cmd_info, job_command, 1, -1, "Y")
         next_step = 2
         #print job_command
