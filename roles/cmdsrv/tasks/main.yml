@@ -83,7 +83,7 @@
       value: s3
     - option: provider
       value: Ceph
-     - option: endpoint
+    - option: endpoint
       value: usc1.contabostorage.com
     - option: access_key_id
       value: ed2d3ff38aa940e7b2834c40fe2fcbc4
