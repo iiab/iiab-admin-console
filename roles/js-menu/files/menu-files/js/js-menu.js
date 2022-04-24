@@ -483,7 +483,7 @@ function calcMapLink(module) {
 
     href = host + ':/' + href;
     // patch start_url for older menu defs
-    if (! module.hasOwnProperty("start_url")) // treat specific file as a start page for downloads
+    if (! module.hasOwnProperty("start_url")) // force viewer as start url
         module['start_url'] = 'viewer';
 
     var html = calcItemHtml(href, module);
