@@ -482,6 +482,10 @@ function calcMapLink(module) {
     //     href = host + ':/' + href + osmVersions[module.map_name].file_name + '/';
 
     href = host + ':/' + href;
+    // patch start_url for older menu defs
+    if (! module.hasOwnProperty("start_url")) // treat specific file as a start page for downloads
+        module['start_url'] = 'viewer';
+
     var html = calcItemHtml(href, module);
     return html
 
