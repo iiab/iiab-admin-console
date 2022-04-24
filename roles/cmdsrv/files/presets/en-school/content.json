@@ -15,8 +15,8 @@
     "en-ebooks"
   ],
   "maps": [
-    "satellite_z0-z9_v3.mbtiles",
-    "planet_z0-z6_2019.mbtiles"
+    "satellite_z0-z9_2020.mbtiles",
+    "planet_z0-z6_2020.mbtiles"
   ],
   "kalite": {
     "lang_code": "en",

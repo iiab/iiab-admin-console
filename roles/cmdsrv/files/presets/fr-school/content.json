@@ -21,8 +21,8 @@
     ],
     "modules": [],
     "maps": [
-      "satellite_z0-z9_v3.mbtiles",
-      "osm-planet_z0-z10_2019.mbtiles"
+      "satellite_z0-z9_2020.mbtiles",
+      "osm-planet_z0-z10_2020.mbtiles"
     ],
     "kalite": {
       "lang_code": "fr",
