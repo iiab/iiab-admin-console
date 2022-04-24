@@ -476,12 +476,12 @@ function calcInternetArchiveLink(module) {
 function calcMapLink(module) {
     var href = 'osm-vector-maps/';
 
-    if (osmVersions.hasOwnProperty(module.map_name) &&
-        typeof osmVersions[module.map_name].file_name != 'undefined') {
-        href = host + ':/' + href + osmVersions[module.map_name].file_name + '/';
-    } else {
-        href = host + ':/' + href;
-    }
+    // there is now (Apr, 2022) only one link for all maps
+    // if (osmVersions.hasOwnProperty(module.map_name) &&
+    //    typeof osmVersions[module.map_name].file_name != 'undefined') {
+    //     href = host + ':/' + href + osmVersions[module.map_name].file_name + '/';
+
+    href = host + ':/' + href;
     var html = calcItemHtml(href, module);
     return html
 
