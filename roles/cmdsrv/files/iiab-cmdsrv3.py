@@ -1808,7 +1808,7 @@ def run_ansible_roles(cmd_info):
     add_network = False
 
     if 'cmd_args' in cmd_info:
-        add_network = cmd_info['cmd_args']['add_network'] # force network role to run
+        add_network = cmd_info['cmd_args'].get('add_network') # force network role to run
 
     if ansible_running_flag:
         return (cmd_error(msg="Ansible Command already Running."))
