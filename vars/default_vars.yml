@@ -20,7 +20,7 @@ iiab_module_cat_url: https://raw.githubusercontent.com/iiab-share/iiab-content/m
 iiab_zim_cat_url: https://raw.githubusercontent.com/iiab-share/iiab-content/main/catalogs/iiab-zim-cat.json
 rachel_mods_url : rsync://dev.worldpossible.org/rachelmods/
 oer2go_mods_url : "{{ rachel_mods_url }}"
-iiab_map_url : http://download.iiab.io/content/OSM/vector-tiles/maplist/hidden
+#iiab_map_url : http://download.iiab.io/content/OSM/vector-tiles/maplist/hidden
 iiab_modules_dir : "{{ doc_root }}/modules/"
 js_menu_dir : "{{ doc_root }}/js-menu/"
 js_menu_assets : "{{ doc_root }}/common/assets/"
@@ -36,3 +36,5 @@ admin_console_group: 'iiab-admin'
 # Expected values are contabo, archive, iiab.me, bittorrent
 maps_download_src: 'contabo'
 adm_maps_catalog_file: 'adm-map-catalog.json'
+adm_maps_catalog_url: "/common/assets/{{ adm_maps_catalog_file }}"
+adm_maps_catalog_path: "{{ doc_root }}{{ adm_maps_catalog_url }}"

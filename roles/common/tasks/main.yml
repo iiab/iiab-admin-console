@@ -113,16 +113,6 @@
     force: yes
   when: not osm_vector_maps_enabled
 
-- name: Copy dummy Osm Vector Maps regions.json file if osm_vector_maps not enabled
-  copy:
-    src: map/regions.json
-    dest: "{{ iiab_etc_path }}/regions.json"
-    owner: root
-    group: root
-    mode: 0644
-    force: yes
-  when: not osm_vector_maps_enabled
-
 # Put dummy idx file in place only if it does not already exist and until calculated in js-menu if osm_vector_maps is enabled
 - name: Copy dummy Osm Vector Maps vector-map-idx.json file if not exist
   copy:
@@ -144,20 +134,3 @@
     mode: 0644
     force: yes
   # when: osm_vector_maps_enabled - always install so cmdsrv has it
-
-# Put dummy regions file in place only if it does not already exist (should have been put there when osm installed)
-- name: Copy dummy Osm Vector Maps regions.json file if not exist
-  copy:
-    src: map/regions.json
-    dest: "{{ iiab_etc_path }}/regions.json"
-    owner: root
-    group: root
-    mode: 0644
-    force: no
-  when: osm_vector_maps_enabled
-
-- name: Create a link to osm catalog in /common/assets
-  file:
-    src: "{{ iiab_etc_path }}/regions.json"
-    dest: "{{ doc_root }}/common/assets/regions.json"
-    state: link
