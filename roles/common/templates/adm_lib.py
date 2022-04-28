@@ -715,13 +715,26 @@ def check_jpg_png(selector):
 
 # Update Map Functions
 
-def get_map_catalog():
-    global map_catalog
-    input_json = CONST.map_doc_root + '/maplist/assets/regions.json'
-    with open(input_json, 'r') as regions:
-        reg_str = regions.read()
-        map_catalog = json.loads(reg_str)
-    #print(json.dumps(map_catalog, indent=2))
+def read_maps_catalog():
+    catalog = read_json_file(CONST.adm_maps_catalog_path)
+    return catalog
+
+def get_map_regions():
+    regions = {}
+    catalog = read_json_file(CONST.adm_maps_catalog_path)
+    for tile_set in catalog['maps']:
+        region = tile_set['region']
+        regions[region] = tile_set['title']
+
+    return regions
+
+#def get_map_catalog(): - not used
+#    global map_catalog
+#    input_json = CONST.map_doc_root + '/maplist/assets/regions.json'
+#    with open(input_json, 'r') as regions:
+#        reg_str = regions.read()
+#        map_catalog = json.loads(reg_str)
+#    print(json.dumps(map_catalog, indent=2))
 
 def get_map_menu_defs(intended_use='map'):
     menu_def_list = []

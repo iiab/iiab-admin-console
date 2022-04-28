@@ -7,7 +7,7 @@ var mapProdDir = '/osm-vector-maps/viewer';
 var mapAssetsDir = '/osm-vector-maps/viewer/assets';
 var mapTileServer = '/osm-vector-maps/installer/tileserver.php?./detail/{z}/{x}/{y}.pbf';
 
-var mapCatalogFile = '/common/assets/adm-map-catalog.json' // unique to admin console
+// var mapCatalogFile = ''
 var mapsDrawn = {'regions': false, 'addons': false};
 
 var mapSelectedLat = 0;
@@ -43,6 +43,7 @@ function getOsmVectStat(){
 // *************************
 
 function procOsmVectStat(data){
+  consoleLog(data)
   mapStat = data;
   mapWip = Object.keys(mapStat.WIP)
   mapInstalled = Object.keys(mapStat.INSTALLED)
@@ -80,7 +81,7 @@ function readMapCatalog(){
   regionList = [];
   var resp = $.ajax({
     type: 'GET',
-    url: mapCatalogFile,
+    url: adminConfig.adm_maps_catalog_url,
     dataType: 'json'
   })
   .done(function( data ) {

@@ -94,10 +94,9 @@ rachel_working_dir = None
 rachel_version = None
 maps_downloads_dir = None
 maps_working_dir = None
-maps_catalog_url = None
-maps_catalog_file = None
-# maps_catalog_url_v2 = future if we need to download
 adm_maps_catalog_file = None # used exclusively by admin console
+adm_maps_catalog_url = None
+adm_maps_catalog_path = None
 maps_tiles_base = None
 maps_sat_base = None
 maps_download_src = None
@@ -2076,7 +2075,6 @@ def install_presets(cmd_info):
             resp = install_oer2go_mod(module_cmd_info)
 
     # maps
-
     map_cmd_info = cmd_info
     map_list = content['maps']
     for map in map_list:
@@ -2084,7 +2082,7 @@ def install_presets(cmd_info):
         map_cmd_info['cmd_args'] = {'osm_vect_id': map}
         map_cmd_info = pseudo_cmd_handler(map_cmd_info)
         if map_cmd_info:
-            resp = install_osm_vect_set_v2(map_cmd_info)
+            resp = install_osm_vect_set(map_cmd_info)
 
     # kalite
 
@@ -2456,53 +2454,14 @@ def get_osm_vect_catalog(cmd_info):
     return cmd_malformed("DUMMY")
 
 def install_osm_vect_set(cmd_info):
-    if osm_version == 'V1':
-        return install_osm_vect_set_v1(cmd_info)
-    elif osm_version == 'V2':
-        return install_osm_vect_set_v2(cmd_info)
+    # previous versions not supported
+    if iiab_roles_status['osm_vector_maps']['active']:
+        return install_osm_vect_set(cmd_info)
     else:
         resp = cmd_error(cmd='INST-OSM-VECT-SET', msg='OSM Vectors not installed or unknown version')
         return resp
 
-
-def install_osm_vect_set_v1(cmd_info):
-    global ansible_running_flag
-    global jobs_requested
-    if 'cmd_args' in cmd_info:
-        map_id = cmd_info['cmd_args']['osm_vect_id']
-        if map_id not in maps_catalog['regions']:
-            resp = cmd_error(cmd='INST-OSM-VECT-SET', msg='Region is not in catalog in Command')
-            return resp
-    else:
-        return cmd_malformed(cmd_info['cmd'])
-
-    download_url = maps_catalog['regions'][map_id]['url'] # https://archive.org/download/en-osm-omt_north_america_2017-07-03_v0.1/en-osm-omt_north_america_2017-07-03_v0.1.zip
-    zip_name = download_url.split('/')[-1] # en-osm-omt_north_america_2017-07-03_v0.1.zip
-    download_file = maps_downloads_dir + zip_name
-    unzipped_dir = maps_working_dir + zip_name.split('.zip')[0]
-
-    # download zip file
-    job_command = "/usr/bin/wget -c --progress=dot:giga " + download_url + " -O " + download_file
-    job_id = request_one_job(cmd_info, job_command, 1, -1, "Y")
-    #print job_command
-
-    # unzip
-    job_command = "/usr/bin/unzip -uo " + download_file + " -d " + maps_working_dir
-    job_id = request_one_job(cmd_info, job_command, 2, job_id, "Y")
-    #print job_command
-
-    # move to location and clean up
-    job_command = "scripts/osm-vect_install_step3.sh"
-    job_command +=  " " + unzipped_dir
-    job_command +=  " " + vector_map_path
-    job_command +=  " " + download_file
-
-    #print job_command
-    resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=3, depend_on_job_id=job_id, has_dependent="N")
-
-    return resp
-
-def install_osm_vect_set_v2(cmd_info):
+def install_osm_vect_set(cmd_info):
     global ansible_running_flag
     global jobs_requested
     if 'cmd_args' in cmd_info:
@@ -3472,23 +3431,10 @@ def read_maps_catalog():
     global maps_catalog
     global init_error
 
-    if osm_version == 'V2':
-        fname = adm_maps_catalog_file
-    else:
-        fname = maps_catalog_file
     try:
-        stream = open (fname,"r")
-        catalog = json.load(stream)
-        if osm_version == 'V1':
-            maps_catalog = catalog
-
-        # for v2 flatten the catalog to put maps and base in same
-        # uses adm-maps-catalog.json
-        if osm_version == 'V2':
-            maps_catalog = catalog['maps']
-            maps_catalog.update(catalog['base'])
-
-        stream.close()
+        catalog = adm.read_maps_catalog()
+        maps_catalog = catalog['maps']
+        maps_catalog.update(catalog['base'])
     except:
         init_error = True
         log(syslog.LOG_ERR, 'Maps Catalog json file not found' )
@@ -3652,10 +3598,9 @@ def app_config():
     global rachel_version
     global maps_downloads_dir
     global maps_working_dir
-    global maps_catalog_url
-    global maps_catalog_file
-    global maps_catalog_url_v2
     global adm_maps_catalog_file
+    global adm_maps_catalog_url
+    global adm_maps_catalog_path
     global vector_map_path
     global maps_tiles_base
     global vector_map_tiles_path
@@ -3711,10 +3656,9 @@ def app_config():
     modules_dir = conf['modules_dir']
     maps_downloads_dir = conf['maps_downloads_dir']
     maps_working_dir = conf['maps_working_dir']
-    maps_catalog_url  = conf['maps_catalog_url']
-    maps_catalog_file  = conf['maps_catalog_file']
-    #maps_catalog_url_v2  = conf['maps_catalog_url_v2']
     adm_maps_catalog_file  = conf['adm_maps_catalog_file']
+    adm_maps_catalog_url  = conf['adm_maps_catalog_url']
+    adm_maps_catalog_path  = conf['adm_maps_catalog_path']
     vector_map_path  = conf['vector_map_path']
     vector_map_tiles_path  = conf['vector_map_tiles_path']
     maps_tiles_base  = conf['maps_tiles_base']
@@ -3728,20 +3672,12 @@ def app_config():
     apache_user = conf['apache_user']
     df_program = conf['df_program']
 
-
 def compute_vars():
     global adm_conf
     global osm_version
-    # only support the older version of vector maps if is in local_vars
-    # calculate osm version
-    if 'osm_version' in local_vars:
-        adm_conf['osm_version'] = local_vars['osm_version']
-    #elif os.path.exists(vector_map_path + '/installer'):
-    #    adm_conf['osm_version'] = 'V2'
-    #elif os.path.exists(vector_map_path):
-    #    adm_conf['osm_version'] = 'V1'
-    else:
-        adm_conf['osm_version'] = 'V2'
+    # for future use, not currently used
+
+    adm_conf['osm_version'] = 'V3'
     osm_version = adm_conf['osm_version']
     return
 
