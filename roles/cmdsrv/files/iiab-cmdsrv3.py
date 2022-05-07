@@ -3368,9 +3368,17 @@ def OBSOL_read_iiab_vars():
 def get_ansible_facts():
     global ansible_facts
 
+    adm_ansible_nolog_file =  '/tmp/adm-ansible-nolog.log' # throw away log for init
+
     command = ansible_program + " localhost -i " + iiab_repo + "/ansible_hosts  -m setup -o  --connection=local"
+    ansible_env = os.environ.copy()
+    ansible_env['ANSIBLE_LOG_PATH'] = adm_ansible_nolog_file
+    # ansible_env['ANSIBLE_NO_LOG'] = 'TRUE' # NO we only get the don't log message and not the data
     args = shlex.split(command)
-    outp = subproc_check_output(args)
+    # can't use our subproc_check_output because adding env
+    outp = subprocess.check_output(args, shell=False, universal_newlines=True, encoding='utf8', env=ansible_env)
+    os.remove(adm_ansible_nolog_file)
+
     if (get_ansible_version() < '2'):
         splitter = 'success >> '
     else:
