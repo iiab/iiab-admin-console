@@ -135,6 +135,7 @@ prereq_jobs = {}
 jobs_running = {}
 running_job_count = 0
 
+SENSITIVE_COMMANDS = ["CHGPW"]
 ANSIBLE_COMMANDS = ["RUN-ANSIBLE", "RESET-NETWORK", "RUN-ANSIBLE-ROLES"]
 ansible_running_flag = False
 iiab_roles_status = {}
@@ -254,7 +255,6 @@ def main():
                     clients.send_multipart([ident, msg.encode('utf8')])
                 else:
                     tprint('sending data message server received from client to worker %s id %s' % (msg, ident))
-                    log(syslog.LOG_INFO, 'Received CMD Message %s.' % msg )
                     workers_data.send_multipart([ident, msg.encode('utf8')])
         if workers_data in sockets:
             ident, msg = workers_data.recv_multipart()
@@ -787,25 +787,34 @@ def cmd_handler(cmd_msg):
         "CHGPW": {"funct": change_password, "inet_req": False}
         }
 
+    # parse the command
+    parse_failed, cmd_info = parse_cmd_msg(cmd_msg)
+    if parse_failed:
+        return cmd_malformed(cmd_info['cmd'])
+
+    cmd_info['cmd_msg'] = cmd_msg
+    cmd = cmd_info['cmd']
+
+    # log the command
+
+    if cmd in SENSITIVE_COMMANDS:
+        log(syslog.LOG_INFO, 'Received CMD Message %s ***.' % cmd )
+    else:
+        log(syslog.LOG_INFO, 'Received CMD Message %s.' % cmd_msg )
+
     # Check for Duplicate Command
     dup_cmd = next((job_id for job_id, active_cmd_msg in list(active_commands.items()) if active_cmd_msg == cmd_msg), None)
     if dup_cmd != None:
         strip_cmd_msg = cmd_msg.replace('\"','')
+        if cmd in SENSITIVE_COMMANDS:
+            strip_cmd_msg = cmd + ' ***'
         log(syslog.LOG_ERR, "Error: %s duplicates an Active Command." % strip_cmd_msg)
         resp = '{"Error": "' + strip_cmd_msg + ' duplicates an Active Command"}'
         return (resp)
 
     # store the command in database
     cmd_rowid = insert_command(cmd_msg)
-
-    # process the command
-    parse_failed, cmd_info = parse_cmd_msg(cmd_msg)
-    if parse_failed:
-        return cmd_malformed(cmd_info['cmd'])
-
     cmd_info['cmd_rowid'] = cmd_rowid
-    cmd_info['cmd_msg'] = cmd_msg
-    cmd = cmd_info['cmd']
 
     #print (cmd_info)
 
