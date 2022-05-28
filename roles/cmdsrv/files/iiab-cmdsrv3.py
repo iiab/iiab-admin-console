@@ -3050,6 +3050,7 @@ def get_jobs_running(cmd_info): # Not used
 def get_jobs_active_sum(cmd_info):
     global jobs_running
     jobs_stat = {'active': False}
+    jobs_stat['ansible_running_flag'] = ansible_running_flag
 
     for job, job_info in jobs_running.items():
         jobs_stat['active'] = True
