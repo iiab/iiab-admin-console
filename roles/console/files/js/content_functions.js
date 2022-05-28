@@ -185,8 +185,8 @@ function procPresetStorage(){
   var presetSpace = presetList[presetId].size_in_gb * 1024 * 1024; // convert to k
   var warningStyle = '';
   var html = '';
-	var availableSpace = Number(internalSpace.availableSpace);
-	var usedSpace = Number(internalSpace.usedSpace);
+  var availableSpace = Number(internalSpace.availableSpace);
+  var usedSpace = Number(internalSpace.usedSpace);
 
   if (presetSpace / availableSpace > .85)
     warningStyle = 'style="color: darkorange;"';
