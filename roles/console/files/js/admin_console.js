@@ -17,6 +17,7 @@ var config_vars = {}; // working variable, no long separate from local vars
 var servicesToHide = [] // use this to block services that have gone out of fashion but have not been removed
 var iiab_ini = {};
 var allJobsStatus = {};
+var jobActiveSum = {};
 var jobStatusLastRowid = 1 // trigger refresh
 var langCodes = {}; // iso code, local name and English name for all languages we support, read from file
 var langCodesXRef = {}; // lookup langCodes key by iso2
@@ -1350,6 +1351,18 @@ function getRolesStat(data) { // try php style function
   }
 
 // Utility Menu Functions
+
+function getJobActiveSum()
+{
+  var command = "GET-JOB-ACTIVE-SUM"
+  sendCmdSrvCmd(command, procJobActiveSum);
+  return true;
+}
+
+function procJobActiveSum(data)
+{
+  jobActiveSum = data;
+}
 
 function getJobStat()
 {
