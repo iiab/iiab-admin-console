@@ -147,9 +147,14 @@ function readableSize(kbytes) {
 
 // Install Preset Functions
 
+function installPresetInit(){
+  $.when(getSpaceAvail(), getJobActiveSum(),getPresetList()).then(procPresetStorage);
+}
+
 function getPresetList(){
   if ($("#PresetList").html() != '') // only populate if empty
-    return;
+    // return;
+    return $.Deferred().resolve().promise();
   var command = "GET-PRESET-LIST";
   var cmd_args = {};
   cmd = command + " " + JSON.stringify(cmd_args);
@@ -164,7 +169,7 @@ function procPresetList(data){
   for (var id in presetList){
     html += '<div class="radio">';
     html += '<label><input type="radio" name="content-preset" id="';
-    html += id + '" value="' + id + '"' + checked + '>';
+    html += id + '" value="' + id + '"' + checked + ' onchange="procPresetStorage()">';
     checked = '' // only first one
     html += '<b>' + presetList[id].name + '</b>: ' + presetList[id].description;
     html += '</label><div>';
@@ -172,6 +177,35 @@ function procPresetList(data){
     $("#PresetList").html(html);
   }
 }
+
+function procPresetStorage(){
+  var internalSpace = calcLibraryDiskSpace(); // returns mix of str and number
+  var allocatedSpace = calcAllocatedSpace();
+  var presetId = $("#instConPresets input[type='radio']:checked").val()
+  var presetSpace = presetList[presetId].size_in_gb * 1024 * 1024; // convert to k
+  var warningStyle = '';
+  var html = '';
+	availableSpace = Number(internalSpace.availableSpace);
+	usedSpace = Number(internalSpace.usedSpace);
+
+  if (presetSpace / availableSpace > .85)
+    warningStyle = 'style="color: darkorange;"';
+  if (presetSpace > availableSpace)
+    warningStyle = 'style="color: red;"';
+
+  html += 'Storage for Preset: ';
+  html += '<b><span ' + warningStyle + '>' + readableSize(presetSpace) + '</span</b>';
+
+  $("#presetTotalDiskSpace").html('Total Storage: <b>' + readableSize(usedSpace + availableSpace) + '</b>');
+  $("#presetAvailDiskSpace").html('Available Storage: <b>' + readableSize(availableSpace) + '</b>');
+  $("#presetReqdDiskSpace").html(html);
+
+}
+
+function updatePresetSpace(cb){
+  procPresetStorage();
+}
+
 
 function installPreset(presetId){
   var command = "INST-PRESETS";

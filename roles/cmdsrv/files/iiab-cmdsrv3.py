@@ -747,6 +747,7 @@ def cmd_handler(cmd_msg):
         "GET-ROLES-STAT": {"funct": get_roles_stat, "inet_req": False},
         "RESET-NETWORK": {"funct": run_ansible, "inet_req": False},
         "GET-JOB-STAT": {"funct": get_last_jobs_stat, "inet_req": False},
+        "GET-JOB-ACTIVE-SUM": {"funct": get_jobs_active_sum, "inet_req": False},
         "CANCEL-JOB": {"funct": cancel_job, "inet_req": False},
         "GET-WHLIST": {"funct": get_white_list, "inet_req": False},
         "SET-WHLIST": {"funct": set_white_list, "inet_req": False},
@@ -3035,7 +3036,7 @@ def get_jobs_running(cmd_info): # Not used
     job_stat = {}
     cur_jobs = {}
     for job, job_info in jobs_running.items():
-        if today in job_info['status_datetime'] or jobinfo['status'] in ['SCHEDULED','STARTED']:
+        if today in job_info['status_datetime'] or job_info['status'] in ['SCHEDULED','STARTED']:
             job_stat['status'] = job_info['status']
             job_stat['job_command'] = job_info['job_command']
             job_stat['status_datetime'] = job_info['status_datetime']
@@ -3044,6 +3045,21 @@ def get_jobs_running(cmd_info): # Not used
             cur_jobs[job] = job_stat
 
     resp = json.dumps(cur_jobs)
+    return resp
+
+def get_jobs_active_sum(cmd_info):
+    global jobs_running
+    jobs_stat = {'active': False}
+
+    for job, job_info in jobs_running.items():
+        jobs_stat['active'] = True
+        status = job_info['status']
+        if status in jobs_stat:
+            jobs_stat[status] += 1
+        else:
+            jobs_stat[status] = 1
+
+    resp = json.dumps(jobs_stat)
     return resp
 
 def json_array(name, str):
