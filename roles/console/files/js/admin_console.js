@@ -285,7 +285,30 @@ function instContentButtonsEvents() {
   });
 
   $("#INST-CONTENT-PRESET").click(function(){
-    var presetId = $("#instConPresets input[type='radio']:checked").val()
+    var presetId = $("#instConPresets input[type='radio']:checked").val();
+    var presetSpace = presetList[presetId].size_in_gb * 1024 * 1024;
+    var internalSpace = calcLibraryDiskSpace();
+    var availableSpace = Number(internalSpace.availableSpace);
+	  var usedSpace = Number(internalSpace.usedSpace);
+    var totalSpace = usedSpace + availableSpace;
+
+    // not enough storage on device
+    if (presetSpace >= totalSpace){
+      alert('There is not enough Storage Space for this Collection');
+      return
+    }
+    if (presetSpace + 5 * 1024 * 1024 > totalSpace){ // less than 5G is cutting it too close
+      alert('The Storage Space is too tight for this Collection');
+      return
+    }
+    // now what if there is not enough available, but we might already installed some
+    // come back to this
+
+    if (presetSpace > availableSpace){
+      if (! confirm('There is not enough Available Storage Space for this Collection\nIf this preset has not already been partially installed\nPLEASE CANCEL'));
+        return
+    }
+
     installPreset(presetId);
     alert ("Selected Preset Installation Started.\n\nPlease view Utilities->Display Job Status to see the results.");
   });
