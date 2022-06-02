@@ -80,7 +80,15 @@ var getConfigJson = $.getJSON(configJson)
     .fail(jsonErrhandler);
 
 // get menu items
-var getMenuJson = $.getJSON(menuJson)
+// move to $.ajax to turn off cache
+// var getMenuJson = $.getJSON(menuJson)
+var getMenuJson = $.ajax({
+      dataType: "json",
+      url: menuJson,
+      headers: {
+      'Cache-Control': 'no-cache'
+      }
+    })
     .done(function (data) {
         consoleLog(data);
         menuParams = data;
