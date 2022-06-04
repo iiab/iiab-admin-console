@@ -153,6 +153,8 @@ def get_oer2go_cat():
     err_num = 0
     err_str = "SUCCESS"
     oer2go_catalog = None
+    oer2go_catalog_json = None
+
     try:
         url_handle = urllib.request.urlopen(adm.CONST.oer2go_cat_url)
         oer2go_catalog_json = url_handle.read()
@@ -190,13 +192,3 @@ def parse_args():
 if __name__ == "__main__":
     # Now run the main routine
     main()
-
-
-try:
-    url_handle = urllib.request.urlopen(adm.CONST.oer2go_cat_url)
-    oer2go_catalog_json = url_handle.read()
-    url_handle.close()
-except (RemoteDisconnected) as exc:
-    err_str = "GET-OER2GO-CAT ERROR - \n"
-    err_num = 1
-
