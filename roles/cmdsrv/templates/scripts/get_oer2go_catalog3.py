@@ -85,6 +85,8 @@ def main ():
         err_num, err_str, oer2go_catalog = get_oer2go_cat()
         if err_num != 0:
             download_flag = False
+            if verbose:
+                print("OER2Go Catalog download failed. Using existing catalog.")
     if not download_flag: # get local copy
         local_oer2go_catalog = adm.read_json(adm.CONST.oer2go_catalog_file)
         oer2go_catalog = local_oer2go_catalog['modules']
