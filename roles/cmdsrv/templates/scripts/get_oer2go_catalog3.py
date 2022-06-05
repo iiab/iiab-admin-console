@@ -85,6 +85,8 @@ def main ():
         err_num, err_str, oer2go_catalog = get_oer2go_cat()
         if err_num != 0:
             download_flag = False
+            if verbose:
+                print("OER2Go Catalog download failed. Using existing catalog.")
     if not download_flag: # get local copy
         local_oer2go_catalog = adm.read_json(adm.CONST.oer2go_catalog_file)
         oer2go_catalog = local_oer2go_catalog['modules']
@@ -136,7 +138,7 @@ def main ():
 
         iiab_oer2go_catalog[moddir] = module
 
-    # write catalog even if not downloaded as our could have changed
+    # write catalog even if not downloaded as ours could have changed
     dated_oer2go_cat = {}
     dated_oer2go_cat['download_date'] = time.strftime("%Y-%m-%d.%H:%M:%S")
     dated_oer2go_cat['modules'] = iiab_oer2go_catalog
@@ -155,22 +157,23 @@ def get_oer2go_cat():
     oer2go_catalog = None
     oer2go_catalog_json = None
 
-    try:
-        url_handle = urllib.request.urlopen(adm.CONST.oer2go_cat_url)
-        oer2go_catalog_json = url_handle.read()
-        url_handle.close()
-    except (urllib.error.URLError) as exc:
-        err_str = "GET-OER2GO-CAT ERROR - " + str(exc.reason) +'\n'
-        err_num = 1
-        oer2go_catalog_json = None
+    for n in range(1,6):
+        try:
+            url_handle = urllib.request.urlopen(adm.CONST.oer2go_cat_url)
+            oer2go_catalog_json = url_handle.read()
+            url_handle.close()
+            break
+        except (urllib.error.URLError) as exc:
+            err_str = "GET-OER2GO-CAT ERROR - " + str(exc.reason) +'\n'
+            err_num = 1
+            oer2go_catalog_json = None
+        except (Exception) as exc:
+            err_str = "GET-OER2GO-CAT ERROR - Unable to download catalog\n"
+            err_num = 1
 
-    # except (RemoteDisconnected) as exc: # where do I import this exception?
-    #    err_str = "GET-OER2GO-CAT ERROR - Remote end closed connection without response\n"
-    #    err_num = 1
-
-    except (Exception) as exc:
-        err_str = "GET-OER2GO-CAT ERROR - Unable to download catalog\n"
-        err_num = 1
+        if verbose:
+            print("Retrying download of catalog.")
+        time.sleep(5) # wait to try again
 
     # now try to parse
     if oer2go_catalog_json:
