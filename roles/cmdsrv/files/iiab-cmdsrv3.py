@@ -1095,7 +1095,9 @@ def get_space_avail(cmd_info):
     return (resp)
 
 def get_storage_info_lite(cmd_info):
-    outp = subproc_check_output([df_program, "-lh"])
+    cmd = df_program + ' -lh'
+    cmd_args = shlex.split(cmd)
+    outp = subproc_check_output(cmd_args)
     json_outp = json_array("system_fs", outp)
     return (json_outp)
 
