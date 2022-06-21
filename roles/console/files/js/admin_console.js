@@ -1109,6 +1109,12 @@ function initStaticWanVars() {
 }
 
 function setConfigVars () {
+  // refresh config_vars in case front and back ends are out of sync
+  $.when(sendCmdSrvCmd("GET-VARS", getInstallVars)).then(setConfigVarsCmd);
+  return true;
+}
+
+function setConfigVarsCmd () {
   //alert ("in setConfigVars");
   var cmd_args = {};
   var changed_vars = {} // now we only send deltas to back end
