@@ -1761,6 +1761,10 @@ def set_config_vars(cmd_info):
     # for user settable service roles
     # if enabled true set install to true
     # if enabled false and rolestatus install false set install to false
+
+    if ansible_running_flag:
+        return (cmd_error(msg="Cannot set Configuration while Ansible Command is Running. Please resubmit later."))
+
     read_iiab_roles_stat()
     fix_install = {}
     for var in config_vars:
