@@ -1,2 +1,2 @@
 squid_service: squid3
-df_program: /bin/df -x fuse.portal
+df_program: /bin/df -x fuse.portal -a
