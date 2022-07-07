@@ -1,5 +1,11 @@
 #!/usr/bin/python3
 
+# As of July, 2022 the oer2go catalog v1 url does not exist
+# We will patch temporarily in case it come back
+# But we will use our previously downloaded copy for now
+# We will do this by simply setting the download_flag = False
+
+# Previously:
 # Get new oer2go (rachel) catalog
 # for now we will assume that old modules are still in the current catalog
 # exclude known modules that we get by another means, such as zims
@@ -29,7 +35,7 @@ import iiab.iiab_lib as iiab
 import iiab.adm_lib as adm
 
 verbose = False
-download_flag = True
+download_flag = False
 
 oer2go_duplicates = {'en': [5, 6, 17, 19, 20, 23, 44, 50, 60, 65, 68, 86, 88, 93, 122, 139, 205],
   'es': [26, 49, 51, 53, 58, 59, 61, 63, 66, 69, 72, 75, 94],
@@ -56,8 +62,8 @@ def main ():
     args = parse_args()
     if args.verbose:
         verbose = True
-    if args.no_download:
-        download_flag = False
+    #if args.no_download:
+    #    download_flag = False
 
     # make sure we have menu js_menu_dir if args.menu true
     if args.menu:
@@ -187,7 +193,7 @@ def get_oer2go_cat():
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Get Rachel/OER2Go catalog. Create menu defs if not found.")
-    parser.add_argument("--no_download", help="Don't download catalog just check which modules are installed", action="store_true")
+    # parser.add_argument("--no_download", help="Don't download catalog just check which modules are installed", action="store_true")
     parser.add_argument("--menu", help="When downloading generate files for IIAB menu and put them in iiab-menu/local/unedited", action="store_true")
     parser.add_argument("-v", "--verbose", help="Print messages.", action="store_true")
     return parser.parse_args()
