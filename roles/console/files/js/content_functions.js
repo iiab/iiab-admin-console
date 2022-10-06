@@ -419,19 +419,32 @@ function rmContent() {
 	var device = calcManContentDevice();
 	var clearFunction = clearRmSelections(device, reset=true);
 	var refreshFunction = refreshRemovePanel(device);
-	var calls =[delModules(device, "zims"),
-              delModules(device, "modules")];
+	var calls =[delContent(device)];
 	if (device == "internal"){
 		calls.push(delDownloadedFileList("downloadedFilesRachel", "zims"));
 		calls.push(delDownloadedFileList("downloadedFilesRachel", "rachel"));
 	}
 
+  // when delContent done
+  // assume that everything worked and remove content from panel
+  // popup that may need to refresh screen
+  // do clear and refresh functions do anything
+  // getRmList(device, contentType); to get lists; could actually uncheck there (? triggers space calc)
+  // getContentMenuToEdit('home') must be done since menu changed
+  // for now don't do
+  // refreshAllContentPanels
+  // refreshAllInstalledList
+
+  // problem is that make kiwix lib is not finished yet
+
   $.when.apply($, calls)
-    //delDownloadedFileList("downloadedFilesRachel", "rachel"),
-    //delDownloadedFileList("downloadedFilesZims", "zims"),
-    //delModules("installedZimModules", "zims"),
-    //delModules("installedOer2goModules", "modules"))
-    .done(clearFunction, refreshFunction);
+  .then(function(){
+    console.log('in rmContent.done');
+    clearFunction();
+    refreshFunction();
+    getContentMenuToEdit('home');
+    alert ("Files have been deleted.\n\nPlease click Refresh Display to see the results.");
+  });
 }
 
 function calcManContentDevice(){
@@ -473,6 +486,7 @@ function refreshAllContentPanels() {
 }
 
 function refreshAllInstalledList() {
+  console.log('in refreshAllInstalledList');
 	$.when(getDownloadList(), getOer2goStat(), getZimStat())
 	.done(renderZimInstalledList, renderOer2goInstalledList, refreshDiskSpace);
 }
@@ -497,8 +511,10 @@ function delDownloadedFileList(id, sub_dir) {
 	var fileList = [];
   $("#" + id + " input").each(function() {
     if (this.type == "checkbox") {
-      if (this.checked)
-      fileList.push(this.name);
+      if (this.checked){
+        fileList.push(this.name);
+        this.checked = false;
+      }
     }
   });
 
@@ -512,7 +528,21 @@ function delDownloadedFileList(id, sub_dir) {
   return sendCmdSrvCmd(delCmd, genericCmdHandler);
 }
 
-function delModules(device, mod_type) {
+function delContent(device) {
+  var delArgs = {}
+
+  delArgs['device'] = device;
+  delArgs['content'] = {};
+
+  for (contentType of ['zims', 'modules']){
+    delArgs['content'][contentType] = getRmList(device, contentType);
+  }
+
+  var delCmd = 'DEL-CONTENT ' + JSON.stringify(delArgs);
+  return sendCmdSrvCmd(delCmd, genericCmdHandler);
+}
+
+function ORIGdelModules(device, mod_type) {
   var delArgs = {}
 	var modList = [];
 
@@ -577,7 +607,7 @@ function getRmList(device, mod_type){
   console.log(params.selectorId);
   $("#" + params.selectorId + " input").each(function() {
     if (this.type == "checkbox") {
-      if (this.checked)
+      if (this.checked){
         if (mod_type == "zims"){
         	zim_path = params.catalog[this.name].path;
         	zim_file = zim_path.split('/').pop(); // take only file name
@@ -586,6 +616,9 @@ function getRmList(device, mod_type){
         }
         else
         	modList.push(this.name);
+        //this.attr("checked", false);
+        this.checked = false;
+      }
     }
   });
   console.log(modList);

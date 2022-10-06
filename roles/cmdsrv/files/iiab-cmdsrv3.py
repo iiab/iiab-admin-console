@@ -774,6 +774,7 @@ def cmd_handler(cmd_msg):
         "INST-KALITE": {"funct": install_kalite, "inet_req": True},
         "DEL-DOWNLOADS": {"funct": del_downloads, "inet_req": False},
         "DEL-MODULES": {"funct": del_modules, "inet_req": False},
+        "DEL-CONTENT": {"funct": del_content, "inet_req": False},
         "GET-MENU-ITEM-DEF-LIST": {"funct": get_menu_item_def_list, "inet_req": False},
         "UPDATE-HOME-MENU": {"funct": update_home_menu, "inet_req": False},
         "SAVE-MENU-DEF": {"funct": save_menu_def, "inet_req": False},
@@ -957,6 +958,74 @@ def del_downloads(cmd_info):
             # ignore for now but report
             error_flag = True
             pass
+
+    if error_flag:
+        resp = cmd_success_msg(cmd_info['cmd'], "- Some errors occurred")
+    else:
+        resp = cmd_success(cmd_info['cmd'])
+
+    return (resp)
+
+def del_content(cmd_info): # includes zims
+    error_flag = False
+    rm_menu_items = []
+    device = cmd_info['cmd_args']['device']
+    content = cmd_info['cmd_args']['content']
+
+    for content_type in content:
+        if content_type not in ["zims", "modules"]:
+            return cmd_malformed(cmd_info['cmd'])
+
+    for content_type in content:
+        if content_type == "zims":
+            target_dir = zim_dir
+        else:
+            target_dir = modules_dir
+
+        if device != "internal":
+            target_dir = '/media/usb' + device[-1] + target_dir # prevent injection of other device
+
+        for item in content[content_type]:
+            try:
+                if content_type == "zims":
+                    filelist=glob(target_dir + "content/" + item + "*")
+                    for file in filelist:
+                        os.remove(file)
+
+                    # shutil.rmtree(target_dir + "index/" + mod + ".idx", ignore_errors=True) no index directories any more
+                else: # modules
+                    shutil.rmtree(target_dir + item)
+            except:
+                # ignore for now but report
+                error_flag = True
+                pass
+
+        if content_type == "zims" and device == "internal":
+            make_kiwix_lib(cmd_info) # create job to reindex kiwix
+
+    if device == "internal":
+        home_menu = adm.read_json(adm.CONST.menu_json_file)
+
+        if home_menu['autoupdate_menu']:
+            menu_defs = adm.get_all_menu_defs()
+
+            for menu_item in home_menu['menu_items_1']:
+                try:
+                    if menu_defs[menu_item]['intended_use'] == 'zim':
+                        for zim in content['zims']:
+                            if zim.startswith(menu_defs[menu_item]['zim_name']):
+                                rm_menu_items.append(menu_item)
+                    elif menu_defs[menu_item]['intended_use'] == 'html':
+                        for module in content['modules']:
+                            if menu_defs[menu_item]['moddir'] == module:
+                                rm_menu_items.append(menu_item)
+                except:
+                    error_flag = True
+                    continue
+
+            for item in rm_menu_items:
+                home_menu['menu_items_1'].remove(item)
+            adm.write_json_file(home_menu, adm.CONST.menu_json_path)
 
     if error_flag:
         resp = cmd_success_msg(cmd_info['cmd'], "- Some errors occurred")
