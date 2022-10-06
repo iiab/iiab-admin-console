@@ -375,8 +375,8 @@ function readKiwixCatalog() { // Reads kiwix catalog from file system as json
 
 function checkKiwixCatalogDate() {
 	today = new Date();
-	if (today - kiwixCatalogDate > 30 * dayInMs){
-		alert ("Kiwix Catalog is Older than 30 days.\n\nPlease click Refresh Kiwix Catalog in the menu.");
+	if (today - kiwixCatalogDate > 3 * dayInMs){
+		alert ("Kiwix Catalog is Older than 3 days.\n\nPlease click Refresh Kiwix Catalog in the menu to get the latest.");
 	}
 }
 
