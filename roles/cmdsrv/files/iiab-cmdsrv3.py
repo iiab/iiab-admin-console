@@ -2233,14 +2233,16 @@ def install_zims(cmd_info):
 
 
         downloadSrcFile = kiwix_catalog[zimId]['download_url']
-        #print(downloadSrcFile)
-        try:
-            rc = urllib.request.urlopen(downloadSrcFile)
-            rc.close()
-        except (urllib.error.URLError) as exc:
-            errmsg = str("Zim File " + zimFileRef + " not found in Cmd")
-            resp = cmd_error(cmd='INST-ZIMS', msg=errmsg)
-            return resp
+        # print(downloadSrcFile)
+        # this yields false negatives, so removing
+
+        #try:
+        #    rc = urllib.request.urlopen(downloadSrcFile)
+        #    rc.close()
+        #except (urllib.error.URLError) as exc:
+        #    errmsg = str("Zim File " + zimFileRef + " not found in Cmd")
+        #    resp = cmd_error(cmd='INST-ZIMS', msg=errmsg)
+        #    return resp
 
         targetDir = zim_working_dir + zimFileRef
         if kiwix_catalog[zimId]['source'] == 'portable': # create working dir, but only for zips
