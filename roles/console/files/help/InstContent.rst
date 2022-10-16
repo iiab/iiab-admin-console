@@ -171,7 +171,7 @@ Actions
 
 **Refresh Display** recalculates what is installed and what is in the process of being installed and tags content accordingly.
 
-**Reindex Kiwix Content** in order to display a ZIM file Kiwix needs it to be in the library.xml catalog. Normally this should happen automatically. Click this to force a redindex.
+**Reindex Kiwix Content** in order to display a ZIM file Kiwix needs it to be in the library.xml catalog. Normally this should happen automatically. Click this to force a reindex.
 
 **Refresh Kiwix Catalog** gets the latest catalog of ZIM files from Kiwix. You are warned it the catalog is more than 30 days old.
 
