@@ -173,6 +173,6 @@ Actions
 
 **Reindex Kiwix Content** in order to display a ZIM file Kiwix needs it to be in the library.xml catalog. Normally this should happen automatically. Click this to force a reindex.
 
-**Refresh Kiwix Catalog** gets the latest catalog of ZIM files from Kiwix. You are warned it the catalog is more than 30 days old.
+**Refresh Kiwix Catalog** gets the latest catalog of ZIM files from Kiwix. You are warned if the catalog is more than 3 days old.
 
-**Refresh OER2Go Catalog** gets the latest catalog of content modules from OER2Go.  You are warned it the catalog is more than 30 days old.
+**Refresh OER2Go Catalog** gets the latest catalog of content modules from OER2Go.  You are warned if the catalog is more than 30 days old.
