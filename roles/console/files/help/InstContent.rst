@@ -40,7 +40,7 @@ Kiwix.org supplies a server that is installed on Internet-in-a-Box and also host
 
 ### Do this First
 
-Click on the button labelled **Refresh Kiwix Catalog** if you have not done so before or if it has been a month or more since you last did so.  This will retrieve the latest list of content hosted at Kiwix.org.
+Click on the button labelled **Refresh Kiwix Catalog** if you have not done so before or if it has been 3 days or more since you last did so.  This will retrieve the latest list of content hosted at Kiwix.org.
 
 ### How it works
 
