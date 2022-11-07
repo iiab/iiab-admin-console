@@ -45,7 +45,6 @@
 - name: Install rclone for wasabi
   shell: curl -s https://rclone.org/install.sh | bash -
   args:
-    warn: no
     creates: /usr/bin/rclone
 
 - name: Configure rclone wasabi-iiab-share
