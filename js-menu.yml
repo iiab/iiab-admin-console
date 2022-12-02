@@ -25,7 +25,7 @@
     cmdsrv_lower_job_priority_flag: "true" # json requires true, not True
     cmdsrv_lower_job_priority_str: "/usr/bin/nice -n19 /usr/bin/ionice -c2 -n7 "
     # because this is not globally in local vars we won't see iiab's role defaults
-    kiwix_url: /kiwix/
+    kiwix_url: /kiwix/viewer#
     kolibri_url: /kolibri
     nodered_port: 1234
 
