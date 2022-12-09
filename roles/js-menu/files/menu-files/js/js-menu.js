@@ -359,6 +359,8 @@ function procMenuItem(module) {
         menuHtml += calcCalibreWebLink(module);
     else if (module['intended_use'] == "internetarchive")
         menuHtml += calcInternetArchiveLink(module);
+    else if (module['intended_use'] == "azuracast")
+        menuHtml += calcAzuraCastLink(module);
     else if (module['intended_use'] == "map")
         menuHtml += calcMapLink(module);
     else if (module['intended_use'] == "info")
@@ -477,6 +479,12 @@ function calcNoderedLink(module) {
 
 function calcInternetArchiveLink(module) {
     var href = host + ':' + menuConfig.internetarchivePort;
+    var html = calcItemHtml(href, module);
+    return html
+}
+
+function calcAzuraCastLink(module) {
+    var href = host + ':' + menuConfig.azuracastPort;
     var html = calcItemHtml(href, module);
     return html
 }
