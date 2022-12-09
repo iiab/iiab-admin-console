@@ -31,6 +31,7 @@
     kiwix_url: /kiwix/viewer#
     kolibri_url: /kolibri
     nodered_port: 1234
+    azuracast_http_port: 12080
 
   vars_files:
   - "{{ iiab_repo }}/vars/default_vars.yml"
