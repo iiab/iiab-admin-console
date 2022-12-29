@@ -202,7 +202,7 @@
   copy: src="json/oer2go_catalog.json"
         dest="/etc/iiab/oer2go_catalog.json"
         mode=0644
-        force=no
+        force=yes
         owner=root
         group=root
 
