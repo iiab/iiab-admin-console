@@ -722,6 +722,7 @@ def cmd_handler(cmd_msg):
 
     avail_cmds = {
         "TEST": {"funct": do_test, "inet_req": False},
+        "TEST-JOB": {"funct": do_test_job, "inet_req": False},
         "LIST-LIBR": {"funct": list_library, "inet_req": False},
         "WGET": {"funct": wget_file, "inet_req": True},
         "GET-ADM-CONF": {"funct": get_adm_conf, "inet_req": False},
@@ -883,6 +884,23 @@ def do_test(cmd_info):
     outp = subproc_check_output(["scripts/test.sh"])
     json_outp = json_array("TEST",outp)
     return (json_outp)
+
+def do_test_job(cmd_info):
+    if 'cmd_args' in cmd_info:
+        steps = cmd_info['cmd_args']['steps']
+    else:
+        return cmd_malformed(cmd_info['cmd'])
+
+    step_no = 1
+    job_id = -1
+    for step_sleep in steps:
+        job_command = "scripts/test-job.sh " + str(step_sleep)
+        if step_no < len(steps):
+            job_id = request_one_job(cmd_info, job_command, step_no, job_id, "Y")
+        else:
+            resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=step_no, depend_on_job_id=job_id, has_dependent="N")
+        step_no += 1
+    return resp
 
 def list_library(cmd_info):
     libr_list = {}
