@@ -2993,7 +2993,6 @@ def request_one_job(cmd_info, job_command, cmd_step_no, depend_on_job_id, has_de
     global jobs_requested
     global prereq_jobs
 
-    prereq_info = {}
     job_id = get_job_id()
 
     job_info = {}
@@ -3022,8 +3021,8 @@ def request_one_job(cmd_info, job_command, cmd_step_no, depend_on_job_id, has_de
     insert_job(job_id, cmd_info['cmd_rowid'], job_command, opt_args_json, cmd_step_no, depend_on_job_id, has_dependent)
 
     if has_dependent == "Y":
-        prereq_info ['status'] = job_info['status'] # should be OK because is local prereq_info and only one job_id
-        prereq_jobs[job_id] = prereq_info
+        prereq_jobs[job_id] = {}
+        prereq_jobs[job_id]['status'] = job_info['status']
 
     if cmd_step_no == 1:
         add_wip(job_info)
