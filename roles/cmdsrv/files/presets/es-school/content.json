@@ -4,29 +4,28 @@
     "phet_es",
     "wiktionary_es_all_maxi",
     "wikiquote_es_all_maxi",
-    "ecured_es_all",
     "gcflearn_es_all_maxi",
+    "ecured_es_all",
     "gutenberg_es_all",
-    "wikipedia_en_top_maxi",
     "wikipedia_en_simple_all_maxi",
     "wiktionary_en_simple_all_maxi",
     "crashcourse_en_top"
   ],
   "modules": [
+    "es-blockly-games",
     "es-hesperian_health",
     "es-medline_plus",
-    "es-educalab",
     "es-soluciones",
     "es-wikihow",
     "es-bibliofilo",
-    "es-vedoque",
-    "es-mustardseedbooks",
-    "es-ebooks"
+    "es-mustardseedbooks/MustardSeedBooksSP.html",
+    "es-ebooks",
+    "es-biblioteca"
   ],
   "maps": [
     "satellite_z0-z9_2020.mbtiles",
-    "osm-planet_z0-z10_2020.mbtiles",
-    "osm_central_america_z11-z14_2020.mbtiles"
+    "osm_central_america_z11-z14_2020.mbtiles",
+    "osm-planet_z0-z10_2020.mbtiles"
   ],
   "kalite": {
     "lang_code": "es",
