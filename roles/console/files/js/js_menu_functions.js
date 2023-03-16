@@ -207,6 +207,13 @@ function drawMenuItemSelectList () { // for selecting menu item to edit definiti
     handleEditMenuItemClick($(this).attr('menu_item_name'), 'clone');
     //consoleLog($(this));
   });
+
+  // create default menu item in edit panel of first item on menu
+
+  if($('#menu_item_name').val() == ''){
+    handleEditMenuItemClick(currentJsMenuToEdit.menu_items_1[0], 'edit');
+    $('#menusEditMenuItemTabs a[href="#menusEditMenuItemSelect"]').tab('show'); // redisplay select tab
+  }
 }
 
 function drawMenuItemSelectListItem (menuItemName, prefix) {

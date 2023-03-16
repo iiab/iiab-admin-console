@@ -1,8 +1,8 @@
 {
     "name": "School Server in Spanish",
-    "description": "This version of IIAB has been installed in numerous schools in the Oaxaca region of Mexico",
+    "description": "This is an updated version of IIAB that has been installed in numerous schools in the Oaxaca region of Mexico",
     "default_lang": "es",
-    "location": "Oaxaca, Mexicon",
-    "size_in_gb": 107,
-    "last_modified": "2021-05-01"
+    "location": "Oaxaca, Mexico",
+    "size_in_gb": 112,
+    "last_modified": "2023-03-01"
   }
