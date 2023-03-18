@@ -1742,7 +1742,7 @@ def get_inet_speed(cmd_info):
     return (json_outp)
 
 def get_inet_speed2(cmd_info):
-    outp = subproc_check_output(["/usr/bin/speedtest-cli","--simple"])
+    outp = subproc_check_output(["/usr/local/speedtest/bin/speedtest-cli","--simple"])
     json_outp = json_array("internet_speed", outp)
     return (json_outp)
 
