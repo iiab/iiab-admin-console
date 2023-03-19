@@ -22,18 +22,13 @@
 #   tags:
 #     - download2
 
-- name: Download speedtest-cli
-  command: "pip3 download --dest {{ pip_packages_dir }} speedtest-cli"
-  # "pip install --download <dir> SomePkg" (below) is DEPRECATED after pip 9.x
-  #pip: name=speedtest-cli
-  #     extra_args="--download {{ pip_packages_dir }}"
-  when: not use_cache and not no_network
-  tags:
-    - download2
-
-- name: Install speedtest-cli
-  pip: name=speedtest-cli
-       extra_args="--no-index --find-links=file://{{ pip_packages_dir }}"
+- name: Install speedtest-cli into virtual environment
+  pip:
+    name: speedtest-cli
+    virtualenv: /usr/local/speedtest
+    virtualenv_site_packages: no
+    virtualenv_command: python3 -m venv /usr/local/speedtest
+    extra_args: "--no-cache-dir"
 
 - name: Download piclone_cmd to /usr/sbin
   get_url:
