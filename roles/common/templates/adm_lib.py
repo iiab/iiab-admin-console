@@ -781,7 +781,7 @@ def write_vector_map_idx(installed_maps):
     idx_dict = {}
     for fname in installed_maps:
         region = extract_region_from_filename(fname)
-        if map == 'maplist': continue # not a real region
+        if region == 'maplist': continue # not a real region
         map_dict = map_catalog['regions'].get(region, '')
         if map_dict == '': continue
 

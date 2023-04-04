@@ -47,11 +47,11 @@ def main():
     # create init.json which sets initial coords and zoom
     if is_map:
         init = {}
-        map = map_catalog[map_id]
-        init['region'] = map['region']
-        init['zoom'] = map['zoom']
-        init['center_lon'] = map['center_lon']
-        init['center_lat'] = map['center_lat']
+        osm_map = map_catalog[map_id]
+        init['region'] = osm_map['region']
+        init['zoom'] = osm_map['zoom']
+        init['center_lon'] = osm_map['center_lon']
+        init['center_lat'] = osm_map['center_lat']
         init_fn = viewer_path + '/init.json'
         adm.write_json_file(init, init_fn)
 
