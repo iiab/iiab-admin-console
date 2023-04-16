@@ -137,10 +137,46 @@ function jsMenuMain(menuDiv) {
         } else {
             toggleDisplay = false;
         }
-        $.when(getMenuJson, getZimVersions, getConfigJson).always(procPage); // ignore errors like kiwix not installed
+        $.when(getMenuJson, getZimVersions, getConfigJson).always(checkMenuJson); // ignore errors like kiwix not installed
     }
     else {
         $.when(getConfigJson).then(procStatic);
+    }
+}
+
+// as of 4/16/2023 for unknown reasons < 1% of installs experience corruption of menu.json
+    // try to repair that one case
+
+function checkMenuJson(){
+    console.log('in checkMenuJson')
+    if (Object.keys(menuParams).length != 0)
+        procPage()
+    else {
+        $.get( menuJson, function() {
+            console.log( "Reading raw json" );
+          })
+            .always(function(    data, textStatus, errorThrown){
+                console.log(errorThrown)
+                jsonStr = data.responseText
+                console.log(jsonStr)
+                //console.log( "finished", data.responseText );
+                try {
+                    JSON.parse(jsonStr)
+                }
+                catch(e) {
+                    parseErr = e.message
+                    //consoleLog(e)
+                    parseErrParts = parseErr.split('Unexpected non-whitespace character after JSON at position ')
+                    if (parseErrParts.length == 2){
+                        menuParams = JSON.parse(jsonStr.substring(0, parseInt(parseErrParts[1])))
+                        menuItems = menuParams.menu_items_1;
+                        procPage()
+
+                        //alert('Menu.json file is corrupt. Attempting temporary repair.')
+                        //return true
+                    }
+                }
+            });
     }
 }
 
@@ -941,6 +977,7 @@ function sendFeedback() {
         });
     return resp;
 }
+
 function jsonErrhandler(jqXHR, textStatus, errorThrown) {
     // only handle json parse errors here, others in ajaxErrHandler
     //  if (textStatus == "parserror") {
