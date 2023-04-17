@@ -528,8 +528,8 @@ def put_iiab_enabled_into_menu_json():
             update_menu_json(CONST.iiab_menu_items[iiab_option], no_lang=True) # accept same item in a different language
 
 def update_menu_json(new_item, no_lang=False):
-    data = read_json_file(CONST.menu_json_path)
-    autoupdate_menu = data.get('autoupdate_menu', False)
+    home_menu = read_json_file(adm.CONST.menu_json_file, verbose=True, fix_json=True)
+    autoupdate_menu = home_menu.get('autoupdate_menu', False)
     if not autoupdate_menu: # only update if allowed
         return
 
@@ -537,16 +537,16 @@ def update_menu_json(new_item, no_lang=False):
     all_menu_defs = get_all_menu_defs()
 
     # remove any non-existent menu defs as a repair
-    item_list = data['menu_items_1']
+    item_list = home_menu['menu_items_1']
     for item in item_list:
         if item not in all_menu_defs:
-            data['menu_items_1'].remove(item)
-    write_json_file(data, CONST.menu_json_path)
+            home_menu['menu_items_1'].remove(item)
+    write_json_file(home_menu, CONST.menu_json_path)
 
     # try to add new item
     if new_item not in all_menu_defs:
         return
-    for item in data['menu_items_1']:
+    for item in home_menu['menu_items_1']:
         if item == new_item: # already there
             return
         if no_lang:
@@ -555,16 +555,16 @@ def update_menu_json(new_item, no_lang=False):
 
     # new_item does not exist in list
     print("Adding %s to Menu"%new_item)
-    last_item = data['menu_items_1'].pop()
+    last_item = home_menu['menu_items_1'].pop()
     # always keep credits last
     if last_item.find('credits') == -1:
-        data['menu_items_1'].append(last_item)
-        data['menu_items_1'].append(new_item)
+        home_menu['menu_items_1'].append(last_item)
+        home_menu['menu_items_1'].append(new_item)
     else:
-        data['menu_items_1'].append(new_item)
-        data['menu_items_1'].append(last_item)
+        home_menu['menu_items_1'].append(new_item)
+        home_menu['menu_items_1'].append(last_item)
 
-    write_json_file(data, CONST.menu_json_path)
+    write_json_file(home_menu, CONST.menu_json_path)
 
 def put_kiwix_enabled_into_menu_json():
     # steps:
@@ -902,13 +902,21 @@ def pcgvtd9():
     git_committer_handle = data['iiab_user_ip']
 
 def fetch_menu_json_value(key):
-    menu_json = read_json(CONST.menu_json_file)
+    menu_json = read_json_file(CONST.menu_json_file, fix_json=True)
     return menu_json.get(key, '')
 
-def read_json(file_path): # alias
+def read_json(file_path): # alias that takes default
     return read_json_file(file_path)
 
-def read_json_file(file_path, verbose=False):
+def read_json_file(file_path, verbose=False, fix_json=False):
+    '''
+    As of 4/16/2023 a small percentage of users (< 1%)
+    have experienced a corrupt menu.json file.
+    See https://github.com/iiab/iiab/issues/3487
+    This function now optionally patches the json before converting.
+    Note that this function does not update the json file.
+    That will be done in update_menu_json if autoupdate_menu is true (default)
+    '''
     try:
         with open(file_path, 'r') as json_file:
             readstr = json_file.read()
@@ -917,7 +925,23 @@ def read_json_file(file_path, verbose=False):
     except OSError as e:
         if verbose:
             print('Unable to read json file', e)
-        raise
+        raise e
+    except json.JSONDecodeError as e:
+        if verbose:
+            print('Unable to parse json file', e)
+        if fix_json:
+            fixed_str = e.doc[:e.pos-1]
+            try:
+                json_dict = json.loads(fixed_str)
+                if verbose:
+                    print('WARNING: ' file_path + ' Patched in memory but not updatged.')
+                return json_dict
+            except json.JSONDecodeError as e2:
+                if verbose:
+                    print('Unable to repair json file', e)
+                raise e
+        else:
+            raise e
 
 def write_iiab_local_vars(delta_vars, strip_comments=False, strip_defaults=False):
     output_lines = merge_local_vars(IIAB_CONST.iiab_local_vars_file, delta_vars, strip_comments=strip_comments, strip_defaults=strip_defaults)
