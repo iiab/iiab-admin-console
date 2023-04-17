@@ -152,6 +152,11 @@ function checkMenuJson(){
     if (Object.keys(menuParams).length != 0)
         procPage()
     else {
+        warning_msg = 'The Home Page menu.json file is broken and has been temporarily patched.\n'
+        warning_msg += 'To save the patch go to Admin Console Content Menus\n'
+        warning_msg += 'And click Update Home Menu.\n'
+        warning_msg += 'Autoupdate Menu must be On, which is the default.\n'
+        alert(warning_msg)
         $.get( menuJson, function() {
             console.log( "Reading raw json" );
           })
