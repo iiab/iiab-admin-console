@@ -78,13 +78,15 @@ function getContentMenuToEdit(currentJsMenuToEditUrl){ // passed by button click
     }
 	})
 	.fail(function (jqXHR, textStatus, errorThrown){
+    currentJsMenuToEdit = {};
+    procCurrentMenuItemDefList ([], menuItemDefPrefixes.current);
 		if (errorThrown == 'Not Found'){
-		  currentJsMenuToEdit = {};
-		  procCurrentMenuItemDefList ([], menuItemDefPrefixes.current);
 		  alert ('Content Menu not Found.');
 		}
-		else
-		  jsonErrhandler (jqXHR, textStatus, errorThrown); // probably a json error
+		else{
+		  //jsonErrhandler (jqXHR, textStatus, errorThrown); // probably a json error
+      alert ('This Content Menu is broken.');
+    }
 	});
 	return resp;
 }

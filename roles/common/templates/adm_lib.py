@@ -528,7 +528,7 @@ def put_iiab_enabled_into_menu_json():
             update_menu_json(CONST.iiab_menu_items[iiab_option], no_lang=True) # accept same item in a different language
 
 def update_menu_json(new_item, no_lang=False):
-    home_menu = read_json_file(adm.CONST.menu_json_file, verbose=True, fix_json=True)
+    home_menu = read_json_file(CONST.menu_json_file, verbose=True, fix_json=True)
     autoupdate_menu = home_menu.get('autoupdate_menu', False)
     if not autoupdate_menu: # only update if allowed
         return
@@ -934,7 +934,7 @@ def read_json_file(file_path, verbose=False, fix_json=False):
             try:
                 json_dict = json.loads(fixed_str)
                 if verbose:
-                    print('WARNING: ' file_path + ' Patched in memory but not updatged.')
+                    print('WARNING: ' + file_path + ' Patched in memory but not updatged.')
                 return json_dict
             except json.JSONDecodeError as e2:
                 if verbose:
