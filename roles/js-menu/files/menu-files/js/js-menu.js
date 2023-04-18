@@ -96,8 +96,9 @@ var getMenuJson = $.ajax({
             debug = menuParams.debug;
         }
         menuItems = menuParams.menu_items_1; // hooks for multi tab menu later
+        getMenuJson['jsonStatus'] = 'SUCCEEDED'
     })
-    .fail(jsonErrhandler);
+    .fail(menuJsonErrhandler);
 
 // get name to instance index for zim files
 var getZimVersions = $.getJSON(zimVersionIdx)
@@ -137,10 +138,58 @@ function jsMenuMain(menuDiv) {
         } else {
             toggleDisplay = false;
         }
-        $.when(getMenuJson, getZimVersions, getConfigJson).always(procPage); // ignore errors like kiwix not installed
+        $.when(getMenuJson, getZimVersions, getConfigJson).always(checkMenuJson); // ignore errors like kiwix not installed
     }
     else {
         $.when(getConfigJson).then(procStatic);
+    }
+}
+
+// as of 4/16/2023 for unknown reasons < 1% of installs experience corruption of menu.json
+    // try to repair that one case
+
+function menuJsonErrhandler(jqXHR, textStatus, errorThrown) {
+    console.log(errorThrown)
+    jsonStr = jqXHR.responseText
+    console.log(jsonStr)
+    //console.log( "finished", data.responseText );
+    try {
+        JSON.parse(jsonStr) // should fail
+    }
+    catch(e) {
+        parseErr = e.message
+        //consoleLog(e)
+        parseErrParts = parseErr.split('Unexpected non-whitespace character after JSON at position ')
+        if (parseErrParts.length == 2){
+            menuParams = JSON.parse(jsonStr.substring(0, parseInt(parseErrParts[1])))
+            menuItems = menuParams.menu_items_1;
+            getMenuJson['jsonStatus'] = 'PATCHED'
+        }
+        else{
+            getMenuJson['jsonStatus'] = 'FAILED'
+            jsonErrhandler(jqXHR, textStatus, errorThrown) // another problem'
+        }
+    }
+    return
+}
+
+function checkMenuJson(){
+    console.log('in checkMenuJson')
+    var warning_msg = ''
+    if (getMenuJson['jsonStatus'] == 'SUCCEEDED')
+        procPage()
+    else if (getMenuJson['jsonStatus'] == 'PATCHED') {
+        warning_msg = 'The Home Page menu.json file is broken and has been temporarily patched.\n\n'
+        warning_msg += 'To save the patch go to Admin Console Content Menus\n'
+        warning_msg += 'Select Edit Content Menus and if the menu looks correct click Save Menu.\n\n'
+        warning_msg += 'Please also consider running iiab-diagnostics and creating an issue at https://github.com/iiab/iiab/issues'
+        alert(warning_msg)
+        procPage()
+    }
+    else {
+        warning_msg = 'The Home Page menu.json file is broken and could not be patched.\n\n'
+        warning_msg += 'Please consider creating an issue at https://github.com/iiab/iiab/issues'
+        alert(warning_msg)
     }
 }
 
@@ -941,6 +990,7 @@ function sendFeedback() {
         });
     return resp;
 }
+
 function jsonErrhandler(jqXHR, textStatus, errorThrown) {
     // only handle json parse errors here, others in ajaxErrHandler
     //  if (textStatus == "parserror") {

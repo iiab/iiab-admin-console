@@ -57,6 +57,7 @@ function procMenuItemDefList (data){
 
 function getContentMenuToEdit(currentJsMenuToEditUrl){ // passed by button click from form
 	  var jsMenuToEditUrl = '/' + currentJsMenuToEditUrl + '/';
+    var warning_msg = ''
 		var resp = $.ajax({
 		type: 'GET',
 		async: true,
@@ -65,28 +66,58 @@ function getContentMenuToEdit(currentJsMenuToEditUrl){ // passed by button click
 	})
 	.done(function( data ) {
 		currentJsMenuToEdit = data;
-		// don't allow blank list of menu item defs
-		if (!Array.isArray(currentJsMenuToEdit.menu_items_1) || !currentJsMenuToEdit.menu_items_1.length)
-		  currentJsMenuToEdit.menu_items_1 = ['en-credits'];
-		setContentMenuToEditFormValues();
-    if (homeMenuLoaded)
-      delayedProcCurrentMenuItemDefList (5000, currentJsMenuToEdit.menu_items_1, menuItemDefPrefixes.current); // hard coded name
-    else { // the first time we let the all menu item list completion draw the current menu
-      var html = createMenuItemScaffold(currentJsMenuToEdit.menu_items_1, menuItemDefPrefixes.current);
-	    $("#menusDefineMenuCurrentItemList").html(html);
-      homeMenuLoaded = true;
-    }
+    drawContentMenuToEdit(currentJsMenuToEdit)
 	})
 	.fail(function (jqXHR, textStatus, errorThrown){
-		if (errorThrown == 'Not Found'){
-		  currentJsMenuToEdit = {};
-		  procCurrentMenuItemDefList ([], menuItemDefPrefixes.current);
+    if (errorThrown == 'Not Found'){
 		  alert ('Content Menu not Found.');
-		}
-		else
-		  jsonErrhandler (jqXHR, textStatus, errorThrown); // probably a json error
+      currentJsMenuToEdit = {};
+      procCurrentMenuItemDefList ([], menuItemDefPrefixes.current);
+    }
+		else {
+      jsonStr = jqXHR.responseText
+      console.log(jsonStr)
+      //console.log( "finished", data.responseText );
+      try {
+          JSON.parse(jsonStr) // should fail
+      }
+      catch(e) {
+        parseErr = e.message
+        //consoleLog(e)
+        parseErrParts = parseErr.split('Unexpected non-whitespace character after JSON at position ')
+        if (parseErrParts.length == 2){
+          currentJsMenuToEdit = JSON.parse(jsonStr.substring(0, parseInt(parseErrParts[1])))
+          warning_msg = 'The Home Page menu.json file is broken and has been temporarily patched.\n\n'
+          warning_msg += 'Click Save Menu To save the patch.'
+          alert(warning_msg)
+          drawContentMenuToEdit(currentJsMenuToEdit)
+        }
+        else{
+            jsonErrhandler(jqXHR, textStatus, errorThrown) // another problem'
+            warning_msg = 'The Home Page menu.json file is broken and could not be patched.'
+            alert(warning_msg)
+            currentJsMenuToEdit = {};
+            drawContentMenuToEdit(currentJsMenuToEdit)
+        }
+      } // end catch
+    }
 	});
+
 	return resp;
+}
+
+function drawContentMenuToEdit(currentJsMenuToEdit){
+  // don't allow blank list of menu item defs
+  if (!Array.isArray(currentJsMenuToEdit.menu_items_1) || !currentJsMenuToEdit.menu_items_1.length)
+  currentJsMenuToEdit.menu_items_1 = ['en-credits'];
+  setContentMenuToEditFormValues();
+  if (homeMenuLoaded)
+    delayedProcCurrentMenuItemDefList (5000, currentJsMenuToEdit.menu_items_1, menuItemDefPrefixes.current); // hard coded name
+  else { // the first time we let the all menu item list completion draw the current menu
+    var html = createMenuItemScaffold(currentJsMenuToEdit.menu_items_1, menuItemDefPrefixes.current);
+    $("#menusDefineMenuCurrentItemList").html(html);
+  homeMenuLoaded = true;
+  }
 }
 
 function saveContentMenuDef(readForm=true, callback=genericCmdHandler) {

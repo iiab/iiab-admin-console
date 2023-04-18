@@ -1017,7 +1017,7 @@ def del_content(cmd_info): # includes zims
             make_kiwix_lib(cmd_info) # create job to reindex kiwix
 
     if device == "internal":
-        home_menu = adm.read_json(adm.CONST.menu_json_file)
+        home_menu = adm.read_json_file(adm.CONST.menu_json_file, verbose=True, fix_json=True)
 
         if home_menu['autoupdate_menu']:
             menu_defs = adm.get_all_menu_defs()
