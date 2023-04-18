@@ -87,7 +87,7 @@ function getContentMenuToEdit(currentJsMenuToEditUrl){ // passed by button click
         parseErrParts = parseErr.split('Unexpected non-whitespace character after JSON at position ')
         if (parseErrParts.length == 2){
           currentJsMenuToEdit = JSON.parse(jsonStr.substring(0, parseInt(parseErrParts[1])))
-          warning_msg = 'The Home Page menu.json file is broken and has been temporarily patched.\n'
+          warning_msg = 'The Home Page menu.json file is broken and has been temporarily patched.\n\n'
           warning_msg += 'Click Save Menu To save the patch.'
           alert(warning_msg)
           drawContentMenuToEdit(currentJsMenuToEdit)

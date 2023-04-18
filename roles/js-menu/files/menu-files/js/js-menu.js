@@ -179,15 +179,15 @@ function checkMenuJson(){
     if (getMenuJson['jsonStatus'] == 'SUCCEEDED')
         procPage()
     else if (getMenuJson['jsonStatus'] == 'PATCHED') {
-        warning_msg = 'The Home Page menu.json file is broken and has been temporarily patched.\n'
+        warning_msg = 'The Home Page menu.json file is broken and has been temporarily patched.\n\n'
         warning_msg += 'To save the patch go to Admin Console Content Menus\n'
-        warning_msg += 'Select Edit Content Menus and if the menu looks correct click Save Menu.\n'
+        warning_msg += 'Select Edit Content Menus and if the menu looks correct click Save Menu.\n\n'
         warning_msg += 'Please also consider running iiab-diagnostics and creating an issue at https://github.com/iiab/iiab/issues'
         alert(warning_msg)
         procPage()
     }
     else {
-        warning_msg = 'The Home Page menu.json file is broken and could not be patched.\n'
+        warning_msg = 'The Home Page menu.json file is broken and could not be patched.\n\n'
         warning_msg += 'Please consider creating an issue at https://github.com/iiab/iiab/issues'
         alert(warning_msg)
     }
