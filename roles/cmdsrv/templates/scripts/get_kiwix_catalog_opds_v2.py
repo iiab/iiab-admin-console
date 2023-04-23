@@ -91,7 +91,8 @@ if verbose:
     print("Parsing xml downloads from Kiwix")
 
 # now parse Kiwix catalog
-bs_content = BeautifulSoup(r.text, "lxml")
+utf8_xlm = r.content.decode("utf-8")
+bs_content = BeautifulSoup(utf8_xlm, "lxml")
 zims = bs_content.find_all('entry')
 
 zimCount = 0
