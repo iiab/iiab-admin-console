@@ -76,7 +76,7 @@ def get_zim_menu_defs():
                 zim_menu_defs[perma_ref] = menu_def
     return zim_menu_defs
 
-def get_all_menu_defs():
+def get_all_menu_defs(filter=None):
     all_menu_defs = {}
     for filename in os.listdir(CONST.menu_def_dir):
         if fnmatch.fnmatch(filename, '*.json'):
@@ -88,6 +88,9 @@ def get_all_menu_defs():
                 print("failed to parse %s"%filename)
                 continue
             #print(menu_def)
+            if filter:
+                if menu_def['intended_use'] != 'zim':
+                    continue
             menu_item_name = filename[:-5] # strip .json
             all_menu_defs[menu_item_name] = menu_def
     return all_menu_defs
@@ -529,9 +532,9 @@ def put_iiab_enabled_into_menu_json():
 
 def update_menu_json(new_item, no_lang=False):
     home_menu = read_json_file(CONST.menu_json_file, verbose=True, fix_json=True)
-    autoupdate_menu = home_menu.get('autoupdate_menu', False)
-    if not autoupdate_menu: # only update if allowed
-        return
+    # autoupdate_menu = home_menu.get('autoupdate_menu', False)
+    # if not autoupdate_menu: # only update if allowed - the caller must handle this
+    #    return
 
     # see what menu defs we have
     all_menu_defs = get_all_menu_defs()
@@ -567,6 +570,82 @@ def update_menu_json(new_item, no_lang=False):
     write_json_file(home_menu, CONST.menu_json_path)
 
 def put_kiwix_enabled_into_menu_json():
+    '''
+    Put menu defs for all installed zims into Home Page menu
+    Caller checks for autoupdate_menu == False
+    Rules:
+        Don't add test.zim unless it is the only zim installed
+        If an installed zim's menu def is in the menu do nothing
+        If not use a menu def of the form <zim language>-<zim permaref> if it exists
+        If it does not exist create it
+        There are some edge cases of non-canonical zim names that must be monitored
+        Uses parameters of install zims in library.xml and zim_version_idx.json
+        And paramters of install menu defs
+        Creates additional working indices to aid lookups
+    '''
+    # make sure all zims in zims/content/ are in zim_versions_idx.json
+    iiab.read_lang_codes() # initialize
+    zim_menu_defs = get_all_menu_defs(filter='zim') # read zim menu defs
+
+    zim_files, zim_versions = iiab.get_zim_list(iiab.CONST.zim_path)
+    write_zim_versions_idx(zim_versions, iiab.CONST.kiwix_library_xml, CONST.zim_version_idx_dir, zim_menu_defs)
+    zims_installed, path_to_id_map = iiab.read_library_xml(iiab.CONST.kiwix_library_xml)
+    home_menu = read_json_file(CONST.menu_json_file, verbose=True, fix_json=True)
+
+    # convenience lists of zim menudefs and permarefs already in menu
+    zim_menudefs_in_menu = set()
+    perma_refs_in_menu = set()
+    for item in home_menu['menu_items_1']:
+        if item in zim_menu_defs:
+            zim_menudefs_in_menu.add(item)
+            perma_refs_in_menu.add(zim_menu_defs[item]['zim_name'])
+
+    # lists of zim menu defs by perma ref
+    defs_per_perma_ref = {}
+    for menu_def in zim_menu_defs:
+        perma_ref = zim_menu_defs[menu_def]['zim_name']
+        if perma_ref not in defs_per_perma_ref:
+            defs_per_perma_ref[perma_ref] = []
+        defs_per_perma_ref[perma_ref].append(menu_def)
+
+    # list of zim languages converted to iso2 by perma ref
+    zim_perma_ref_iso2 = {}
+    for zim in zims_installed:
+        perma_ref = iiab.calc_perma_ref(zims_installed[zim]['path']) # N.B. 4/25/2023 first use of this function
+        zim_lang_code = zims_installed[zim]['language']
+        zim_iso2_code = iiab.kiwix_lang_to_iso2(zim_lang_code)
+        zim_perma_ref_iso2[perma_ref] = zim_iso2_code
+
+    # use that data
+    zim_idx = CONST.zim_version_idx_dir + CONST.zim_version_idx_file
+    zim_versions_info = read_json_file(zim_idx)
+    for perma_ref in zim_versions_info: # all installed zims OR use zims_installed
+        # if other zims exist, do not add test zim
+        if len(zim_versions_info) > 1 and perma_ref == 'tes':
+            continue
+        if perma_ref in perma_refs_in_menu: # already in menu
+            continue
+
+        # check if menu def exists for this perma_ref
+        #num_defs =  len(defs_per_perma_ref[perma_ref])
+        expected_name =  zim_perma_ref_iso2[perma_ref] + '-' + perma_ref.replace('.','_')
+
+        if expected_name not in defs_per_perma_ref.get(perma_ref, []):
+            # create canonical menu def name
+            # we may later prefer to use an existing name that is not ideal but exists
+            # as we did before
+            new_def_name = expected_name
+            path = zim_versions[perma_ref].get('file_name') + '.zim'
+            zim_id = path_to_id_map['content/' + path]
+            zim_info = zims_installed[zim_id]
+            new_menu_def = generate_zim_menu_def(perma_ref, new_def_name, zim_info)
+            new_menu_def = format_menu_item_def(new_def_name, new_menu_def)
+            print("Creating %s"%new_def_name)
+            write_menu_item_def(new_def_name, new_menu_def, change_ref='generated')
+            menu_item_name = new_def_name
+        update_menu_json(expected_name) # add to menu
+
+def put_kiwix_enabled_into_menu_json_SAVE():
     # steps:
     #   1. Make sure all downloaded zims are in zim_verion_idx
     #   2. Look for a back link to perma_ref in menu_defs_dir
@@ -609,13 +688,6 @@ def put_kiwix_enabled_into_menu_json():
                     menu_item_name = new_def_name
                 update_menu_json(menu_item_name) # add to menu
 
-                # make the menu_item reflect any name changes due to collision
-                # this could only happen if there is a bug
-                # zim_versions_info[perma_ref]['menu_item'] = new_menu_def
-        # write the updated menu_item links
-        #write_json_file(zim_versions_info, zim_idx)
-        #with open(zim_idx,"w") as zim_fp:
-        #    zim_fp.write(json.dumps(zim_versions_info,indent=2))
 
 def generate_zim_menu_def(perma_ref, menu_def_name, zim_info):
     # this looks only to be used by zims
