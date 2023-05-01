@@ -91,8 +91,11 @@ if verbose:
     print("Parsing xml downloads from Kiwix")
 
 # now parse Kiwix catalog
-utf8_xlm = r.content.decode("utf-8")
-bs_content = BeautifulSoup(utf8_xlm, "lxml")
+bs_content = BeautifulSoup(r.content, "lxml-xml")
+#utf8_xlm = r.content.decode("utf-8")
+#bs_content = BeautifulSoup(utf8_xlm, "lxml-xml")
+
+
 zims = bs_content.find_all('entry')
 
 zimCount = 0
@@ -236,8 +239,8 @@ def parse_root_attr(entity):
     if 'description' in zim_attr:
         zim_attr['description'] = zim_attr['description'].replace('"', '&quot;') # replace quotes that break parsing
 
-    zim_attr['articleCount'] = zim.find('articlecount').text.strip()
-    zim_attr['mediaCount'] = zim.find('mediacount').text.strip()
+    zim_attr['articleCount'] = zim.find('articleCount').text.strip()
+    zim_attr['mediaCount'] = zim.find('mediaCount').text.strip()
 
 
     zim_attr['download_url'] = downloadUrl
