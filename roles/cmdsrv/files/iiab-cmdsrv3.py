@@ -1839,10 +1839,10 @@ def get_oer2go_catalog(cmd_info):
 def set_config_vars(cmd_info):
     config_vars = cmd_info['cmd_args']['config_vars']
     # adjust install state as necessary
-    # front end only sends enabled
+    # front end only sends enabled T/F
     # for user settable service roles
     # if enabled true set install to true
-    # if enabled false and rolestatus install false set install to false
+    # if enabled false and rolestatus installed not true set install to false
 
     if ansible_running_flag:
         return (cmd_error(msg="Cannot set Configuration while Ansible Command is Running. Please resubmit later."))
@@ -1852,13 +1852,14 @@ def set_config_vars(cmd_info):
     for var in config_vars:
         if '_enabled' in var:
             role = var.split('_enabled')[0]
-            if role in iiab_roles_status: # settable role
+            if role in iiab_roles_status: # settable role; any others do not adjust _install
                 if config_vars[var]: # enabled is true
                     fix_install[role + '_install'] = True # enabled so install is implied
                 else: # enabled false
-                    if not iiab_roles_status[role]['active']: # not active so assume not installed
+                    if iiab_roles_status[role]['installed']: # iiab_state says it was installed
+                        fix_install[role + '_install'] = True
+                    else:
                         fix_install[role + '_install'] = False
-
     config_vars = {**config_vars, **fix_install}
     adm.write_iiab_local_vars(config_vars)
     #print config_vars
