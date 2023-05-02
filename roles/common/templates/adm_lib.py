@@ -933,8 +933,11 @@ def get_roles_status():
         if stat_src == 'service':
             roles_status[role]['enabled'] = is_role_service_enabled(role)
             roles_status[role]['active'] = is_role_service_active(role)
-        elif stat_src == 'nginx':
+        elif stat_src == 'nginx-conf':
             roles_status[role]['enabled'] = is_role_nginx_enabled(role)
+            roles_status[role]['active'] = roles_status[role]['enabled'] # assumes nginx is running
+        elif stat_src == 'nginx-site':
+            roles_status[role]['enabled'] = is_role_nginx_site_enabled(role)
             roles_status[role]['active'] = roles_status[role]['enabled'] # assumes nginx is running
         elif stat_src == 'install':
             roles_status[role]['enabled'] = roles_status[role]['installed']
@@ -960,6 +963,12 @@ def is_role_service_active(role):
 
 def is_role_nginx_enabled(role):
     if os.path.exists('/etc/nginx/conf.d/' + CONST.iiab_roles[role]['stat_arg']):
+        return True
+    else:
+        return False
+
+def is_role_nginx_site_enabled(role): # treat as enabled = active
+    if os.path.exists('/etc/nginx/sites-enabled/' + CONST.iiab_roles[role]['stat_arg']):
         return True
     else:
         return False
