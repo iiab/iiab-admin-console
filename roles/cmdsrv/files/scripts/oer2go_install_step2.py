@@ -35,7 +35,8 @@ def main ():
         shutil.rmtree(working_dir)
 
     print('Adding to Home Page Menu')
-    adm.update_menu_json(oer2go_mod_name, no_lang=False)
+    adm.subproc_run('iiab-update-menus') # use current practice
+    # adm.update_menu_json(oer2go_mod_name, no_lang=False)
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Add module to home menu.")
