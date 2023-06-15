@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # Scan the osm-vector-maps directory, update the osm-vector-maps-idx.json, add menu-defs
 
+# 6/15/2023 I don't think this is used
+
 import json
 
 import iiab.iiab_lib as iiab
@@ -58,3 +60,7 @@ def main():
 if __name__ == '__main__':
    if adm_cons_installed:
       main()
+
+
+
+adm.subproc_run('iiab-update-menus')

@@ -2554,13 +2554,16 @@ def install_rachel(cmd_info):
 def get_osm_vect_catalog(cmd_info):
     return cmd_malformed("DUMMY")
 
-def install_osm_vect_set(cmd_info):
-    # previous versions not supported
-    if iiab_roles_status['osm_vector_maps']['active']:
-        return install_osm_vect_set(cmd_info)
-    else:
-        resp = cmd_error(cmd='INST-OSM-VECT-SET', msg='OSM Vectors not installed or unknown version')
-        return resp
+# not sure why this is still here, obviously meant to call the next one with a different name
+# also check for maps active handled below by requiring the service
+
+# def install_osm_vect_set(cmd_info):
+#    # previous versions not supported
+#    if iiab_roles_status['osm_vector_maps']['active']:
+#        return install_osm_vect_set(cmd_info)
+#    else:
+#        resp = cmd_error(cmd='INST-OSM-VECT-SET', msg='OSM Vectors not installed or unknown version')
+#        return resp
 
 def install_osm_vect_set(cmd_info):
     global ansible_running_flag
