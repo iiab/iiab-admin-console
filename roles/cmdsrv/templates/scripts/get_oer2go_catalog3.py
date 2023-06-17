@@ -139,8 +139,9 @@ def main ():
                 msg = "Generating menu files"
                 if verbose:
                     print("%s %s %s" % (msg, module_id, moddir))
-            if is_downloaded:
-                adm.update_menu_json(menu_item_name) # only adds if not already in menu
+            # this is not consistent with current practice, so removing 6/15/2023
+            # if is_downloaded:
+            #    adm.update_menu_json(menu_item_name) # only adds if not already in menu
 
         iiab_oer2go_catalog[moddir] = module
 

@@ -8,6 +8,7 @@
 echo "Moving downloaded $1 to production"
 mv $OER2GO_WORKING$1 $MODULES_DIR
 
-scripts/add_module_to_menu.py $1
+# scripts/add_module_to_menu.py $1
+iiab-update-menus # use new wrapper script with locking
 
 exit 0

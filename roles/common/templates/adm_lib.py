@@ -989,7 +989,7 @@ def fetch_menu_json_value(key):
 def read_json(file_path): # alias that takes default
     return read_json_file(file_path)
 
-def read_json_file(file_path, verbose=False, fix_json=False):
+def read_json_file(file_path, verbose=True, fix_json=False):
     '''
     As of 4/16/2023 a small percentage of users (< 1%)
     have experienced a corrupt menu.json file.
