@@ -1973,8 +1973,13 @@ def run_ansible_roles(cmd_info):
     with open(iiab_repo + '/adm-run-roles-tmp.yml', 'w') as f:
         f.writelines(lines)
 
+    # first step run ansible
     job_command = ansible_playbook_program + " -i " + iiab_repo + "/ansible_hosts " + iiab_repo + "/adm-run-roles-tmp.yml --connection=local"
-    resp = request_job(cmd_info, job_command)
+    job_id = request_one_job(cmd_info, job_command, 1, -1, "Y")
+
+    # second step update home menu
+    job_command = 'iiab-update-menus'
+    resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=3, depend_on_job_id=job_id, has_dependent="N")
     return resp
 
 def get_roles_stat(cmd_info):
