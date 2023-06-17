@@ -137,6 +137,7 @@ running_job_count = 0
 
 SENSITIVE_COMMANDS = ["CHGPW"]
 ANSIBLE_COMMANDS = ["RUN-ANSIBLE", "RESET-NETWORK", "RUN-ANSIBLE-ROLES"]
+FULL_LOG_COMMANDS = ["RUN-ANSIBLE", "RESET-NETWORK", "RUN-ANSIBLE-ROLES"]
 ansible_running_flag = False
 iiab_roles_status = {}
 daemon_mode = False
@@ -589,14 +590,15 @@ def end_job(job_id, job_info, status): # modify to use tail of job_output
     jobs_running[job_id]['file'].close()
 
     # load output from tmp file
+    job_output = read_job_output(job_id)
     output_file = jobs_running[job_id]['output_file']
+
     #file = open(output_file, 'r')
     #job_output = file.read()
     #file.close()
-
-    command = "tail " + output_file
-    args = shlex.split(command)
-    job_output = subproc_check_output(args)
+    #command = "tail " + output_file
+    #args = shlex.split(command)
+    #job_output = subproc_check_output(args)
 
     #print(job_output)
     # make html safe
@@ -604,7 +606,7 @@ def end_job(job_id, job_info, status): # modify to use tail of job_output
 
     # remove non-printing chars as an alternative
 
-    job_output = job_output.encode('ascii', 'replace').decode()
+    #job_output = job_output.encode('ascii', 'replace').decode()
 
     # print(job_id)
     tprint(job_output)
@@ -1971,8 +1973,13 @@ def run_ansible_roles(cmd_info):
     with open(iiab_repo + '/adm-run-roles-tmp.yml', 'w') as f:
         f.writelines(lines)
 
+    # first step run ansible
     job_command = ansible_playbook_program + " -i " + iiab_repo + "/ansible_hosts " + iiab_repo + "/adm-run-roles-tmp.yml --connection=local"
-    resp = request_job(cmd_info, job_command)
+    job_id = request_one_job(cmd_info, job_command, 1, -1, "Y")
+
+    # second step update home menu
+    job_command = 'iiab-update-menus'
+    resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=3, depend_on_job_id=job_id, has_dependent="N")
     return resp
 
 def get_roles_stat(cmd_info):
@@ -3108,12 +3115,14 @@ def get_last_jobs_stat(cmd_info):
             if jobs_running[job_id]['status'] == "STARTED" or jobs_running[job_id]['status'] == "RESTARTED":
                 status_job['elapsed_sec'] = int(cur_time_sec) - int(create_datetime_sec) # last_update_datetime not update while running
                 # load output from tmp file
-                output_file = jobs_running[job_id]['output_file']
-                #print output_file
+                job_output = read_job_output(job_id)
 
-                command = "tail " + output_file
-                args = shlex.split(command)
-                job_output = subproc_check_output(args)
+                #output_file = jobs_running[job_id]['output_file']
+                #print output_file
+                #command = "tail " + output_file
+                #args = shlex.split(command)
+                #job_output = subproc_check_output(args)
+
                 status_job['job_output'] = job_output
 
                 #print "job output" + job_output
@@ -3122,6 +3131,20 @@ def get_last_jobs_stat(cmd_info):
 
     resp = json.dumps(status_jobs_return)
     return resp
+
+def read_job_output(job_id):
+    # only for running jobs
+    output_file = jobs_running[job_id]['output_file']
+
+    if jobs_running[job_id]['cmd'] in FULL_LOG_COMMANDS:
+        with open(output_file, 'r') as file:
+            job_output = file.read()
+    else:
+        command = "tail " + output_file
+        args = shlex.split(command)
+        job_output = subproc_check_output(args)
+
+    return job_output.encode('ascii', 'replace').decode()
 
 def get_jobs_running(cmd_info): # Not used
     global jobs_running
