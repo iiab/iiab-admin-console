@@ -11,6 +11,7 @@
     name:
       - python3-requests
       - python3-jinja2
+      - python3-venv # for speed test
     state: present
 
 # Duplicates IIAB, but we are never able to change that, and these are all used by Admin Console
