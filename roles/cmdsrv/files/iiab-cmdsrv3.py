@@ -3432,19 +3432,7 @@ def write_sdcard_params():
 
 def read_iiab_ini_file():
     global iiab_ini
-    iiab_ini_tmp = {}
-
-    config = configparser.ConfigParser()
-    config.read(iiab_ini_file)
-    for section in config.sections():
-        iiab_ini_sec = {}
-        opts = config.options(section)
-        for opt in opts:
-            attr = config.get(section, opt)
-            iiab_ini_sec[opt] = attr
-        iiab_ini_tmp[section] = iiab_ini_sec
-
-    iiab_ini = iiab_ini_tmp
+    iiab_ini = adm.read_non_nested_ini_file(iiab_ini_file)
 
 def read_iiab_local_vars():
     global local_vars
