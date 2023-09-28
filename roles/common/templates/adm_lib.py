@@ -17,6 +17,7 @@ import shutil
 import requests
 import yaml
 import jinja2
+import configparser
 
 import iiab.iiab_lib as iiab
 import iiab.iiab_const as IIAB_CONST
@@ -1128,6 +1129,20 @@ def read_yaml(file_name, loader=yaml.SafeLoader):
             return y
     except:
         raise
+
+def read_non_nested_ini_file(ini_file):
+    # does not support nested sections
+    ini_dict = {}
+    config = configparser.ConfigParser()
+    config.read(ini_file)
+    for section in config.sections():
+        ini_sec = {}
+        opts = config.options(section)
+        for opt in opts:
+            attr = config.get(section, opt)
+            ini_sec[opt] = attr
+        ini_dict[section] = ini_sec
+    return ini_dict
 
 def jinja2_subst(src_dict, dflt_dict=None):
     # assumes all substitution variables are in src_dict or dflt
