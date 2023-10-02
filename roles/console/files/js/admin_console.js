@@ -168,6 +168,10 @@ function controlButtonsEvents() {
     controlWifi();
   });
 
+  $("#HOSTSPOT-CTL").click(function(){
+    controlWifiHotspot();
+  });
+
 	$("#WIFI-CREDENTIALS").click(function(){
     setWpaCredentials();
   });
@@ -825,6 +829,7 @@ function procSystemInfo(data){
   // hostapd
   $("#hotspotStateUD").html(serverInfo.hostapd_status);
   $("#hotspotState").html(serverInfo.hostapd_status);
+  $("#hotspot_wifi_password_UD").val(serverInfo.hostapd_password);
   //$("#WIFI-CTL").html('Turn Hotspot Access ON');
   // make_button_disabled('#WIFI-CTL', true); // disable
 
@@ -910,6 +915,17 @@ function controlWifi(){
 
   var command = "CTL-WIFI " + JSON.stringify(cmd_args);
   return sendCmdSrvCmd(command, getSystemInfo);
+}
+
+function controlWifiHotspot(){
+  var cmd_args = {};
+  if (serverInfo.hostapd_status == 'ON'){
+    cmd_args['hotspot_passord'] = gEBI('hotspot_wifi_password_UD').value;
+    var command = "CTL-HOTSPOT " + JSON.stringify(cmd_args);
+    return sendCmdSrvCmd(command, genericCmdHandler, "HOSTSPOT-CTL");
+  }
+  else
+    alert ("Can't change password as Internal Hotspot is not ON.");
 }
 
 function setWpaCredentials(){

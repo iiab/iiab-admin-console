@@ -105,9 +105,20 @@
                       <!-- Start controlWifiUpDown Submenu Option Pane  - Used if wifi_up_down is true-->
                       <h2>WiFi Control</h2>
                       <p><b>WARNING:</b> When you reboot you will need to reconnect to the IIAB Wifi Hotspot.</p>
+
+					  <h4>IIAB Internal Hotspot is <b><span id="hotspotState">OFF</span></b></h4>
+					  <div class="form-group row">
+                        <div class="col-xs-4">
+                          <label for="hotspot_wifi_password_UD">Internal Wi-Fi Access Point Password</label>
+                          <input type="text" name="hotspot_wifi_password_UD" class="form-control" id="hotspot_wifi_password_UD">
+                        </div>
+                      </div>
+                      <button id="HOSTSPOT-CTL" type="button" class="btn btn-lg btn-primary">Change IIAB Internal Hotspot Password</button>
+						</BR></BR>
+
                       <h4>IIAB Dual Wifi is <b><span>ON</span></b></h4>
                       <div class="row" id="currentNetworkStateUD"></div>
-                      <h4>IIAB Internal Hotspot is <b><span id="hotspotStateUD">OFF</span></b></h4>
+
                       <h4>Internet Access Wifi Router Details</h4>
                       <div class="form-group row">
                         <div class="col-xs-4">
@@ -121,6 +132,8 @@
                         Internet Access Wifi Connection</button>
                       <span class="btn-lg">Requires a Reboot the First Time you Connect.</span>
                     </div> <!--  End controlWifiUpDown Submenu Option Pane -->
+
+
                     <div class="tab-pane" id="controlWifiNotUpDown" style="display:none">
                       <!-- Start controlWifi Submenu Option Pane - Used if wifi_up_down is false or undefined -->
                       <h2>WiFi Control</h2>

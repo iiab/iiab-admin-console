@@ -1144,6 +1144,24 @@ def read_non_nested_ini_file(ini_file):
         ini_dict[section] = ini_sec
     return ini_dict
 
+def read_conf_file(filename):
+    # for conf file with no section, so unlike ini file
+    conf_dict = {}
+    try:
+        with open(filename) as f:
+            file_content = '[TOP]\n' + f.read()
+    except:
+        return conf_dict
+    config_parser = configparser.RawConfigParser()
+    config_parser.read_string(file_content)
+    section = 'TOP'
+    opts = config_parser.options(section)
+    for opt in opts:
+        attr = config_parser.get(section, opt)
+        conf_dict[opt] = attr
+        print (opt, attr)
+    return conf_dict
+
 def jinja2_subst(src_dict, dflt_dict=None):
     # assumes all substitution variables are in src_dict or dflt
     # if not substitution will be a zero length string
