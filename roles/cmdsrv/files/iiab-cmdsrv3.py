@@ -735,6 +735,7 @@ def cmd_handler(cmd_msg):
         "GET-REM-DEV-LIST": {"funct": get_rem_dev_list, "inet_req": False},
         "GET-SYSTEM-INFO": {"funct": get_system_info, "inet_req": False},
         "GET-NETWORK-INFO": {"funct": get_network_info, "inet_req": False},
+        "CTL-HOTSPOT": {"funct": ctl_hotspot, "inet_req": False},
         "CTL-WIFI": {"funct": ctl_wifi, "inet_req": False},
         "SET-WPA-CREDENTIALS": {"funct": set_wpa_credentials, "inet_req": False},
         "CTL-BLUETOOTH": {"funct": ctl_bluetooth, "inet_req": False},
@@ -1257,6 +1258,7 @@ def calc_network_info():
     # bridge -d link
     # systemctl is-active hostapd
     # systemctl is-active openvpn
+    #
     # /etc/iiab/uuid
     # /etc/iiab/openvpn_handle
     # /bin/ping -qc 1 1.1.1.1
@@ -1298,6 +1300,8 @@ def calc_network_info():
     net_stat["bridge_devs"] = bridge_devs
 
     net_stat["hostapd_status"] = check_systemd_service_active('hostapd')
+    hostapd_conf = adm.read_conf_file('/etc/hostapd/hostapd.conf')
+    net_stat["hostapd_password"] = hostapd_conf.get('wpa_passphrase', effective_vars['hostapd_password'])
     net_stat["openvpn_status"] = check_systemd_service_active('openvpn')
     net_stat["bt_pan_status"] = check_systemd_service_active('bt-pan')
     net_stat["iiab_uuid"] = run_command("/bin/cat /etc/iiab/uuid")[0]
@@ -1319,6 +1323,42 @@ def systemctl_wrapper(verb, service):
     FNULL = open(os.devnull, 'w')
     rc = subprocess.call(['/bin/systemctl', verb, service], stdout=FNULL, stderr=subprocess.STDOUT)
     return rc
+
+def ctl_hotspot(cmd_info):
+    # change password
+    HOSTAPD_CONF = '/etc/hostapd/hostapd.conf'
+    wpa_pass_text = None
+    delta_vars = {}
+    if not os.path.isfile(HOSTAPD_CONF):
+        return cmd_error(cmd=cmd_info['cmd'], msg='Hotspot conf file not found.')
+    with open(HOSTAPD_CONF) as f:
+        file_content = f.read()
+    attr_list = file_content.split('\n')
+    for attr in attr_list:
+        if 'wpa_passphrase' in attr:
+            wpa_pass_text = attr
+    if not wpa_pass_text:
+        return cmd_error(cmd=cmd_info['cmd'], msg='Hotspot is not in secure mode.')
+    if 'cmd_args' in cmd_info:
+        password = cmd_info['cmd_args']['hotspot_passord']
+    else:
+        return cmd_malformed(cmd_info['cmd'])
+    target_index = attr_list.index(wpa_pass_text)
+    attr_list[target_index] = 'wpa_passphrase=' + password
+    try:
+        with open(HOSTAPD_CONF, 'w') as f:
+            for line in attr_list:
+                f.write(line + '\n')
+    except:
+        return cmd_error(cmd=cmd_info['cmd'], msg='Unknown error writing to Hotspot conf file.')
+    rc = systemctl_wrapper('restart', 'hostapd')
+    if rc != 0:
+        return cmd_error(cmd=cmd_info['cmd'], msg='Unknown error restarting hostapd.')
+
+    delta_vars['hostapd_password'] = password
+    adm.write_iiab_local_vars(delta_vars)
+
+    return cmd_success(cmd_info['cmd'])
 
 def ctl_wifi(cmd_info):
     if not is_rpi:
