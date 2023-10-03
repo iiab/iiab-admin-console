@@ -27,7 +27,7 @@ Raspberry Pi Only
 
 On a Raspberry Pi several other links appear:
 
-* Wifi Control - Use this to the IIAB Hotspot Password
-* Wifi Control - Also use this to switch the builtin WiFi between a hostspot and connection to another router
+* Wifi Control - Use this to Change IIAB Internal Hotspot Password.
+* Wifi Control - Also use this to Setup Internet Access WiFi Connection.
 * Bluetooth Control - Use this to turn network over Bluetooth on and off. You can run Admin Console over Bluetooth.
 * VPN Control - Use this to turn the IIAB Support VPN on and off.
