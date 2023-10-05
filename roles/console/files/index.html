@@ -94,69 +94,70 @@
 										<p>Please make sure that no one is using it.</p>
 										<h2>PLEASE NOTE</h2>
 										<p>After you have made <b>Changes to Hardware</b> you should probably
-											<b>Reboot</b>.</p>
+											<b>Reboot</b>.
+										</p>
 										<p>After you have <b>Installed New Content or Features</b> please <b>Refresh
 												your Browser</b>.</p>
 										<h2>Starting Application</h2>
 										<div id="initLog"></div>
 									</div> <!--  End controlWarning Submenu Option Pane -->
 									<div class="tab-pane" id="controlWifi">
-                    <div id="controlWifiUpDown">
-                      <!-- Start controlWifiUpDown Submenu Option Pane  - Used if wifi_up_down is true-->
-                      <h2>WiFi Control</h2>
-                      <p><b>WARNING:</b> When you reboot you will need to reconnect to the IIAB Wifi Hotspot.</p>
+										<div>
+											<!-- Start controlWifiUpDown Submenu Option Pane  - Used if wifi_up_down is true-->
+											<h2>WiFi Control</h2>
+											<p><b>WARNING:</b> When you reboot you will need to reconnect to the IIAB
+												Wifi Hotspot.</p>
 
-					  <h4>IIAB Internal Hotspot is <b><span id="hotspotState">OFF</span></b></h4>
-					  <div class="form-group row">
-                        <div class="col-xs-4">
-                          <label for="hotspot_wifi_password_UD">Internal Wi-Fi Access Point Password</label>
-                          <input type="text" name="hotspot_wifi_password_UD" class="form-control" id="hotspot_wifi_password_UD">
-                        </div>
-                      </div>
-                      <button id="HOSTSPOT-CTL" type="button" class="btn btn-lg btn-primary">Change IIAB Internal Hotspot Password</button>
-						</BR></BR>
+											<h4>IIAB Internal Hotspot is <b><span id="hotspotState">OFF</span></b></h4>
+											<div class="form-group row">
+												<div class="col-xs-4">
+													<label for="hotspot_wifi_password_UD">Internal Wi-Fi Access Point
+														Password</label>
+													<input type="text" name="hotspot_wifi_password_UD"
+														class="form-control" id="hotspot_wifi_password_UD">
+												</div>
+											</div>
+											<button id="HOSTSPOT-CTL" type="button"
+												class="btn btn-lg btn-primary">Change IIAB Internal Hotspot
+												Password</button>
+											</BR></BR>
 
-                      <h4>IIAB Dual Wifi is <b><span>ON</span></b></h4>
-                      <div class="row" id="currentNetworkStateUD"></div>
+											<h4>IIAB Dual Wifi is <b><span id="dualWifiState">ON</span></b></h4>
+											<div class="row" id="currentNetworkStateUD"></div>
 
-                      <h4>Internet Access Wifi Router Details</h4>
-                      <div class="form-group row">
-                        <div class="col-xs-4">
-                          <label for="connect_wifi_ssid_UD">Name of Internet Access Wifi Router</label>
-                          <input type="text" name="connect_wifi_ssid_UD" class="form-control" id="connect_wifi_ssid_UD">
-                          <label for="connect_wifi_password_UD">Internet Access Wifi Router Password</label>
-                          <input type="text" name="connect_wifi_password_UD" class="form-control" id="connect_wifi_password_UD">
-                        </div>
-                      </div>
-                      <button id="WIFI-CREDENTIALS-UD" type="button" class="btn btn-lg btn-primary">Setup
-                        Internet Access Wifi Connection</button>
-                      <span class="btn-lg">Requires a Reboot the First Time you Connect.</span>
-                    </div> <!--  End controlWifiUpDown Submenu Option Pane -->
+											<div class="tab-pane" id="controlWifiNotUpDown" style="display:none">
+												<!-- Start controlWifi Submenu Option Pane - Used if wifi_up_down is false or undefined -->
+												<h4>Change Use of Internal WiFi</h4>
+												<p><b>WARNING:</b> When you turn off the IIAB Wifi Hotspot you will no
+													longer be
+													able to connect to it.</p>
+												<p>So it is <b>highly recommended</b> that you have another means of
+													connecting
+													to IIAB, either via Bluetooth or OpenVPN before turning the Hotspot Off.
+												</p>
+												<button id="WIFI-CTL" type="button" class="btn btn-lg btn-primary"
+													style="opacity:0.5" disabled>Toggle Internal Wifi</button>
+											</div> <!--  End controlWifiNotUpDown -->
 
+											<h4>Internet Access Wifi Router Details</h4>
+											<div class="form-group row">
+												<div class="col-xs-4">
+													<label for="connect_wifi_ssid_UD">Name of Internet Access Wifi
+														Router</label>
+													<input type="text" name="connect_wifi_ssid_UD" class="form-control"
+														id="connect_wifi_ssid_UD">
+													<label for="connect_wifi_password_UD">Internet Access Wifi Router
+														Password</label>
+													<input type="text" name="connect_wifi_password_UD"
+														class="form-control" id="connect_wifi_password_UD">
+												</div>
+											</div>
+											<button id="WIFI-CREDENTIALS-UD" type="button"
+												class="btn btn-lg btn-primary">Setup
+												Internet Access Wifi Connection</button>
+											<span class="btn-lg">Requires a Reboot the First Time you Connect.</span>
+										</div> <!--  End controlWifiUpDown Submenu Option Pane -->
 
-                    <div class="tab-pane" id="controlWifiNotUpDown" style="display:none">
-                      <!-- Start controlWifi Submenu Option Pane - Used if wifi_up_down is false or undefined -->
-                      <h2>WiFi Control</h2>
-                      <p><b>WARNING:</b> When you turn off the IIAB Wifi Hotspot you will no longer be
-                        able to connect to it.</p>
-                      <p>So it is <b>highly recommended</b> that you have another means of connecting
-                        to IIAB, either via Bluetooth or OpenVPN before turning the Hotspot Off.</p>
-                      <h4>IIAB Dual Wifi is <b><span>OFF</span></b></h4>
-                      <div class="row" id="currentNetworkState"></div>
-                      <h4>IIAB Internal Hotspot is <b><span id="hotspotState">OFF</span></b></h4>
-                      <h4>External Wifi Router Details</h4>
-                      <div class="form-group row">
-                        <div class="col-xs-4">
-                          <label for="connect_wifi_ssid">Wifi Connection Hotspot</label>
-                          <input type="text" name="connect_wifi_ssid" class="form-control" id="connect_wifi_ssid">
-                          <label for="connect_wifi_password">Wifi Connection Password</label>
-                          <input type="text" name="connect_wifi_password" class="form-control" id="connect_wifi_password">
-                        </div>
-                      </div>
-                      <button id="WIFI-CREDENTIALS" type="button" class="btn btn-lg btn-primary">Setup
-                        External Wifi Router Connection</button>
-                      <button id="WIFI-CTL" type="button" class="btn btn-lg btn-primary" style="opacity:0.5" disabled>Toggle Internal Wifi</button>
-                    </div> <!--  End controlWifiNotUpDown -->
 									</div> <!--  End controlWifi Submenu Option Pane -->
 									<div class="tab-pane" id="controlBluetooth">
 										<!-- Start controlBluetooth Submenu Option Pane -->
@@ -352,34 +353,36 @@
 		</div> <!-- End Top Level tabbable boxed parentTabs -->
 		<!-- Modal Pages go Here -->
 		<!-- Admin Console Login Modal -->
-		<div class="modal" id="adminConsoleLoginModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal" id="adminConsoleLoginModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+			aria-hidden="true">
 			<div class="modal-dialog" role="document">
 				<div class="modal-content">
-				<div class="modal-header text-center">
-					<h4 class="modal-title w-100 font-weight-bold">Sign in</h4>
-					<!-- <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<div class="modal-header text-center">
+						<h4 class="modal-title w-100 font-weight-bold">Sign in</h4>
+						<!-- <button type="button" class="close" data-dismiss="modal" aria-label="Close">
 					<span aria-hidden="true">&times;</span>-->
-					</button>
-				</div>
-				<div class="modal-body mx-3">
-					<form id="iiabAdminLoginForm">
-					<div class="md-form mb-5">
-					<i class="fas fa-envelope prefix grey-text"></i>
-					<input type="text" id="iiabAdminUserName" class="form-control">
-					<label data-error="wrong" data-success="right" for="defaultForm-email">User Name</label>
+						</button>
 					</div>
+					<div class="modal-body mx-3">
+						<form id="iiabAdminLoginForm">
+							<div class="md-form mb-5">
+								<i class="fas fa-envelope prefix grey-text"></i>
+								<input type="text" id="iiabAdminUserName" class="form-control">
+								<label data-error="wrong" data-success="right" for="defaultForm-email">User Name</label>
+							</div>
 
-					<div class="md-form mb-4">
-					<i class="fas fa-lock prefix grey-text"></i>
-					<input type="password" id="iiabAdminUserPassword" class="form-control validate">
-					<label data-error="wrong" data-success="right" for="iiabAdminUserPassword">Password</label>
+							<div class="md-form mb-4">
+								<i class="fas fa-lock prefix grey-text"></i>
+								<input type="password" id="iiabAdminUserPassword" class="form-control validate">
+								<label data-error="wrong" data-success="right"
+									for="iiabAdminUserPassword">Password</label>
+							</div>
+						</form>
 					</div>
-					</form>
-				</div>
-				<div class="modal-footer">
-					<span id='adminConsoleLoginError' style='float:left; color:red'></span>
-					<button id='ADMIN-CONSOLE-LOGIN' class="btn btn-default">Login</button>
-				</div>
+					<div class="modal-footer">
+						<span id='adminConsoleLoginError' style='float:left; color:red'></span>
+						<button id='ADMIN-CONSOLE-LOGIN' class="btn btn-default">Login</button>
+					</div>
 				</div>
 			</div>
 		</div>

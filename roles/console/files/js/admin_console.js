@@ -131,16 +131,21 @@ function navButtonsEvents() {
     else
       console.log(' no call-after');
   });
+
   // Special Cases
   if (is_rpi){
     if (!config_vars.wifi_up_down){ //wifi_up_down is false or undefined
-      $("#controlWifiUpDown").hide();
       $("#controlWifiNotUpDown").show();
     }
+    else {
+      $("#controlWifiNotUpDown").hide();
+    }
+
     $("#controlWifiLink").show();
     $("#controlBluetoothLink").show();
     $("#controlVPNLink").show();
   }
+
   var platform = ansibleFacts.ansible_machine;
   if (platform == "armv7l" || platform == "aarch64"){ // not on W
     $("#instConCloneLink").show();
@@ -830,8 +835,16 @@ function procSystemInfo(data){
   $("#hotspotStateUD").html(serverInfo.hostapd_status);
   $("#hotspotState").html(serverInfo.hostapd_status);
   $("#hotspot_wifi_password_UD").val(serverInfo.hostapd_password);
-  //$("#WIFI-CTL").html('Turn Hotspot Access ON');
-  // make_button_disabled('#WIFI-CTL', true); // disable
+
+  // wifi up down
+  if (config_vars.wifi_up_down){
+    $("#dualWifiState").html('ON');
+    $("#controlWifiNotUpDown").hide();
+  }
+  else {
+  	$("#dualWifiState").html('OFF');
+    $("#controlWifiNotUpDown").show();
+  }
 
   if (serverInfo.hostapd_status == 'ON'){
     $("#WIFI-CTL").html('Switch Wifi to Connect to Router');
