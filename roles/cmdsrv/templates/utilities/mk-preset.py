@@ -57,11 +57,20 @@ def do_preset(this_preset_dir):
     preset["description"] = "Put a longer description here"
     preset["default_lang"] = "en or another code"
     preset["location"] = "Optional location this was installed"
-    preset["size_in_gb"] = 115
+    space_avail = adm.calc_space_avail()
+    root_size_in_k = int(space_avail['root']['size_in_k']) - int(space_avail['root']['avail_in_k'] )
+    if 'library' in space_avail:
+        libr_size_in_k = int(space_avail['library']['size_in_k']) - int(space_avail['library']['avail_in_k'] )
+    else:
+        libr_size_in_k = 0
+    size_in_k = root_size_in_k + libr_size_in_k
+    preset["root_size_in_k"] = root_size_in_k
+    preset["libr_size_in_k"] = libr_size_in_k
+    preset["size_in_gb"] = int(size_in_k / 1024 / 1024) + 1 # round up
     today = str(date.today())
     preset["last_modified"] = today
-    if not os.path.exists(preset_file):
-        adm.write_json_file(preset, preset_file)
+
+    adm.write_json_file(preset, preset_file)
 
 def do_menu(this_preset_dir, menu_dir):
     menu_file = this_preset_dir + 'menu.json'
