@@ -1110,6 +1110,39 @@ def merge_local_vars(target_vars_file, delta_vars, strip_comments=False, strip_d
 
     return output_lines
 
+def calc_space_avail():
+    space_avail = {}
+    space_avail['library_on_root'] = True
+    libr_attr = {}
+    #cmd = df_program + " -m" get size info in K not M
+    cmd = CONST.df_program
+    cmd_args = shlex.split(cmd)
+    outp = subproc_check_output(cmd_args)
+    dev_arr = outp.split('\n')
+    for dev_str in dev_arr[1:-1]:
+       dev_attr = dev_str.split()
+       if dev_attr[5] == '/':
+           space_avail['root'] = parse_df_str(dev_str, "in k")
+       if dev_attr[5] == '/library':
+           space_avail['library'] = parse_df_str(dev_str, "in k")
+           space_avail['library_on_root'] = False
+    return (space_avail)
+
+def parse_df_str(df_str, size_unit="megs"):
+    dev_attr = {}
+    dev_attr_array = df_str.split()
+    dev_attr_array = [a for a in dev_attr_array if a not in ['']]
+    dev_attr['dev'] = dev_attr_array[0]
+    if size_unit == "megs":
+        dev_attr['size_in_megs'] = dev_attr_array[1]
+        dev_attr['avail_in_megs'] = dev_attr_array[3]
+    else:
+        dev_attr['size_in_k'] = dev_attr_array[1]
+        dev_attr['avail_in_k'] = dev_attr_array[3]
+
+    dev_attr['mount_point'] = dev_attr_array[5]
+    return (dev_attr)
+
 # duplicates cmdsrv - but now revised
 
 def write_json_file(src_dict, target_file, sort_keys=False):
