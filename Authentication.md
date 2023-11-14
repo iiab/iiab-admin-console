@@ -56,6 +56,8 @@ You can login as any sudoer or member of the admin_console_group, but Change Pas
 
 * Status Code 403 (unauthorized) is used for unathenticated. (Some use 401.)
 * Authentication is performed by the uswgi app as a wrapper to CMDSRV.
+* uswgi makes AUTHENTICATE request to CMDSRV as uwsgi has no access to /etc/shadow
+* AUTHENTICATE command is blocked calls by front end to prevent password guessing
 * Authentication data is stored on the client in the authData structure.
 * Authorization data is transmitted encoded in base64 in the following http headers:
 * X-IIAB-Credentials: encryptedCredentials64
