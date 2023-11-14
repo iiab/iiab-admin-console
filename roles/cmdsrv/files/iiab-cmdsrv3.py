@@ -33,8 +33,6 @@ import re
 import urllib.request, urllib.error, urllib.parse
 import string
 import imghdr
-import crypt
-import spwd
 import cracklib
 import socket
 import iiab.adm_lib as adm
@@ -785,6 +783,7 @@ def cmd_handler(cmd_msg):
         "POWEROFF": {"funct": poweroff_server, "inet_req": False},
         #"REMOTE-ADMIN-CTL": {"funct": remote_admin_ctl, "inet_req": True}, #true/false
         #"GET-REMOTE-ADMIN-STATUS": {"funct": get_remote_admin_status, "inet_req": True}, #returns activated
+        "AUTHENTICATE": {"funct": authenticate, "inet_req": False},
         "CHGPW": {"funct": change_password, "inet_req": False}
         }
 
@@ -2903,6 +2902,43 @@ def get_remote_admin_status(cmd_info):
     outp = subproc_check_output(["scripts/get_remote_admin_status.sh"])
     #resp = json_array("remote",outp)
     return (outp.strip())
+
+def authenticate (cmd_info):
+    #print(cmd_info)
+
+    user = cmd_info['cmd_args']['user']
+    passwd = cmd_info['cmd_args']['password']
+
+    #print (user, passwd)
+    if not auth_calcsuser, passwd):
+        print('Bad Password')
+        return '"INVALID"'
+    else:
+        return '"VALID"'
+
+# this is klugy but spwd is going away and pam is not thread safe
+def auth_calcs(user, password):
+    read_pw_hash = None
+    with open('/etc/shadow') as f:
+        spwd = f.read()
+    spwddb = spwd.split('\n')
+    for i in spwddb:
+        entry = i.split(':')
+        if entry[0] == user:
+            read_pw_hash = entry[1]
+            break
+    if not read_pw_hash:
+        return False
+    try:
+        calc_pw_hash = subprocess.run(['perl', '-e', f"print crypt('{password}', '{read_pw_hash}')"], capture_output=True, text=True).stdout
+    except:
+        calc_pw_hash = None
+    if calc_pw_hash != read_pw_hash:
+        print('Bad Password')
+        time.sleep(2) # slow down password guessing
+        return False
+    else:
+        return True
 
 def change_password(cmd_info):
     #print cmd_info['cmd_args']

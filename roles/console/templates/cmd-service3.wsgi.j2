@@ -4,7 +4,9 @@ import time
 import urllib.request, urllib.error, urllib.parse
 import crypt
 import pwd
-import spwd
+# import spwd
+import pam
+import json
 import grp
 import secrets
 import subprocess
@@ -38,6 +40,9 @@ valid_nonces = []
 # future guard against attack against already logged in machine
 # ould add expiry, ip addr OR just alway use credentials
 valid_tokens = []
+
+# these commands can not be issued from the front end
+internal_commands = ['AUTHENTICATE']
 
 # init() at bottom
 
@@ -139,7 +144,7 @@ def auth_login(credentials64, client_public_key64, nonce64): # candidate for adm
 
     # see if user exists
     try:
-        spwddb = spwd.getspnam(user)
+        #spwddb = spwd.getspnam(user)
         user_info = pwd.getpwnam(user)
     except:
         print('Bad User')
@@ -164,25 +169,30 @@ def auth_login(credentials64, client_public_key64, nonce64): # candidate for adm
         print('Bad Group')
         return False
 
-    # check password - N.B. allows password guessing
-    # readpasswd = spwddb[1]
-    # pwparts = readpasswd.split('$')
-    # if len(pwparts) < 4:
-    #     salt = ''
-    #     print('No Password Salt')
-    # else:
-    #     salt = '$' + pwparts[1] + '$' +  pwparts[2] +'$'
-    # calcpasswd = crypt.crypt(password, salt)
-    #
-    # if calcpasswd != readpasswd:
-    
     # 2021-09-26: Works with all hashes in /etc/shadow (SHA-512, yescrypt, etc) for #2985
-    read_pw_hash = spwddb[1]
-    try:
-        calc_pw_hash = subprocess.run(['perl', '-e', f"print crypt('{password}', '{read_pw_hash}')"], capture_output=True, text=True).stdout
-    except:
-        calc_pw_hash = None
-    if calc_pw_hash != read_pw_hash:
+    #read_pw_hash = spwddb[1]
+    #try:
+    #    calc_pw_hash = subprocess.run(['perl', '-e', f"print crypt('{password}', '{read_pw_hash}')"], capture_output=True, text=True).stdout
+    #except:
+    #    calc_pw_hash = None
+    #if calc_pw_hash != read_pw_hash:
+    #    print('Bad Password')
+    #    return False
+    #else:
+    #    return True
+
+    cmd_args = {}
+    cmd_args['user'] = user
+    cmd_args['password'] = password
+
+    auth_cmd = 'AUTHENTICATE ' + json.dumps(cmd_args, separators=(",",":"))
+
+    resp = send_command(auth_cmd, time.time())
+    auth = json.loads(resp)
+
+    print('auth = ', auth)
+
+    if auth['Data'] != 'VALID':
         print('Bad Password')
         return False
     else:
@@ -227,9 +237,12 @@ def handle_cmd(req_uri, environ):
 
             #cmd = urllib.parse.unquote(cmd)
             cmd = cmd.replace('%20', ' ')
-            print('Handling ' + cmd)
-
-            response_body = send_command(cmd, start_ms)
+            cmd_verb = cmd.split(' ')[0]
+            if cmd_verb in internal_commands: # don't allow from front end
+                response_body = '{"Error": "Invalid command."' + alert_param
+            else:
+                print('Handling ' + cmd)
+                response_body = send_command(cmd, start_ms)
         else:
             response_body = '{"Error": "CMDSRV has started but is not ready."' + alert_param
     else:
