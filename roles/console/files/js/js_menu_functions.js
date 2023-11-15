@@ -1013,7 +1013,7 @@ function uploadMenuItemIcon() {
   	else {
       $("#menu_item_icon_name").val(fileName);
       // try to move file to js-menu images
-      moveUploadedFile(fileName, 'icon', ['jpeg', 'gif', 'png']);
+      moveUploadedFile(fileName, 'icon', ['image/jpeg', 'image/gif', 'image/png']);
   	}
   })
   .fail(function (jqXHR, textStatus, errorThrown){
