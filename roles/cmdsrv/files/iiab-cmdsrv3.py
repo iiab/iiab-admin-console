@@ -32,7 +32,7 @@ import configparser
 import re
 import urllib.request, urllib.error, urllib.parse
 import string
-import imghdr
+import mimetypes
 import cracklib
 import socket
 import iiab.adm_lib as adm
@@ -2836,7 +2836,7 @@ def move_uploaded_file(cmd_info):
     #print(src)
     #print(dst)
     if len(filter_array) > 0:
-        if imghdr.what(src) not in filter_array:
+        if mimetypes.guess_type(src)[0] not in filter_array:
             os.remove(src)
             return cmd_error(cmd_info['cmd'], msg="File cannot be used as " + file_use + ".")
     try:
