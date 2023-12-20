@@ -842,6 +842,11 @@ function validateMenuItemDef(menuItemName, menuDef){
     alert('Description may not be left blank.');
     return false;
   }
+
+  if (menuDef['logo_url'].includes(' ')){
+    alert('Logo file name may not contain spaces; please use "-" or "_".');
+    return false;
+  }
   return true;
 }
 
