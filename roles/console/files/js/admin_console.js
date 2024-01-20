@@ -505,6 +505,7 @@ function contentMenuButtonsEvents() {
     uploadMenuItemIcon();
   });
   attachMenuItemDefNameCalc(); // attach events to fields
+  // $("#contentMenuItemsFilter").change(filterMenuItemDefList); // menu def filtering - NO in html
 }
 
   // Util Buttons

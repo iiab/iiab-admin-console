@@ -9,6 +9,7 @@ var menuItemDefList = [];
 var menuItemDefs = {};
 menuItemDefs['call_count'] = null; // mark as not downloaded
 var menuItemDefPrefixes = {"all" : "all-items", "current" : "current-items", "select" : "select-items"};
+var menuItemDefListDrawn = false
 var homeMenuLoaded = false;
 var menuItemDragSrcElement = null;
 var menuItemDragSrcParent = null;
@@ -30,6 +31,58 @@ var jsMenuTypeTargets =
     "download"  : "download_folder"
   };
 // var targetTypes = ['zim', 'html', 'webroot', 'download']
+
+// next two functions are called when tab clicked
+function selectMenuPropertiesTab(){
+  $("#contentMenuItemsFilterDiv").hide();
+}
+
+function selectContentItemListTab(){
+  $("#contentMenuItemsFilterDiv").show();
+
+}
+
+function filterMenuItemDefList(){
+  // hide items in list if filter string not in name, title, or description
+  var filterString = gEBI("contentMenuItemsFilter").value
+  if (filterString.length < 3){
+    if(!menuItemDefListDrawn)
+      redrawAllMenuItemList()
+    return
+  }
+  var list = menuItemDefList
+  for (var i = 0; i < list.length; i++) {
+    var menuItemName = list[i];
+    var menuItemDivId = '#' + menuItemDefPrefixes.all + '-' + menuItemName;
+    // check if should hide this item
+    if (!shouldShowMenuItem(menuItemDivId, menuItemName)) {
+      $(menuItemDivId).hide();
+      continue
+    }
+    // consoleLog(menuItemName, menuItemDivId)
+    var showItem = false
+    var menuDef = menuItemDefs[menuItemName]
+    if (compareMenuItemProperty(menuItemName, filterString))
+      showItem = true
+    if (compareMenuItemProperty(menuDef.title, filterString))
+      showItem = true
+    if (compareMenuItemProperty(menuDef.description, filterString))
+      showItem = true
+    if (showItem)
+      $(menuItemDivId).show()
+    else
+      $(menuItemDivId).hide()
+  }
+  menuItemDefListDrawn = false
+}
+
+function compareMenuItemProperty(attribute, compareStr){
+  var attributeLc = attribute.toLowerCase()
+  if (attributeLc.indexOf(compareStr.toLowerCase()) != -1)
+      return true
+  else
+    return false
+}
 
 function getMenuItemDefLists(){
 	var resp = getMenuItemDefList();
@@ -303,6 +356,7 @@ function procCurrentMenuUpdateSelectedLangs (list) { // automatically select any
 function redrawAllMenuItemList() {
   // createMenuItemScaffold(menuItemDefList, menuItemDefPrefixes.all); - not needed as done for all items initially
   drawMenuItemDefList(menuItemDefList, menuItemDefPrefixes.all);
+  menuItemDefListDrawn = true
 }
 
 function drawMenuItemDefList (list, prefix){
@@ -360,20 +414,30 @@ function genMenuItem(divId, menuItemName) {
 	var menuItemDivId = "#" + divId;
 	var module = menuItemDefs[menuItemName];
 
-	var langLookup = langCodesXRef[module.lang];
-
-  // don't hide any items on menu
-  if (divId.indexOf(menuItemDefPrefixes.current) == -1 && selectedLangs.length > 0 && selectedLangs.indexOf(langLookup) == -1) { // not a selected language
+  // check if should hide this item
+  if (!shouldShowMenuItem(menuItemDivId, menuItemName)) {
 		$(menuItemDivId).hide();
 		return;
 	}
-	var menuHtml = genMenuItemHtml(menuItemName);
+	menuHtml = genMenuItemHtml(menuItemName);
 	if (menuHtml == "") // skip problem definitions, probably not found
 	  return;
 
-	$("#" + divId).html(menuHtml);
+	$(menuItemDivId).html(menuHtml);
 	menuItemAddDnDHandlers($("#" + divId).get(0));
-	$("#" + divId).show();
+	$(menuItemDivId).show();
+}
+
+function shouldShowMenuItem(menuItemDivId, menuItemName) {
+  // hide if language not selected except show if already on menu
+	var module = menuItemDefs[menuItemName];
+	var langLookup = langCodesXRef[module.lang];
+
+  // don't hide any items on menu
+  if (menuItemDivId.indexOf(menuItemDefPrefixes.current) == -1 && selectedLangs.length > 0 && selectedLangs.indexOf(langLookup) == -1)
+		return false;
+  else
+    return true
 }
 
 function genMenuItemHtml(menuItemName) {
