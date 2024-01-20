@@ -68,6 +68,8 @@ On the **left** are the links in the menu you are editing and on the **right** a
 * To add a link drag it from the right to the left.
 * To remove a link drag it from the left to the right.
 
+You can filter the list of **Available Menu Item Definitions** by entering characters in **Filter Definitions**. Three or more characters will cause a match on Name, Title, and Description and filter accordingly. Case does not matter.
+
 ### Don't Forget
 
 Don't forget to save your changes by clicking **Save Menu**. The **menu item list is not part of the menu until you save**.
