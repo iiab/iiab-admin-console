@@ -1301,6 +1301,7 @@ function changePassword ()
 
 function changePasswordSuccess ()
 {
+  $("#iiab_admin_old_password").val('');
   $("#iiab_admin_new_password").val('');
   $("#iiab_admin_new_password2").val('');
   alert ("Password Changed. Please Sign in again.");
@@ -1968,6 +1969,7 @@ function logOutUser(){
   authData.token = ''; // possible future use
   $('#iiabAdminUserName').val('');
   $('#iiabAdminUserPassword').val('');
+  $("#iiab_admin_old_password").val('');
   init();
 }
 
