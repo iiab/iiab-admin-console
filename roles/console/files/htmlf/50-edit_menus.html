@@ -41,13 +41,17 @@
             </div>
           </div>
           <div class="row">
-            <div class="col-sm-12">
+            <div class="col-sm-6">
               <ul id="menusDefineMenuTabs" class="nav nav-tabs">
-                <li class="nav-item active"><a href="#menusDefineMenuProperties" class="nav-link small" call-after="nop">Menu Properties</a></li>
-                <li class="nav-item"><a href="#menusDefineMenuItems" class="nav-link small" call-after="nop">Content Item List</a></li>
+                <li class="nav-item active"><a href="#menusDefineMenuProperties" class="nav-link small" call-after="selectMenuPropertiesTab">Menu Properties</a></li>
+                <li class="nav-item"><a href="#menusDefineMenuItems" class="nav-link small" call-after="selectContentItemListTab">Content Item List</a></li>
               </ul>
-            </div> <!-- end row -->
-          </div>
+            </div> <!-- end left side -->
+            <div class="col-sm-6" id="contentMenuItemsFilterDiv" style="display:none">
+              <label for="contentMenuItemsFilter" style="width:200px;"><h3>Filter Definitions</h3></label>
+              <input type="text" size="30" name="contentMenuItemsFilter" id="contentMenuItemsFilter" onkeyup="filterMenuItemDefList()" value="">
+            </div> <!-- end right side -->
+          </div> <!-- end row -->
           <div class="row">
             <div class="col-sm-12">
               <div id="menusDefineMenuTabsPanes" class="tab-content">
