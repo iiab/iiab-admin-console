@@ -15,6 +15,8 @@
 				<li><a href="#utilsTools">Admin Tools</a></li>
 				<li><a href="#utilsAnsible">Display Ansible Facts</a></li>
 				<li><a href="#utilsXsceIni" call-after="getXsceIni">Display IIAB.INI File</a></li>
+				<li id="utilsRpiStatusLink" style="display:none"><a href="#utilsRpiStatus"
+					call-after="getRpiState">Display System Status</a></li>
 				<li><a href="#utilsMemory" call-after="getSysMem">Display System Memory</a></li>
 				<li><a href="#utilsStorage" call-after="getSysStorage">Display System Storage</a></li>
 				<li><a href="#utilsSpeedTest">Perform Internet Speed Test</a></li>
@@ -105,12 +107,17 @@
 					<div id=iiabIni>
 					</div>
 				</div> <!--  End statusAnsible pane -->
-				<div class="tab-pane" id="utilsMemory"> <!-- Start statusAnsible Pane -->
+				<div class="tab-pane" id="utilsRpiStatus"> <!-- Start utilsRpiStatus Pane -->
+					<h2>System Status</h2>
+					<div id="sysStatus">
+					</div>
+				</div> <!--  End utilsRpiStatus pane -->
+				<div class="tab-pane" id="utilsMemory"> <!-- Start utilsMemory Pane -->
 					<h2>System Memory</h2>
 					<pre><div id="sysMemory">
 					</div></pre>
 				</div> <!--  End utilsMemory pane -->
-				<div class="tab-pane" id="utilsStorage"> <!-- Start statusAnsible Pane -->
+				<div class="tab-pane" id="utilsStorage"> <!-- Start utilsStorage Pane -->
 					<h2>System Storage</h2>
 					<pre><div id=sysStorage>
 					</div></pre>

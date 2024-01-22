@@ -726,6 +726,7 @@ def cmd_handler(cmd_msg):
         "GET-VARS": {"funct": get_install_vars, "inet_req": False},
         "GET-IIAB-INI": {"funct": get_iiab_ini, "inet_req": False},
         "SET-CONF": {"funct": set_config_vars, "inet_req": False},
+        "GET-RPI-STATE": {"funct": get_rpi_state, "inet_req": False},
         "GET-MEM-INFO": {"funct": get_mem_info, "inet_req": False},
         "GET-SPACE-AVAIL": {"funct": get_space_avail, "inet_req": False},
         "GET-STORAGE-INFO": {"funct": get_storage_info_lite, "inet_req": False},
@@ -1150,6 +1151,21 @@ def get_iiab_ini(cmd_info):
     read_iiab_ini_file()
     resp = json.dumps(iiab_ini)
     return (resp)
+
+def get_rpi_state(cmd_info):
+    state = {}
+    if is_rpi:
+        outp = subproc_check_output(["/usr/bin/vcgencmd"," measure_temp"])
+        state['rpi_temp'] = outp.split('\n')[0].split('=')[1]
+        state['rpi_temp'] = state['rpi_temp'].replace("'", " ")
+        outp = subproc_check_output(["/usr/bin/vcgencmd"," get_throttled"])
+        state['rpi_throttled'] = outp.split('\n')[0].split('=')[1]
+        # print(state)
+        resp = json.dumps(state)
+        return (resp)
+    else:
+        resp = cmd_error(cmd='GET-RPI-STATE', msg='Server is not a Raspberry Pi.')
+        return (resp)
 
 def get_mem_info(cmd_info):
     outp = subproc_check_output(["/usr/bin/free", "-h"])

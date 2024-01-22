@@ -70,6 +70,16 @@ sysStorage.root = {};
 sysStorage.library = {};
 sysStorage.library.partition = false; // no separate library partition
 
+var rpiThrottleStates = {
+  0	: 'Under-voltage detected',
+  1 : 'ARM frequency has been capped',
+  2	: 'Currently throttled',
+  3 : 'Soft temperature limit is active',
+  16 : 'Under-voltage has occurred',
+  17 : 'ARM frequency capping has occurred',
+  18 : 'Throttling has occurred',
+  19 : 'Soft temperature limit has occurred'}
+
 // because jquery does not percolate .fail conditions in async chains
 // and because an error returned from the server is not an ajax error
 // flag must be set to false before use
@@ -144,6 +154,7 @@ function navButtonsEvents() {
     $("#controlWifiLink").show();
     $("#controlBluetoothLink").show();
     $("#controlVPNLink").show();
+    $("#utilsRpiStatusLink").show();
   }
 
   var platform = ansibleFacts.ansible_machine;
@@ -1530,6 +1541,34 @@ function cancelJobFunc(job_id)
   	});
 }
 
+function getRpiState()
+{
+  var command = "GET-RPI-STATE"
+  sendCmdSrvCmd(command, procRpiState);
+  return true;
+}
+
+function procRpiState(data) {
+  //alert ("in procRpiState");
+  consoleLog(data);
+  var rpiState = data;
+  var html = "Temperature: " + rpiState.rpi_temp  + "<BR>";
+  html += "Throttle Code: " + rpiState.rpi_throttled + "<BR><BR>";
+  html += '<table class="table table-bordered" style="width: 500px">'
+  var throttleCode = Number(rpiState.rpi_throttled)
+  for (var stateBit in rpiThrottleStates){
+    html += "<tr><td>" + rpiThrottleStates[stateBit] + "</td>"
+    if(Math.pow(2, stateBit) & throttleCode) // is this bit set in return code
+      html += "<td>YES</td></tr>"
+    else
+      html += "<td>NO</td></tr>"
+  }
+  html += "</table>"
+  $( "#sysStatus" ).html(html);
+  //consoleLog(jqXHR);
+  return true;
+}
+
 function getSysMem()
 {
   var command = "GET-MEM-INFO"
@@ -1544,7 +1583,7 @@ function procSysMem(data)
   var sysMemory = data['system_memory'];
   var html = "";
   for (var i in sysMemory)
-  html += sysMemory[i] + "<BR>"
+    html += sysMemory[i] + "<BR>"
 
   $( "#sysMemory" ).html(html);
   //consoleLog(jqXHR);
