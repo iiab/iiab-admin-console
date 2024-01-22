@@ -133,7 +133,7 @@ prereq_jobs = {}
 jobs_running = {}
 running_job_count = 0
 
-SENSITIVE_COMMANDS = ["CHGPW"]
+SENSITIVE_COMMANDS = ["CHGPW", "AUTHENTICATE"]
 ANSIBLE_COMMANDS = ["RUN-ANSIBLE", "RESET-NETWORK", "RUN-ANSIBLE-ROLES"]
 FULL_LOG_COMMANDS = ["RUN-ANSIBLE", "RESET-NETWORK", "RUN-ANSIBLE-ROLES"]
 ansible_running_flag = False
