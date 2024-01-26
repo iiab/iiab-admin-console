@@ -32,6 +32,10 @@ All software on the server has been installed using a product called ansible.  T
 
 The iiab.ini file is where the Server stores information about what is installed and enabled.  You can view it here.
 
+###System Status
+
+This is Raspberry Pi Only. It displays the temperature and the Throttling State.
+
 ###Display System Memory
 
 Just what it says.
