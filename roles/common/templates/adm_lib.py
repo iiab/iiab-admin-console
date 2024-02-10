@@ -111,7 +111,9 @@ def get_substitution_data(perma_ref, zim_versions, zims_installed, path_to_id_ma
         articlecount = item.get('articleCount', '')
         size = item.get('size', '')
         tags = item.get('tags', '')
-        zim_lang = item.get('language')
+        # zims like gutenberg_mul_xxx can have a list of languages separated by commas
+        # always take the first item in the list
+        zim_lang = item.get('language').split(',')[0]
         menu_def_lang = iiab.kiwix_lang_to_iso2(zim_lang)
         date = item.get('date', '')
         return (articlecount, mediacount, size, tags, menu_def_lang, date)
