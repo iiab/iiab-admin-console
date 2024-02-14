@@ -111,10 +111,8 @@ def get_substitution_data(perma_ref, zim_versions, zims_installed, path_to_id_ma
         articlecount = item.get('articleCount', '')
         size = item.get('size', '')
         tags = item.get('tags', '')
-        # zims like gutenberg_mul_xxx can have a list of languages separated by commas
-        # always take the first item in the list
-        zim_lang = item.get('language').split(',')[0]
-        menu_def_lang = iiab.kiwix_lang_to_iso2(zim_lang)
+        zim_lang = item.get('language')
+        menu_def_lang = kiwix_lang_to_iso2(zim_lang)
         date = item.get('date', '')
         return (articlecount, mediacount, size, tags, menu_def_lang, date)
     return ('0', '0', '0', '0', '0', '0')
@@ -616,7 +614,7 @@ def put_kiwix_enabled_into_menu_json():
     for zim in zims_installed:
         perma_ref = iiab.calc_perma_ref(zims_installed[zim]['path']) # N.B. 4/25/2023 first use of this function
         zim_lang_code = zims_installed[zim]['language']
-        zim_iso2_code = iiab.kiwix_lang_to_iso2(zim_lang_code)
+        zim_iso2_code = kiwix_lang_to_iso2(zim_lang_code)
         zim_perma_ref_iso2[perma_ref] = zim_iso2_code
 
     # use that data
@@ -698,7 +696,7 @@ def generate_zim_menu_def(perma_ref, menu_def_name, zim_info):
     if perma_ref == 'tes': return ""
 
     zim_lang = zim_info['language']
-    menu_def_lang = iiab.kiwix_lang_to_iso2(zim_lang)
+    menu_def_lang = kiwix_lang_to_iso2(zim_lang)
     #filename = menu_def_lang + '-' + perma_ref + '.json'
     # create a stub for this zim
     menu_def = {}
@@ -724,6 +722,13 @@ def generate_zim_menu_def(perma_ref, menu_def_name, zim_info):
     #        menufile.write(json.dumps(menuDef,indent=2))
 
     return menu_def
+
+def kiwix_lang_to_iso2(zim_lang_code): # 2/13/2024 moved from iiab_lib where not used
+    '''Lookup the iso2 equivalent of a zim language code'''
+    # zims like gutenberg_mul_xxx can have a list of languages separated by commas
+    # always take the first item in the list
+    zim_lang = zim_lang_code.split(',')[0]
+    return iiab.lang_codes[zim_lang]['iso2']
 
 def get_default_logo(logo_selector, lang):
     # Note we could also get the logo for a zim out of the catalog
