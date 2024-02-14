@@ -1832,9 +1832,10 @@ def read_library_xml(lib_xml_file, kiwix_exclude_attr=[""]):
     try:
         tree = ET.parse(lib_xml_file)
         root = tree.getroot()
-
         for child in root:
             attributes = {}
+            if len(child.attrib['language'].split(',')) > 1: # skip multi languages
+                continue
             if 'id' in child.attrib:
                 id = child.attrib['id']
                 for attr in child.attrib:
