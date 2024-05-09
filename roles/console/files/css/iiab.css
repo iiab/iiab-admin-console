@@ -235,6 +235,7 @@ text-align: center;
 	width:100%;
 	padding: 4px;
 	vertical-align: top;
+  table-layout:fixed;
 }
 
 .jobTable tr, td{
