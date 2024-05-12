@@ -736,7 +736,7 @@ def cmd_handler(cmd_msg):
         "GET-NETWORK-INFO": {"funct": get_network_info, "inet_req": False},
         "CTL-HOTSPOT": {"funct": ctl_hotspot, "inet_req": False},
         "CTL-WIFI": {"funct": ctl_wifi, "inet_req": False},
-        "SET-WPA-CREDENTIALS": {"funct": set_wpa_credentials, "inet_req": False},
+        "SET-WIFI-CONNECTION-PARAMS": {"funct": set_wifi_connection_params, "inet_req": False},
         "CTL-BLUETOOTH": {"funct": ctl_bluetooth, "inet_req": False},
         "CTL-VPN": {"funct": ctl_vpn, "inet_req": True},
         "REMOVE-USB": {"funct": umount_usb, "inet_req": False},
@@ -1401,9 +1401,10 @@ def ctl_wifi(cmd_info):
         resp = cmd_success(cmd_info['cmd'])
     return resp
 
-def set_wpa_credentials (cmd_info):
+def set_wifi_connection_params(cmd_info):
+    cmd=cmd_info['cmd']
     if not is_rpi:
-        resp = cmd_error(cmd=cmd_info['cmd'], msg='Only supported on Raspberry Pi.')
+        resp = cmd_error(cmd=cmd, msg='Only supported on Raspberry Pi.')
         return (resp)
 
     #print(cmd_info)
@@ -1411,7 +1412,24 @@ def set_wpa_credentials (cmd_info):
         connect_wifi_ssid = cmd_info['cmd_args']['connect_wifi_ssid']
         connect_wifi_password = cmd_info['cmd_args']['connect_wifi_password']
     else:
-        return cmd_malformed(cmd_info['cmd'])
+        return cmd_malformed(cmd)
+
+    if adm.is_service_active('NetworkManager'):
+        resp = set_nmcli_connection(cmd, connect_wifi_ssid, connect_wifi_password)
+    elif adm.is_service_active('dhcpcd'):
+        resp = set_nmcli_connection(cmd. connect_wifi_ssid, connect_wifi_password)
+    else:
+        resp = cmd_error(cmd=cmd_info['cmd'], msg='Neither NetworkManager nor dhcpcd service is active.')
+
+    return resp
+
+def set_nmcli_connection(cmd, connect_wifi_ssid, connect_wifi_password):
+    rc = adm.subproc_run('nmcli device wifi connect ' + connect_wifi_ssid + ' password ' + connect_wifi_password)
+
+    resp = cmd_success(cmd)
+    return resp
+
+def set_wpa_credentials (cmd, connect_wifi_ssid, connect_wifi_password):
 
     # this works for raspbian but maybe not for ubuntu
     # may need to add file /etc/netplan/99-iiab-admin-access-points.yaml
@@ -1422,7 +1440,7 @@ def set_wpa_credentials (cmd_info):
     if ansible_facts['ansible_local']['local_facts']['os'] == 'ubuntu':
         write_netplan_wpa_file(connect_wifi_ssid, connect_wifi_password)
 
-    resp = cmd_success(cmd_info['cmd'])
+    resp = cmd_success(cmd)
     return resp
 
 def write_wpa_supplicant_file(connect_wifi_ssid, connect_wifi_password):

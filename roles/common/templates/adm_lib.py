@@ -981,6 +981,13 @@ def is_role_nginx_site_enabled(role): # treat as enabled = active
     else:
         return False
 
+def is_service_active(service):
+    rc = subproc_run('systemctl is-active ' + service)
+    if rc.returncode:
+        return False
+    else:
+        return True
+
 def pcgvtd9():
     global headers
     global git_committer_handle

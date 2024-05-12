@@ -970,7 +970,7 @@ function setWpaCredentials(){
   	return;
   }
 
-  var command = "SET-WPA-CREDENTIALS " + JSON.stringify(cmd_args);
+  var command = "SET-WIFI-CONNECTION-PARAMS " + JSON.stringify(cmd_args);
   return sendCmdSrvCmd(command, genericCmdHandler);
 }
 
