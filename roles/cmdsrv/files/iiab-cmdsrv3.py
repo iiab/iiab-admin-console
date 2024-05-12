@@ -1417,16 +1417,26 @@ def set_wifi_connection_params(cmd_info):
     if adm.is_service_active('NetworkManager'):
         resp = set_nmcli_connection(cmd, connect_wifi_ssid, connect_wifi_password)
     elif adm.is_service_active('dhcpcd'):
-        resp = set_nmcli_connection(cmd. connect_wifi_ssid, connect_wifi_password)
+        resp = set_wpa_credentials(cmd, connect_wifi_ssid, connect_wifi_password)
     else:
         resp = cmd_error(cmd=cmd_info['cmd'], msg='Neither NetworkManager nor dhcpcd service is active.')
 
     return resp
 
 def set_nmcli_connection(cmd, connect_wifi_ssid, connect_wifi_password):
-    rc = adm.subproc_run('nmcli device wifi connect ' + connect_wifi_ssid + ' password ' + connect_wifi_password)
-
-    resp = cmd_success(cmd)
+    cmdstr = 'nmcli device wifi connect ' + connect_wifi_ssid + ' password ' + connect_wifi_password
+    try:
+        rc = adm.subproc_run(cmdstr, timeout=30)
+        if rc.returncode == 0:
+            resp = cmd_success(cmd)
+        elif rc.returncode == 4:
+            resp = cmd_error(cmd=cmd, msg='Unable to Connect. Check credentials.')
+        elif rc.returncode == 10:
+            resp = cmd_error(cmd=cmd, msg='Unable to Find Router.')
+        else:
+            resp = cmd_error(cmd=cmd, msg='Unable to Connect.')
+    except:
+        resp = cmd_error(cmd=cmd, msg='Error Connecting to Router.')
     return resp
 
 def set_wpa_credentials (cmd, connect_wifi_ssid, connect_wifi_password):

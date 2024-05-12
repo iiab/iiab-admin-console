@@ -188,11 +188,11 @@ function controlButtonsEvents() {
     controlWifiHotspot();
   });
 
-	$("#WIFI-CREDENTIALS").click(function(){
-    setWpaCredentials();
+	$("#WIFI-CREDENTIALS").click(function(){ // Not Used
+    setWifiConnectionParams();
   });
   $("#WIFI-CREDENTIALS-UD").click(function(){
-    setWpaCredentials();
+    setWifiConnectionParams();
   });
 
 	$("#BLUETOOTH-CTL").click(function(){
@@ -953,7 +953,7 @@ function controlWifiHotspot(){
     alert ("Can't change password as Internal Hotspot is not ON.");
 }
 
-function setWpaCredentials(){
+function setWifiConnectionParams(){
   var cmd_args = {};
 
   if (config_vars.wifi_up_down){
@@ -971,7 +971,7 @@ function setWpaCredentials(){
   }
 
   var command = "SET-WIFI-CONNECTION-PARAMS " + JSON.stringify(cmd_args);
-  return sendCmdSrvCmd(command, genericCmdHandler);
+  return sendCmdSrvCmd(command, getSystemInfo);
 }
 
 function controlBluetooth(){

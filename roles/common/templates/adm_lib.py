@@ -1226,10 +1226,10 @@ def jinja2_subst(src_dict, dflt_dict=None):
             dest_dict[k] = v
     return dest_dict
 
-def subproc_run(cmdstr, shell=False, check=False):
+def subproc_run(cmdstr, shell=False, check=False, timeout=CONST.cmdsrv_proc_timeout):
     args = shlex.split(cmdstr)
     try:
-        compl_proc = subprocess.run(args, shell=shell, check=check,
+        compl_proc = subprocess.run(args, shell=shell, check=check, timeout=timeout,
                                     universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     except:
         raise
