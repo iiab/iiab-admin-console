@@ -1402,6 +1402,10 @@ def ctl_wifi(cmd_info):
     return resp
 
 def set_wifi_connection_params(cmd_info):
+    # TO DO
+    # Handle non rpi servers
+    # Handle non-raspios
+    # Soft code wifi device
     cmd=cmd_info['cmd']
     if not is_rpi:
         resp = cmd_error(cmd=cmd, msg='Only supported on Raspberry Pi.')
@@ -1424,8 +1428,24 @@ def set_wifi_connection_params(cmd_info):
     return resp
 
 def set_nmcli_connection(cmd, connect_wifi_ssid, connect_wifi_password):
-    cmdstr = 'nmcli device wifi connect ' + connect_wifi_ssid + ' password ' + connect_wifi_password
+    WIFI_DEV = 'wlan0'
+    wifi_connection = None
+
+    cmdstr = 'nmcli -t -f device,name connection show --active'
+    rc = adm.subproc_run(cmdstr)
+    dev_arr = rc.stdout.split('\n')
+
+    for devstr in dev_arr:
+        if WIFI_DEV in devstr:
+            wifi_connection = devstr.split(':')[1]
+    if connect_wifi_ssid == wifi_connection:
+        return cmd_error(cmd=cmd, msg='Already connected to ' + connect_wifi_ssid + '.')
+    if wifi_connection: # already connected to another router
+        rc = adm.subproc_run('nmcli device disconnect ' + WIFI_DEV)
+        if rc.returncode != 0:
+            return cmd_error(cmd=cmd, msg='Error disconnecting from ' + wifi_connection + '.')
     try:
+        cmdstr = 'nmcli device wifi connect ' + connect_wifi_ssid + ' password ' + connect_wifi_password
         rc = adm.subproc_run(cmdstr, timeout=30)
         if rc.returncode == 0:
             resp = cmd_success(cmd)
