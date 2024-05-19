@@ -968,6 +968,12 @@ function setWifiConnectionParams(){
     cmd_args['connect_wifi_ssid'] = gEBI('connect_wifi_ssid').value;
     cmd_args['connect_wifi_password'] = gEBI('connect_wifi_password').value;
   }
+  // do this by putting up pick list
+  if (!serverInfo.nmcli_devices.hasOwnProperty(cmd_args['connect_wifi_ssid'] )){
+    alert('Unknown Router')
+    return
+  }
+
   var len = cmd_args['connect_wifi_password'].length
 
   if (len != 0 && (len < 8 || len > 63)){
