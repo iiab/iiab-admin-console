@@ -1501,39 +1501,6 @@ def set_nmcli_connection(cmd, connect_wifi_ssid, connect_wifi_password):
         resp = cmd_error(cmd=cmd, msg='Error Connecting to Router.')
     return resp
 
-
-def set_nmcli_connection_v1(cmd, connect_wifi_ssid, connect_wifi_password):
-    WIFI_DEV = 'wlan0'
-    wifi_connection = None
-
-    cmdstr = 'nmcli -t -f device,name connection show --active'
-    rc = adm.subproc_run(cmdstr)
-    dev_arr = rc.stdout.split('\n')
-
-    for devstr in dev_arr:
-        if WIFI_DEV in devstr:
-            wifi_connection = devstr.split(':')[1]
-    if connect_wifi_ssid == wifi_connection:
-        return cmd_error(cmd=cmd, msg='Already connected to ' + connect_wifi_ssid + '.')
-    if wifi_connection: # already connected to another router
-        rc = adm.subproc_run('nmcli device disconnect ' + WIFI_DEV)
-        if rc.returncode != 0:
-            return cmd_error(cmd=cmd, msg='Error disconnecting from ' + wifi_connection + '.')
-    try:
-        cmdstr = 'nmcli device wifi connect ' + connect_wifi_ssid + ' password ' + connect_wifi_password
-        rc = adm.subproc_run(cmdstr, timeout=30)
-        if rc.returncode == 0:
-            resp = cmd_success(cmd)
-        elif rc.returncode == 4:
-            resp = cmd_error(cmd=cmd, msg='Unable to Connect. Check credentials.')
-        elif rc.returncode == 10:
-            resp = cmd_error(cmd=cmd, msg='Unable to Find Router.')
-        else:
-            resp = cmd_error(cmd=cmd, msg='Unable to Connect.')
-    except:
-        resp = cmd_error(cmd=cmd, msg='Error Connecting to Router.')
-    return resp
-
 def set_wpa_credentials (cmd, connect_wifi_ssid, connect_wifi_password):
 
     # this works for raspbian but maybe not for ubuntu
