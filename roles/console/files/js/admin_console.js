@@ -191,11 +191,16 @@ function controlButtonsEvents() {
 	$("#WIFI-CREDENTIALS").click(function(){ // Not Used
     setWifiConnectionParams();
   });
+
   $("#WIFI-CREDENTIALS-UD").click(function(){
     setWifiConnectionParams();
   });
 
-	$("#BLUETOOTH-CTL").click(function(){
+	$("#FORGET-WIFI-CONNECTIONS-UD").click(function(){
+    removeWifiConnectionParams();
+  });
+
+  $("#BLUETOOTH-CTL").click(function(){
     controlBluetooth();
   });
 	$("#VPN-CTL").click(function(){
@@ -971,6 +976,11 @@ function setWifiConnectionParams(){
   }
 
   var command = "SET-WIFI-CONNECTION-PARAMS " + JSON.stringify(cmd_args);
+  return sendCmdSrvCmd(command, getSystemInfo);
+}
+
+function removeWifiConnectionParams(){
+  var command = "REMOVE-WIFI-CONNECTION-PARAMS";
   return sendCmdSrvCmd(command, getSystemInfo);
 }
 

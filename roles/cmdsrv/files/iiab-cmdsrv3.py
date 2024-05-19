@@ -35,6 +35,8 @@ import string
 import mimetypes
 import cracklib
 import socket
+import hashlib
+import binascii
 import iiab.adm_lib as adm
 
 
@@ -737,6 +739,7 @@ def cmd_handler(cmd_msg):
         "CTL-HOTSPOT": {"funct": ctl_hotspot, "inet_req": False},
         "CTL-WIFI": {"funct": ctl_wifi, "inet_req": False},
         "SET-WIFI-CONNECTION-PARAMS": {"funct": set_wifi_connection_params, "inet_req": False},
+        "REMOVE-WIFI-CONNECTION-PARAMS": {"funct": remove_wifi_connection_params_nm, "inet_req": False},
         "CTL-BLUETOOTH": {"funct": ctl_bluetooth, "inet_req": False},
         "CTL-VPN": {"funct": ctl_vpn, "inet_req": True},
         "REMOVE-USB": {"funct": umount_usb, "inet_req": False},
@@ -1308,6 +1311,19 @@ def calc_network_info():
     net_stat["iiab_uuid"] = run_command("/bin/cat /etc/iiab/uuid")[0]
     net_stat["openvpn_handle"] = run_command("/bin/cat /etc/iiab/openvpn_handle")[0]
 
+    if is_rpi: # assumes all rpi use raspios or at least have network manager
+        outp = run_command("/usr/bin/nmcli -t -f ssid,in-use,signal,bars,security dev wifi")
+        outpd = {}
+        for item in outp:
+            props = item.split(':')
+            outpd[props[0]] = {'in_use':props[1], 'signal':props[2], 'bars':props[3], 'security':props[4] }
+        net_stat["nmcli_devices"] = outpd
+        outp = run_command("/usr/bin/nmcli -t -f name,type,device con show")
+        outpd = {}
+        for item in outp:
+            props = item.split(':')
+            outpd[props[0]] = {'type':props[1], 'device':props[2] }
+        net_stat["nmcli_connections"] = outpd
     return (net_stat)
 
 def check_systemd_service_active(service):
@@ -1428,6 +1444,65 @@ def set_wifi_connection_params(cmd_info):
     return resp
 
 def set_nmcli_connection(cmd, connect_wifi_ssid, connect_wifi_password):
+    WIFI_DEV = 'wlan0' # get from somewhere, but this is rpi only
+    current_wifi_connection = None
+    add_flag = True
+    con_name = connect_wifi_ssid.replace(' ', '_')
+
+    cmdstr = 'nmcli -t -f device,name,type connection show'
+    rc = adm.subproc_run(cmdstr)
+    dev_arr = rc.stdout.split('\n')[:-1]
+
+    for devstr in dev_arr:
+        props = devstr.split(':')
+        if props[2] != '802-11-wireless':
+            continue
+        if props[0] == WIFI_DEV:
+            current_wifi_connection = props[1]
+        if props[1] == con_name:
+            add_flag = False
+
+    if connect_wifi_ssid == current_wifi_connection:
+        return cmd_error(cmd=cmd, msg='Already connected to ' + connect_wifi_ssid + '.')
+
+    if current_wifi_connection: # already connected to another router
+        rc = adm.subproc_run('nmcli device disconnect ' + WIFI_DEV)
+        if rc.returncode != 0:
+            return cmd_error(cmd=cmd, msg='Error disconnecting from ' + current_wifi_connection + '.')
+
+    psk = wpa_psk(connect_wifi_ssid, connect_wifi_password)
+
+    if add_flag:
+        cmdstr = 'nmcli con add type wifi con-name ' + con_name + ' ssid "' + connect_wifi_ssid + '" '
+        cmdstr += 'wifi-sec.auth-alg open wifi-sec.key-mgmt wpa-psk wifi-sec.psk ' + psk
+    else:
+        cmdstr = 'nmcli con modify ' + con_name + ' wifi-sec.psk '  + psk
+
+    print(cmdstr)
+
+    try:
+        rc = adm.subproc_run(cmdstr)
+        if rc.returncode != 0:
+            return cmd_error(cmd=cmd, msg='Error Connecting to Router.')
+    except:
+        return cmd_error(cmd=cmd, msg='Error Connecting to Router.')
+
+    try:
+        rc = adm.subproc_run('nmcli con up ' + con_name)
+        if rc.returncode == 0:
+            resp = cmd_success(cmd)
+        elif rc.returncode == 4:
+            resp = cmd_error(cmd=cmd, msg='Unable to Connect. Check credentials.')
+        elif rc.returncode == 10:
+            resp = cmd_error(cmd=cmd, msg='Unable to Find Router.')
+        else:
+            resp = cmd_error(cmd=cmd, msg='Unable to Connect.')
+    except:
+        resp = cmd_error(cmd=cmd, msg='Error Connecting to Router.')
+    return resp
+
+
+def set_nmcli_connection_v1(cmd, connect_wifi_ssid, connect_wifi_password):
     WIFI_DEV = 'wlan0'
     wifi_connection = None
 
@@ -1520,6 +1595,10 @@ def write_wpa_supplicant_file(connect_wifi_ssid, connect_wifi_password):
             if l != '':
                 f.write(l + '\n')
 
+def wpa_psk(ssid, password):
+    dk = hashlib.pbkdf2_hmac('sha1', str.encode(password), str.encode(ssid), 4096, 32)
+    return binascii.hexlify(dk).decode('utf-8')
+
 def write_netplan_wpa_file(connect_wifi_ssid, connect_wifi_password):
     # This will get changed a lot, so just hard code here
     netplan_wpa_yaml_file = '/etc/netplan/02-iiab-config.yaml'
@@ -1551,6 +1630,27 @@ def write_netplan_wpa_file(connect_wifi_ssid, connect_wifi_password):
 
     with open(netplan_wpa_yaml_file, 'w') as f:
         documents = yaml.dump(netplan_config, f)
+
+def remove_wifi_connection_params_nm(cmd_info):
+    cmd = cmd_info['cmd']
+    try:
+        cmdstr = 'nmcli -t -f type,name connection show'
+        rc = adm.subproc_run(cmdstr)
+        if rc.returncode != 0:
+            return cmd_error(cmd=cmd, msg='Error Removing Router Connections.')
+        dev_arr = rc.stdout.split('\n')
+        for devstr in dev_arr:
+            props = devstr.split(':')
+            if props[0] == '802-11-wireless':
+                cmdstr = 'nmcli con delete ' + props[1]
+                rc = adm.subproc_run(cmdstr)
+                if rc.returncode != 0:
+                    return cmd_error(cmd=cmd, msg='Error removing Router Connection ' + props[1] + '.')
+    except:
+        return cmd_error(cmd=cmd, msg='Error Removing Router Connections.')
+
+    resp = cmd_success(cmd)
+    return resp
 
 def ctl_bluetooth(cmd_info):
     if not is_rpi:
