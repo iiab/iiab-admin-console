@@ -902,6 +902,23 @@ function procSystemInfo(data){
   $("#currentNetworkStateUD").html(html);
   $("#currentNetworkState").html(html);
 
+  html = '';
+  html += '<table>';
+  html += '<tr><th>SSID</th><th>Signal</th><th>Bars</th><th>Security</th></tr>';
+  Object.keys(serverInfo.nmcli_devices).forEach( function(ssid) {
+    consoleLog(ssid);
+    html += '<tr>';
+    html += '<td>' + ssid + '</td>';
+    html += '<td>' + serverInfo.nmcli_devices[ssid].signal + '</td>';
+    html += '<td>' + serverInfo.nmcli_devices[ssid].bars + '</td>';
+    html += '<td>' + serverInfo.nmcli_devices[ssid].security + '</td>';
+    html += '</tr>';
+
+  });
+  html += '</table>';
+
+  $("#internetAccessRouterSelection").html(html);
+
   // bluetooth
   $("#bluetoothState").html(serverInfo.bt_pan_status);
   $("#BLUETOOTH-CTL").html('Turn Bluetooth Access ON');
