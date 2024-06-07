@@ -902,12 +902,29 @@ function procSystemInfo(data){
   $("#currentNetworkStateUD").html(html);
   $("#currentNetworkState").html(html);
 
+  // ToDo
+  // handle space in ssid
   html = '';
+  var radioChecked = '';
   html += '<table>';
-  html += '<tr><th>SSID</th><th>Signal</th><th>Bars</th><th>Security</th></tr>';
-  Object.keys(serverInfo.nmcli_devices).forEach( function(ssid) {
+  //html += '<tr><th>Select</th><th>SSID</th><th>Signal</th><th>Bars</th><th>Security</th></tr>';
+
+  html += '<tr><th style="width:15%; text-align: left;">Select</th>';
+  html += '<th style="width:35%; text-align: left;">SSID</th>';
+  html += '<th style="width:15%; text-align: left;">Signal</th>';
+  html += '<th style="width:15%; text-align: left;">Bars</th>';
+  html += '<th style="width:20%; text-align: left;">Security</th></tr>';
+
+  Object.keys(serverInfo.nmcli_devices).forEach( ssid => {
     consoleLog(ssid);
+    if (serverInfo.nmcli_devices[ssid].in_use == '*')
+      radioChecked = ' checked ';
+    else
+      radioChecked = '';
     html += '<tr>';
+    html += '<td><input type="radio" id="connect_wifi_ssid_UD-' + ssid + '"';
+    html += ' name="connect_wifi_ssid_UD" value="' + ssid + '"';
+    html += radioChecked + '/></td>';
     html += '<td>' + ssid + '</td>';
     html += '<td>' + serverInfo.nmcli_devices[ssid].signal + '</td>';
     html += '<td>' + serverInfo.nmcli_devices[ssid].bars + '</td>';
@@ -980,6 +997,7 @@ function setWifiConnectionParams(){
 
   if (config_vars.wifi_up_down){
     cmd_args['connect_wifi_ssid'] = gEBI('connect_wifi_ssid_UD').value;
+    // var presetId = $("#instConPresets input[type='radio']:checked").val();
     cmd_args['connect_wifi_password'] = gEBI('connect_wifi_password_UD').value;
   } else {
     cmd_args['connect_wifi_ssid'] = gEBI('connect_wifi_ssid').value;
