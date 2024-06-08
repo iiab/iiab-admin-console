@@ -917,10 +917,12 @@ function procSystemInfo(data){
 
   Object.keys(serverInfo.nmcli_devices).forEach( ssid => {
     consoleLog(ssid);
+    radioChecked = '';
     if (serverInfo.nmcli_devices[ssid].in_use == '*')
-      radioChecked = ' checked ';
-    else
-      radioChecked = '';
+      if (nmcli_connections.hasOwnProperty(ssid))
+        if (nmcli_connections[ssid].device == 'wlan0')
+          radioChecked = ' checked ';
+
     html += '<tr>';
     html += '<td><input type="radio" id="connect_wifi_ssid_UD-' + ssid + '"';
     html += ' name="connect_wifi_ssid_UD" value="' + ssid + '"';
@@ -996,8 +998,12 @@ function setWifiConnectionParams(){
   var cmd_args = {};
 
   if (config_vars.wifi_up_down){
-    cmd_args['connect_wifi_ssid'] = gEBI('connect_wifi_ssid_UD').value;
-    // var presetId = $("#instConPresets input[type='radio']:checked").val();
+    var connect_wifi_ssid_UD = $("#internetAccessRouterSelection input[type='radio']:checked").val();
+    if (!connect_wifi_ssid_UD){
+      alert('No Router Selected');
+      return
+    }
+    cmd_args['connect_wifi_ssid'] = connect_wifi_ssid_UD
     cmd_args['connect_wifi_password'] = gEBI('connect_wifi_password_UD').value;
   } else {
     cmd_args['connect_wifi_ssid'] = gEBI('connect_wifi_ssid').value;
