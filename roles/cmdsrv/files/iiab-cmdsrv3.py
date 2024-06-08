@@ -1314,13 +1314,29 @@ def calc_network_info():
     if is_rpi: # assumes all rpi use raspios or at least have network manager
         outp = run_command("/usr/bin/nmcli -t -f ssid,in-use,signal,bars,security dev wifi")
         outpd = {}
-        # returns multiple items when there is a wifi network of identically  named devices
-        # they seems to be in the order of strongest to weakest, so we will only
-        # take the first occurence
+        # returns multiple items when there is a wifi network of identically named devices
+        # in use == * always wins
+        # otherwise chose the strongest signal
+
         for item in outp:
             props = item.split(':')
-            if props[0] not in outpd and props[0] != '':
-                outpd[props[0]] = {'in_use':props[1], 'signal':props[2], 'bars':props[3], 'security':props[4] }
+            ssid = props[0]
+            if ssid == '':
+                continue
+            itemd = {'in_use':props[1], 'signal':props[2], 'bars':props[3], 'security':props[4] }
+            if ssid not in outpd:
+                outpd[ssid] = itemd
+            elif outpd[ssid]['in_use'] == '*':
+                continue
+            elif itemd['in_use'] == '*':
+                outpd[ssid] = itemd
+            else:
+                try:
+                    if int(itemd['signal']) > int(outpd[ssid]['signal']):
+                        outpd[ssid] = itemd
+                except:
+                    pass
+
         net_stat["nmcli_devices"] = outpd
         outp = run_command("/usr/bin/nmcli -t -f name,type,device con show")
         outpd = {}
