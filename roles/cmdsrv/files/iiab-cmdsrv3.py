@@ -1636,8 +1636,7 @@ def remove_wifi_connection_params_nm(cmd_info):
     except:
         return cmd_error(cmd=cmd, msg='Error Removing Router Connections.')
 
-    resp = cmd_success(cmd)
-    return resp
+    return reboot_server(cmd_info)
 
 def ctl_bluetooth(cmd_info):
     if not is_rpi:
