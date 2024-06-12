@@ -902,25 +902,28 @@ function procSystemInfo(data){
   $("#currentNetworkStateUD").html(html);
   $("#currentNetworkState").html(html);
 
-  // ToDo
-  // handle space in ssid
   html = '';
   var radioChecked = '';
+  var con_name = '';
   html += '<table>';
-  //html += '<tr><th>Select</th><th>SSID</th><th>Signal</th><th>Bars</th><th>Security</th></tr>';
+  html += '<tr><th>Select</th><th>SSID</th><th>Channel</th><th>Signal</th><th>Bars</th><th>Security</th></tr>';
 
-  html += '<tr><th style="width:15%; text-align: left;">Select</th>';
-  html += '<th style="width:35%; text-align: left;">SSID</th>';
-  html += '<th style="width:15%; text-align: left;">Signal</th>';
-  html += '<th style="width:15%; text-align: left;">Bars</th>';
-  html += '<th style="width:20%; text-align: left;">Security</th></tr>';
+  //html += '<tr><th style="width:15%; text-align: left;">Select</th>';
+  //html += '<th style="width:35%; text-align: left;">SSID</th>';
+  //html += '<th style="width:35%; text-align: left;">Channel</th>';
+  //html += '<th style="width:15%; text-align: left;">Signal</th>';
+  //html += '<th style="width:15%; text-align: left;">Bars</th>';
+  //html += '<th style="width:20%; text-align: left;">Security</th></tr>';
 
   Object.keys(serverInfo.nmcli_devices).forEach( ssid => {
     consoleLog(ssid);
+    con_name = ssid.replaceAll(" ", "_");
     radioChecked = '';
+    // nmcli_devices has ssid with possible spaces
+    // nmcli_connections has space replaced with underscore
     if (serverInfo.nmcli_devices[ssid].in_use == '*')
-      if (nmcli_connections.hasOwnProperty(ssid))
-        if (nmcli_connections[ssid].device == 'wlan0')
+      if (serverInfo.nmcli_connections.hasOwnProperty(con_name))
+        if (serverInfo.nmcli_connections[con_name].device == 'wlan0')
           radioChecked = ' checked ';
 
     html += '<tr>';
@@ -928,6 +931,7 @@ function procSystemInfo(data){
     html += ' name="connect_wifi_ssid_UD" value="' + ssid + '"';
     html += radioChecked + '/></td>';
     html += '<td>' + ssid + '</td>';
+    html += '<td>' + serverInfo.nmcli_devices[ssid].chan + '</td>';
     html += '<td>' + serverInfo.nmcli_devices[ssid].signal + '</td>';
     html += '<td>' + serverInfo.nmcli_devices[ssid].bars + '</td>';
     html += '<td>' + serverInfo.nmcli_devices[ssid].security + '</td>';

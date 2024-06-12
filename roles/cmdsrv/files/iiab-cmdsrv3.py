@@ -1305,6 +1305,7 @@ def calc_network_info():
 
     net_stat["hostapd_status"] = check_systemd_service_active('hostapd')
     hostapd_conf = adm.read_conf_file('/etc/hostapd/hostapd.conf')
+    net_stat['hostapd_conf'] = hostapd_conf
     net_stat["hostapd_password"] = hostapd_conf.get('wpa_passphrase', effective_vars['hostapd_password'])
     net_stat["openvpn_status"] = check_systemd_service_active('openvpn')
     net_stat["bt_pan_status"] = check_systemd_service_active('bt-pan')
@@ -1312,7 +1313,7 @@ def calc_network_info():
     net_stat["openvpn_handle"] = run_command("/bin/cat /etc/iiab/openvpn_handle")[0]
 
     if is_rpi: # assumes all rpi use raspios or at least have network manager
-        outp = run_command("/usr/bin/nmcli -t -f ssid,in-use,signal,bars,security dev wifi")
+        outp = run_command("/usr/bin/nmcli -t -f ssid,in-use,chan,signal,bars,security dev wifi")
         outpd = {}
         # returns multiple items when there is a wifi network of identically named devices
         # in use == * always wins
@@ -1323,7 +1324,7 @@ def calc_network_info():
             ssid = props[0]
             if ssid == '':
                 continue
-            itemd = {'in_use':props[1], 'signal':props[2], 'bars':props[3], 'security':props[4] }
+            itemd = {'in_use':props[1], 'chan':props[2], 'signal':props[3], 'bars':props[4], 'security':props[5] }
             if ssid not in outpd:
                 outpd[ssid] = itemd
             elif outpd[ssid]['in_use'] == '*':
