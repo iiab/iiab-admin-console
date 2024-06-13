@@ -1324,6 +1324,8 @@ def calc_network_info():
             ssid = props[0]
             if ssid == '':
                 continue
+            if ssid == hostapd_conf['ssid']: # don't show our hotspot
+                continue
             itemd = {'in_use':props[1], 'chan':props[2], 'signal':props[3], 'bars':props[4], 'security':props[5] }
             if ssid not in outpd:
                 outpd[ssid] = itemd

@@ -878,6 +878,7 @@ function procSystemInfo(data){
   html += '<div>Support VPN Status</div>';
   html += '<div>Wired IP Address</div>';
   html += '<div>Wireless IP Address</div>';
+  html += '<div>Hotspot Channel</div>';
   html += '<div>Internet Access</div>';
   html += '<div>Gateway Address</div>';
   html += '<div>Gateway Device</div>';
@@ -892,6 +893,7 @@ function procSystemInfo(data){
   else
     html+= '<div>null </div>';
   html += '<div>' + serverInfo.wlan0.addr + '</div>';
+  html += '<div>' + serverInfo.hostapd_conf.channel + '</div>';
   html += '<div>' + serverInfo.internet_access + '</div>';
   html += '<div>' + serverInfo.gateway_addr + '</div>';
   html += '<div>' + serverInfo.gateway_dev + '</div>';
