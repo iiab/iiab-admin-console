@@ -35,6 +35,8 @@ import string
 import mimetypes
 import cracklib
 import socket
+import hashlib
+import binascii
 import iiab.adm_lib as adm
 
 
@@ -736,7 +738,8 @@ def cmd_handler(cmd_msg):
         "GET-NETWORK-INFO": {"funct": get_network_info, "inet_req": False},
         "CTL-HOTSPOT": {"funct": ctl_hotspot, "inet_req": False},
         "CTL-WIFI": {"funct": ctl_wifi, "inet_req": False},
-        "SET-WPA-CREDENTIALS": {"funct": set_wpa_credentials, "inet_req": False},
+        "SET-WIFI-CONNECTION-PARAMS": {"funct": set_wifi_connection_params, "inet_req": False},
+        "REMOVE-WIFI-CONNECTION-PARAMS": {"funct": remove_wifi_connection_params_nm, "inet_req": False},
         "CTL-BLUETOOTH": {"funct": ctl_bluetooth, "inet_req": False},
         "CTL-VPN": {"funct": ctl_vpn, "inet_req": True},
         "REMOVE-USB": {"funct": umount_usb, "inet_req": False},
@@ -1302,12 +1305,48 @@ def calc_network_info():
 
     net_stat["hostapd_status"] = check_systemd_service_active('hostapd')
     hostapd_conf = adm.read_conf_file('/etc/hostapd/hostapd.conf')
+    net_stat['hostapd_conf'] = hostapd_conf
     net_stat["hostapd_password"] = hostapd_conf.get('wpa_passphrase', effective_vars['hostapd_password'])
     net_stat["openvpn_status"] = check_systemd_service_active('openvpn')
     net_stat["bt_pan_status"] = check_systemd_service_active('bt-pan')
     net_stat["iiab_uuid"] = run_command("/bin/cat /etc/iiab/uuid")[0]
     net_stat["openvpn_handle"] = run_command("/bin/cat /etc/iiab/openvpn_handle")[0]
 
+    if is_rpi: # assumes all rpi use raspios or at least have network manager
+        outp = run_command("/usr/bin/nmcli -t -f ssid,in-use,chan,signal,bars,security dev wifi")
+        outpd = {}
+        # returns multiple items when there is a wifi network of identically named devices
+        # in use == * always wins
+        # otherwise chose the strongest signal
+
+        for item in outp:
+            props = item.split(':')
+            ssid = props[0]
+            if ssid == '':
+                continue
+            if ssid == hostapd_conf['ssid']: # don't show our hotspot
+                continue
+            itemd = {'in_use':props[1], 'chan':props[2], 'signal':props[3], 'bars':props[4], 'security':props[5] }
+            if ssid not in outpd:
+                outpd[ssid] = itemd
+            elif outpd[ssid]['in_use'] == '*':
+                continue
+            elif itemd['in_use'] == '*':
+                outpd[ssid] = itemd
+            else:
+                try:
+                    if int(itemd['signal']) > int(outpd[ssid]['signal']):
+                        outpd[ssid] = itemd
+                except:
+                    pass
+
+        net_stat["nmcli_devices"] = outpd
+        outp = run_command("/usr/bin/nmcli -t -f name,type,device con show")
+        outpd = {}
+        for item in outp:
+            props = item.split(':')
+            outpd[props[0]] = {'type':props[1], 'device':props[2] }
+        net_stat["nmcli_connections"] = outpd
     return (net_stat)
 
 def check_systemd_service_active(service):
@@ -1401,9 +1440,14 @@ def ctl_wifi(cmd_info):
         resp = cmd_success(cmd_info['cmd'])
     return resp
 
-def set_wpa_credentials (cmd_info):
+def set_wifi_connection_params(cmd_info):
+    # TO DO
+    # Handle non rpi servers
+    # Handle non-raspios
+    # Soft code wifi device
+    cmd=cmd_info['cmd']
     if not is_rpi:
-        resp = cmd_error(cmd=cmd_info['cmd'], msg='Only supported on Raspberry Pi.')
+        resp = cmd_error(cmd=cmd, msg='Only supported on Raspberry Pi.')
         return (resp)
 
     #print(cmd_info)
@@ -1411,7 +1455,80 @@ def set_wpa_credentials (cmd_info):
         connect_wifi_ssid = cmd_info['cmd_args']['connect_wifi_ssid']
         connect_wifi_password = cmd_info['cmd_args']['connect_wifi_password']
     else:
-        return cmd_malformed(cmd_info['cmd'])
+        return cmd_malformed(cmd)
+
+    if adm.is_service_active('NetworkManager'):
+        resp = set_nmcli_connection(cmd, connect_wifi_ssid, connect_wifi_password)
+    elif adm.is_service_active('dhcpcd'):
+        resp = set_wpa_credentials(cmd, connect_wifi_ssid, connect_wifi_password)
+    else:
+        resp = cmd_error(cmd=cmd_info['cmd'], msg='Neither NetworkManager nor dhcpcd service is active.')
+
+    return resp
+
+def set_nmcli_connection(cmd, connect_wifi_ssid, connect_wifi_password):
+    WIFI_DEV = 'wlan0' # get from somewhere, but this is rpi only
+    current_wifi_connection = None
+    add_flag = True
+    con_name = connect_wifi_ssid.replace(' ', '_')
+
+    cmdstr = 'nmcli -t -f device,name,type connection show'
+    rc = adm.subproc_run(cmdstr)
+    dev_arr = rc.stdout.split('\n')[:-1]
+
+    for devstr in dev_arr:
+        props = devstr.split(':')
+        if props[2] != '802-11-wireless':
+            continue
+        if props[0] == WIFI_DEV:
+            current_wifi_connection = props[1]
+        if props[1] == con_name:
+            add_flag = False
+
+    if connect_wifi_ssid == current_wifi_connection:
+        return cmd_error(cmd=cmd, msg='Already connected to ' + connect_wifi_ssid + '.')
+
+    if current_wifi_connection: # already connected to another router
+        rc = adm.subproc_run('nmcli device disconnect ' + WIFI_DEV)
+        if rc.returncode != 0:
+            return cmd_error(cmd=cmd, msg='Error disconnecting from ' + current_wifi_connection + '.')
+
+    psk = wpa_psk(connect_wifi_ssid, connect_wifi_password)
+
+    if add_flag:
+        cmdstr = 'nmcli con add type wifi con-name ' + con_name + ' ssid "' + connect_wifi_ssid + '" '
+        cmdstr += 'wifi-sec.auth-alg open wifi-sec.key-mgmt wpa-psk wifi-sec.psk ' + psk
+    else:
+        cmdstr = 'nmcli con modify ' + con_name + ' wifi-sec.psk '  + psk
+
+    print(cmdstr)
+
+    try:
+        rc = adm.subproc_run(cmdstr)
+        if rc.returncode != 0:
+            return cmd_error(cmd=cmd, msg='Error Connecting to Router.')
+    except:
+        return cmd_error(cmd=cmd, msg='Error Connecting to Router.')
+
+    try:
+        rc = adm.subproc_run('nmcli con up ' + con_name)
+        if rc.returncode == 0:
+            resp = cmd_success(cmd)
+            return resp
+        elif rc.returncode == 4:
+            resp = cmd_error(cmd=cmd, msg='Unable to Connect. Check credentials.')
+        elif rc.returncode == 10:
+            resp = cmd_error(cmd=cmd, msg='Unable to Find Router.')
+        else:
+            resp = cmd_error(cmd=cmd, msg='Unable to Connect.')
+    except:
+        resp = cmd_error(cmd=cmd, msg='Error Connecting to Router.')
+    if restart_hotspot():
+        return cmd_success(cmd)
+    else:
+        return cmd_error(cmd=cmd, msg='Error Restarting Hotspot.')
+
+def set_wpa_credentials (cmd, connect_wifi_ssid, connect_wifi_password):
 
     # this works for raspbian but maybe not for ubuntu
     # may need to add file /etc/netplan/99-iiab-admin-access-points.yaml
@@ -1422,7 +1539,7 @@ def set_wpa_credentials (cmd_info):
     if ansible_facts['ansible_local']['local_facts']['os'] == 'ubuntu':
         write_netplan_wpa_file(connect_wifi_ssid, connect_wifi_password)
 
-    resp = cmd_success(cmd_info['cmd'])
+    resp = cmd_success(cmd)
     return resp
 
 def write_wpa_supplicant_file(connect_wifi_ssid, connect_wifi_password):
@@ -1472,6 +1589,10 @@ def write_wpa_supplicant_file(connect_wifi_ssid, connect_wifi_password):
             if l != '':
                 f.write(l + '\n')
 
+def wpa_psk(ssid, password):
+    dk = hashlib.pbkdf2_hmac('sha1', str.encode(password), str.encode(ssid), 4096, 32)
+    return binascii.hexlify(dk).decode('utf-8')
+
 def write_netplan_wpa_file(connect_wifi_ssid, connect_wifi_password):
     # This will get changed a lot, so just hard code here
     netplan_wpa_yaml_file = '/etc/netplan/02-iiab-config.yaml'
@@ -1503,6 +1624,51 @@ def write_netplan_wpa_file(connect_wifi_ssid, connect_wifi_password):
 
     with open(netplan_wpa_yaml_file, 'w') as f:
         documents = yaml.dump(netplan_config, f)
+
+def remove_wifi_connection_params_nm(cmd_info):
+    cmd = cmd_info['cmd']
+    try:
+        cmdstr = 'nmcli -t -f type,name connection show'
+        rc = adm.subproc_run(cmdstr)
+        if rc.returncode != 0:
+            return cmd_error(cmd=cmd, msg='Error Removing Router Connections.')
+        dev_arr = rc.stdout.split('\n')
+        for devstr in dev_arr:
+            props = devstr.split(':')
+            if props[0] == '802-11-wireless':
+                cmdstr = 'nmcli con delete ' + props[1]
+                rc = adm.subproc_run(cmdstr)
+                if rc.returncode != 0:
+                    return cmd_error(cmd=cmd, msg='Error removing Router Connection ' + props[1] + '.')
+    except:
+        return cmd_error(cmd=cmd, msg='Error Removing Router Connections.')
+
+    #return reboot_server(cmd_info)
+    if restart_hotspot():
+        return cmd_success(cmd_info['cmd'])
+    else:
+        return cmd_error(cmd=cmd, msg='Error Restarting Hotspot.')
+
+def restart_hotspot():
+    log(syslog.LOG_ERR, "Restarting hostapd")
+    blocked_text = 'rfkill: WLAN soft blocked'
+
+    if not effective_vars['hostapd_enabled']:
+        log(syslog.LOG_ERR, "hostapd is not enabled")
+        return False
+
+    # rc = adm.subproc_run('systemctl status hostapd')
+
+    try:
+        rc = adm.subproc_run('systemctl restart hostapd')
+        if rc.returncode:
+            log(syslog.LOG_ERR, "Failed to restart hostapd")
+            return False
+        else:
+            return True
+    except:
+        log(syslog.LOG_ERR, "Failed to restart hostapd")
+        return False
 
 def ctl_bluetooth(cmd_info):
     if not is_rpi:
@@ -3419,6 +3585,10 @@ def init():
 
      # Compute variables derived from all of the above
     compute_vars()
+
+    # restart hostapd in case blocked by rfkill
+    if effective_vars['hostapd_enabled']:
+       restart_hotspot()
 
     #get_ansible_tags()
     read_kiwix_catalog()

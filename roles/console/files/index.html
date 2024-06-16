@@ -139,13 +139,10 @@
 													style="opacity:0.5" disabled>Toggle Internal Wifi</button>
 											</div> <!--  End controlWifiNotUpDown -->
 
-											<h4>Internet Access Wifi Router Details</h4>
+											<h4>Select Internet Access Wifi Router</h4>
 											<div class="form-group row">
-												<div class="col-xs-4">
-													<label for="connect_wifi_ssid_UD">Name of Internet Access Wifi
-														Router</label>
-													<input type="text" name="connect_wifi_ssid_UD" class="form-control"
-														id="connect_wifi_ssid_UD">
+												<div class="col-xs-8">
+													<div id="internetAccessRouterSelection"></div>
 													<label for="connect_wifi_password_UD">Internet Access Wifi Router
 														Password</label>
 													<input type="text" name="connect_wifi_password_UD"
@@ -155,7 +152,11 @@
 											<button id="WIFI-CREDENTIALS-UD" type="button"
 												class="btn btn-lg btn-primary">Setup
 												Internet Access Wifi Connection</button>
-											<span class="btn-lg">Requires a Reboot the First Time you Connect.</span>
+											<span class="btn-lg">May require a Reboot the First Time you Connect.</span>
+											<p></p>
+												<button id="FORGET-WIFI-CONNECTIONS-UD" type="button"
+												class="btn btn-lg btn-primary">Forget All Wifi Connections</button>
+											<span class="btn-lg">Will cause a REBOOT.</span>
 										</div> <!--  End controlWifiUpDown Submenu Option Pane -->
 
 									</div> <!--  End controlWifi Submenu Option Pane -->

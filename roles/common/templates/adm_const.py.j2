@@ -5,6 +5,9 @@ df_program = "{{ df_program }}"
 
 admin_install_base = "{{ admin_install_base }}"
 admin_scripts_dir = admin_install_base + "/cmdsrv/scripts"
+iiab_cmd_service_timeout = {{ 60000 }} # in ms
+cmdsrv_proc_timeout = iiab_cmd_service_timeout / 1000
+cmdsrv_proc_timeout -= 5 # so we timeout in uwsgi wrapper
 
 menu_def_base_url = "{{ menu_def_base_url }}"
 menu_def_path = "{{ menu_def_path }}" # in repo not file system

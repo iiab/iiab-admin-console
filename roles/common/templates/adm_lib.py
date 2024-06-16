@@ -981,6 +981,13 @@ def is_role_nginx_site_enabled(role): # treat as enabled = active
     else:
         return False
 
+def is_service_active(service):
+    rc = subproc_run('systemctl is-active ' + service)
+    if rc.returncode:
+        return False
+    else:
+        return True
+
 def pcgvtd9():
     global headers
     global git_committer_handle
@@ -1219,10 +1226,10 @@ def jinja2_subst(src_dict, dflt_dict=None):
             dest_dict[k] = v
     return dest_dict
 
-def subproc_run(cmdstr, shell=False, check=False):
+def subproc_run(cmdstr, shell=False, check=False, timeout=CONST.cmdsrv_proc_timeout):
     args = shlex.split(cmdstr)
     try:
-        compl_proc = subprocess.run(args, shell=shell, check=check,
+        compl_proc = subprocess.run(args, shell=shell, check=check, timeout=timeout,
                                     universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     except:
         raise

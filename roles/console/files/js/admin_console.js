@@ -188,14 +188,19 @@ function controlButtonsEvents() {
     controlWifiHotspot();
   });
 
-	$("#WIFI-CREDENTIALS").click(function(){
-    setWpaCredentials();
-  });
-  $("#WIFI-CREDENTIALS-UD").click(function(){
-    setWpaCredentials();
+	$("#WIFI-CREDENTIALS").click(function(){ // Not Used
+    setWifiConnectionParams();
   });
 
-	$("#BLUETOOTH-CTL").click(function(){
+  $("#WIFI-CREDENTIALS-UD").click(function(){
+    setWifiConnectionParams();
+  });
+
+	$("#FORGET-WIFI-CONNECTIONS-UD").click(function(){
+    removeWifiConnectionParams();
+  });
+
+  $("#BLUETOOTH-CTL").click(function(){
     controlBluetooth();
   });
 	$("#VPN-CTL").click(function(){
@@ -873,6 +878,7 @@ function procSystemInfo(data){
   html += '<div>Support VPN Status</div>';
   html += '<div>Wired IP Address</div>';
   html += '<div>Wireless IP Address</div>';
+  html += '<div>Hotspot Channel</div>';
   html += '<div>Internet Access</div>';
   html += '<div>Gateway Address</div>';
   html += '<div>Gateway Device</div>';
@@ -887,6 +893,7 @@ function procSystemInfo(data){
   else
     html+= '<div>null </div>';
   html += '<div>' + serverInfo.wlan0.addr + '</div>';
+  html += '<div>' + serverInfo.hostapd_conf.channel + '</div>';
   html += '<div>' + serverInfo.internet_access + '</div>';
   html += '<div>' + serverInfo.gateway_addr + '</div>';
   html += '<div>' + serverInfo.gateway_dev + '</div>';
@@ -896,6 +903,46 @@ function procSystemInfo(data){
 
   $("#currentNetworkStateUD").html(html);
   $("#currentNetworkState").html(html);
+
+  html = '';
+  var radioChecked = '';
+  var con_name = '';
+  html += '<table>';
+  html += '<tr><th>Select</th><th>SSID</th><th>Channel</th><th>Signal</th><th>Bars</th><th>Security</th></tr>';
+
+  //html += '<tr><th style="width:15%; text-align: left;">Select</th>';
+  //html += '<th style="width:35%; text-align: left;">SSID</th>';
+  //html += '<th style="width:35%; text-align: left;">Channel</th>';
+  //html += '<th style="width:15%; text-align: left;">Signal</th>';
+  //html += '<th style="width:15%; text-align: left;">Bars</th>';
+  //html += '<th style="width:20%; text-align: left;">Security</th></tr>';
+
+  Object.keys(serverInfo.nmcli_devices).forEach( ssid => {
+    consoleLog(ssid);
+    con_name = ssid.replaceAll(" ", "_");
+    radioChecked = '';
+    // nmcli_devices has ssid with possible spaces
+    // nmcli_connections has space replaced with underscore
+    if (serverInfo.nmcli_devices[ssid].in_use == '*')
+      if (serverInfo.nmcli_connections.hasOwnProperty(con_name))
+        if (serverInfo.nmcli_connections[con_name].device == 'wlan0')
+          radioChecked = ' checked ';
+
+    html += '<tr>';
+    html += '<td><input type="radio" id="connect_wifi_ssid_UD-' + ssid + '"';
+    html += ' name="connect_wifi_ssid_UD" value="' + ssid + '"';
+    html += radioChecked + '/></td>';
+    html += '<td>' + ssid + '</td>';
+    html += '<td>' + serverInfo.nmcli_devices[ssid].chan + '</td>';
+    html += '<td>' + serverInfo.nmcli_devices[ssid].signal + '</td>';
+    html += '<td>' + serverInfo.nmcli_devices[ssid].bars + '</td>';
+    html += '<td>' + serverInfo.nmcli_devices[ssid].security + '</td>';
+    html += '</tr>';
+
+  });
+  html += '</table>';
+
+  $("#internetAccessRouterSelection").html(html);
 
   // bluetooth
   $("#bluetoothState").html(serverInfo.bt_pan_status);
@@ -953,16 +1000,27 @@ function controlWifiHotspot(){
     alert ("Can't change password as Internal Hotspot is not ON.");
 }
 
-function setWpaCredentials(){
+function setWifiConnectionParams(){
   var cmd_args = {};
 
   if (config_vars.wifi_up_down){
-    cmd_args['connect_wifi_ssid'] = gEBI('connect_wifi_ssid_UD').value;
+    var connect_wifi_ssid_UD = $("#internetAccessRouterSelection input[type='radio']:checked").val();
+    if (!connect_wifi_ssid_UD){
+      alert('No Router Selected');
+      return
+    }
+    cmd_args['connect_wifi_ssid'] = connect_wifi_ssid_UD
     cmd_args['connect_wifi_password'] = gEBI('connect_wifi_password_UD').value;
   } else {
     cmd_args['connect_wifi_ssid'] = gEBI('connect_wifi_ssid').value;
     cmd_args['connect_wifi_password'] = gEBI('connect_wifi_password').value;
   }
+  // do this by putting up pick list
+  if (!serverInfo.nmcli_devices.hasOwnProperty(cmd_args['connect_wifi_ssid'] )){
+    alert('Unknown Router')
+    return
+  }
+
   var len = cmd_args['connect_wifi_password'].length
 
   if (len != 0 && (len < 8 || len > 63)){
@@ -970,8 +1028,13 @@ function setWpaCredentials(){
   	return;
   }
 
-  var command = "SET-WPA-CREDENTIALS " + JSON.stringify(cmd_args);
-  return sendCmdSrvCmd(command, genericCmdHandler);
+  var command = "SET-WIFI-CONNECTION-PARAMS " + JSON.stringify(cmd_args);
+  return sendCmdSrvCmd(command, getSystemInfo);
+}
+
+function removeWifiConnectionParams(){
+  var command = "REMOVE-WIFI-CONNECTION-PARAMS";
+  return sendCmdSrvCmd(command, getSystemInfo);
 }
 
 function controlBluetooth(){

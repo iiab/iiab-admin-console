@@ -123,6 +123,11 @@ text-align: center;
 #help-tip p {
   font-size: 18px;
 }
+
+#internetAccessRouterSelection th,td {
+  padding: 5px;
+}
+
 /* Configure */
 
 /* Install Content styles */
