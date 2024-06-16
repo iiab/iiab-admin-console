@@ -1514,6 +1514,7 @@ def set_nmcli_connection(cmd, connect_wifi_ssid, connect_wifi_password):
         rc = adm.subproc_run('nmcli con up ' + con_name)
         if rc.returncode == 0:
             resp = cmd_success(cmd)
+            return resp
         elif rc.returncode == 4:
             resp = cmd_error(cmd=cmd, msg='Unable to Connect. Check credentials.')
         elif rc.returncode == 10:
@@ -1522,7 +1523,10 @@ def set_nmcli_connection(cmd, connect_wifi_ssid, connect_wifi_password):
             resp = cmd_error(cmd=cmd, msg='Unable to Connect.')
     except:
         resp = cmd_error(cmd=cmd, msg='Error Connecting to Router.')
-    return resp
+    if restart_hotspot():
+        return cmd_success(cmd)
+    else:
+        return cmd_error(cmd=cmd, msg='Error Restarting Hotspot.')
 
 def set_wpa_credentials (cmd, connect_wifi_ssid, connect_wifi_password):
 
@@ -1639,7 +1643,32 @@ def remove_wifi_connection_params_nm(cmd_info):
     except:
         return cmd_error(cmd=cmd, msg='Error Removing Router Connections.')
 
-    return reboot_server(cmd_info)
+    #return reboot_server(cmd_info)
+    if restart_hotspot():
+        return cmd_success(cmd_info['cmd'])
+    else:
+        return cmd_error(cmd=cmd, msg='Error Restarting Hotspot.')
+
+def restart_hotspot():
+    log(syslog.LOG_ERR, "Restarting hostapd")
+    blocked_text = 'rfkill: WLAN soft blocked'
+
+    if not effective_vars['hostapd_enabled']:
+        log(syslog.LOG_ERR, "hostapd is not enabled")
+        return False
+
+    # rc = adm.subproc_run('systemctl status hostapd')
+
+    try:
+        rc = adm.subproc_run('systemctl restart hostapd')
+        if rc.returncode:
+            log(syslog.LOG_ERR, "Failed to restart hostapd")
+            return False
+        else:
+            return True
+    except:
+        log(syslog.LOG_ERR, "Failed to restart hostapd")
+        return False
 
 def ctl_bluetooth(cmd_info):
     if not is_rpi:
@@ -3556,6 +3585,10 @@ def init():
 
      # Compute variables derived from all of the above
     compute_vars()
+
+    # restart hostapd in case blocked by rfkill
+    if effective_vars['hostapd_enabled']:
+       restart_hotspot()
 
     #get_ansible_tags()
     read_kiwix_catalog()
