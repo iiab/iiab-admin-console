@@ -1,0 +1,15 @@
+{
+  "zims": [
+    "mdwiki_en_all",
+    "wikipedia_en_all_maxi",
+    "wikipedia_es_all_maxi"
+  ],
+  "modules": [
+  ],
+  "maps": [
+    "satellite_z0-z9_2020.mbtiles",
+    "osm-planet_z0-z10_2020.mbtiles"
+  ],
+  "kalite": {
+  }
+}
