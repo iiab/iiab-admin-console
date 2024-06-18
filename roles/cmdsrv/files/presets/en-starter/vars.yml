@@ -1,0 +1,24 @@
+# starter
+remoteit_install: False
+kalite_install: False
+kalite_enabled: False
+awstats_install: False
+awstats_enabled: False
+matomo_install: False
+matomo_enabled: False
+calibreweb_install: False
+calibreweb_enabled: False
+
+kiwix_install: True
+kiwix_enabled: True
+osm_vector_maps_install: True
+osm_vector_maps_enabled: True
+mediawiki_install: True
+mediawiki_enabled: True
+openvpn_install: True
+openvpn_enabled: False
+captiveportal_install: True
+captiveportal_enabled: True
+
+# awstats_install: True
+# awstats_enabled: True
