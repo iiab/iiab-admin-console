@@ -2,7 +2,10 @@
   "zims": [
     "mdwiki_en_all",
     "wikipedia_en_all_maxi",
-    "wikipedia_es_all_maxi"
+    "wikipedia_es_all_maxi",
+    "wikivoyage_en_all_maxi",
+    "tedmed_en_all",
+    "teded_en_all"
   ],
   "modules": [
   ],
