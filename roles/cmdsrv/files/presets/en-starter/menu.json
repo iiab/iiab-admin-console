@@ -26,8 +26,11 @@
     "en-mdwiki_en_all",
     "en-wikipedia_en_all_maxi",
     "es-wikipedia_es_all_maxi",
-    "en-mediawiki",
+    "en-wikivoyage_en_all_maxi",
     "en-osm_viewer_v2",
+    "en-tedmed_en_all",
+    "en-teded_en_all",
+    "en-mediawiki",
     "en-credits"
   ]
 }
