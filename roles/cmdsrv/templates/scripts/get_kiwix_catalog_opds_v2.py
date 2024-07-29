@@ -115,9 +115,8 @@ def main():
         if zim_attr['uses_socket_workers'] and not kiwix_include_zimit: # skip service workers for now
             continue
 
-        if len(zim_attr['language'].split(',')) > 1: # for now skip 'multi' language zims
-            print('Skipping Multi Language ZIM ' + zim_attr['title'])
-            continue
+        if len(zim_attr['language'].split(',')) > 1:
+            zim_attr['language'] = 'mul' # for now use mul pseudo language cod
 
         zimCount += 1
         zim_dict[id] = zim_attr
