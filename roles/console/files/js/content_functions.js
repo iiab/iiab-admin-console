@@ -93,7 +93,8 @@ function procContentLangs() {
 
 function selectedLangsDefaults() {
   if (selectedLangs.length == 0)
-    selectedLangs.push (defaultLang); // default
+    selectedLangs = defaultSelLangs;
+    //selectedLangs.push (defaultLang); // default
   // make sure languages for all installed content are selected
 
   for (var id in installedZimCatalog['INSTALLED']){

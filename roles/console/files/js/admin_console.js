@@ -54,8 +54,9 @@ var mapInstalled = []; // list of map regions already installed
 var externalDeviceContents = {}; // zims and other content on external devices, only one active at a time
 
 var langNames = []; // iso code, local name and English name for languages for which we have zims sorted by English name for language
-var topNames = ["ara","eng","spa","fra","hin","por"]; // languages for top language menu
+var topNames = ["ara","eng","spa","fra","hin","por","mul"]; // languages for top language menu
 var defaultLang = "eng";
+var defaultSelLangs = [defaultLang, "mul"]
 var langGroups = {"en":"eng","fr":"fra","es":"spa"}; // language codes to treat as a single code
 var selectedLangs = []; // languages selected by gui for display of content
 var selectedZims = [];
