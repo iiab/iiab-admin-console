@@ -1318,6 +1318,8 @@ def calc_network_info():
         # returns multiple items when there is a wifi network of identically named devices
         # in use == * always wins
         # otherwise chose the strongest signal
+        # need to add freq so not connect to 5GHz
+        # nmcli -f in-use,ssid,bssid,freq,signal,bars dev wifi
 
         for item in outp:
             props = item.split(':')

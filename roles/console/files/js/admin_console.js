@@ -985,15 +985,15 @@ function controlWifi() {
 function controlWifiHotspot() {
   var cmd_args = {};
   if (serverInfo.hostapd_status == 'ON') {
-    const hotspotPassword = gEBI('hotspot_wifi_password_UD').value;
-    if (hotspotPassword.length < 8) {
-      alert("WiFi password must be a minimum of 8 printable characters.");
+    var hotspotPassword = gEBI('hotspot_wifi_password_UD').value;
+    if (hotspotPassword.length < 8 || hotspotPassword.length > 63) {
+      alert("WiFi password must be between 8 and 63 printable characters.");
       return
     }
     for (let i = 0; i < hotspotPassword.length; i++) {
       let charCode = hotspotPassword.charCodeAt(i);
       if (charCode < 32 || charCode > 126){
-        alert("Password cannot contain the character '" + hotspotPassword(i) + "'")
+        alert("Password cannot contain the character '" + hotspotPassword[i] + "'")
         return
       }
     }
