@@ -992,13 +992,25 @@ function controlWifi(){
 
 function controlWifiHotspot(){
   var cmd_args = {};
-  if (serverInfo.hostapd_status == 'ON'){
-    cmd_args['hotspot_passord'] = gEBI('hotspot_wifi_password_UD').value;
+  if (serverInfo.hostapd_status == 'ON') {
+    var hotspotPassword = gEBI('hotspot_wifi_password_UD').value;
+    if (hotspotPassword.length < 8 || hotspotPassword.length > 63) {
+      alert("WiFi password must be between 8 and 63 printable characters.");
+      return
+    }
+    for (let i = 0; i < hotspotPassword.length; i++) {
+      let charCode = hotspotPassword.charCodeAt(i);
+      if (charCode < 32 || charCode > 126){
+        alert("Password cannot contain the character '" + hotspotPassword[i] + "'")
+        return
+      }
+    }
+    cmd_args['hotspot_passord'] = hotspotPassword;
     var command = "CTL-HOTSPOT " + JSON.stringify(cmd_args);
     return sendCmdSrvCmd(command, genericCmdHandler, "HOSTSPOT-CTL");
   }
   else
-    alert ("Can't change password as Internal Hotspot is not ON.");
+    alert("Can't change password as Internal Hotspot is not ON.");
 }
 
 function setWifiConnectionParams(){
