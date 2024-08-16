@@ -994,23 +994,30 @@ function controlWifiHotspot(){
   var cmd_args = {};
   if (serverInfo.hostapd_status == 'ON') {
     var hotspotPassword = gEBI('hotspot_wifi_password_UD').value;
-    if (hotspotPassword.length < 8 || hotspotPassword.length > 63) {
-      alert("WiFi password must be between 8 and 63 printable characters.");
-      return
-    }
-    for (let i = 0; i < hotspotPassword.length; i++) {
-      let charCode = hotspotPassword.charCodeAt(i);
-      if (charCode < 32 || charCode > 126){
-        alert("Password cannot contain the character '" + hotspotPassword[i] + "'")
-        return
-      }
-    }
+    if (validateHostapdPassword(hotspotPassword) == false)
+      return false;
+
     cmd_args['hotspot_passord'] = hotspotPassword;
     var command = "CTL-HOTSPOT " + JSON.stringify(cmd_args);
     return sendCmdSrvCmd(command, genericCmdHandler, "HOSTSPOT-CTL");
   }
   else
     alert("Can't change password as Internal Hotspot is not ON.");
+}
+
+function validateHostapdPassword(password){
+  if (password.length < 8 || password.length > 63) {
+    alert("WiFi password must be between 8 and 63 printable characters.");
+    return false;
+  }
+  for (let i = 0; i < password.length; i++) {
+    let charCode = password.charCodeAt(i);
+    if (charCode < 32 || charCode > 126){
+      alert("Password cannot contain the character '" + password[i] + "'")
+      return false;
+    }
+  }
+  return true;
 }
 
 function setWifiConnectionParams(){
@@ -1260,10 +1267,22 @@ function setConfigVarsCmd () {
       // we will do this on the backend
     }
   });
+  if (validateChangedVars(changed_vars) == false)
+    return false;
+
   cmd_args['config_vars'] = changed_vars;
   var cmd = "SET-CONF " + JSON.stringify(cmd_args);
   sendCmdSrvCmd(cmd, genericCmdHandler);
   alert ("Saving Configuration.");
+  return true;
+}
+
+function validateChangedVars(changedVars){
+  // field validation functions raise alerts
+  if (changedVars.hasOwnProperty('hostapd_password'))
+    if (validateHostapdPassword(changedVars['hostapd_password']) == false)
+      return false;
+
   return true;
 }
 
