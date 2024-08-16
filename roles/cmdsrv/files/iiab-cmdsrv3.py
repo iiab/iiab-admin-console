@@ -1313,20 +1313,38 @@ def calc_network_info():
     net_stat["openvpn_handle"] = run_command("/bin/cat /etc/iiab/openvpn_handle")[0]
 
     if is_rpi: # assumes all rpi use raspios or at least have network manager
-        outp = run_command("/usr/bin/nmcli -t -f ssid,in-use,chan,signal,bars,security dev wifi")
+        outp = run_command("/usr/bin/nmcli -t -f ssid,in-use,chan,signal,bars,security,bssid dev wifi")
         outpd = {}
         # returns multiple items when there is a wifi network of identically named devices
         # in use == * always wins
         # otherwise chose the strongest signal
+        # a couple of additional problems when an ssid supports 2.4 and 5 GHz:
+        #   1. if 5GHz is selected will break hostapd
+        #   2. even if 2.4GHz is selected nmcli reports the 5 as 'inuse'
+
+        ssid_inuse = None
+        for item in outp: # get inuse ssid in case is wrong freq
+            props = item.split(':')
+            if props[1] == '*':
+                ssid_inuse = props[0]
 
         for item in outp:
-            props = item.split(':')
+            # temporarily remove ':' from output and save as '$'
+            # or bssic gets split
+            props = item.replace('\:','$').split(':')
             ssid = props[0]
+
             if ssid == '':
                 continue
             if ssid == hostapd_conf['ssid']: # don't show our hotspot
                 continue
-            itemd = {'in_use':props[1], 'chan':props[2], 'signal':props[3], 'bars':props[4], 'security':props[5] }
+            if int(props[2]) > 11:
+                continue # higher channels may break hotspot
+            itemd = {'in_use':props[1], 'chan':props[2], 'signal':props[3],
+                      'bars':props[4], 'security':props[5],
+                      'bssid': props[6].replace('$', ':') } # restore
+            if ssid == ssid_inuse:
+                itemd['in_use'] = '*' # patch any 2.4GHz with 5GHz name
             if ssid not in outpd:
                 outpd[ssid] = itemd
             elif outpd[ssid]['in_use'] == '*':
@@ -1453,12 +1471,13 @@ def set_wifi_connection_params(cmd_info):
     #print(cmd_info)
     if 'cmd_args' in cmd_info:
         connect_wifi_ssid = cmd_info['cmd_args']['connect_wifi_ssid']
+        connect_wifi_bssid = cmd_info['cmd_args']['connect_wifi_bssid']
         connect_wifi_password = cmd_info['cmd_args']['connect_wifi_password']
     else:
         return cmd_malformed(cmd)
 
     if adm.is_service_active('NetworkManager'):
-        resp = set_nmcli_connection(cmd, connect_wifi_ssid, connect_wifi_password)
+        resp = set_nmcli_connection(cmd, connect_wifi_ssid, connect_wifi_bssid, connect_wifi_password)
     elif adm.is_service_active('dhcpcd'):
         resp = set_wpa_credentials(cmd, connect_wifi_ssid, connect_wifi_password)
     else:
@@ -1466,7 +1485,56 @@ def set_wifi_connection_params(cmd_info):
 
     return resp
 
-def set_nmcli_connection(cmd, connect_wifi_ssid, connect_wifi_password):
+def set_nmcli_connection(cmd, connect_wifi_ssid, connect_wifi_bssid, connect_wifi_password):
+    WIFI_DEV = 'wlan0' # get from somewhere, but this is rpi only
+    current_wifi_connection = None
+    con_name = connect_wifi_ssid.replace(' ', '_')
+
+    cmdstr = 'nmcli -t -f device,name,type connection show'
+    rc = adm.subproc_run(cmdstr)
+    dev_arr = rc.stdout.split('\n')[:-1]
+
+    for devstr in dev_arr:
+        props = devstr.split(':')
+        if props[2] != '802-11-wireless':
+            continue
+        if props[0] == WIFI_DEV:
+            current_wifi_connection = props[1]
+
+    if connect_wifi_ssid == current_wifi_connection:
+        return cmd_error(cmd=cmd, msg='Already connected to ' + connect_wifi_ssid + '.')
+
+    if current_wifi_connection: # already connected to another router
+        rc = adm.subproc_run('nmcli device disconnect ' + WIFI_DEV)
+        if rc.returncode != 0:
+            return cmd_error(cmd=cmd, msg='Error disconnecting from ' + current_wifi_connection + '.')
+
+    psk = wpa_psk(connect_wifi_ssid, connect_wifi_password)
+    cmdstr = 'nmcli device wifi connect ' + connect_wifi_bssid + ' password '  + psk
+
+    print(cmdstr)
+
+    try:
+        rc = adm.subproc_run(cmdstr)
+        if rc.returncode == 0:
+            resp = cmd_success(cmd)
+            return resp
+        # not clear if these rc codes are returned
+        elif rc.returncode == 4:
+            resp = cmd_error(cmd=cmd, msg='Unable to Connect. Check credentials.')
+        elif rc.returncode == 10:
+            resp = cmd_error(cmd=cmd, msg='Unable to Find Router.')
+        else:
+            resp = cmd_error(cmd=cmd, msg='Unable to Connect.')
+    except:
+        resp = cmd_error(cmd=cmd, msg='Error Connecting to Router.')
+    if restart_hotspot():
+        # return cmd_success(cmd)
+        return resp
+    else:
+        return cmd_error(cmd=cmd, msg='Error Restarting Hotspot.')
+
+def set_nmcli_connection_OLD(cmd, connect_wifi_ssid, connect_wifi_password):
     WIFI_DEV = 'wlan0' # get from somewhere, but this is rpi only
     current_wifi_connection = None
     add_flag = True

@@ -1023,8 +1023,9 @@ function setWifiConnectionParams(){
       return
     }
     cmd_args['connect_wifi_ssid'] = connect_wifi_ssid_UD
+    cmd_args['connect_wifi_bssid'] = serverInfo.nmcli_devices[connect_wifi_ssid_UD].bssid
     cmd_args['connect_wifi_password'] = gEBI('connect_wifi_password_UD').value;
-  } else {
+  } else { // not sure how this can occur
     cmd_args['connect_wifi_ssid'] = gEBI('connect_wifi_ssid').value;
     cmd_args['connect_wifi_password'] = gEBI('connect_wifi_password').value;
   }
