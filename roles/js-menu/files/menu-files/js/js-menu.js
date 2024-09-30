@@ -152,7 +152,19 @@ function menuJsonErrhandler(jqXHR, textStatus, errorThrown) {
     console.log(errorThrown)
     jsonStr = jqXHR.responseText
     console.log(jsonStr)
-    //console.log( "finished", data.responseText );
+
+    // ? no connection to server error
+    // unable to reproduce
+    // best we can do is add some diagnostics
+
+    console.log('In menuJsonErrhandler')
+    console.log(jqXHR)
+    if (jqXHR.status != 200) {
+        alert('Request Status: ' + str(jqXHR.status) + '\n\nError Thrown: ' + errorThrown);
+        return
+     }
+
+    // ? bad json
     try {
         JSON.parse(jsonStr) // should fail
     }
