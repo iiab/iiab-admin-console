@@ -136,6 +136,7 @@ jobs_running = {}
 running_job_count = 0
 
 SENSITIVE_COMMANDS = ["CHGPW", "AUTHENTICATE", "CTL-HOTSPOT", "SET-WIFI-CONNECTION-PARAMS"]
+NO_LOG_COMMANDS = ["AUTHENTICATE"]
 ANSIBLE_COMMANDS = ["RUN-ANSIBLE", "RESET-NETWORK", "RUN-ANSIBLE-ROLES"]
 FULL_LOG_COMMANDS = ["RUN-ANSIBLE", "RESET-NETWORK", "RUN-ANSIBLE-ROLES"]
 ansible_running_flag = False
@@ -799,12 +800,13 @@ def cmd_handler(cmd_msg):
     cmd_info['cmd_msg'] = cmd_msg
     cmd = cmd_info['cmd']
 
-    # log the command
-
+    display_cmd_msg = cmd_msg
     if cmd in SENSITIVE_COMMANDS:
-        log(syslog.LOG_INFO, 'Received CMD Message %s ***.' % cmd )
-    else:
-        log(syslog.LOG_INFO, 'Received CMD Message %s.' % cmd_msg )
+        display_cmd_msg = cmd + ' ***'
+
+    # log the command
+    if cmd not in NO_LOG_COMMANDS:
+        log(syslog.LOG_INFO, 'Received CMD Message %s.' % display_cmd_msg )
 
     # Check for Duplicate Command
     dup_cmd = next((job_id for job_id, active_cmd_msg in list(active_commands.items()) if active_cmd_msg == cmd_msg), None)
@@ -817,8 +819,9 @@ def cmd_handler(cmd_msg):
         return (resp)
 
     # store the command in database
-    cmd_rowid = insert_command(cmd_msg)
-    cmd_info['cmd_rowid'] = cmd_rowid
+    if cmd not in NO_LOG_COMMANDS:
+        cmd_rowid = insert_command(display_cmd_msg)
+        cmd_info['cmd_rowid'] = cmd_rowid
 
     #print (cmd_info)
 
