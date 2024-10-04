@@ -158,11 +158,18 @@ function menuJsonErrhandler(jqXHR, textStatus, errorThrown) {
     // best we can do is add some diagnostics
 
     console.log('In menuJsonErrhandler')
-    console.log(jqXHR)
-    if (jqXHR.status != 200) {
-        alert('Request Status: ' + str(jqXHR.status) + '\n\nError Thrown: ' + errorThrown);
-        return
-     }
+    console.log(jqXHR) // this should have more info
+    warning_msg = 'Unknown error getting the Home Page menu.json file.\n\n'
+    warning_msg += 'Request Status: ' + str(jqXHR.status) + '\n'
+    warning_msg += 'Status Message: ' + textStatus + '\n'
+    warning_msg += 'Error Thrown: ' + errorThrown + '\n'
+
+    alert(warning_msg);
+
+    // just return and leave the menu.json patching as is not likely to be the problem
+
+    return
+
 
     // ? bad json
     try {
