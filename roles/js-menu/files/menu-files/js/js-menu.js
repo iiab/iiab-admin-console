@@ -63,6 +63,14 @@ var ajaxCallCount = 0;
 var i;
 var searchResults = "";
 
+var loadStatus = {};
+loadStatus['config'] = {};
+loadStatus['config']['status'] = 'FAILED'
+loadStatus['menu'] = {};
+loadStatus['menu']['status'] = 'FAILED'
+loadStatus['zims'] = {};
+loadStatus['zims']['status'] = 'FAILED'
+
 // get config
 var getConfigJson = $.getJSON(configJson)
     .done(function (data) {
@@ -70,6 +78,7 @@ var getConfigJson = $.getJSON(configJson)
         menuConfig = data;
         downloadBaseUrl = menuConfig['downloadBaseUrl'];
         apkBaseUrl = menuConfig['apkBaseUrl'];
+        loadStatus['config']['status'] = 'SUCCEEDED'
         //  if (isMobile){
         //    baseFontSize = menuConfig['mobilePortraitSize'].split("px")[0];
         //    mobilePortraitSize = baseFontSize + "px";
@@ -77,7 +86,10 @@ var getConfigJson = $.getJSON(configJson)
         //    window.addEventListener("resize", resizeHandler);
         //  }
     })
-    .fail(jsonErrhandler);
+    .fail (function(jqxhr, textStatus, errorThrown)  {
+        saveLoadStatus('config', jqxhr.status, textStatus, errorThrown)
+        jsonErrhandler(jqxhr, textStatus, errorThrown)
+    })
 
 // get menu items
 // move to $.ajax to turn off cache
@@ -96,17 +108,25 @@ var getMenuJson = $.ajax({
             debug = menuParams.debug;
         }
         menuItems = menuParams.menu_items_1; // hooks for multi tab menu later
-        getMenuJson['jsonStatus'] = 'SUCCEEDED'
+        loadStatus['menu']['status'] = 'SUCCEEDED'
     })
-    .fail(menuJsonErrhandler);
+    .fail (function(jqxhr, textStatus, errorThrown)  {
+        saveLoadStatus('menu', jqxhr.status, textStatus, errorThrown)
+        menuJsonErrhandler(jqxhr, textStatus, errorThrown)
+    })
 
 // get name to instance index for zim files
 var getZimVersions = $.getJSON(zimVersionIdx)
     .done(function (data) {
         //consoleLog(data);
         zimVersions = data;
+        loadStatus['zims']['status'] = 'SUCCEEDED'
     })
-    .fail(jsonErrhandler);
+    .fail (function(jqxhr, textStatus, errorThrown)  {
+        saveLoadStatus('zims', jqxhr.status, textStatus, errorThrown)
+
+        jsonErrhandler(jqxhr, textStatus, errorThrown)
+    })
 
 // get name to instance index for osm files
 var getOsmVersions = $.getJSON(osmVersionIdx)
@@ -194,8 +214,16 @@ function menuJsonErrhandler(jqXHR, textStatus, errorThrown) {
 
 function checkMenuJson(){
     console.log('in checkMenuJson')
+    console.log(loadStatus)
     var warning_msg = ''
-    if (getMenuJson['jsonStatus'] == 'SUCCEEDED')
+    if (loadStatus.config.status != 'SUCCEEDED') {
+        warning_msg = 'Failed to load Config File. Is there a connection to the server?\n\n'
+        warning_msg += "Error Message - " + loadStatus.config.textStatus + " : " + loadStatus.config.errorThrown
+        alert(warning_msg)
+        return
+    }
+
+    if (loadStatus['menu']['status'] == 'SUCCEEDED')
         procPage()
     else if (getMenuJson['jsonStatus'] == 'PATCHED') {
         warning_msg = 'The Home Page menu.json file is broken and has been temporarily patched.\n\n'
@@ -206,10 +234,17 @@ function checkMenuJson(){
         procPage()
     }
     else {
-        warning_msg = 'The Home Page menu.json file is broken and could not be patched.\n\n'
-        warning_msg += 'Please consider creating an issue at https://github.com/iiab/iiab/issues'
+        warning_msg = 'Failed to load Menu Json File. Is there a connection to the server?'
+        //warning_msg = 'The Home Page menu.json file is broken and could not be patched.\n\n'
+        //warning_msg += 'Please consider creating an issue at https://github.com/iiab/iiab/issues'
         alert(warning_msg)
     }
+}
+
+function saveLoadStatus(context, jqxhrStatus, textStatus, errorThrown){
+    loadStatus[context]['jqxhrStatus'] = jqxhrStatus
+    loadStatus[context]['textStatus'] = textStatus
+    loadStatus[context]['errorThrown'] = errorThrown
 }
 
 function procPage() {
