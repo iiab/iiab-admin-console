@@ -102,7 +102,7 @@ If you selected **Clone** you will be able to edit the following fields as well:
 
 * Select Menu Item Type - The type of Menu Item Definition determines how it displays and the link to which it points. Select from the list.
 * Select Menu Item Language - The language is part of the Menu Item Definition name. Select from the list.
-* Content this Menu Item Shows - What you put here will depend on the Type. It could be a directory under modules or in the webroot, or the name of a zim (without the date part).
+* Content this Menu Item Shows - What you put here will depend on the Type. It could be a directory under modules or in the webroot, or the name of a zim (without the final date part and without .zim).
 * Menu Item Code - This is calculated based on the above fields and may not be changed.
 * Optional Code Suffix - This is an option suffix that will be added to the Menu Item Definition to distinguish it from another definition, perhaps a country code.
 
