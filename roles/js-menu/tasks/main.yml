@@ -134,13 +134,13 @@
     src: 021_apache_set_time.j2
     dest: /etc/sudoers.d/021_apache_set_time
     mode: 0440
-  when: apache_allow_sudo
+  when: allow_www_data_sudo
 
 - name: Remove above
   file:
     path: /etc/sudoers.d/021_apache_set_time
     state: absent
-  when: not apache_allow_sudo
+  when: not allow_www_data_sudo
 
 - name: Create Feedback Database
   shell: ./setup-feedback
