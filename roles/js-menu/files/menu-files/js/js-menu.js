@@ -275,7 +275,7 @@ function procPage() {
 
 function updateServerTime() {
     if (isMobile || navigator.userAgent.search('Win64') !== -1 || navigator.platform == 'MacIntel') {
-        var allowed = menuConfig.apache_allow_sudo || false;
+        var allowed = menuConfig.allow_www_data_sudo || false;
         var desired = menuParams.allow_server_time_update || false;
         if (allowed && desired) {
 
