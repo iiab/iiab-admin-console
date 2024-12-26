@@ -864,8 +864,9 @@ def parse_cmd_msg(cmd_msg):
     return parse_failed, cmd_dict
 
 def is_internet_avail():
-    #return is_url_avail("www.google.com")
-    return is_url_avail("neverssl.com") # in case captive portal traps www.google.com
+    # return is_url_avail("www.google.com")
+    # return is_url_avail("neverssl.com") # 12/26/2024 does not exist
+    return is_url_avail("en.wikipedia.org") # something not caught by captive portal
 
 def is_url_avail(url):
     try:
