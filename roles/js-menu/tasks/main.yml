@@ -131,14 +131,14 @@
 # Enable or Disable menu client setting server time
 - name: Give {{ apache_user }} permission to set time
   template:
-    src: 021_apache_set_time.j2
-    dest: /etc/sudoers.d/021_apache_set_time
+    src: iiab-admin.j2
+    dest: /etc/sudoers.d/iiab-admin.j2
     mode: 0440
   when: allow_www_data_sudo
 
 - name: Remove above
   file:
-    path: /etc/sudoers.d/021_apache_set_time
+    path: /etc/sudoers.d/iiab-admin
     state: absent
   when: not allow_www_data_sudo
 
