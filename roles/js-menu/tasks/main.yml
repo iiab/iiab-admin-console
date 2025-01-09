@@ -142,6 +142,11 @@
     state: absent
   when: not allow_www_data_sudo
 
+- name: Removing stale /etc/sudoers.d/020_apache_poweroff
+  file:
+    path: /etc/sudoers.d/020_apache_poweroff
+    state: absent
+
 - name: Create Feedback Database
   shell: ./setup-feedback
 
