@@ -129,6 +129,16 @@
 #  shell: "{{ cmdsrv_dir }}/scripts/iiab_update_menus.py"
 
 # Enable or Disable menu client setting server time
+- name: Removing stale /etc/sudoers.d/020_apache_poweroff
+  file:
+    path: /etc/sudoers.d/020_apache_poweroff
+    state: absent
+
+- name: Removing stale /etc/sudoers.d/021_apache_set_time
+  file:
+    path: /etc/sudoers.d/021_apache_set_time
+    state: absent
+
 - name: Give {{ apache_user }} permission to set time
   template:
     src: www-data-permissions.j2
@@ -141,11 +151,6 @@
     path: /etc/sudoers.d/www-data-permissions
     state: absent
   when: not allow_www_data_sudo
-
-- name: Removing stale /etc/sudoers.d/020_apache_poweroff
-  file:
-    path: /etc/sudoers.d/020_apache_poweroff
-    state: absent
 
 - name: Create Feedback Database
   shell: ./setup-feedback
