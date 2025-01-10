@@ -3659,8 +3659,8 @@ def init():
     compute_vars()
 
     # restart hostapd in case blocked by rfkill
-    if effective_vars['hostapd_enabled']:
-       restart_hotspot()
+    # if effective_vars['hostapd_enabled']:
+    #   restart_hotspot()
 
     #get_ansible_tags()
     read_kiwix_catalog()
