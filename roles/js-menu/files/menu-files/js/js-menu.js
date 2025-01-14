@@ -275,9 +275,8 @@ function procPage() {
 
 function updateServerTime() {
     if (isMobile || navigator.userAgent.search('Win64') !== -1 || navigator.platform == 'MacIntel') {
-        var allowed = menuConfig.allow_www_data_sudo || false;
         var desired = menuParams.allow_server_time_update || false;
-        if (allowed && desired) {
+        if (desired) {
 
             var now = new Date();
             var user_utc_datetime = now.toISOString().substr(0, 19) + 'Z';

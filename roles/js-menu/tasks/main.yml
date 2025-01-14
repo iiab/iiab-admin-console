@@ -129,18 +129,16 @@
 #  shell: "{{ cmdsrv_dir }}/scripts/iiab_update_menus.py"
 
 # Enable or Disable menu client setting server time
-- name: Give {{ apache_user }} permission to set time
+- name: Give www-data permission to set time
   template:
-    src: 021_apache_set_time.j2
-    dest: /etc/sudoers.d/021_apache_set_time
+    src: 021_www_data_set_time.j2
+    dest: /etc/sudoers.d/021_www_data_set_time
     mode: 0440
-  when: allow_www_data_sudo
 
 - name: Remove above
   file:
-    path: /etc/sudoers.d/021_apache_set_time
+    path: /etc/sudoers.d/021_www_data_set_time
     state: absent
-  when: not allow_www_data_sudo
 
 - name: Create Feedback Database
   shell: ./setup-feedback
