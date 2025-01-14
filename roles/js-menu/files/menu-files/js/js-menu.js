@@ -252,10 +252,13 @@ function procPage() {
     drawMenu();
     updateServerTime();
 
+    var allowed = menuConfig.allow_www_data_poweroff || false;
+    var desired = menuParams.allow_poweroff || false;
+
     // choose the header and header font family
     $('#headerMobile').css('font-family', menuParams.mobile_header_font);
     $('#headerDesktop').css('font-family', menuParams.desktop_header_font);
-    if (!menuParams.allow_poweroff) {
+    if (!allowed || !desired) {
         gEBI("poweroffLink").style.display = "none";
     }
     else {
