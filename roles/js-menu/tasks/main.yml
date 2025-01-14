@@ -128,17 +128,18 @@
 #- name: Add any IIAB roles that are installed to home/menu.js
 #  shell: "{{ cmdsrv_dir }}/scripts/iiab_update_menus.py"
 
-# Enable or Disable menu client setting server time
+# Enable menu client setting server time
 - name: Give www-data permission to set time
   template:
     src: 021_www_data_set_time.j2
     dest: /etc/sudoers.d/021_www_data_set_time
     mode: 0440
 
-- name: Remove above
-  file:
-    path: /etc/sudoers.d/021_www_data_set_time
-    state: absent
+# Now always enabled
+#- name: Remove above
+#  file:
+#    path: /etc/sudoers.d/021_www_data_set_time
+#    state: absent
 
 - name: Create Feedback Database
   shell: ./setup-feedback
