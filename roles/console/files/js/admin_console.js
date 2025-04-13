@@ -997,7 +997,7 @@ function controlWifiHotspot(){
     if (validateHostapdPassword(hotspotPassword) == false)
       return false;
 
-    cmd_args['hotspot_passord'] = hotspotPassword;
+    cmd_args['hotspot_password'] = hotspotPassword;
     var command = "CTL-HOTSPOT " + JSON.stringify(cmd_args);
     return sendCmdSrvCmd(command, genericCmdHandler, "HOSTSPOT-CTL");
   }

@@ -1402,7 +1402,7 @@ def ctl_hotspot(cmd_info):
     if not wpa_pass_text:
         return cmd_error(cmd=cmd_info['cmd'], msg='Hotspot is not in secure mode.')
     if 'cmd_args' in cmd_info:
-        password = cmd_info['cmd_args']['hotspot_passord']
+        password = cmd_info['cmd_args']['hotspot_password']
     else:
         return cmd_malformed(cmd_info['cmd'])
     target_index = attr_list.index(wpa_pass_text)
