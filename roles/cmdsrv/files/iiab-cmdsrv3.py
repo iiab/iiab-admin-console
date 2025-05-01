@@ -1806,13 +1806,13 @@ def ctl_tailscale(cmd_info):
     if not iiab_roles_status['tailscale']['installed']:
         resp = cmd_error(cmd=cmd_info['cmd'], msg='TailScale not installed.')
         return resp
-
-    if 'cmd_args' in cmd_info:
+    try:
         tailscale_login = cmd_info['cmd_args']['tailscale_login']
         tailscale_custom_login = cmd_info['cmd_args']['tailscale_custom_login']
         tailscale_authkey = cmd_info['cmd_args']['tailscale_authkey']
+        tailscale_host_name = cmd_info['cmd_args']['tailscale_host_name']
         tailscale_on_off = cmd_info['cmd_args']['tailscale_on_off']
-    else:
+    except:
         return cmd_malformed(cmd_info['cmd'])
     if tailscale_on_off not in ['ON', 'OFF']:
         return cmd_malformed(cmd_info['cmd'])
@@ -1830,10 +1830,10 @@ def ctl_tailscale(cmd_info):
             # In Tailscale, tailscale logout disconnects your device from the network and invalidates the current login, requiring re-authentication when you run tailscale up again. tailscale down shuts down the Tailscale service and puts it into an idle state. It doesn't disconnect you from the network or invalidate your login. You can later resume connectivity by running tailscale up without needing to re-authenticate.
 
             rc = adm.subproc_run('/usr/bin/tailscale logout')
-            if rc == 0:
+            if rc.returncode == 0:
                 resp = cmd_success(cmd_info['cmd'])
             else:
-                resp = cmd_error(cmd=cmd_info['cmd'], msg='Some errors occurred stopping.')
+                resp = cmd_error(cmd=cmd_info['cmd'], msg='Some errors occurred while stopping.')
             return resp
 
     # tailscale_on_off == 'ON'
@@ -1848,22 +1848,46 @@ def ctl_tailscale(cmd_info):
         return resp
     cmdstr = '/usr/bin/tailscale up --login-server ' + this_tailscale_login_url
     cmdstr += ' --auth-key ' + tailscale_authkey
+    if not tailscale_host_name:
+        tailscale_host_name = 'iiab-' + str(datetime.now())[:19].replace(' ', '-')
+    cmdstr += ' --hostname ' + tailscale_host_name
+    # N.B. hostname preserves the previous value,
+    # but on https://login.tailscale.com/admin/machines it is correct
+    # tailscale down and up with no parameters seems to correct this
     #--timeout 8s - default is forever
-    rc = adm.subproc_run(cmdstr)
-    if rc == 0:
-        resp = cmd_success(cmd_info['cmd'])
-    else:
-        resp = cmd_error(cmd=cmd_info['cmd'], msg='Some errors occurred.')
-    return resp
+    # --advertise-tags=tag:server
+    # curl https://api.tailscale.com/api/v2/device/11055/tags \
+    # -u "tskey-<key>" \
+    # -H "Content-Type: application/json" \
+    # --data-binary '{"tags": ["tag:foo", "tag:bar"]}'
 
+    rc = adm.subproc_run(cmdstr)
+    if rc.returncode != 0:
+        resp = cmd_error(cmd=cmd_info['cmd'], msg='Some errors occurred.')
+        return resp
+
+    # cycle up down to update hostname
+    rc = adm.subproc_run('/usr/bin/tailscale down')
+    rc = adm.subproc_run('/usr/bin/tailscale up')
+
+    resp = cmd_success(cmd_info['cmd'])
+    return resp
     # TailScale Status after install
     # systemctl is-active tailscaled - active
     # systemctl status tailscaled - Status: "Stopped; run 'tailscale up' to log in"
     # root@box:~# tailscale status - Logged out.
 
+    # tailscale status
+    # 100.120.125.109 box-1                box-1.tail48e51e.ts.net linux   -
+    # 100.79.143.41   timpc                tim@         windows -
+
     # Stop tailscale
     # tailscale down - Disconnect from Tailscale.  To reconnect, re-run tailscale up without any flags.
     # tailscale logout - Disconnect from Tailscale and expire the current log in. The next time you run tailscale up, you'll need to reauthenticate your device
+    # but after logout still appears connected in tailscale console; disconnected after status
+    # needs to be ephemeral for auto removal
+    # in console took a couple of seconds to change name on fresh login
+    # after a couple of minutes, still has old name in status
 
 def get_ext_zim_catalog(dev_name):
     iiab_zim_path = dev_name + zim_dir
