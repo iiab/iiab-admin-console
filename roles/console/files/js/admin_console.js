@@ -1113,6 +1113,9 @@ function controlTailscale(){
 
 function validateTailscaleParams(cmd_args){
   consoleLog(cmd_args);
+  if (cmd_args['tailscale_on_off'] == 'OFF')
+    return true
+
   if (cmd_args['tailscale_login'] == 'custom'){
     if (cmd_args['tailscale_custom_login'] == ''){
       alert('Must enter Custom TailScale Login URL if TailScale Login is Custom Login URL.')
