@@ -1815,7 +1815,7 @@ def get_tailscale_status(cmd_info):
         tailscale_status['status'] = 'not_active'
     else:
         tailscale_status['status'] = 'active'
-        tailscale_status['connections'] = rc.stdout
+        tailscale_status['connections'] = rc.stdout.replace("\n", "<BR>")
 
     resp = json.dumps(tailscale_status)
     return (resp)

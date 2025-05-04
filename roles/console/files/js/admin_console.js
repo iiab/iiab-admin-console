@@ -1091,9 +1091,9 @@ function controlTailscale(){
 
   var onOff = $("#tailscaleStatus").html()
   if (onOff == 'OFF')
-    cmd_args['tailscale_login'] = 'ON'
+    cmd_args['tailscale_on_off'] = 'ON'
   else if (onOff == 'ON')
-    cmd_args['tailscale_login'] = 'OFF'
+    cmd_args['tailscale_on_off'] = 'OFF'
   else{
     alert('TailScale is not installed.')
     return false
@@ -1112,13 +1112,14 @@ function controlTailscale(){
 }
 
 function validateTailscaleParams(cmd_args){
+  consoleLog(cmd_args);
   if (cmd_args['tailscale_login'] == 'custom'){
-    if (cmd_args['tailscale_custom_login'] = ''){
+    if (cmd_args['tailscale_custom_login'] == ''){
       alert('Must enter Custom TailScale Login URL if TailScale Login is Custom Login URL.')
       return false
     }
   }
-  if (cmd_args['tailscale_authkey'] = ''){
+  if (cmd_args['tailscale_authkey'] == ''){
     alert('Must enter TailScale Auth Key.')
     return false
   }
