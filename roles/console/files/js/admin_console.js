@@ -154,7 +154,6 @@ function navButtonsEvents() {
 
     $("#controlWifiLink").show();
     $("#controlBluetoothLink").show();
-    // $("#controlVPNLink").show();
     $("#utilsRpiStatusLink").show();
   }
 
@@ -204,8 +203,9 @@ function controlButtonsEvents() {
   $("#BLUETOOTH-CTL").click(function(){
     controlBluetooth();
   });
-	$("#VPN-CTL").click(function(){
-    controlVpn();
+
+  $("#TAILSCALE-CTL").click(function(){
+    controlTailscale();
   });
 
   $("#LOGOUT").click(function(){
@@ -958,23 +958,6 @@ function procSystemInfo(data){
   	$("#BLUETOOTH-CTL").html('Turn Bluetooth Access ON');
     make_button_disabled('#BLUETOOTH-CTL', false); // enable
   }
-
-  // openvpn
-  $("#supportVpnState").html(serverInfo.openvpn_status);
-  gEBI('support_vpn_handle').value = serverInfo.openvpn_handle;
-  $("#VPN-CTL").html('Turn Support VPN ON');
-  make_button_disabled('#VPN-CTL', true); // disable
-  $("#support_vpn_handle").prop('disabled', true);
-  if (serverInfo.openvpn_status == 'ON'){
-    $("#support_vpn_handle").prop('disabled', false)
-    $("#VPN-CTL").html('Turn Support VPN OFF');
-    make_button_disabled('#VPN-CTL', false); // enable
-  }
-  else if (serverInfo.openvpn_status == 'OFF'){
-  	$("#support_vpn_handle").prop('disabled', false)
-  	$("#VPN-CTL").html('Turn Support VPN ON');
-    make_button_disabled('#VPN-CTL', false); // enable
-  }
 }
 
 function controlWifi(){
@@ -1071,47 +1054,75 @@ function controlBluetooth(){
   return sendCmdSrvCmd(command, getSystemInfo);
 }
 
-function controlVpn(){ // Not Used
-  var cmd_args = {};
-
-  if (serverInfo.openvpn_status == 'ON')
-    cmd_args['vpn_on_off'] = 'off';
-  if (serverInfo.openvpn_status == 'OFF')
-    cmd_args['vpn_on_off'] = 'on';
-  serverInfo.openvpn_handle = gEBI('support_vpn_handle').value;
-  cmd_args['vpn_handle'] = serverInfo.openvpn_handle;
-  cmd_args['make_permanent'] = 'False';
-
-  var command = "CTL-VPN " + JSON.stringify(cmd_args);
-  return sendCmdSrvCmd(command, getSystemInfo);
-}
+// TailScale
 
 function getTailscaleStatus(){
   var command = "GET-TAILSCALE-STATUS"
   return sendCmdSrvCmd(command, procTailscaleStatus);
-
 }
 
 function procTailscaleStatus(data){
-  if (data.tailscale_status == 'not_installed')
+  consoleLog(data);
+  if (data.status == 'not_installed'){
     $("#tailscaleStatus").html('NOT INSTALLED');
-  else if (data.tailscale_status == 'not_active')
+    $("#TAILSCALE-CTL").html('First install TailScale.');
+    make_button_disabled('#TAILSCALE-CTL', true); // disable
+  }
+  else if (data.status == 'not_active'){
     $("#tailscaleStatus").html('OFF');
-  else if (data.tailscale_status == 'active')
+    $("#TAILSCALE-CTL").html('Turn TailScale ON.');
+    make_button_disabled('#TAILSCALE-CTL', false); // enable
+  }
+  else if (data.status == 'active'){
     $("#tailscaleStatus").html('ON');
-  else
+    $("#TAILSCALE-CTL").html('Turn TailScale OFF.');
+    make_button_disabled('#TAILSCALE-CTL', false); // enable
+  }
+  else{
     $("#tailscaleStatus").html('ERROR');
+    make_button_disabled('#TAILSCALE-CTL', true); // disable
+  }
+
   $("#tailscaleConnections").html(data.connections);
 }
 
 function controlTailscale(){
+  var cmd_args = {};
 
+  var onOff = $("#tailscaleStatus").html()
+  if (onOff == 'OFF')
+    cmd_args['tailscale_login'] = 'ON'
+  else if (onOff == 'ON')
+    cmd_args['tailscale_login'] = 'OFF'
+  else{
+    alert('TailScale is not installed.')
+    return false
+  }
 
+  cmd_args['tailscale_login'] = gEBI('tailscale_login').value;
+  cmd_args['tailscale_custom_login'] = gEBI('tailscale_custom_login').value;
+  cmd_args['tailscale_authkey'] = gEBI('tailscale_authkey').value;
+  cmd_args['tailscale_hostname'] = gEBI('tailscale_hostname').value;
+
+  if (!validateTailscaleParams(cmd_args))
+    return false
+
+  var command = "CTL-TAILSCALE " + JSON.stringify(cmd_args);
+  return sendCmdSrvCmd(command, getTailscaleStatus);
 }
 
-function validateTailscaleParams(){
-
-
+function validateTailscaleParams(cmd_args){
+  if (cmd_args['tailscale_login'] == 'custom'){
+    if (cmd_args['tailscale_custom_login'] = ''){
+      alert('Must enter Custom TailScale Login URL if TailScale Login is Custom Login URL.')
+      return false
+    }
+  }
+  if (cmd_args['tailscale_authkey'] = ''){
+    alert('Must enter TailScale Auth Key.')
+    return false
+  }
+  return true
 }
 
 // Configure Menu Functions
