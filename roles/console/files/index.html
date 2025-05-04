@@ -70,7 +70,7 @@
 									<li id="controlBluetoothLink" style="display:none"><a href="#controlBluetooth"
 											call-after="getSystemInfo">Bluetooth Control</a></li>
 									<li id="controlTailscaleLink"><a href="#controlTailscale"
-											call-after="getTailscaleStatus">TailScale Control</a></li>
+											call-after="getTailscaleStatus">Tailscale Control</a></li>
 									<!-- <li><a href="#">Services Enabled</a></li> -->
 								</ul> <!-- End XXX Sub Level Menu -->
 								<h2>Actions</h2>
@@ -169,23 +169,23 @@
 									</div> <!--  End controlBluetooth Submenu Option Pane -->
 									<div class="tab-pane" id="controlTailscale">
 										<!-- Start controcontrolTailscalelVPN Submenu Option Pane -->
-										<h2>TailScale Control</h2>
-										<p><b>WARNING:</b> Turning on the TailScale VPN is a <b>Security Risk</b>.</p>
+										<h2>Tailscale Control</h2>
+										<p><b>WARNING:</b> Turning on the Tailscale VPN is a <b>Security Risk</b>.</p>
 										<p>It is <b>NOT recommended</b> that you do this unless you have changed the
 											published passwords for the <b>pi</b> and <b>iiab-admin</b> users.</p>
-										<h4>TailScale Status <b><span id="tailscaleStatus">OFF</span></b></h4>
+										<h4>Tailscale Status <b><span id="tailscaleStatus">OFF</span></b></h4>
 										<div class="form-group">
-											<label for="tailscale_login">Select TailScale Login</label>
+											<label for="tailscale_login">Select Tailscale Login</label>
 											<select class="form-control" id="tailscale_login">
-												<option value="iiab">IIAB TailScale Login</option>
-												<option value="tailscale">TailScale Default Login</option>
+												<option value="iiab">IIAB Tailscale Login</option>
+												<option value="tailscale">Tailscale Default Login</option>
 												<option value="custom">Custom Login URL</option>
 											</select>
-											<label for="tailscale_custom_login">Custom TailScale Login URL</label>
+											<label for="tailscale_custom_login">Custom Tailscale Login URL</label>
 											<input type="text" name="tailscale_custom_login" class="form-control" id="tailscale_custom_login">
-											<label for="tailscale_authkey">TailScale Auth Key</label>
+											<label for="tailscale_authkey">Tailscale Auth Key</label>
 											<input type="text" name="tailscale_authkey" class="form-control" id="tailscale_authkey">
-											<label for="tailscale_hostname">Local TailScale Hostname</label>
+											<label for="tailscale_hostname">Local Tailscale Hostname</label>
 											<input type="text" name="tailscale_hostname" class="form-control" id="tailscale_hostname">
 										</div>
 										<button id="TAILSCALE-CTL" type="button" class="btn btn-lg btn-primary"

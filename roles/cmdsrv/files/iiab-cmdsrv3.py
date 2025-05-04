@@ -1823,7 +1823,7 @@ def get_tailscale_status(cmd_info):
 def ctl_tailscale(cmd_info):
     read_iiab_roles_stat() # refresh status
     if not iiab_roles_status['tailscale']['installed']:
-        resp = cmd_error(cmd=cmd_info['cmd'], msg='TailScale not installed.')
+        resp = cmd_error(cmd=cmd_info['cmd'], msg='Tailscale not installed.')
         return resp
     try:
         tailscale_login = cmd_info['cmd_args']['tailscale_login']
@@ -1838,7 +1838,7 @@ def ctl_tailscale(cmd_info):
 
     if tailscale_on_off == 'OFF':
         if not iiab_roles_status['tailscale']['active']:
-            resp = cmd_error(cmd=cmd_info['cmd'], msg='TailScale already OFF.')
+            resp = cmd_error(cmd=cmd_info['cmd'], msg='Tailscale already OFF.')
             return resp
         else:
             # /usr/bin/tailscale down or tailscale logout
@@ -1863,7 +1863,7 @@ def ctl_tailscale(cmd_info):
     elif tailscale_login == 'custom':
         this_tailscale_login_url = tailscale_custom_login
     else:
-        resp = cmd_error(cmd=cmd_info['cmd'], msg='Unknown TailScale login.')
+        resp = cmd_error(cmd=cmd_info['cmd'], msg='Unknown Tailscale login.')
         return resp
     cmdstr = '/usr/bin/tailscale up --login-server ' + this_tailscale_login_url
     cmdstr += ' --auth-key ' + tailscale_authkey
@@ -1891,7 +1891,7 @@ def ctl_tailscale(cmd_info):
 
     resp = cmd_success(cmd_info['cmd'])
     return resp
-    # TailScale Status after install
+    # Tailscale Status after install
     # systemctl is-active tailscaled - active
     # systemctl status tailscaled - Status: "Stopped; run 'tailscale up' to log in"
     # root@box:~# tailscale status - Logged out.

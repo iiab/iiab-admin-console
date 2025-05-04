@@ -1054,7 +1054,7 @@ function controlBluetooth(){
   return sendCmdSrvCmd(command, getSystemInfo);
 }
 
-// TailScale
+// Tailscale
 
 function getTailscaleStatus(){
   var command = "GET-TAILSCALE-STATUS"
@@ -1065,17 +1065,17 @@ function procTailscaleStatus(data){
   consoleLog(data);
   if (data.status == 'not_installed'){
     $("#tailscaleStatus").html('NOT INSTALLED');
-    $("#TAILSCALE-CTL").html('First install TailScale.');
+    $("#TAILSCALE-CTL").html('First install Tailscale.');
     make_button_disabled('#TAILSCALE-CTL', true); // disable
   }
   else if (data.status == 'not_active'){
     $("#tailscaleStatus").html('OFF');
-    $("#TAILSCALE-CTL").html('Turn TailScale ON.');
+    $("#TAILSCALE-CTL").html('Turn Tailscale ON.');
     make_button_disabled('#TAILSCALE-CTL', false); // enable
   }
   else if (data.status == 'active'){
     $("#tailscaleStatus").html('ON');
-    $("#TAILSCALE-CTL").html('Turn TailScale OFF.');
+    $("#TAILSCALE-CTL").html('Turn Tailscale OFF.');
     make_button_disabled('#TAILSCALE-CTL', false); // enable
   }
   else{
@@ -1095,7 +1095,7 @@ function controlTailscale(){
   else if (onOff == 'ON')
     cmd_args['tailscale_on_off'] = 'OFF'
   else{
-    alert('TailScale is not installed.')
+    alert('Tailscale is not installed.')
     return false
   }
 
@@ -1118,12 +1118,12 @@ function validateTailscaleParams(cmd_args){
 
   if (cmd_args['tailscale_login'] == 'custom'){
     if (cmd_args['tailscale_custom_login'] == ''){
-      alert('Must enter Custom TailScale Login URL if TailScale Login is Custom Login URL.')
+      alert('Must enter Custom Tailscale Login URL if Tailscale Login is Custom Login URL.')
       return false
     }
   }
   if (cmd_args['tailscale_authkey'] == ''){
-    alert('Must enter TailScale Auth Key.')
+    alert('Must enter Tailscale Auth Key.')
     return false
   }
   return true
