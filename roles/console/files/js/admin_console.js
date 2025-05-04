@@ -154,7 +154,7 @@ function navButtonsEvents() {
 
     $("#controlWifiLink").show();
     $("#controlBluetoothLink").show();
-    $("#controlVPNLink").show();
+    // $("#controlVPNLink").show();
     $("#utilsRpiStatusLink").show();
   }
 
@@ -1071,7 +1071,7 @@ function controlBluetooth(){
   return sendCmdSrvCmd(command, getSystemInfo);
 }
 
-function controlVpn(){
+function controlVpn(){ // Not Used
   var cmd_args = {};
 
   if (serverInfo.openvpn_status == 'ON')
@@ -1084,6 +1084,34 @@ function controlVpn(){
 
   var command = "CTL-VPN " + JSON.stringify(cmd_args);
   return sendCmdSrvCmd(command, getSystemInfo);
+}
+
+function getTailscaleStatus(){
+  var command = "GET-TAILSCALE-STATUS"
+  return sendCmdSrvCmd(command, procTailscaleStatus);
+
+}
+
+function procTailscaleStatus(data){
+  if (data.tailscale_status == 'not_installed')
+    $("#tailscaleStatus").html('NOT INSTALLED');
+  else if (data.tailscale_status == 'not_active')
+    $("#tailscaleStatus").html('OFF');
+  else if (data.tailscale_status == 'active')
+    $("#tailscaleStatus").html('ON');
+  else
+    $("#tailscaleStatus").html('ERROR');
+  $("#tailscaleConnections").html(data.connections);
+}
+
+function controlTailscale(){
+
+
+}
+
+function validateTailscaleParams(){
+
+
 }
 
 // Configure Menu Functions

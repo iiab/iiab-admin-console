@@ -69,8 +69,8 @@
 											call-after="getSystemInfo">Wifi Control</a></li>
 									<li id="controlBluetoothLink" style="display:none"><a href="#controlBluetooth"
 											call-after="getSystemInfo">Bluetooth Control</a></li>
-									<li id="controlVPNLink" style="display:none"><a href="#controlVPN"
-											call-after="getSystemInfo">VPN Control</a></li>
+									<li id="controlTailscaleLink"><a href="#controlTailscale"
+											call-after="getTailscaleStatus">TailScale Control</a></li>
 									<!-- <li><a href="#">Services Enabled</a></li> -->
 								</ul> <!-- End XXX Sub Level Menu -->
 								<h2>Actions</h2>
@@ -167,23 +167,34 @@
 										<button id="BLUETOOTH-CTL" type="button" class="btn btn-lg btn-primary"
 											style="opacity:0.5" disabled>Change Bluetooth</button>
 									</div> <!--  End controlBluetooth Submenu Option Pane -->
-									<div class="tab-pane" id="controlVPN">
-										<!-- Start controlVPN Submenu Option Pane -->
-										<h2>Support VPN Control</h2>
-										<p><b>WARNING:</b> Turning on the Support VPN is a <b>Security Risk</b>.</p>
+									<div class="tab-pane" id="controlTailscale">
+										<!-- Start controcontrolTailscalelVPN Submenu Option Pane -->
+										<h2>TailScale Control</h2>
+										<p><b>WARNING:</b> Turning on the TailScale VPN is a <b>Security Risk</b>.</p>
 										<p>It is <b>NOT recommended</b> that you do this unless you have changed the
 											published passwords for the <b>pi</b> and <b>iiab-admin</b> users.</p>
-										<h4>Support VPN is <b><span id="supportVpnState">OFF</span></b></h4>
-										<div class="form-group row">
-											<div class="col-xs-4">
-												<label for="support_vpn_handle">Your Name on the Support VPN</label>
-												<input type="text" name="support_vpn_handle" class="form-control"
-													id="support_vpn_handle">
-											</div>
+										<h4>TailScale Status <b><span id="tailscaleStatus">OFF</span></b></h4>
+										<div class="form-group">
+											<label for="tailscale_login">Select TailScale Login</label>
+											<select class="form-control" id="tailscale_login">
+												<option value="tailscale">TailScale Default Login</option>
+												<option value="iiab">IIAB TailScale Login</option>
+												<option value="custom">Custom Login URL</option>
+											</select>
+											<label for="tailscale_custom_login">Custom TailScale Login URL</label>
+											<input type="text" name="poweroff_prompt" class="form-control" id="tailscale_custom_login">
+											<label for="tailscale_authkey">TailScale Auth Key</label>
+											<input type="text" name="tailscale_authkey" class="form-control" id="tailscale_authkey">
+											<label for="tailscale_hostname">Local TailScale Hostname</label>
+											<input type="text" name="tailscale_hostname" class="form-control" id="tailscale_hostname">
 										</div>
-										<button id="VPN-CTL" type="button" class="btn btn-lg btn-primary"
+										<button id="TAILSCALE-CTL" type="button" class="btn btn-lg btn-primary"
 											style="opacity:0.5" disabled>Change Support VPN</button>
-									</div> <!--  End controlVPN Submenu Option Pane -->
+										<div>
+											<p><b>Active Connections</b></p>
+											<div id="tailscaleConnections"></div>
+										</div>
+									</div> <!--  End controlTailscale Submenu Option Pane -->
 								</div> <!-- End Container for Sub Menu Options Panes -->
 							</div> <!-- right column -->
 						</div> <!-- End containing row -->

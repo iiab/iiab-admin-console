@@ -746,6 +746,7 @@ def cmd_handler(cmd_msg):
         "REMOVE-WIFI-CONNECTION-PARAMS": {"funct": remove_wifi_connection_params_nm, "inet_req": False},
         "CTL-BLUETOOTH": {"funct": ctl_bluetooth, "inet_req": False},
         "CTL-VPN": {"funct": ctl_vpn, "inet_req": True},
+        "GET-TAILSCALE-STATUS": {"funct": get_tailscale_status, "inet_req": False},
         "CTL-TAILSCALE": {"funct": ctl_tailscale, "inet_req": True},
         "REMOVE-USB": {"funct": umount_usb, "inet_req": False},
         "RUN-ANSIBLE": {"funct": run_ansible, "inet_req": False},
@@ -1315,10 +1316,10 @@ def calc_network_info():
     hostapd_conf = adm.read_conf_file('/etc/hostapd/hostapd.conf')
     net_stat['hostapd_conf'] = hostapd_conf
     net_stat["hostapd_password"] = hostapd_conf.get('wpa_passphrase', effective_vars['hostapd_password'])
-    net_stat["openvpn_status"] = check_systemd_service_active('openvpn')
+    # net_stat["openvpn_status"] = check_systemd_service_active('openvpn')
     net_stat["bt_pan_status"] = check_systemd_service_active('bt-pan')
     net_stat["iiab_uuid"] = run_command("/bin/cat /etc/iiab/uuid")[0]
-    net_stat["openvpn_handle"] = run_command("/bin/cat /etc/iiab/openvpn_handle")[0]
+    # net_stat["openvpn_handle"] = run_command("/bin/cat /etc/iiab/openvpn_handle")[0]
 
     if is_rpi: # assumes all rpi use raspios or at least have network manager
         outp = run_command("/usr/bin/nmcli -t -f ssid,in-use,chan,signal,bars,security,bssid dev wifi")
@@ -1801,6 +1802,24 @@ def ctl_vpn(cmd_info):
         resp = cmd_error(cmd=cmd_info['cmd'], msg='Some errors occurred.')
     return resp
 
+def get_tailscale_status(cmd_info):
+    tailscale_status = {}
+    try:
+        rc = adm.subproc_run("/usr/bin/tailscale status")
+    except:
+        rc = None
+
+    if not rc:
+        tailscale_status['status'] = 'not_installed'
+    elif rc.returncode == 1:
+        tailscale_status['status'] = 'not_active'
+    else:
+        tailscale_status['status'] = 'active'
+        tailscale_status['connections'] = rc.stdout
+
+    resp = json.dumps(tailscale_status)
+    return (resp)
+
 def ctl_tailscale(cmd_info):
     read_iiab_roles_stat() # refresh status
     if not iiab_roles_status['tailscale']['installed']:
@@ -1810,7 +1829,7 @@ def ctl_tailscale(cmd_info):
         tailscale_login = cmd_info['cmd_args']['tailscale_login']
         tailscale_custom_login = cmd_info['cmd_args']['tailscale_custom_login']
         tailscale_authkey = cmd_info['cmd_args']['tailscale_authkey']
-        tailscale_host_name = cmd_info['cmd_args']['tailscale_host_name']
+        tailscale_hostname = cmd_info['cmd_args']['tailscale_hostname']
         tailscale_on_off = cmd_info['cmd_args']['tailscale_on_off']
     except:
         return cmd_malformed(cmd_info['cmd'])
@@ -1848,9 +1867,9 @@ def ctl_tailscale(cmd_info):
         return resp
     cmdstr = '/usr/bin/tailscale up --login-server ' + this_tailscale_login_url
     cmdstr += ' --auth-key ' + tailscale_authkey
-    if not tailscale_host_name:
-        tailscale_host_name = 'iiab-' + str(datetime.now())[:19].replace(' ', '-')
-    cmdstr += ' --hostname ' + tailscale_host_name
+    if not tailscale_hostname:
+        tailscale_hostname = 'iiab-' + str(datetime.now())[:19].replace(' ', '-')
+    cmdstr += ' --hostname ' + tailscale_hostname
     # N.B. hostname preserves the previous value,
     # but on https://login.tailscale.com/admin/machines it is correct
     # tailscale down and up with no parameters seems to correct this
