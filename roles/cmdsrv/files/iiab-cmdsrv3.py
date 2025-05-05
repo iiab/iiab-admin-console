@@ -1868,7 +1868,7 @@ def ctl_tailscale(cmd_info):
     cmdstr = '/usr/bin/tailscale up --login-server ' + this_tailscale_login_url
     cmdstr += ' --auth-key ' + tailscale_authkey
     if not tailscale_hostname:
-        tailscale_hostname = 'iiab-' + str(datetime.now())[:19].replace(' ', '-')
+        tailscale_hostname = 'iiab-' + str(datetime.now())[:16].replace(' ', '-').replace(':', '')
     cmdstr += ' --hostname ' + tailscale_hostname
     # N.B. hostname preserves the previous value,
     # but on https://login.tailscale.com/admin/machines it is correct

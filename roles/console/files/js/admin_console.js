@@ -1063,6 +1063,7 @@ function getTailscaleStatus(){
 
 function procTailscaleStatus(data){
   consoleLog(data);
+  $("#tailscaleConnections").html('None');
   if (data.status == 'not_installed'){
     $("#tailscaleStatus").html('NOT INSTALLED');
     $("#TAILSCALE-CTL").html('First install Tailscale.');
@@ -1077,13 +1078,12 @@ function procTailscaleStatus(data){
     $("#tailscaleStatus").html('ON');
     $("#TAILSCALE-CTL").html('Turn Tailscale OFF.');
     make_button_disabled('#TAILSCALE-CTL', false); // enable
+    $("#tailscaleConnections").html(data.connections);
   }
   else{
     $("#tailscaleStatus").html('ERROR');
     make_button_disabled('#TAILSCALE-CTL', true); // disable
   }
-
-  $("#tailscaleConnections").html(data.connections);
 }
 
 function controlTailscale(){
