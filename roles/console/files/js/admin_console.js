@@ -876,7 +876,7 @@ function procSystemInfo(data){
   var html = "";
   html += '<div class="col-sm-4">';
   html += '<div>Bluetooth Status</div>';
-  html += '<div>Support VPN Status</div>';
+  // html += '<div>Support VPN Status</div>';
   html += '<div>Wired IP Address</div>';
   html += '<div>Wireless IP Address</div>';
   html += '<div>Hotspot Channel</div>';
@@ -888,7 +888,7 @@ function procSystemInfo(data){
   html += '</div>';
   html += '<div class="col-sm-4">';
   html += '<div>' + serverInfo.bt_pan_status + '</div>';
-  html += '<div>' + serverInfo.openvpn_status + '</div>';
+  // html += '<div>' + serverInfo.openvpn_status + '</div>';
   if (serverInfo.hasOwnProperty('eth0'))
     html += '<div>' + serverInfo.eth0.addr + '</div>';
   else
@@ -1063,6 +1063,8 @@ function getTailscaleStatus(){
 
 function procTailscaleStatus(data){
   consoleLog(data);
+  var html = procTailscaleKnownPasswords(data);
+  $("#tailscaleKnownPasswords").html(html);
   $("#tailscaleConnections").html('None');
   if (data.status == 'not_installed'){
     $("#tailscaleStatus").html('NOT INSTALLED');
@@ -1084,6 +1086,25 @@ function procTailscaleStatus(data){
     $("#tailscaleStatus").html('ERROR');
     make_button_disabled('#TAILSCALE-CTL', true); // disable
   }
+}
+
+function procTailscaleKnownPasswords(data){
+  var html = '';
+  html += '<div class="col-sm-4">';
+  html += '<div>Is user <b>pi</b> Password <b>Known</b></div>';
+  html += '<div>Is user <b>iiab-admin</b> Password <b>Known</b></div>';
+  html += '</div>';
+  html += '<div class="col-sm-4">';
+  if (data.pi_passwd_known)
+    html += '<div style="color:Red;"><b>' + data.pi_passwd_known.toString().toUpperCase() + '</b></div>';
+  else
+    html += '<div>' + data.pi_passwd_known + '</div>';
+  if (data.admin_passwd_known)
+    html += '<div style="color:Red;"><b>WARNING: ' + data.admin_passwd_known.toString().toUpperCase() + '</b></div>';
+  else
+    html += '<div>' + data.admin_passwd_known + '</div>';
+  html += '</div>';
+  return html;
 }
 
 function controlTailscale(){

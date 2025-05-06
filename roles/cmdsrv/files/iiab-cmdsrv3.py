@@ -1253,10 +1253,16 @@ def get_rem_dev_list(cmd_info):
 
 def get_system_info(cmd_info):
     sys_stat = calc_network_info()
-    sys_stat['pi_passwd_known'] = auth_calcs('pi', 'raspberry', sleep_time=0)
-    sys_stat['admin_passwd_known'] = auth_calcs(effective_vars['iiab_admin_user'], effective_vars['iiab_admin_published_pwd'], sleep_time=0)
+    known_passwords = check_known_passwords()
+    sys_stat.update(known_passwords)
     resp = json.dumps(sys_stat)
     return (resp)
+
+def check_known_passwords():
+    known_passwords = {}
+    known_passwords['pi_passwd_known'] = auth_calcs('pi', 'raspberry', sleep_time=0)
+    known_passwords['admin_passwd_known'] = auth_calcs(effective_vars['iiab_admin_user'], effective_vars['iiab_admin_published_pwd'], sleep_time=0)
+    return known_passwords
 
 def get_network_info(cmd_info):
     net_stat = calc_network_info()
@@ -1804,6 +1810,8 @@ def ctl_vpn(cmd_info):
 
 def get_tailscale_status(cmd_info):
     tailscale_status = {}
+    tailscale_status = check_known_passwords()
+
     try:
         rc = adm.subproc_run("/usr/bin/tailscale status")
     except:

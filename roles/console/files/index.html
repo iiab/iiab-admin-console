@@ -174,7 +174,8 @@
 										<p>It is <b>NOT recommended</b> that you do this unless you have changed the
 											published passwords for the <b>pi</b> and <b>iiab-admin</b> users.</p>
 										<h4>Tailscale Status <b><span id="tailscaleStatus">OFF</span></b></h4>
-										<div class="form-group">
+										<div class="row" id="tailscaleKnownPasswords"></div><BR>
+										<div class="form-group" style="width: 80%;">
 											<label for="tailscale_login">Select Tailscale Login</label>
 											<select class="form-control" id="tailscale_login">
 												<option value="iiab">IIAB Tailscale Login</option>
@@ -190,7 +191,7 @@
 										</div>
 										<button id="TAILSCALE-CTL" type="button" class="btn btn-lg btn-primary"
 											style="opacity:0.5" disabled>Change Support VPN</button>
-										<div>
+										<div style="width: 80%;">
 											<p></p>
 											<p><b>Active Connections</b></p>
 											<pre id="tailscaleConnections"></pre>
