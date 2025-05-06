@@ -106,6 +106,9 @@ osm_version = None
 modules_dir = None
 small_device_size = 525000 # bigger than anticipated boot partition
 js_menu_dir = None
+tailscale_login_url = 'https://controlplane.tailscale.com'
+tailscale_iiab_login_url = 'https://iiab.net'
+
 
 # Global Variables
 last_command_rowid = 0
@@ -135,7 +138,7 @@ prereq_jobs = {}
 jobs_running = {}
 running_job_count = 0
 
-SENSITIVE_COMMANDS = ["CHGPW", "AUTHENTICATE", "CTL-HOTSPOT", "SET-WIFI-CONNECTION-PARAMS"]
+SENSITIVE_COMMANDS = ["CHGPW", "AUTHENTICATE", "CTL-HOTSPOT", "SET-WIFI-CONNECTION-PARAMS", "CTL-TAILSCALE"]
 NO_LOG_COMMANDS = ["AUTHENTICATE"]
 ANSIBLE_COMMANDS = ["RUN-ANSIBLE", "RESET-NETWORK", "RUN-ANSIBLE-ROLES"]
 FULL_LOG_COMMANDS = ["RUN-ANSIBLE", "RESET-NETWORK", "RUN-ANSIBLE-ROLES"]
@@ -743,6 +746,8 @@ def cmd_handler(cmd_msg):
         "REMOVE-WIFI-CONNECTION-PARAMS": {"funct": remove_wifi_connection_params_nm, "inet_req": False},
         "CTL-BLUETOOTH": {"funct": ctl_bluetooth, "inet_req": False},
         "CTL-VPN": {"funct": ctl_vpn, "inet_req": True},
+        "GET-TAILSCALE-STATUS": {"funct": get_tailscale_status, "inet_req": False},
+        "CTL-TAILSCALE": {"funct": ctl_tailscale, "inet_req": True},
         "REMOVE-USB": {"funct": umount_usb, "inet_req": False},
         "RUN-ANSIBLE": {"funct": run_ansible, "inet_req": False},
         "RUN-ANSIBLE-ROLES": {"funct": run_ansible_roles, "inet_req": False},
@@ -1248,10 +1253,16 @@ def get_rem_dev_list(cmd_info):
 
 def get_system_info(cmd_info):
     sys_stat = calc_network_info()
-    sys_stat['pi_passwd_known'] = auth_calcs('pi', 'raspberry', sleep_time=0)
-    sys_stat['admin_passwd_known'] = auth_calcs(effective_vars['iiab_admin_user'], effective_vars['iiab_admin_published_pwd'], sleep_time=0)
+    known_passwords = check_known_passwords()
+    sys_stat.update(known_passwords)
     resp = json.dumps(sys_stat)
     return (resp)
+
+def check_known_passwords():
+    known_passwords = {}
+    known_passwords['pi_passwd_known'] = auth_calcs('pi', 'raspberry', sleep_time=0)
+    known_passwords['admin_passwd_known'] = auth_calcs(effective_vars['iiab_admin_user'], effective_vars['iiab_admin_published_pwd'], sleep_time=0)
+    return known_passwords
 
 def get_network_info(cmd_info):
     net_stat = calc_network_info()
@@ -1311,10 +1322,10 @@ def calc_network_info():
     hostapd_conf = adm.read_conf_file('/etc/hostapd/hostapd.conf')
     net_stat['hostapd_conf'] = hostapd_conf
     net_stat["hostapd_password"] = hostapd_conf.get('wpa_passphrase', effective_vars['hostapd_password'])
-    net_stat["openvpn_status"] = check_systemd_service_active('openvpn')
+    # net_stat["openvpn_status"] = check_systemd_service_active('openvpn')
     net_stat["bt_pan_status"] = check_systemd_service_active('bt-pan')
     net_stat["iiab_uuid"] = run_command("/bin/cat /etc/iiab/uuid")[0]
-    net_stat["openvpn_handle"] = run_command("/bin/cat /etc/iiab/openvpn_handle")[0]
+    # net_stat["openvpn_handle"] = run_command("/bin/cat /etc/iiab/openvpn_handle")[0]
 
     if is_rpi: # assumes all rpi use raspios or at least have network manager
         outp = run_command("/usr/bin/nmcli -t -f ssid,in-use,chan,signal,bars,security,bssid dev wifi")
@@ -1796,6 +1807,114 @@ def ctl_vpn(cmd_info):
     else:
         resp = cmd_error(cmd=cmd_info['cmd'], msg='Some errors occurred.')
     return resp
+
+def get_tailscale_status(cmd_info):
+    tailscale_status = {}
+    tailscale_status = check_known_passwords()
+
+    try:
+        rc = adm.subproc_run("/usr/bin/tailscale status")
+    except:
+        rc = None
+
+    if not rc:
+        tailscale_status['status'] = 'not_installed'
+    elif rc.returncode == 1:
+        tailscale_status['status'] = 'not_active'
+    else:
+        tailscale_status['status'] = 'active'
+        tailscale_status['connections'] = rc.stdout.replace("\n", "<BR>")
+
+    resp = json.dumps(tailscale_status)
+    return (resp)
+
+def ctl_tailscale(cmd_info):
+    read_iiab_roles_stat() # refresh status
+    if not iiab_roles_status['tailscale']['installed']:
+        resp = cmd_error(cmd=cmd_info['cmd'], msg='Tailscale not installed.')
+        return resp
+    try:
+        tailscale_login = cmd_info['cmd_args']['tailscale_login']
+        tailscale_custom_login = cmd_info['cmd_args']['tailscale_custom_login']
+        tailscale_authkey = cmd_info['cmd_args']['tailscale_authkey']
+        tailscale_hostname = cmd_info['cmd_args']['tailscale_hostname']
+        tailscale_on_off = cmd_info['cmd_args']['tailscale_on_off']
+    except:
+        return cmd_malformed(cmd_info['cmd'])
+    if tailscale_on_off not in ['ON', 'OFF']:
+        return cmd_malformed(cmd_info['cmd'])
+
+    if tailscale_on_off == 'OFF':
+        if not iiab_roles_status['tailscale']['active']:
+            resp = cmd_error(cmd=cmd_info['cmd'], msg='Tailscale already OFF.')
+            return resp
+        else:
+            # /usr/bin/tailscale down or tailscale logout
+            # tailscale down - Disconnect from Tailscale.
+            # To reconnect, re-run tailscale up without any flags.
+            # tailscale logout - Disconnect from Tailscale and expire the current log in.
+            # The next time you run tailscale up, you'll need to reauthenticate your device
+            # In Tailscale, tailscale logout disconnects your device from the network and invalidates the current login, requiring re-authentication when you run tailscale up again. tailscale down shuts down the Tailscale service and puts it into an idle state. It doesn't disconnect you from the network or invalidate your login. You can later resume connectivity by running tailscale up without needing to re-authenticate.
+
+            rc = adm.subproc_run('/usr/bin/tailscale logout')
+            if rc.returncode == 0:
+                resp = cmd_success(cmd_info['cmd'])
+            else:
+                resp = cmd_error(cmd=cmd_info['cmd'], msg='Some errors occurred while stopping.')
+            return resp
+
+    # tailscale_on_off == 'ON'
+    if tailscale_login == 'tailscale':
+        this_tailscale_login_url = tailscale_login_url
+    elif tailscale_login == 'iiab':
+        this_tailscale_login_url = tailscale_iiab_login_url
+    elif tailscale_login == 'custom':
+        this_tailscale_login_url = tailscale_custom_login
+    else:
+        resp = cmd_error(cmd=cmd_info['cmd'], msg='Unknown Tailscale login.')
+        return resp
+    cmdstr = '/usr/bin/tailscale up --login-server ' + this_tailscale_login_url
+    cmdstr += ' --auth-key ' + tailscale_authkey
+    if not tailscale_hostname:
+        tailscale_hostname = 'iiab-' + str(datetime.now())[:16].replace(' ', '-').replace(':', '')
+    cmdstr += ' --hostname ' + tailscale_hostname
+    # N.B. hostname preserves the previous value,
+    # but on https://login.tailscale.com/admin/machines it is correct
+    # tailscale down and up with no parameters seems to correct this
+    #--timeout 8s - default is forever
+    # --advertise-tags=tag:server
+    # curl https://api.tailscale.com/api/v2/device/11055/tags \
+    # -u "tskey-<key>" \
+    # -H "Content-Type: application/json" \
+    # --data-binary '{"tags": ["tag:foo", "tag:bar"]}'
+
+    rc = adm.subproc_run(cmdstr)
+    if rc.returncode != 0:
+        resp = cmd_error(cmd=cmd_info['cmd'], msg='Some errors occurred.')
+        return resp
+
+    # cycle up down to update hostname
+    rc = adm.subproc_run('/usr/bin/tailscale down')
+    rc = adm.subproc_run('/usr/bin/tailscale up')
+
+    resp = cmd_success(cmd_info['cmd'])
+    return resp
+    # Tailscale Status after install
+    # systemctl is-active tailscaled - active
+    # systemctl status tailscaled - Status: "Stopped; run 'tailscale up' to log in"
+    # root@box:~# tailscale status - Logged out.
+
+    # tailscale status
+    # 100.120.125.109 box-1                box-1.tail48e51e.ts.net linux   -
+    # 100.79.143.41   timpc                tim@         windows -
+
+    # Stop tailscale
+    # tailscale down - Disconnect from Tailscale.  To reconnect, re-run tailscale up without any flags.
+    # tailscale logout - Disconnect from Tailscale and expire the current log in. The next time you run tailscale up, you'll need to reauthenticate your device
+    # but after logout still appears connected in tailscale console; disconnected after status
+    # needs to be ephemeral for auto removal
+    # in console took a couple of seconds to change name on fresh login
+    # after a couple of minutes, still has old name in status
 
 def get_ext_zim_catalog(dev_name):
     iiab_zim_path = dev_name + zim_dir

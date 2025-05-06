@@ -154,7 +154,6 @@ function navButtonsEvents() {
 
     $("#controlWifiLink").show();
     $("#controlBluetoothLink").show();
-    $("#controlVPNLink").show();
     $("#utilsRpiStatusLink").show();
   }
 
@@ -204,8 +203,9 @@ function controlButtonsEvents() {
   $("#BLUETOOTH-CTL").click(function(){
     controlBluetooth();
   });
-	$("#VPN-CTL").click(function(){
-    controlVpn();
+
+  $("#TAILSCALE-CTL").click(function(){
+    controlTailscale();
   });
 
   $("#LOGOUT").click(function(){
@@ -876,7 +876,7 @@ function procSystemInfo(data){
   var html = "";
   html += '<div class="col-sm-4">';
   html += '<div>Bluetooth Status</div>';
-  html += '<div>Support VPN Status</div>';
+  // html += '<div>Support VPN Status</div>';
   html += '<div>Wired IP Address</div>';
   html += '<div>Wireless IP Address</div>';
   html += '<div>Hotspot Channel</div>';
@@ -888,7 +888,7 @@ function procSystemInfo(data){
   html += '</div>';
   html += '<div class="col-sm-4">';
   html += '<div>' + serverInfo.bt_pan_status + '</div>';
-  html += '<div>' + serverInfo.openvpn_status + '</div>';
+  // html += '<div>' + serverInfo.openvpn_status + '</div>';
   if (serverInfo.hasOwnProperty('eth0'))
     html += '<div>' + serverInfo.eth0.addr + '</div>';
   else
@@ -957,23 +957,6 @@ function procSystemInfo(data){
   else if (serverInfo.bt_pan_status == 'OFF'){
   	$("#BLUETOOTH-CTL").html('Turn Bluetooth Access ON');
     make_button_disabled('#BLUETOOTH-CTL', false); // enable
-  }
-
-  // openvpn
-  $("#supportVpnState").html(serverInfo.openvpn_status);
-  gEBI('support_vpn_handle').value = serverInfo.openvpn_handle;
-  $("#VPN-CTL").html('Turn Support VPN ON');
-  make_button_disabled('#VPN-CTL', true); // disable
-  $("#support_vpn_handle").prop('disabled', true);
-  if (serverInfo.openvpn_status == 'ON'){
-    $("#support_vpn_handle").prop('disabled', false)
-    $("#VPN-CTL").html('Turn Support VPN OFF');
-    make_button_disabled('#VPN-CTL', false); // enable
-  }
-  else if (serverInfo.openvpn_status == 'OFF'){
-  	$("#support_vpn_handle").prop('disabled', false)
-  	$("#VPN-CTL").html('Turn Support VPN ON');
-    make_button_disabled('#VPN-CTL', false); // enable
   }
 }
 
@@ -1071,19 +1054,99 @@ function controlBluetooth(){
   return sendCmdSrvCmd(command, getSystemInfo);
 }
 
-function controlVpn(){
+// Tailscale
+
+function getTailscaleStatus(){
+  var command = "GET-TAILSCALE-STATUS"
+  return sendCmdSrvCmd(command, procTailscaleStatus);
+}
+
+function procTailscaleStatus(data){
+  consoleLog(data);
+  var html = procTailscaleKnownPasswords(data);
+  $("#tailscaleKnownPasswords").html(html);
+  $("#tailscaleConnections").html('None');
+  if (data.status == 'not_installed'){
+    $("#tailscaleStatus").html('NOT INSTALLED');
+    $("#TAILSCALE-CTL").html('First install Tailscale.');
+    make_button_disabled('#TAILSCALE-CTL', true); // disable
+  }
+  else if (data.status == 'not_active'){
+    $("#tailscaleStatus").html('OFF');
+    $("#TAILSCALE-CTL").html('Turn Tailscale ON.');
+    make_button_disabled('#TAILSCALE-CTL', false); // enable
+  }
+  else if (data.status == 'active'){
+    $("#tailscaleStatus").html('ON');
+    $("#TAILSCALE-CTL").html('Turn Tailscale OFF.');
+    make_button_disabled('#TAILSCALE-CTL', false); // enable
+    $("#tailscaleConnections").html(data.connections);
+  }
+  else{
+    $("#tailscaleStatus").html('ERROR');
+    make_button_disabled('#TAILSCALE-CTL', true); // disable
+  }
+}
+
+function procTailscaleKnownPasswords(data){
+  var html = '';
+  html += '<div class="col-sm-4">';
+  html += '<div><b>pi</b> &nbsp;password</div>';
+  html += '<div><b>iiab-admin</b> &nbsp;password</div>';
+  html += '</div>';
+  html += '<div class="col-sm-4">';
+  if (data.pi_passwd_known)
+    html += '<div style="color:Red;"><b>NOT CHANGED</b></div>';
+  else
+    html += '<div>CHANGED</div>';
+  if (data.admin_passwd_known)
+    html += '<div style="color:Red;"><b>NOT CHANGED</b></div>';
+  else
+    html += '<div>CHANGED</div>';
+  return html;
+}
+
+function controlTailscale(){
   var cmd_args = {};
 
-  if (serverInfo.openvpn_status == 'ON')
-    cmd_args['vpn_on_off'] = 'off';
-  if (serverInfo.openvpn_status == 'OFF')
-    cmd_args['vpn_on_off'] = 'on';
-  serverInfo.openvpn_handle = gEBI('support_vpn_handle').value;
-  cmd_args['vpn_handle'] = serverInfo.openvpn_handle;
-  cmd_args['make_permanent'] = 'False';
+  var onOff = $("#tailscaleStatus").html()
+  if (onOff == 'OFF')
+    cmd_args['tailscale_on_off'] = 'ON'
+  else if (onOff == 'ON')
+    cmd_args['tailscale_on_off'] = 'OFF'
+  else{
+    alert('Tailscale is not installed.')
+    return false
+  }
 
-  var command = "CTL-VPN " + JSON.stringify(cmd_args);
-  return sendCmdSrvCmd(command, getSystemInfo);
+  cmd_args['tailscale_login'] = gEBI('tailscale_login').value;
+  cmd_args['tailscale_custom_login'] = gEBI('tailscale_custom_login').value;
+  cmd_args['tailscale_authkey'] = gEBI('tailscale_authkey').value;
+  cmd_args['tailscale_hostname'] = gEBI('tailscale_hostname').value;
+
+  if (!validateTailscaleParams(cmd_args))
+    return false
+
+  var command = "CTL-TAILSCALE " + JSON.stringify(cmd_args);
+  return sendCmdSrvCmd(command, getTailscaleStatus);
+}
+
+function validateTailscaleParams(cmd_args){
+  consoleLog(cmd_args);
+  if (cmd_args['tailscale_on_off'] == 'OFF')
+    return true
+
+  if (cmd_args['tailscale_login'] == 'custom'){
+    if (cmd_args['tailscale_custom_login'] == ''){
+      alert('Must enter Custom Tailscale Login URL if Tailscale Login is Custom Login URL.')
+      return false
+    }
+  }
+  if (cmd_args['tailscale_authkey'] == ''){
+    alert('Must enter Tailscale Auth Key.')
+    return false
+  }
+  return true
 }
 
 // Configure Menu Functions
