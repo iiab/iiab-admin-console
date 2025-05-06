@@ -1091,19 +1091,18 @@ function procTailscaleStatus(data){
 function procTailscaleKnownPasswords(data){
   var html = '';
   html += '<div class="col-sm-4">';
-  html += '<div>Is user <b>pi</b> Password <b>Known</b></div>';
-  html += '<div>Is user <b>iiab-admin</b> Password <b>Known</b></div>';
+  html += '<div><b>pi</b> &nbsp;password</div>';
+  html += '<div><b>iiab-admin</b> &nbsp;password</div>';
   html += '</div>';
   html += '<div class="col-sm-4">';
   if (data.pi_passwd_known)
-    html += '<div style="color:Red;"><b>' + data.pi_passwd_known.toString().toUpperCase() + '</b></div>';
+    html += '<div style="color:Red;"><b>NOT CHANGED</b></div>';
   else
-    html += '<div>' + data.pi_passwd_known + '</div>';
+    html += '<div>CHANGED</div>';
   if (data.admin_passwd_known)
-    html += '<div style="color:Red;"><b>WARNING: ' + data.admin_passwd_known.toString().toUpperCase() + '</b></div>';
+    html += '<div style="color:Red;"><b>NOT CHANGED</b></div>';
   else
-    html += '<div>' + data.admin_passwd_known + '</div>';
-  html += '</div>';
+    html += '<div>CHANGED</div>';
   return html;
 }
 
