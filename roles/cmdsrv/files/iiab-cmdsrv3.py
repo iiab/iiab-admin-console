@@ -2191,8 +2191,8 @@ def read_library_xml(lib_xml_file, kiwix_exclude_attr=[""]):
         root = tree.getroot()
         for child in root:
             attributes = {}
-            if len(child.attrib['language'].split(',')) > 1: # skip multi languages
-                continue
+            if len(child.attrib['language'].split(',')) > 1: # change multi language list to 'mul'
+                child.attrib['language'] = 'mul'
             if 'id' in child.attrib:
                 id = child.attrib['id']
                 for attr in child.attrib:
