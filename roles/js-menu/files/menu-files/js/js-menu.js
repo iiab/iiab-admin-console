@@ -548,7 +548,7 @@ function calcKolibriLink(module) {
 
     if (module.hasOwnProperty('kolibri_channel_id'))
         if (module.kolibri_channel_id != '')
-            href += '/learn/#/topics/' + module.kolibri_channel_id;
+            href += '/learn/#/topics/t/' + module.kolibri_channel_id;
 
     var html = calcItemHtml(href, module);
     return html
