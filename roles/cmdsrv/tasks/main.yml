@@ -145,7 +145,7 @@
     - { src: 'scripts/get_oer2go_catalog3.py', dest: '{{ cmdsrv_dir }}/scripts/get_oer2go_catalog'}
     - { src: 'scripts/iiab_update_menus3.py', dest: '{{ cmdsrv_dir }}/scripts/iiab_update_menus.py'}
     - { src: 'scripts/iiab-update-map3.py', dest: '{{ cmdsrv_dir }}/scripts/iiab-update-map.py'}
-
+    - { src: 'scripts/upgrade-zims.py', dest: '{{ cmdsrv_dir }}/scripts/upgrade-zims.py'}
 
 - name: Copy assets
   copy: src={{ item }}
@@ -180,6 +180,7 @@
             - utilities/iiab-install-oer2go-mod
             - utilities/iiab-sync-menu-defs
             - utilities/iiab-update-menus
+            - utilities/iiab-upgrade-zims
 
 - name: Copy default kiwix_catalog.json
   copy: src="json/kiwix_catalog.json"
