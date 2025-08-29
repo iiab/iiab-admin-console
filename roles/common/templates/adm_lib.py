@@ -103,8 +103,10 @@ def get_substitution_data(perma_ref, zim_versions, zims_installed, path_to_id_ma
         zim_id = path_to_id_map[path]
         item = zims_installed[zim_id]
     except:
-        print("Zim files and library.xml are out of sync. Please run iiab-make-kiwix-lib.")
-        sys.exit(1)
+        print('Error on ' + path)
+        print("zim_version_idx.json and library.xml are now out of sync.")
+        print("Try removing the file and rerunning iiab-make-kiwix-lib.")
+        raise
 
     if len(item) != 0 or perma_ref == 'test':
         mediacount = item.get('mediaCount', '')
