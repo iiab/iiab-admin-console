@@ -25,6 +25,7 @@ zim_version_idx_dir = doc_root + "/common/assets/"
 zim_version_idx_file = "zim_version_idx.json"
 zim_content_path = iiab.CONST.zim_path + '/content/'
 MAX_THREADS = 4
+num_threads = MAX_THREADS
 
 version_idx = {}
 zims_cat = {}
@@ -41,6 +42,8 @@ def main():
     global zims_installed
     global path_to_id_map
 
+    num_threads = MAX_THREADS
+
     args = parse_args()
 
     version_idx = read_zim_version_idx(zim_version_idx_dir + zim_version_idx_file)
@@ -48,20 +51,38 @@ def main():
     cat_perm_ref_id_map, cat_perm_ref_url_map = calc_cat_perm_ref_idx(zims_cat)
     zims_installed, path_to_id_map = read_library_xml(lib_xml_file)
 
+    when_to_remove_old = 'after' # default
+    if args.delete:
+        when_to_remove_old = 'before'
+    if args.keep:
+        when_to_remove_old = 'never'
+
+    if args.threads:
+        if args.threads > 0 and args.threads <= MAX_THREADS:
+            num_threads = args.threads
+        else:
+            print("Invalid number of threads, using default of " + str(MAX_THREADS))
+
     if args.list:
         list_upgradable_zims()
         return
 
-    if args.keep:
-        keep_flag = True
-    else:
-        keep_flag = False
     if args.zim:
-        upgrade_zim(args.zim, keep_flag)
+        # strip version and extension if present
+        zim_to_upgrade = args.zim
+        if zim_to_upgrade.endswith('.zim'):
+            zim_to_upgrade = zim_to_upgrade[:-4]
+        if re.match(r'.*_[0-9]{4}-[0-9]{2}$', zim_to_upgrade):
+            zim_to_upgrade = '_'.join(zim_to_upgrade.split('_')[:-1])
+        if zim_to_upgrade not in version_idx:
+            print("ZIM " + zim_to_upgrade + " not installed")
+            return
+        upgrade_zim(zim_to_upgrade, when_to_remove_old)
     else:
-        with concurrent.futures.ThreadPoolExecutor(MAX_THREADS) as executor:
+
+        with concurrent.futures.ThreadPoolExecutor(num_threads) as executor:
             for installed_perma_ref in version_idx:
-                executor.submit(upgrade_zim, installed_perma_ref, keep_flag)
+                executor.submit(upgrade_zim, installed_perma_ref, when_to_remove_old)
 
 def list_upgradable_zims():
     for installed_perma_ref in version_idx:
@@ -112,7 +133,7 @@ def calc_zim_version(zim_file):
     version = no_file_extension.split('_')[-1] # assume last _xxxx-xx is version
     return version
 
-def upgrade_zim(installed_perma_ref, keep_flag):
+def upgrade_zim(installed_perma_ref, when_to_remove_old):
     print("Checking for upgrade to " + installed_perma_ref)
     upgrade_params = calc_zim_upgrade(installed_perma_ref)
     if upgrade_params is None:
@@ -121,7 +142,7 @@ def upgrade_zim(installed_perma_ref, keep_flag):
     print("Upgrading " + installed_perma_ref + " version " + upgrade_params['old_zim_version'] + " to " + upgrade_params['new_zim_version'])
     installed_perma_ref_path = "content/" + version_idx[installed_perma_ref]["file_name"] + ".zim"
     full_installed_perma_ref_path = iiab.CONST.zim_path + "/" + installed_perma_ref_path
-    download_zim(upgrade_params['new_zim_url'], full_installed_perma_ref_path, keep_flag)
+    download_zim(upgrade_params['new_zim_url'], full_installed_perma_ref_path, when_to_remove_old)
     return
 
 def read_kiwix_catalog(KIWIX_CAT):
@@ -179,19 +200,24 @@ def calc_cat_perm_ref_idx(zims_catalog):
             cat_perm_ref_url_map[perma_ref] = url
     return cat_perm_ref_id_map, cat_perm_ref_url_map
 
-def download_zim(new_url, installed_perma_ref_path, keep_flag):
+def download_zim(new_url, installed_perma_ref_path, when_to_remove_old):
     # make sure not already downloaded
     # cmdstr = "/usr/bin/wget -c --progress=dot:giga --directory-prefix=" + zim_content_path + " " + new_url
     cmdstr = "/usr/bin/aria2c --follow-metalink=mem --summary-interval=0 --dir=" + zim_content_path + " " + new_url
+    if when_to_remove_old == 'before':
+        remove_old_zim(installed_perma_ref_path)
     try:
         adm.subproc_run(cmdstr, timeout=None)
     except:
         print("Download failed for " + new_url)
         return
+    if when_to_remove_old == 'after':
+        remove_old_zim(installed_perma_ref_path)
+
+def remove_old_zim(installed_perma_ref_path):
     try:
-        if not keep_flag:
-            print("Removing " + installed_perma_ref_path)
-            os.remove(installed_perma_ref_path)
+        print("Removing " + installed_perma_ref_path)
+        os.remove(installed_perma_ref_path)
     except:
         print("Failed to remove " + installed_perma_ref_path)
         pass
@@ -210,11 +236,12 @@ def rewrite_perma_ref(installed_perma_ref):
     return perma_ref
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Upgrade All installed Zims to latest version, removing old after new downloads.")
-    parser.add_argument("-l", "--list", help="only list all zims that can be upgraded", action="store_true")
-    parser.add_argument("-z", "--zim", type=str, help="single zim to upgrade (e.g. wikipedia_en_medicine_maxi)")
-    parser.add_argument("-d", "--delete", help="remove old zim before downloading new instead of after", action="store_true")
-    parser.add_argument("-k", "--keep", help="don't remove old zim", action="store_true")
+    parser = argparse.ArgumentParser(description="Upgrade ZIMs: Default is All installed ZIMs to latest version, removing old after new download.")
+    parser.add_argument("-l", "--list", help="only list all ZIMs that can be upgraded", action="store_true")
+    parser.add_argument("-z", "--zim", type=str, help="single ZIM to upgrade (e.g. wikipedia_en_medicine_maxi)")
+    parser.add_argument("-d", "--delete", help="remove old ZIM before downloading new, instead of after", action="store_true")
+    parser.add_argument("-k", "--keep", help="don't remove old ZIM", action="store_true")
+    parser.add_argument("-t", "--threads", type=int, help="maximum number of threads (default: " + str(MAX_THREADS) + ")")
     return parser.parse_args()
 
 # Now start the application
