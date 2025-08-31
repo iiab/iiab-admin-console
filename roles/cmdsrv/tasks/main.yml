@@ -13,6 +13,7 @@
     - python3-bs4
     - python3-lxml
     - uuid
+    - aria2
   tags:
     - download
   when: is_debuntu
