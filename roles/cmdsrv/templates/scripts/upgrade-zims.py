@@ -203,7 +203,7 @@ def calc_cat_perm_ref_idx(zims_catalog):
 def download_zim(new_url, installed_perma_ref_path, when_to_remove_old):
     # make sure not already downloaded
     # cmdstr = "/usr/bin/wget -c --progress=dot:giga --directory-prefix=" + zim_content_path + " " + new_url
-    cmdstr = "/usr/bin/aria2c --follow-metalink=mem --summary-interval=0 --dir=" + zim_content_path + " " + new_url
+    cmdstr = "/usr/bin/aria2c -c --follow-metalink=mem --summary-interval=0 --dir=" + zim_content_path + " " + new_url
     if when_to_remove_old == 'before':
         remove_old_zim(installed_perma_ref_path)
     try:
@@ -236,12 +236,20 @@ def rewrite_perma_ref(installed_perma_ref):
     return perma_ref
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Upgrade ZIMs: Default is All installed ZIMs to latest version, removing old after new download.")
+    parser = argparse.ArgumentParser(
+        description="""Upgrade ZIMs:
+        No parameters means upgrade All installed ZIMs with maximum threads, removing old after new is downloaded.
+        To save storage use -d so old ZIM is removed before the dowload.
+        Use -t to reduce the number of threads if necessary.
+        Use -l to see the impact without doing any downloads.
+        """,
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("-l", "--list", help="only list all ZIMs that can be upgraded", action="store_true")
     parser.add_argument("-z", "--zim", type=str, help="single ZIM to upgrade (e.g. wikipedia_en_medicine_maxi)")
     parser.add_argument("-d", "--delete", help="remove old ZIM before downloading new, instead of after", action="store_true")
     parser.add_argument("-k", "--keep", help="don't remove old ZIM", action="store_true")
-    parser.add_argument("-t", "--threads", type=int, help="maximum number of threads (default: " + str(MAX_THREADS) + ")")
+    parser.add_argument("-t", "--threads", type=int, help="number of threads (1 - " + str(MAX_THREADS) + ")")
     return parser.parse_args()
 
 # Now start the application
