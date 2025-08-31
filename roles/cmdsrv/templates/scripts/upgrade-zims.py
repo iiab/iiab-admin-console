@@ -242,6 +242,7 @@ def parse_args():
         To save storage use -d so old ZIM is removed before the dowload.
         Use -t to reduce the number of threads if necessary.
         Use -l to see the impact without doing any downloads.
+        Run iiab-make-kiwix-lib after upgrades are complete.
         """,
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
