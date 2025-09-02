@@ -44,7 +44,15 @@ def main():
 
     num_threads = MAX_THREADS
 
-    args = parse_args()
+    args_parser = parse_args()
+
+    # To avoid running upgrade on all simply with no args, require at least one arg
+    # have arg_parser return parser and check if len(sys.argv)==1
+    if len(sys.argv)==1:
+        print("No arguments supplied, use -h for help")
+        args_parser.print_help()
+        return
+    args = args_parser.parse_args()
 
     version_idx = read_zim_version_idx(zim_version_idx_dir + zim_version_idx_file)
     zims_cat = read_kiwix_catalog(KIWIX_CAT)
@@ -238,20 +246,24 @@ def rewrite_perma_ref(installed_perma_ref):
 def parse_args():
     parser = argparse.ArgumentParser(
         description="""Upgrade ZIMs:
-        No parameters means upgrade All installed ZIMs with maximum threads, removing old after new is downloaded.
-        To save storage use -d so old ZIM is removed before the dowload.
-        Use -t to reduce the number of threads if necessary.
+        No parameters causes this help message to be printed.
         Use -l to see the impact without doing any downloads.
+        -a upgrades All installed ZIMs with maximum threads, removing old after new is downloaded.
+        -z upgrades a single ZIM, removing old after new is downloaded.
+        To save storage specify -d so the old ZIM is removed before the new is dowloaded.
+        Specify -k to keep old ZIMs (not recommended).
+        Specify -t to reduce the number of threads if necessary.
         Run iiab-make-kiwix-lib after upgrades are complete.
         """,
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument("-l", "--list", help="only list all ZIMs that can be upgraded", action="store_true")
+    parser.add_argument("-a", "--all", help="upgrade all ZIMs", action="store_true")
     parser.add_argument("-z", "--zim", type=str, help="single ZIM to upgrade (e.g. wikipedia_en_medicine_maxi)")
     parser.add_argument("-d", "--delete", help="remove old ZIM before downloading new, instead of after", action="store_true")
     parser.add_argument("-k", "--keep", help="don't remove old ZIM", action="store_true")
     parser.add_argument("-t", "--threads", type=int, help="number of threads (1 - " + str(MAX_THREADS) + ")")
-    return parser.parse_args()
+    return parser
 
 # Now start the application
 if __name__ == "__main__":
