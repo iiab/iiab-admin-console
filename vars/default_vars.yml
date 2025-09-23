@@ -38,3 +38,8 @@ maps_download_src: 'contabo'
 adm_maps_catalog_file: 'adm-map-catalog.json'
 adm_maps_catalog_url: "/common/assets/{{ adm_maps_catalog_file }}"
 adm_maps_catalog_path: "{{ doc_root }}{{ adm_maps_catalog_url }}"
+# retire <os>.yml
+# these are the raspian values
+# df_program is assumed to be same for all debian based systems
+squid_service: squid3
+df_program: /bin/df
