@@ -1344,9 +1344,9 @@ def calc_network_info():
                 ssid_inuse = props[0]
 
         for item in outp:
-            # temporarily remove ':' from output and save as '$'
+            # temporarily remove '\:' from output and save as '$'
             # or bssic gets split
-            props = item.replace('\:','$').split(':')
+            props = item.replace(r'\:','$').split(':')
             ssid = props[0]
 
             if ssid == '':
