@@ -253,6 +253,7 @@
 
 - name: Ask systemd to reread the unit files, picks up changes done
   shell: systemctl daemon-reload
+  when: not is_proot
 
 # Enable and restart iiab-cmdsrv service deferred until the final role
 # Allows cmdsrv to pick up any data computed during the install process
