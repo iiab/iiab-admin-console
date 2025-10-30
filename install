@@ -59,6 +59,7 @@ else
   iiab-update-menus
 fi
 
-# Restart CMDSRV
+# Restart CMDSRV (if not Android)
 echo "(Restarting CMDSRV"
+[ -z "${ANDROID_ROOT}" ] && \
 systemctl restart iiab-cmdsrv
