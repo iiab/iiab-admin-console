@@ -78,6 +78,18 @@
   synchronize:
     src: files/sample-menus
     dest: "{{ js_menu_dir }}/sample-menus"
+  when: not is_proot
+
+- name: Synchronize/Copy menu-files (proot)
+  synchronize:
+    src: files/sample-menus
+    dest: "{{ js_menu_dir }}/sample-menus"
+    rsync_opts:
+      - "--no-owner"
+      - "--no-group"
+      - "--no-perms"
+      - "--omit-dir-times"
+  when: is_proot
 
 - name: Install js-menu config file
   template: src=config.json.j2

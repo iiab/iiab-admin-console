@@ -8,13 +8,13 @@
   synchronize:
     src: "{{ downloads_dir }}/js-menu-files/menu-defs"
     dest: "{{ js_menu_dir }}/menu-files"
-    when: not is_proot
+  when: not is_proot
 
 - name: Synchronize/Copy images
   synchronize:
     src: "{{ downloads_dir }}/js-menu-files/images"
     dest: "{{ js_menu_dir }}/menu-files"
-    when: not is_proot
+  when: not is_proot
 
 - name: Synchronize/Copy menu-defs (proot)
   synchronize:
@@ -25,7 +25,7 @@
       - "--no-group"
       - "--no-perms"
       - "--omit-dir-times"
-    when: is_proot
+  when: is_proot
 
 - name: Synchronize/Copy images (proot)
   synchronize:
@@ -36,7 +36,7 @@
       - "--no-group"
       - "--no-perms"
       - "--omit-dir-times"
-    when: is_proot
+  when: is_proot
 
 - name: Post process the downloaded menu defs
   shell: "{{ cmdsrv_dir }}/scripts/install_menu_defs.py"
