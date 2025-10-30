@@ -40,6 +40,7 @@ ansible-playbook -i $INVENTORY $PLAYBOOK --connection=local
 # Start CMDSRV
 echo "(Re)Starting CMDSRV"
 systemctl enable iiab-cmdsrv
+[ -z "${ANDROID_ROOT}" ] && \
 systemctl restart iiab-cmdsrv
 
 if [[ "$1" ==  "-n" ]]; then
