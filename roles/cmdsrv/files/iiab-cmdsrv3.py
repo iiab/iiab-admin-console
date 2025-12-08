@@ -2,14 +2,14 @@
 
 """
 
-   Multi-threaded Polling Command server
+    Multi-threaded Polling Command server
+    Copyright 2014-2025 Tim Moody
+    Author: Tim Moody <tim(at)timmoody(dot)com>
+    Contributions: Guillaume Aubert (gaubert) <guillaume(dot)aubert(at)gmail(dot)com>
+                    Felipe Cruz <felipecruz@loogica.net>
 
-   Author: Tim Moody <tim(at)timmoody(dot)com>
-   Contributions: Guillaume Aubert (gaubert) <guillaume(dot)aubert(at)gmail(dot)com>
-                 Felipe Cruz <felipecruz@loogica.net>
-
-   Accepts commands in the form COMMAND <optional json-encoded arguments>
-   Returns json-encoded results
+    Accepts commands in the form COMMAND <optional json-encoded arguments>
+    Returns json-encoded results
 
 """
 

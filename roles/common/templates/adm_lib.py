@@ -1,5 +1,9 @@
 # adm_lib.py
-# common functions for Admin Console
+# iiab-admin-console - ADM Library Functions
+
+# Copyright 2019-2025 Tim Moody
+# Author: Tim Moody <tim(at)timmoody(dot)com>
+
 # IIAB functions are in iiab_lib.py
 # import iiab.adm_lib as adm
 

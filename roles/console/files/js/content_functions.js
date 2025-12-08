@@ -1,5 +1,6 @@
 // content_functions.js
-// copyright 2020 Tim Moody
+// copyright 2020-2025 Tim Moody
+// Author: Tim Moody <tim(at)timmoody(dot)com>
 
 var presetList = {};
 

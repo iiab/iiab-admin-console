@@ -1,5 +1,6 @@
 // js_menu_functions.js
-// copyright 2019 Tim Moody
+// copyright 2019-2025 Tim Moody
+// Author: Tim Moody <tim(at)timmoody(dot)com>
 
 var jsMenuUrl = "/js-menu";
 var jsMenuImageUrl = "/js-menu/menu-files/images/";

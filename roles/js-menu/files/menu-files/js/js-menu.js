@@ -1,5 +1,6 @@
 // js-menu.js
-// copyright 2019 Tim Moody
+// Copyright 2019-2025 Tim Moody
+// Author: Tim Moody <tim(at)timmoody(dot)com>
 
 var menuConfig = {};
 
