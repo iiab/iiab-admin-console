@@ -1,5 +1,6 @@
 // oer2go_functions.js
-// copyright 2018 Tim Moody
+// copyright 2018-2025 Tim Moody
+// Author: Tim Moody <tim(at)timmoody(dot)com>
 
 // to do
 // remove PhET, OER2Go from whitelist

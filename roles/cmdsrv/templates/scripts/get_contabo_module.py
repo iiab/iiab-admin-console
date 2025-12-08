@@ -5,6 +5,8 @@
 # https://usc1.contabostorage.com/0985d391e0364353ab3c2577fcf25f99:iiab-modules/
 # and that the module name corresponds to a directory on Contabo storage
 # and that an index file <module_name>.index.json exists listing files.
+# Copyright 2025 Tim Moody
+# Author: Tim Moody <tim(at)timmoody(dot)com>
 
 import os
 import sys

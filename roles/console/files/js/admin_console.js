@@ -1,5 +1,6 @@
 // admin_console.js
-// copyright 2021 Tim Moody
+// copyright 2021-2025 Tim Moody
+// Author: Tim Moody <tim(at)timmoody(dot)com>
 
 var today = new Date();
 var dayInMs = 1000*60*60*24;
