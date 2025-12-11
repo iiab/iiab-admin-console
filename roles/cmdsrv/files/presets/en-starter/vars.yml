@@ -1,13 +1,19 @@
-# starter
+# Starter version
+# turn off defaults
 remoteit_install: False
 kalite_install: False
 kalite_enabled: False
+kolibri_install: False
+kolibri_enabled: False
+maps_install: False
 awstats_install: False
 awstats_enabled: False
 matomo_install: False
 matomo_enabled: False
-calibreweb_install: False
-calibreweb_enabled: False
+
+############################################################################
+# IIAB -- following variables are first set by browser via the Admin Console
+#  They may be changed via text editor, or by the Admin Console.
 
 kiwix_install: True
 kiwix_enabled: True
@@ -15,10 +21,8 @@ osm_vector_maps_install: True
 osm_vector_maps_enabled: True
 mediawiki_install: True
 mediawiki_enabled: True
-openvpn_install: True
-openvpn_enabled: False
+calibreweb_install: True
+calibreweb_enabled: False
 captiveportal_install: True
 captiveportal_enabled: True
-
-# awstats_install: True
-# awstats_enabled: True
+tailscale_install: True

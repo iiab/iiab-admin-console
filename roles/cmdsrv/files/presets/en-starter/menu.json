@@ -22,14 +22,12 @@
     "Main"
   ],
   "menu_items_1": [
-    "en-starter_info",
     "en-mdwiki_en_all",
     "en-wikipedia_en_all_maxi",
-    "es-wikipedia_es_all_maxi",
+    "es-wikipedia_es_all_nopic",
     "en-wikivoyage_en_all_maxi",
     "en-osm_viewer_v2",
-    "en-ted_mul_tedmed",
-    "en-ted_mul_ted-ed",
+    "en-ted_mul_all",
     "en-mediawiki",
     "en-credits"
   ]
