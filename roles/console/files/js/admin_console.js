@@ -38,7 +38,8 @@ var mapRegionIdx = {}; // index of catalog by region
 var rachelStat = {}; // installed, enabled and whether content is installed and which is enabled
 
 var zimsInstalled = []; // list of zims already installed
-var zimsDownloading = []; // list of zims being downloaded
+var zimsUpgradeable = {}; // list of permarefs of zims that can be upgraded with other info
+var zimsDownloading = []; // list of ids of zims being downloaded
 var zimsCopying = []; // list of zims being copied
 var zimsExternal = []; // list of zims on external device
 var oer2goInstalled = []; // list of Oer2go items already installed
@@ -357,6 +358,22 @@ function instContentButtonsEvents() {
     procZimGroups();
     alert ("Selected Zims scheduled to be installed.\n\nPlease view Utilities->Display Job Status to see the results.");
     make_button_disabled("#INST-ZIMS", false);
+  });
+
+  // add upgrade zims button
+  $("#UPGRADE-ZIMS").click(function(){
+    var zim_permarefs = []
+    make_button_disabled("#UPGRADE-ZIMS", true);
+
+    $('#UpgradeZimList input').each( function(){
+      if (this.type == "checkbox")
+      if (this.checked){
+        zim_permarefs.push(this.name);
+      }
+    });
+    upgradeZims(zim_permarefs);
+    alert ("Selected Zims scheduled to be upgraded.\n\nPlease view Utilities->Display Job Status to see the results.");
+    make_button_disabled("#UPGRADE-ZIMS", false);
   });
 
   $("#INST-MODS").click(function(){
