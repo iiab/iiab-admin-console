@@ -2714,16 +2714,26 @@ def get_upgradeable_zims(cmd_info):
         return cmd_error(cmd='GET-UPGRADEABLE-ZIMS', msg=str(e))
 
 def upgrade_zims(cmd_info):
-    if 'cmd_args' in cmd_info and 'zim_permarefs' in cmd_info['cmd_args']:
-        # Call the script with selected ZIMs
-        job_command = "scripts/upgrade-zims.py -z " + ' '.join(cmd_info['cmd_args']['zim_permarefs'])
-        job_id = request_one_job(cmd_info, job_command, 1, -1, "Y")
-        # Make Kiwix Lib after upgrading ZIMs
-        job_command = "/usr/bin/iiab-make-kiwix-lib"
-        resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=2, depend_on_job_id=job_id, has_dependent="N")
-        return resp
-    else:
+    if not cmd_info.get('cmd_args',{}).get('zim_permarefs'):
         return cmd_malformed(cmd_info['cmd'])
+    # check if already running or requested
+    for job_id in jobs_running:
+        job_info = jobs_running[job_id]
+        if job_info['cmd'] in ["UPGRADE-ZIMS", "INST-ZIMS"]:
+            resp = cmd_error(cmd=cmd_info['cmd'], msg='ZIMs already being installed or upgraded.')
+            return resp
+    for job_id in jobs_requested:
+        job_info = jobs_requested[job_id]
+        if job_info['cmd'] in ["UPGRADE-ZIMS", "INST-ZIMS"]:
+            resp = cmd_error(cmd=cmd_info['cmd'], msg='ZIMs already being installed or upgraded.')
+            return resp
+    # Call the script with selected ZIMs
+    job_command = "scripts/upgrade-zims.py -z " + ' '.join(cmd_info['cmd_args']['zim_permarefs'])
+    job_id = request_one_job(cmd_info, job_command, 1, -1, "Y")
+    # Make Kiwix Lib after upgrading ZIMs
+    job_command = "/usr/bin/iiab-make-kiwix-lib"
+    resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=2, depend_on_job_id=job_id, has_dependent="N")
+    return resp
 
 def copy_zims(cmd_info):
 
