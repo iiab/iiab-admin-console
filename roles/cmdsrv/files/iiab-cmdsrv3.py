@@ -361,6 +361,7 @@ def job_minder_thread(client_url, worker_control_url, context=None):
 
             # don't start job if at max allowed
             if running_job_count >= cmdsrv_max_concurrent_jobs:
+                # print(f'Waiting for queue: running_job_count {running_job_count}, cmdsrv_max_concurrent_jobs {cmdsrv_max_concurrent_jobs}')
                 continue
 
             #print "starting prereq check"
