@@ -1901,6 +1901,7 @@ function displaySpaceAvail(){
   html += '<b><span ' + warningStyle + '>' + readableSize(allocatedSpace) + '</span</b>';
 
   $( "#zimDiskSpace" ).html(html);
+  $( "#upgrZImsDiskSpace" ).html(html);
   $( "#oer2goDiskSpace" ).html(html);
   $( "#mapDiskSpace" ).html(html);
   $( "#mapDiskSpace2" ).html(html);
@@ -1950,6 +1951,7 @@ function calcAllocatedSpace(){
 	totalSpace += sumAllocationList(selectedZims, 'zim');
 	//consoleLog(totalSpace);
 	totalSpace += sumZimWip();
+  totalSpace += sumZimUpgrWip();
 	totalSpace += sumAllocationList(selectedOer2goItems, 'oer2go');
 	totalSpace += sumOer2goWip();
 	totalSpace += sumAllocationList(selectedMapItems, 'map');
@@ -1986,6 +1988,23 @@ function sumZimWip(){
   	if (zim.source == "portable")
   	  totalSpace += parseInt(zim.size); //add twice to account for zip download
   }
+  return totalSpace;
+}
+
+function sumZimUpgrWip(){ // work directly off panel with no global var
+  var totalSpace = 0;
+
+  $('#UpgradeZimList').find('input[type=checkbox]').each(function() {
+    // 'this' refers to the current checkbox element in the loop
+
+    var isChecked = $(this).is(':checked'); // Check if the checkbox is checked
+    if (isChecked) {
+      var zimPermaref = $(this).attr('name');
+      var upgradeSize = parseInt(zimsUpgradeable[zimPermaref].new_zim_size_k);
+      upgradeSize -= parseInt(zimsUpgradeable[zimPermaref].old_zim_size_k);
+      totalSpace += upgradeSize;
+    }
+  });
   return totalSpace;
 }
 

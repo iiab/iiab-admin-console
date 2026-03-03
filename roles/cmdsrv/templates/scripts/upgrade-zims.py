@@ -130,6 +130,7 @@ def list_upgradable_zims_json():
         zim_json['old_zim_version'] = upgrade_params['old_zim_version']
         zim_json['new_zim_version'] = upgrade_params['new_zim_version']
         zim_json['old_zim_size_k'] = upgrade_params['old_zim_size_k']
+        zim_json['new_zim_size_k'] = upgrade_params['new_zim_size_k']
         zim_json['size_diff_human'] = upgrade_params['size_diff_human']
         json_return[installed_perma_ref] = zim_json
 

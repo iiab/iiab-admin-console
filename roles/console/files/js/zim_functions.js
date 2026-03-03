@@ -423,7 +423,7 @@ function renderUpgradeableZimList() {
     var zim_info = value;
     consoleLog(perma_ref, zim_info);
     html += '<tr>';
-    html += '<td><input type="checkbox" name="' + perma_ref + '"></td>';
+    html += '<td><input type="checkbox" name="' + perma_ref + '" onchange="displaySpaceAvail()"></td>';
     // html += '<td><input type="checkbox" name="' + perma_ref + '" zim_perma_ref="' + perma_ref + '" onChange="updateUpgradeZimsSpace(this)"></td>';
     html += '<td>' + perma_ref + '</td>';
     html += '<td>' + zim_info.installed_zim_title + '</td>';
