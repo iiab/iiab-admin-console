@@ -1,6 +1,8 @@
 default_language: es
 kiwix_install: True
 kiwix_enabled: True
-kalite_install: True
-kalite_enabled: True
+kalite_install: False
+kalite_enabled: False
+kolibri_install: True
+kolibri_enabled: True
 # usb is by default

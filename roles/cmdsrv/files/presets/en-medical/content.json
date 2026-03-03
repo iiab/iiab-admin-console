@@ -20,10 +20,5 @@
   ],
   "maps": [
   ],
-  "kalite": {
-    "lang_code": "en",
-    "topics": [
-      "khan/science/health-and-medicine/"
-    ]
-  }
+  "kalite": {}
 }

@@ -361,7 +361,6 @@ def job_minder_thread(client_url, worker_control_url, context=None):
 
             # don't start job if at max allowed
             if running_job_count >= cmdsrv_max_concurrent_jobs:
-                # print(f'Waiting for queue: running_job_count {running_job_count}, cmdsrv_max_concurrent_jobs {cmdsrv_max_concurrent_jobs}')
                 continue
 
             #print "starting prereq check"
@@ -779,6 +778,7 @@ def cmd_handler(cmd_msg):
         "INST-SAT-AREA": {"funct": install_sat_area, "inet_req": True},
         "GET-OSM-VECT-STAT": {"funct": get_osm_vect_stat, "inet_req": False},
         "INST-KALITE": {"funct": install_kalite, "inet_req": True},
+        "INST-KOLIBRI": {"funct": install_kolibri, "inet_req": True},
         "DEL-DOWNLOADS": {"funct": del_downloads, "inet_req": False},
         "DEL-MODULES": {"funct": del_modules, "inet_req": False},
         "DEL-CONTENT": {"funct": del_content, "inet_req": False},
@@ -2482,6 +2482,7 @@ def install_presets(cmd_info):
     map_list = content['maps']
     kalite_vars = content['kalite']
     needed_services = []
+    kolibri_channels = content.get('kolibri', [])
 
     if len(zim_list) > 0:
         if planned_vars['kiwix_install'] != True or planned_vars['kiwix_enabled'] != True:
@@ -2498,6 +2499,11 @@ def install_presets(cmd_info):
             needed_services.append('KA Lite')
             vars['kalite_install'] = True
             vars['kalite_enabled'] = True
+    if len(kolibri_channels) > 0:
+        if planned_vars['kolibri_install'] != True or planned_vars['kolibri_enabled'] != True:
+            needed_services.append('Kolibri')
+            vars['kolibri_install'] = True
+            vars['kolibri_enabled'] = True
 
     services_needed_error = ', '.join(needed_services)
 
@@ -2587,6 +2593,15 @@ def install_presets(cmd_info):
         kalite_cmd_info = pseudo_cmd_handler(kalite_cmd_info)
         if kalite_cmd_info:
             resp = install_kalite(kalite_cmd_info)
+
+    # kolibri
+    if len(kolibri_channels) > 0:
+        kolibri_cmd_info = cmd_info
+        kolibri_cmd_info['cmd'] = 'INST-KOLIBRI'
+        kolibri_cmd_info['cmd_args'] = {'channels': kolibri_channels}
+        kolibri_cmd_info = pseudo_cmd_handler(kolibri_cmd_info)
+        if kolibri_cmd_info:
+            resp = install_kolibri(kolibri_cmd_info)
 
     # copy menu.json
     shutil.copyfile(src_dir + 'menu.json', doc_root + '/home/menu.json')
@@ -3110,6 +3125,27 @@ def install_kalite(cmd_info):
     resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=next_step, depend_on_job_id=job_id, has_dependent="N")
 
     return resp
+
+def install_kolibri(cmd_info):
+    global jobs_requested
+    if 'cmd_args' not in cmd_info or 'channels' not in cmd_info['cmd_args']:
+        return cmd_malformed(cmd_info['cmd'])
+
+    channels = cmd_info['cmd_args']['channels']  # list of {"channel_id": "..."}
+
+    if 'service_required' in cmd_info['cmd_args']: # allow caller to supply
+        cmd_info['service_required'] = cmd_info['cmd_args']['service_required']
+    else:
+        cmd_info['service_required'] = ['kolibri', 'active']
+
+    last_resp = None
+    for channel in channels:
+        channel_id = channel['channel_id']
+        job_command = "scripts/import_kolibri.py " + channel_id
+        if 'node_id' in channel:
+            job_command += " --node " + channel['node_id']
+        last_resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=1, depend_on_job_id=-1, has_dependent="N")
+    return last_resp
 
 # Content Menu Commands
 
