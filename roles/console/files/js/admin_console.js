@@ -332,8 +332,8 @@ function instContentButtonsEvents() {
     // come back to this
 
     if (presetSpace > availableSpace){
-      if (! confirm('There is not enough Available Storage Space for this Collection\nIf this preset has not already been partially installed\nPLEASE CANCEL'));
-        return
+      if (! confirm('There is not enough Available Storage Space for this Collection\nIf this preset has not already been partially installed\nPLEASE CANCEL'))
+        return // this should only execute when user clicks cancel
     }
 
     installPreset(presetId);

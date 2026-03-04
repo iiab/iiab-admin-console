@@ -23,6 +23,8 @@ c3 = '8ef0c1bf48a64049af202bd96c059cbf'
 en_ka = 'c9d7f950ab6b5a1199e3d6c10d7f0103' # is actually just Khan Academy
 en_ka_econ = 'a70e92db178d59669d5a7dfe50571ffb' # this is the econ node
 hi_ka = 'a53592c972a8594e9b695aa127493ff6'
+es_ka = 'c1f2b7e6ac9f56a2bb44fa7a48b66dce' # Spanish Khan Academy
+fr_ka = '878ec2e6f88c5c268b1be6f202833cd4' # French Khan Academy
 
 #     kolibri manage importcontent network <Channel ID> --node_ids <Node ID 1>,<Node ID 2>
 
@@ -62,7 +64,7 @@ def main ():
 def parse_args():
     parser = argparse.ArgumentParser(description="Import Channel Content into Kolibri with option Node ID.")
     parser.add_argument("channel", help="The name of the channel.")
-    parser.add_argument("--node", help="Only download starting at this Node ID. Call multiple time for different nodes", action="store_true")
+    parser.add_argument("--node", help="Only download starting at this Node ID. Call multiple time for different nodes", action="store")
     return parser.parse_args()
 
 if __name__ == "__main__":
