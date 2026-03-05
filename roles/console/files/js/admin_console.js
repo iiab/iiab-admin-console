@@ -372,7 +372,10 @@ function instContentButtonsEvents() {
       }
     });
     upgradeZims(zim_permarefs);
-    alert ("Selected Zims scheduled to be upgraded.\n\nPlease view Utilities->Display Job Status to see the results.");
+    var msg = "Selected Zims scheduled to be upgraded.";
+    msg += "\n\nPlease view Utilities->Display Job Status to see the results.";
+    msg += "\n\nTo refresh the list of upgradeable zims, please this menu item again after the current upgrades are complete.";
+    alert (msg);
     make_button_disabled("#UPGRADE-ZIMS", false);
   });
 
@@ -1948,13 +1951,16 @@ function manContUsbStat(dev){
 
 function calcAllocatedSpace(){
 	var totalSpace = 0;
+  // assume Kiwix installed
 	totalSpace += sumAllocationList(selectedZims, 'zim');
 	//consoleLog(totalSpace);
 	totalSpace += sumZimWip();
   totalSpace += sumZimUpgrWip();
 	totalSpace += sumAllocationList(selectedOer2goItems, 'oer2go');
 	totalSpace += sumOer2goWip();
-	totalSpace += sumAllocationList(selectedMapItems, 'map');
+  // don't add space for maps unless active
+  if (mapStat.maps_active)
+	  totalSpace += sumAllocationList(selectedMapItems, 'map');
 	// totalSpace += sumMapWip(); selectedMapItems also holds wip as they are still selected
 	return totalSpace;
 }
