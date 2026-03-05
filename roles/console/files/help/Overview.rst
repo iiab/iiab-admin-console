@@ -36,6 +36,7 @@ Install Content
 
 * Quick Pick
 * Get ZIM Files from Kiwix
+* Upgrade ZIM Files
 * Get OER2Go(RACHEL) Modules
 * Download Khan Academy Videos
 * Manage Content
