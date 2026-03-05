@@ -39,19 +39,20 @@
     consoleLog('in procUpgradeableZimsList');
     consoleLog(zimsUpgradeable);
     renderUpgradeableZimList();
+    getSpaceAvail().then(displaySpaceAvail);
     return true;
   }
 
   function upgradeZims(zim_permarefs)
   {
     for (var i = 0; i < zim_permarefs.length; i++) {
-      zimsDownloading.push(zimsUpgradeable[zim_permarefs[i]].new_zim_id)
+      //zimsDownloading.push(zimsUpgradeable[zim_permarefs[i]].new_zim_id)
     }
     var command = "UPGRADE-ZIMS"
     var cmd_args = {}
     cmd_args['zim_permarefs'] = zim_permarefs;
     cmd = command + " " + JSON.stringify(cmd_args);
-    sendCmdSrvCmd(cmd, genericCmdHandler, "", upgradeZimsError, cmd_args);
+    sendCmdSrvCmd(cmd, getUpgradeableZimsList, "", upgradeZimsError, cmd_args);
     return true;
   }
 
@@ -60,7 +61,7 @@
     consoleLog(cmd_args);
     consoleLog(cmd_args["zim_permarefs"]);
     for (var i = 0; i < cmd_args["zim_permarefs"].length; i++) {
-      zimsDownloading.pop(zimsUpgradeable[zim_permarefs[i]].new_zim_id);
+      //zimsDownloading.pop(zimsUpgradeable[zim_permarefs[i]].new_zim_id);
     }
     procZimGroups();
     return true;
