@@ -27,7 +27,8 @@
     "osm-planet_z0-z10_2020.mbtiles"
   ],
   "kalite": {},
-  "kolibri": [
-    {"channel_id": "c1f2b7e6ac9f56a2bb44fa7a48b66dce"}
-  ]
+  "kolibri": {
+    "lang_code": "es",
+    "channels": [{"channel_id": "c1f2b7e6ac9f56a2bb44fa7a48b66dce"}]
+  }
 }

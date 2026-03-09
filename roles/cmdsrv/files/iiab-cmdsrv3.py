@@ -2483,7 +2483,8 @@ def install_presets(cmd_info):
     map_list = content['maps']
     kalite_vars = content['kalite']
     needed_services = []
-    kolibri_channels = content.get('kolibri', [])
+    kolibri_content = content.get('kolibri', {})
+    kolibri_channels = kolibri_content.get('channels', [])
 
     if len(zim_list) > 0:
         if planned_vars['kiwix_install'] != True or planned_vars['kiwix_enabled'] != True:
@@ -2505,6 +2506,7 @@ def install_presets(cmd_info):
             needed_services.append('Kolibri')
             vars['kolibri_install'] = True
             vars['kolibri_enabled'] = True
+        vars['kolibri_language'] = kolibri_content.get('lang_code', 'en')
 
     services_needed_error = ', '.join(needed_services)
 
