@@ -2506,7 +2506,8 @@ def install_presets(cmd_info):
             needed_services.append('Kolibri')
             vars['kolibri_install'] = True
             vars['kolibri_enabled'] = True
-        vars['kolibri_language'] = kolibri_content.get('lang_code', 'en')
+        if kolibri_content.get('lang_code') is not None:
+            vars['kolibri_language'] = kolibri_content['lang_code']
 
     services_needed_error = ', '.join(needed_services)
 
