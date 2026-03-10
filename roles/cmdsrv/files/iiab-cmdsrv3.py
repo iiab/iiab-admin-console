@@ -2593,6 +2593,18 @@ def install_presets(cmd_info):
     # copy menu.json
     shutil.copyfile(src_dir + 'menu.json', doc_root + '/home/menu.json')
 
+    # Remove some OOB content that may not be relevant to the preset, but do this after copying menu so don't mess up menu.json
+    test_mod = modules_dir + 'en-test_mod'
+    if os.path.isdir(test_mod):
+        shutil.rmtree(test_mod)
+
+    # if Kiwix is not yet installed test.zim will not be there yet.
+    # It is also not clear whether removing it will cause problems.
+    # if len(zim_list) > 0:
+    #     test_zim = zim_content_dir + 'test.zim'
+    #     if os.path.isfile(test_zim):
+    #         os.remove(test_zim)
+
     if len(services_needed_error) > 0:
         resp = cmd_warning(cmd='INST-PRESETS', msg='WARNING: The following services were added - ' + services_needed_error)
     else:

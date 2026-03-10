@@ -627,8 +627,9 @@ def put_kiwix_enabled_into_menu_json():
     zim_idx = CONST.zim_version_idx_dir + CONST.zim_version_idx_file
     zim_versions_info = read_json_file(zim_idx)
     for perma_ref in zim_versions_info: # all installed zims OR use zims_installed
-        # if other zims exist, do not add test zim
-        if len(zim_versions_info) > 1 and perma_ref == 'test':
+        # do not add test zim as was probably already removed
+        # there is also a known problem that the expected menudef name is en-test, but the actual name is en-test_zim
+        if perma_ref == 'test':
             continue
         if perma_ref in perma_refs_in_menu: # already in menu
             continue
