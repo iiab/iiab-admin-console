@@ -20,6 +20,7 @@ content["zims"] = []
 content["modules"] = []
 content["maps"] = []
 content["kalite"] = {}
+content["kolibri"] = {}
 
 kalite_topics = []
 
@@ -118,6 +119,14 @@ def do_content(this_preset_dir, noscan):
         get_kalite_complete('khan/', lang)
         content["kalite"]["topics"] = kalite_topics
 
+
+    content["kolibri"] = old_content.get("kolibri", {})
+    if role_stats['kolibri']['active']:
+        lang = get_kolibri_lang()
+        content["kolibri"]["channels"] = get_kolibri_channels()
+        if lang:
+            content["kolibri"]["lang_code"] = lang
+
     adm.write_json_file(content, content_file)
 
 def content_from_files():
@@ -150,6 +159,22 @@ def content_from_menu(this_preset_dir):
                  content["modules"].append(all_menu_defs[menu_def]["moddir"])
             elif all_menu_defs[menu_def]["intended_use"] == "zim":
                 content["zims"].append(all_menu_defs[menu_def]["zim_name"])
+
+def get_kolibri_channels():
+    kolibri_db = '/library/kolibri/db.sqlite3'
+    conn = sqlite3.connect(kolibri_db)
+    cur = conn.execute('SELECT id FROM content_channelmetadata WHERE partial = 0')
+    rows = cur.fetchall()
+    conn.close()
+    return [{'channel_id': row[0]} for row in rows]
+
+def get_kolibri_lang():
+    kolibri_db = '/library/kolibri/db.sqlite3'
+    conn = sqlite3.connect(kolibri_db)
+    cur = conn.execute('SELECT language_id FROM device_devicesettings LIMIT 1')
+    row = cur.fetchone()
+    conn.close()
+    return row[0] if row and row[0] else None
 
 def get_kalite_lang():
     # assumes normal, not PRESETS install

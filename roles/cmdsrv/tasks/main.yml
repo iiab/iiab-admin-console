@@ -182,6 +182,7 @@
             - utilities/iiab-sync-menu-defs
             - utilities/iiab-update-menus
             - utilities/iiab-upgrade-zims
+            - utilities/mk-preset.py
 
 - name: Copy default kiwix_catalog.json
   copy: src="json/kiwix_catalog.json"
