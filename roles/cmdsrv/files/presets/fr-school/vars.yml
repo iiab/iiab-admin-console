@@ -2,8 +2,10 @@ awstats_install: True
 awstats_enabled: True
 calibreweb_install: True
 calibreweb_enabled: True
-kalite_install: True
-kalite_enabled: True
+kalite_install: False
+kalite_enabled: False
+kolibri_install: True
+kolibri_enabled: True
 kiwix_install: True
 kiwix_enabled: True
 nextcloud_install: True

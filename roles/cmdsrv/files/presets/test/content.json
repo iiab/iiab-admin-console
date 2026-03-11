@@ -10,11 +10,9 @@
     "maps": [
       "satellite_z0-z9_2020.mbtiles"
     ],
-    "kalite": {
-      "lang_code": "es",
-      "topics": ["khan/math/trigonometry/trigonometry-right-triangles/",
-        "khan/math/trigonometry/trig-with-general-triangles/",
-        "khan/math/trigonometry/unit-circle-trig-func/"
-      ]
+    "kalite": {},
+    "kolibri": {
+      "lang_code": "en",
+      "channels": [{"channel_id": "c9d7f950ab6b5a1199e3d6c10d7f0103", "node_id": "a70e92db178d59669d5a7dfe50571ffb"}]
     }
 }
