@@ -26,6 +26,48 @@
     return true;
   }
 
+  function getUpgradeableZimsList()
+  {
+    var command = "GET-UPGRADEABLE-ZIMS"
+    sendCmdSrvCmd(command, procUpgradeableZimsList, "", upgradeZimsError);
+    return true;
+  }
+
+  function procUpgradeableZimsList(data)
+  {
+    zimsUpgradeable = data;
+    consoleLog('in procUpgradeableZimsList');
+    consoleLog(zimsUpgradeable);
+    renderUpgradeableZimList();
+    getSpaceAvail().then(displaySpaceAvail);
+    return true;
+  }
+
+  function upgradeZims(zim_permarefs)
+  {
+    for (var i = 0; i < zim_permarefs.length; i++) {
+      //zimsDownloading.push(zimsUpgradeable[zim_permarefs[i]].new_zim_id)
+    }
+    var command = "UPGRADE-ZIMS"
+    var cmd_args = {}
+    cmd_args['zim_permarefs'] = zim_permarefs;
+    cmd = command + " " + JSON.stringify(cmd_args);
+    sendCmdSrvCmd(cmd, getUpgradeableZimsList, "", upgradeZimsError, cmd_args);
+    return true;
+  }
+
+  function upgradeZimsError(data, cmd_args)
+  {
+    consoleLog(cmd_args);
+    consoleLog(cmd_args["zim_permarefs"]);
+    for (var i = 0; i < cmd_args["zim_permarefs"].length; i++) {
+      //zimsDownloading.pop(zimsUpgradeable[zim_permarefs[i]].new_zim_id);
+    }
+    procZimGroups();
+    return true;
+  }
+
+
   function restartKiwix() // Restart Kiwix Server
   {
     var command = "RESTART-KIWIX";
@@ -350,6 +392,51 @@ function zimListCompare(catalog) {
     else
       return 1;
   }
+}
+
+function renderUpgradeableZimList() {
+  consoleLog('in renderUpgradeableZimList');
+  consoleLog(zimsUpgradeable);
+  // use global variable zimsUpgradeable
+  var html = "";
+
+  // Find upgradeable zims
+  if (zimsUpgradeable == null) {
+    html = "<p>No ZIM files are currently installed.</p>";
+    $( "#UpgradeZimList" ).html(html);
+    return;
+  }
+
+  html = '<table class="table table-borderless table-hover ">';
+  // table-striped
+  html += '<thead><tr>';
+  html += '<th>Select</th>';
+  html += '<th>ZIM Name</th>';
+  html += '<th>Title</th>';
+  html += '<th>Installed Version</th>';
+  html += '<th>Upgrade Version</th>';
+  html += '<th>Size Change</th>';
+  html += '</tr></thead>';
+  html += '<tbody>';
+
+  for (const [key, value] of Object.entries(zimsUpgradeable)) {
+    var perma_ref = key;
+    var zim_info = value;
+    consoleLog(perma_ref, zim_info);
+    html += '<tr>';
+    html += '<td><input type="checkbox" name="' + perma_ref + '" onchange="displaySpaceAvail()"></td>';
+    // html += '<td><input type="checkbox" name="' + perma_ref + '" zim_perma_ref="' + perma_ref + '" onChange="updateUpgradeZimsSpace(this)"></td>';
+    html += '<td>' + perma_ref + '</td>';
+    html += '<td>' + zim_info.installed_zim_title + '</td>';
+    html += '<td>' + zim_info.old_zim_version + '</td>';
+    html += '<td>' + zim_info.new_zim_version + '</td>';
+    html += '<td>' + zim_info.size_diff_human + '</td>';
+    html += '</tr>';
+  }
+
+  html += '</tbody></table>';
+  $( "#UpgradeZimList" ).html(html);
+  //activateTooltip();
 }
 
 function readKiwixCatalog() { // Reads kiwix catalog from file system as json

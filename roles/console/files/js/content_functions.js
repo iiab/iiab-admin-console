@@ -139,12 +139,26 @@ function procSelectedLangs() { // redraw various lists using newly selected lang
 }
 
 function readableSize(kbytes) {
+  // handle zero explicitly
   if (kbytes == 0)
-  return "0";
+    return "0";
+
+  // capture sign and use absolute value for logarithms
+  var sign = '';
+  if (kbytes < 0) {
+    sign = '-';
+    kbytes = Math.abs(kbytes);
+  }
+
   var bytes = 1024 * kbytes;
   var s = ['bytes', 'kB', 'MB', 'GB', 'TB', 'PB'];
+
+  // guard against non-positive after abs (shouldn't happen now)
+  if (bytes <= 0)
+    return sign + "0";
+
   var e = Math.floor(Math.log(bytes) / Math.log(1024));
-  return (bytes / Math.pow(1024, e)).toFixed(2) + " " + s[e];
+  return sign + (bytes / Math.pow(1024, e)).toFixed(2) + " " + s[e];
 }
 
 // Install Preset Functions

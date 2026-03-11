@@ -38,7 +38,8 @@ var mapRegionIdx = {}; // index of catalog by region
 var rachelStat = {}; // installed, enabled and whether content is installed and which is enabled
 
 var zimsInstalled = []; // list of zims already installed
-var zimsDownloading = []; // list of zims being downloaded
+var zimsUpgradeable = {}; // list of permarefs of zims that can be upgraded with other info
+var zimsDownloading = []; // list of ids of zims being downloaded
 var zimsCopying = []; // list of zims being copied
 var zimsExternal = []; // list of zims on external device
 var oer2goInstalled = []; // list of Oer2go items already installed
@@ -357,6 +358,25 @@ function instContentButtonsEvents() {
     procZimGroups();
     alert ("Selected Zims scheduled to be installed.\n\nPlease view Utilities->Display Job Status to see the results.");
     make_button_disabled("#INST-ZIMS", false);
+  });
+
+  // add upgrade zims button
+  $("#UPGRADE-ZIMS").click(function(){
+    var zim_permarefs = []
+    make_button_disabled("#UPGRADE-ZIMS", true);
+
+    $('#UpgradeZimList input').each( function(){
+      if (this.type == "checkbox")
+      if (this.checked){
+        zim_permarefs.push(this.name);
+      }
+    });
+    upgradeZims(zim_permarefs);
+    var msg = "Selected Zims scheduled to be upgraded.";
+    msg += "\n\nPlease view Utilities->Display Job Status to see the results.";
+    msg += "\n\nTo refresh the list of upgradeable zims, please this menu item again after the current upgrades are complete.";
+    alert (msg);
+    make_button_disabled("#UPGRADE-ZIMS", false);
   });
 
   $("#INST-MODS").click(function(){
@@ -1884,6 +1904,7 @@ function displaySpaceAvail(){
   html += '<b><span ' + warningStyle + '>' + readableSize(allocatedSpace) + '</span</b>';
 
   $( "#zimDiskSpace" ).html(html);
+  $( "#upgrZImsDiskSpace" ).html(html);
   $( "#oer2goDiskSpace" ).html(html);
   $( "#mapDiskSpace" ).html(html);
   $( "#mapDiskSpace2" ).html(html);
@@ -1930,12 +1951,16 @@ function manContUsbStat(dev){
 
 function calcAllocatedSpace(){
 	var totalSpace = 0;
+  // assume Kiwix installed
 	totalSpace += sumAllocationList(selectedZims, 'zim');
 	//consoleLog(totalSpace);
 	totalSpace += sumZimWip();
+  totalSpace += sumZimUpgrWip();
 	totalSpace += sumAllocationList(selectedOer2goItems, 'oer2go');
 	totalSpace += sumOer2goWip();
-	totalSpace += sumAllocationList(selectedMapItems, 'map');
+  // don't add space for maps unless active
+  if (mapStat.maps_active)
+	  totalSpace += sumAllocationList(selectedMapItems, 'map');
 	// totalSpace += sumMapWip(); selectedMapItems also holds wip as they are still selected
 	return totalSpace;
 }
@@ -1969,6 +1994,23 @@ function sumZimWip(){
   	if (zim.source == "portable")
   	  totalSpace += parseInt(zim.size); //add twice to account for zip download
   }
+  return totalSpace;
+}
+
+function sumZimUpgrWip(){ // work directly off panel with no global var
+  var totalSpace = 0;
+
+  $('#UpgradeZimList').find('input[type=checkbox]').each(function() {
+    // 'this' refers to the current checkbox element in the loop
+
+    var isChecked = $(this).is(':checked'); // Check if the checkbox is checked
+    if (isChecked) {
+      var zimPermaref = $(this).attr('name');
+      var upgradeSize = parseInt(zimsUpgradeable[zimPermaref].new_zim_size_k);
+      upgradeSize -= parseInt(zimsUpgradeable[zimPermaref].old_zim_size_k);
+      totalSpace += upgradeSize;
+    }
+  });
   return totalSpace;
 }
 

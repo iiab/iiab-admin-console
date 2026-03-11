@@ -58,6 +58,31 @@ When each of the ZIM files has been downloaded and installed the Kiwix server wi
 
 Make sure that the **Kiwix** service is enabled under **Configure** - **Services Enabled**.
 
+Upgrade ZIM Files
+-----------------
+
+### Overview
+
+Kiwix produces new versions of ZIM files on a regular basis, which can be downloaded and installed using the previous menu option. This menu option allows you to upgrade existing ZIM files to their latest versions.
+
+You must have an internet connection to use this option and it is best to have a high bandwidth connection.  The download process can take a long time.  Visit **Display Job Status** on the **Utilities** menu to see when they have completed or any problems encountered.  It is not necessary to keep the browser open during the download.
+
+**WARNING** - the old ZIM files will be removed before the new ones are be added, so an error durring download will mean you do not have the desired ZIM files.
+
+In that case, please use Get ZIM Files from Kiwix to download the ZIM file.
+
+### Do this First
+
+Click on the button labelled **Refresh Kiwix Catalog** if you have not done so before or if it has been 3 days or more since you last did so.  This will retrieve the latest list of content hosted at Kiwix.org.
+
+### How it works
+
+When you Click on this menu option you will see a list of any installed ZIM files that have newer versions available.  Check the box beside the ones you want to upgrade and click **Upgrade Selected ZIMs**.  Jobs will be created on the server to download and install the selected content.  These are large files and the download can take a long time.  Visit **Display Job Status** on the **Utilities** menu to see when they have completed or any problems encountered.  It is not necessary to keep the browser open during the download.
+
+### Don't Forget
+
+It is best not to run this option more than once at the same time or when running another option that installs ZIM files.
+
 Get OER2Go(RACHEL) Modules
 --------------------------
 

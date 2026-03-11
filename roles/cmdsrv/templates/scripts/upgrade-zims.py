@@ -33,6 +33,7 @@ cat_perm_ref_id_map = {}
 cat_perm_ref_url_map = {}
 zims_installed = {}
 path_to_id_map = {}
+quiet = False
 
 def main():
     global version_idx
@@ -41,10 +42,14 @@ def main():
     global cat_perm_ref_url_map
     global zims_installed
     global path_to_id_map
+    global quiet
 
     num_threads = MAX_THREADS
 
     args_parser = parse_args()
+    args = args_parser.parse_args()
+    if args.quiet:
+        quiet = True
 
     # To avoid running upgrade on all simply with no args, require at least one arg
     # have arg_parser return parser and check if len(sys.argv)==1
@@ -52,7 +57,6 @@ def main():
         print("No arguments supplied, use -h for help")
         args_parser.print_help()
         return
-    args = args_parser.parse_args()
 
     version_idx = read_zim_version_idx(zim_version_idx_dir + zim_version_idx_file)
     zims_cat = read_kiwix_catalog(KIWIX_CAT)
@@ -75,19 +79,24 @@ def main():
         list_upgradable_zims()
         return
 
+    if args.json:
+        list_upgradable_zims_json()
+        return
+
     if args.zim:
         # strip version and extension if present
-        zim_to_upgrade = args.zim
-        if zim_to_upgrade.endswith('.zim'):
-            zim_to_upgrade = zim_to_upgrade[:-4]
-        if re.match(r'.*_[0-9]{4}-[0-9]{2}$', zim_to_upgrade):
-            zim_to_upgrade = '_'.join(zim_to_upgrade.split('_')[:-1])
-        if zim_to_upgrade not in version_idx:
-            print("ZIM " + zim_to_upgrade + " not installed")
-            return
-        upgrade_zim(zim_to_upgrade, when_to_remove_old)
-    else:
-
+        # do not honor args.threads, but do one at a time for safety
+        zims_to_upgrade = args.zim
+        for zim_to_upgrade in zims_to_upgrade:
+            if zim_to_upgrade.endswith('.zim'):
+                zim_to_upgrade = zim_to_upgrade[:-4]
+            if re.match(r'.*_[0-9]{4}-[0-9]{2}$', zim_to_upgrade):
+                zim_to_upgrade = '_'.join(zim_to_upgrade.split('_')[:-1])
+            if zim_to_upgrade not in version_idx:
+                print("ZIM " + zim_to_upgrade + " not installed")
+                continue
+            upgrade_zim(zim_to_upgrade, when_to_remove_old)
+    else: # do all installed ZIMs
         with concurrent.futures.ThreadPoolExecutor(num_threads) as executor:
             for installed_perma_ref in version_idx:
                 executor.submit(upgrade_zim, installed_perma_ref, when_to_remove_old)
@@ -104,6 +113,28 @@ def list_upgradable_zims():
         upgrade += ", Current Size " + iiab.human_readable(float(upgrade_params['old_zim_size_k']) * 1024)
         upgrade += " Net Change " + upgrade_params['size_diff_human']
         print(upgrade)
+
+def list_upgradable_zims_json():
+    json_return = {}
+    for installed_perma_ref in version_idx:
+        upgrade_params = calc_zim_upgrade(installed_perma_ref)
+        if upgrade_params is None:
+            continue
+        # print("Found upgrade for " + installed_perma_ref)
+        # print(upgrade_params)
+        zim_json = {}
+        # zim_json['installed_perma_ref'] = installed_perma_ref
+        zim_json['installed_zim_title'] = upgrade_params['installed_zim_title']
+        zim_json['old_zim_id'] = upgrade_params['old_zim_id']
+        zim_json['new_zim_id'] = upgrade_params['new_zim_id']
+        zim_json['old_zim_version'] = upgrade_params['old_zim_version']
+        zim_json['new_zim_version'] = upgrade_params['new_zim_version']
+        zim_json['old_zim_size_k'] = upgrade_params['old_zim_size_k']
+        zim_json['new_zim_size_k'] = upgrade_params['new_zim_size_k']
+        zim_json['size_diff_human'] = upgrade_params['size_diff_human']
+        json_return[installed_perma_ref] = zim_json
+
+    print(json.dumps(json_return))
 
 def calc_zim_upgrade(installed_perma_ref):
     upgrade_params = {}
@@ -199,7 +230,8 @@ def calc_cat_perm_ref_idx(zims_catalog):
         perma_ref = zims_catalog[zim_id]['perma_ref']
         url = zims_catalog[zim_id]['url'].split('.meta')[0]
         if perma_ref in cat_perm_ref_id_map:
-            print ('duplicate', perma_ref)
+            if not quiet:
+                print ('duplicate', perma_ref)
             if url > cat_perm_ref_url_map[perma_ref]:
                 cat_perm_ref_id_map[perma_ref] = zim_id
                 cat_perm_ref_url_map[perma_ref] = url
@@ -258,11 +290,13 @@ def parse_args():
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument("-l", "--list", help="only list all ZIMs that can be upgraded", action="store_true")
+    parser.add_argument("-j", "--json", help="output list in JSON format", action="store_true")
     parser.add_argument("-a", "--all", help="upgrade all ZIMs", action="store_true")
-    parser.add_argument("-z", "--zim", type=str, help="single ZIM to upgrade (e.g. wikipedia_en_medicine_maxi)")
+    parser.add_argument("-z", "--zim", type=str, nargs='*', help="list of one or more ZIMs to upgrade (e.g. wikipedia_en_medicine_maxi)")
     parser.add_argument("-d", "--delete", help="remove old ZIM before downloading new, instead of after", action="store_true")
     parser.add_argument("-k", "--keep", help="don't remove old ZIM", action="store_true")
     parser.add_argument("-t", "--threads", type=int, help="number of threads (1 - " + str(MAX_THREADS) + ")")
+    parser.add_argument("-q", "--quiet", help="suppress printed output", action="store_true")
     return parser
 
 # Now start the application
