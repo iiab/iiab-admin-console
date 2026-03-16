@@ -782,6 +782,7 @@ def cmd_handler(cmd_msg):
         "GET-OSM-VECT-STAT": {"funct": get_osm_vect_stat, "inet_req": False},
         "INST-KALITE": {"funct": install_kalite, "inet_req": True},
         "INST-KOLIBRI": {"funct": install_kolibri, "inet_req": True},
+        "MK-PRESET": {"funct": make_preset, "inet_req": False},
         "DEL-DOWNLOADS": {"funct": del_downloads, "inet_req": False},
         "DEL-MODULES": {"funct": del_modules, "inet_req": False},
         "DEL-CONTENT": {"funct": del_content, "inet_req": False},
@@ -2629,6 +2630,32 @@ def install_presets(cmd_info):
     else:
         resp = cmd_success_msg('INST-PRESETS', "All jobs scheduled")
     return resp
+
+SUPPLIED_PRESETS = {'en-school', 'es-school', 'fr-school', 'en-medical', 'en-school-256-base', 'en-starter', 'test'}
+
+def make_preset(cmd_info):
+    if 'cmd_args' not in cmd_info:
+        return cmd_malformed(cmd_info['cmd'])
+    cmd_args = cmd_info['cmd_args']
+    preset_name = cmd_args.get('preset_name', '')
+    if not preset_name:
+        return cmd_malformed(cmd_info['cmd'])
+    if preset_name in SUPPLIED_PRESETS:
+        return cmd_error(cmd='MK-PRESET', msg="'" + preset_name + "' is a supplied preset and cannot be overwritten.")
+    job_command = "mk-preset.py " + shlex.quote(preset_name)
+    title = cmd_args.get('title', '')
+    description = cmd_args.get('description', '')
+    default_lang = cmd_args.get('default_lang', '')
+    location = cmd_args.get('location', '')
+    if title:
+        job_command += " --title " + shlex.quote(title)
+    if description:
+        job_command += " --description " + shlex.quote(description)
+    if default_lang:
+        job_command += " --lang " + shlex.quote(default_lang)
+    if location:
+        job_command += " --location " + shlex.quote(location)
+    return request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=1, depend_on_job_id=-1, has_dependent="N")
 
 def pseudo_cmd_handler(cmd_info, check_dup=True):
     # do some of what cmd_handler does so can call cmd function directly

@@ -449,6 +449,37 @@ function instContentButtonsEvents() {
     getOer2goCatalog();
   });
 
+  $("#MK-PRESET").click(function(){
+    var presetName = $("#mkPresetName").val().trim();
+    var title = $("#mkPresetTitle").val().trim();
+    var description = $("#mkPresetDescription").val().trim();
+    var defaultLang = $("#mkPresetLang").val().trim();
+    var location = $("#mkPresetLocation").val().trim();
+
+    if (!presetName) {
+      alert("Preset name is required.");
+      return;
+    }
+    if (/\s/.test(presetName)) {
+      alert("Preset name must not contain spaces.");
+      return;
+    }
+    if (!title) {
+      alert("Title is required.");
+      return;
+    }
+    if (!description) {
+      alert("Description is required.");
+      return;
+    }
+    var suppliedPresets = ['en-school', 'es-school', 'fr-school', 'en-medical', 'en-school-256-base', 'en-starter', 'test'];
+    if (presetName in presetList && suppliedPresets.indexOf(presetName) === -1) {
+      if (!confirm("Preset '" + presetName + "' already exists. Overwrite?"))
+        return;
+    }
+    makePreset(presetName, title, description, defaultLang, location);
+  });
+
   $("#DOWNLOAD-RACHEL").click(function(){
   	if (rachelStat.content_installed == true){
   	  var rc = confirm("RACHEL content is already in the library.  Are you sure you want to download again?");

@@ -706,6 +706,19 @@ function instCloneServerDevicesHtml(dev, devSize, checked){
   return(html);
 }
 
+function makePreset(presetName, title, description, defaultLang, location) {
+  var cmd_args = {};
+  cmd_args['preset_name'] = presetName;
+  cmd_args['title'] = title;
+  cmd_args['description'] = description;
+  cmd_args['default_lang'] = defaultLang;
+  cmd_args['location'] = location;
+  var cmd = "MK-PRESET " + JSON.stringify(cmd_args);
+  return sendCmdSrvCmd(cmd, function() {
+    alert("Content collection '" + presetName + "' created.\n\nPlease view Utilities->Display Job Status to see the results.");
+  }, "MK-PRESET");
+}
+
 function copyDevImage(){
   var selectedDevice = $('input[name="selRemDevice"]:checked').val();
 
