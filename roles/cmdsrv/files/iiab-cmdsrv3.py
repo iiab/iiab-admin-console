@@ -142,6 +142,7 @@ SENSITIVE_COMMANDS = ["CHGPW", "AUTHENTICATE", "CTL-HOTSPOT", "SET-WIFI-CONNECTI
 NO_LOG_COMMANDS = ["AUTHENTICATE"]
 ANSIBLE_COMMANDS = ["RUN-ANSIBLE", "RESET-NETWORK", "RUN-ANSIBLE-ROLES"]
 FULL_LOG_COMMANDS = ["RUN-ANSIBLE", "RESET-NETWORK", "RUN-ANSIBLE-ROLES"]
+SUPPLIED_PRESETS = {'en-school', 'es-school', 'fr-school', 'en-medical', 'en-school-256-base', 'en-starter', 'test'}  # hardcoded list, needs to be updated if presets added
 ansible_running_flag = False
 iiab_roles_status = {}
 daemon_mode = False
@@ -2630,8 +2631,6 @@ def install_presets(cmd_info):
     else:
         resp = cmd_success_msg('INST-PRESETS', "All jobs scheduled")
     return resp
-
-SUPPLIED_PRESETS = {'en-school', 'es-school', 'fr-school', 'en-medical', 'en-school-256-base', 'en-starter', 'test'}
 
 def make_preset(cmd_info):
     if 'cmd_args' not in cmd_info:
