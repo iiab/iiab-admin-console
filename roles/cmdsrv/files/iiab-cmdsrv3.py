@@ -2485,7 +2485,6 @@ def install_presets(cmd_info):
     zim_list = content['zims']
     module_list = content['modules'] # service is web server which is always installed
     map_list = content['maps']
-    kalite_vars = content['kalite']
     needed_services = []
     kolibri_content = content.get('kolibri', {})
     kolibri_channels = kolibri_content.get('channels', [])
@@ -2500,11 +2499,6 @@ def install_presets(cmd_info):
             needed_services.append('OSM Vector Maps')
             vars['osm_vector_maps_install'] = True
             vars['osm_vector_maps_enabled'] = True
-    if len(kalite_vars) > 0:
-        if planned_vars['kalite_install'] != True or planned_vars['kalite_enabled'] != True:
-            needed_services.append('KA Lite')
-            vars['kalite_install'] = True
-            vars['kalite_enabled'] = True
     if len(kolibri_channels) > 0:
         if planned_vars['kolibri_install'] != True or planned_vars['kolibri_enabled'] != True:
             needed_services.append('Kolibri')
@@ -2586,21 +2580,12 @@ def install_presets(cmd_info):
     map_cmd_info = cmd_info
     map_list = content['maps']
     for map in map_list:
+        map_cmd_info = cmd_info
         map_cmd_info['cmd'] = 'INST-OSM-VECT-SET'
         map_cmd_info['cmd_args'] = {'osm_vect_id': map}
         map_cmd_info = pseudo_cmd_handler(map_cmd_info)
         if map_cmd_info:
             resp = install_osm_vect_set(map_cmd_info)
-
-    # kalite
-
-    if len(kalite_vars) > 0:
-        kalite_cmd_info = cmd_info
-        kalite_cmd_info['cmd'] = 'INST-KALITE'
-        kalite_cmd_info['cmd_args'] = content['kalite']
-        kalite_cmd_info = pseudo_cmd_handler(kalite_cmd_info)
-        if kalite_cmd_info:
-            resp = install_kalite(kalite_cmd_info)
 
     # kolibri
     if len(kolibri_channels) > 0:
