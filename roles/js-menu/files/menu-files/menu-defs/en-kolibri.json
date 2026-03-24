@@ -5,6 +5,6 @@
   "menu_item_name" : "en-kolibri",
   "title" : "Kolibri",
   "start_url" : "/",
-  "description" : "Kolibri (might replace KA Lite in future!) provides offline access to a wide range of quality, openly licensed educational content.",
+  "description" : "Kolibri provides offline access to a wide range of quality, openly licensed educational content.",
   "extra_html" : "en-kolibri.html"
 }
