@@ -2482,9 +2482,9 @@ def install_presets(cmd_info):
     # add roles needed by content but not requested
 
     planned_vars = {**effective_vars, **vars}
-    zim_list = content['zims']
-    module_list = content['modules'] # service is web server which is always installed
-    map_list = content['maps']
+    zim_list = content.get('zims', [])
+    module_list = content.get('modules', []) # service is web server which is always installed
+    map_list = content.get('maps', [])
     needed_services = []
     kolibri_content = content.get('kolibri', {})
     kolibri_channels = kolibri_content.get('channels', [])
