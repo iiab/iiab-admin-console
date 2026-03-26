@@ -21,8 +21,8 @@
         <li><a href="#instConOer2go" call-after="oer2goMenuOption">Get OER2Go(RACHEL) Modules</a></li>
         <li><a href="#instOsmRegion" call-after="renderRegionMap">Get Map Regions</a></li>
         <li><a href="#instOsmAddons" call-after="renderAddonsMap">Get Map Addons</a></li>
-        <!-- <li><a href="#instConKAlite">Download Khan Academy Videos</a></li> -->
         <li><a href="#instManageContent" call-after="manageContentInit">Manage Content</a></li>
+        <li><a href="#instMakePreset" call-after="getPresetList">Create a Content Collection</a></li>
         <li id="instConCloneLink" style="display:none"><a href="#instCloneServer" call-after="getIiabCloneStats">Clone
             IIAB</a></li>
         <!-- <li><a href="#instRemoveContent" call-after="refreshAllInstalledList">Remove Content</a></li> -->
@@ -299,6 +299,39 @@
             </div>
           </div>
         </div> <!--  End instManageContent Submenu Option Pane -->
+
+        <div class="tab-pane" id="instMakePreset">
+          <!-- Start instMakePreset Submenu Option Pane -->
+          <h2>Create a Content Collection</h2>
+          <p>Save the content currently installed on this box as a preset that can be installed on other boxes.</p>
+          <div class="row">
+            <div class="col-sm-6">
+              <form>
+                <div class="form-group">
+                  <label for="mkPresetName">Preset name</label>
+                  <input type="text" class="form-control" id="mkPresetName" placeholder="no spaces">
+                </div>
+                <div class="form-group">
+                  <label for="mkPresetTitle">Title</label>
+                  <input type="text" class="form-control" id="mkPresetTitle">
+                </div>
+                <div class="form-group">
+                  <label for="mkPresetDescription">Description</label>
+                  <input type="text" class="form-control" id="mkPresetDescription">
+                </div>
+                <div class="form-group">
+                  <label for="mkPresetLang">Default language (optional)</label>
+                  <input type="text" class="form-control" id="mkPresetLang" placeholder="e.g. en">
+                </div>
+                <div class="form-group">
+                  <label for="mkPresetLocation">Location (optional)</label>
+                  <input type="text" class="form-control" id="mkPresetLocation">
+                </div>
+              </form>
+            </div>
+          </div>
+          <button id="MK-PRESET" type="button" class="btn btn-lg btn-primary">Create</button>
+        </div> <!--  End instMakePreset Submenu Option Pane -->
 
         <div class="tab-pane" id="instCloneServer">
           <!-- Start instCloneServer Submenu Option Pane -->

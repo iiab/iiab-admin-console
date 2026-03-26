@@ -142,6 +142,7 @@ SENSITIVE_COMMANDS = ["CHGPW", "AUTHENTICATE", "CTL-HOTSPOT", "SET-WIFI-CONNECTI
 NO_LOG_COMMANDS = ["AUTHENTICATE"]
 ANSIBLE_COMMANDS = ["RUN-ANSIBLE", "RESET-NETWORK", "RUN-ANSIBLE-ROLES"]
 FULL_LOG_COMMANDS = ["RUN-ANSIBLE", "RESET-NETWORK", "RUN-ANSIBLE-ROLES"]
+SUPPLIED_PRESETS = {'en-school', 'es-school', 'fr-school', 'en-medical', 'en-school-256-base', 'en-starter', 'test'}  # hardcoded list, needs to be updated if presets added
 ansible_running_flag = False
 iiab_roles_status = {}
 daemon_mode = False
@@ -781,6 +782,8 @@ def cmd_handler(cmd_msg):
         "INST-SAT-AREA": {"funct": install_sat_area, "inet_req": True},
         "GET-OSM-VECT-STAT": {"funct": get_osm_vect_stat, "inet_req": False},
         "INST-KALITE": {"funct": install_kalite, "inet_req": True},
+        "INST-KOLIBRI": {"funct": install_kolibri, "inet_req": True},
+        "MK-PRESET": {"funct": make_preset, "inet_req": False},
         "DEL-DOWNLOADS": {"funct": del_downloads, "inet_req": False},
         "DEL-MODULES": {"funct": del_modules, "inet_req": False},
         "DEL-CONTENT": {"funct": del_content, "inet_req": False},
@@ -2479,11 +2482,12 @@ def install_presets(cmd_info):
     # add roles needed by content but not requested
 
     planned_vars = {**effective_vars, **vars}
-    zim_list = content['zims']
-    module_list = content['modules'] # service is web server which is always installed
-    map_list = content['maps']
-    kalite_vars = content['kalite']
+    zim_list = content.get('zims', [])
+    module_list = content.get('modules', []) # service is web server which is always installed
+    map_list = content.get('maps', [])
     needed_services = []
+    kolibri_content = content.get('kolibri', {})
+    kolibri_channels = kolibri_content.get('channels', [])
 
     if len(zim_list) > 0:
         if planned_vars['kiwix_install'] != True or planned_vars['kiwix_enabled'] != True:
@@ -2495,11 +2499,13 @@ def install_presets(cmd_info):
             needed_services.append('OSM Vector Maps')
             vars['osm_vector_maps_install'] = True
             vars['osm_vector_maps_enabled'] = True
-    if len(kalite_vars) > 0:
-        if planned_vars['kalite_install'] != True or planned_vars['kalite_enabled'] != True:
-            needed_services.append('KA Lite')
-            vars['kalite_install'] = True
-            vars['kalite_enabled'] = True
+    if len(kolibri_channels) > 0:
+        if planned_vars['kolibri_install'] != True or planned_vars['kolibri_enabled'] != True:
+            needed_services.append('Kolibri')
+            vars['kolibri_install'] = True
+            vars['kolibri_enabled'] = True
+        if kolibri_content.get('lang_code') is not None:
+            vars['kolibri_language'] = kolibri_content['lang_code']
 
     services_needed_error = ', '.join(needed_services)
 
@@ -2574,21 +2580,21 @@ def install_presets(cmd_info):
     map_cmd_info = cmd_info
     map_list = content['maps']
     for map in map_list:
+        map_cmd_info = cmd_info
         map_cmd_info['cmd'] = 'INST-OSM-VECT-SET'
         map_cmd_info['cmd_args'] = {'osm_vect_id': map}
         map_cmd_info = pseudo_cmd_handler(map_cmd_info)
         if map_cmd_info:
             resp = install_osm_vect_set(map_cmd_info)
 
-    # kalite
-
-    if len(kalite_vars) > 0:
-        kalite_cmd_info = cmd_info
-        kalite_cmd_info['cmd'] = 'INST-KALITE'
-        kalite_cmd_info['cmd_args'] = content['kalite']
-        kalite_cmd_info = pseudo_cmd_handler(kalite_cmd_info)
-        if kalite_cmd_info:
-            resp = install_kalite(kalite_cmd_info)
+    # kolibri
+    if len(kolibri_channels) > 0:
+        kolibri_cmd_info = cmd_info
+        kolibri_cmd_info['cmd'] = 'INST-KOLIBRI'
+        kolibri_cmd_info['cmd_args'] = {'channels': kolibri_channels}
+        kolibri_cmd_info = pseudo_cmd_handler(kolibri_cmd_info)
+        if kolibri_cmd_info:
+            resp = install_kolibri(kolibri_cmd_info)
 
     # copy menu.json
     shutil.copyfile(src_dir + 'menu.json', doc_root + '/home/menu.json')
@@ -2610,6 +2616,30 @@ def install_presets(cmd_info):
     else:
         resp = cmd_success_msg('INST-PRESETS', "All jobs scheduled")
     return resp
+
+def make_preset(cmd_info):
+    if 'cmd_args' not in cmd_info:
+        return cmd_malformed(cmd_info['cmd'])
+    cmd_args = cmd_info['cmd_args']
+    preset_name = cmd_args.get('preset_name', '')
+    if not preset_name:
+        return cmd_malformed(cmd_info['cmd'])
+    if preset_name in SUPPLIED_PRESETS:
+        return cmd_error(cmd='MK-PRESET', msg="'" + preset_name + "' is a supplied preset and cannot be overwritten.")
+    job_command = "mk-preset.py " + shlex.quote(preset_name)
+    title = cmd_args.get('title', '')
+    description = cmd_args.get('description', '')
+    default_lang = cmd_args.get('default_lang', '')
+    location = cmd_args.get('location', '')
+    if title:
+        job_command += " --title " + shlex.quote(title)
+    if description:
+        job_command += " --description " + shlex.quote(description)
+    if default_lang:
+        job_command += " --lang " + shlex.quote(default_lang)
+    if location:
+        job_command += " --location " + shlex.quote(location)
+    return request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=1, depend_on_job_id=-1, has_dependent="N")
 
 def pseudo_cmd_handler(cmd_info, check_dup=True):
     # do some of what cmd_handler does so can call cmd function directly
@@ -3155,6 +3185,27 @@ def install_kalite(cmd_info):
     resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=next_step, depend_on_job_id=job_id, has_dependent="N")
 
     return resp
+
+def install_kolibri(cmd_info):
+    global jobs_requested
+    if 'cmd_args' not in cmd_info or 'channels' not in cmd_info['cmd_args']:
+        return cmd_malformed(cmd_info['cmd'])
+
+    channels = cmd_info['cmd_args']['channels']  # list of {"channel_id": "..."}
+
+    if 'service_required' in cmd_info['cmd_args']: # allow caller to supply
+        cmd_info['service_required'] = cmd_info['cmd_args']['service_required']
+    else:
+        cmd_info['service_required'] = ['kolibri', 'active']
+
+    last_resp = None
+    for channel in channels:
+        channel_id = channel['channel_id']
+        job_command = "scripts/import_kolibri.py " + channel_id
+        if 'node_id' in channel:
+            job_command += " --node " + channel['node_id']
+        last_resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=1, depend_on_job_id=-1, has_dependent="N")
+    return last_resp
 
 # Content Menu Commands
 

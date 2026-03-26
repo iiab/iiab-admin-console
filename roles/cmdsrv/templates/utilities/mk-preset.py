@@ -20,6 +20,7 @@ content["zims"] = []
 content["modules"] = []
 content["maps"] = []
 content["kalite"] = {}
+content["kolibri"] = {}
 
 kalite_topics = []
 
@@ -29,6 +30,10 @@ def main():
     parser.add_argument("preset", help="The name of the preset. Is the directory in which the json files are store.")
     parser.add_argument("-m", "--menu", type=str, default='home', required=False, help="source menu (default home)")
     parser.add_argument("-n", "--noscan", help="do not scan file system for content, but rather use the menu", action="store_true")
+    parser.add_argument("--title", type=str, default=None, required=False, help="preset title (name field in preset.json)")
+    parser.add_argument("--description", type=str, default=None, required=False, help="preset description")
+    parser.add_argument("--lang", type=str, default=None, required=False, help="default language code")
+    parser.add_argument("--location", type=str, default=None, required=False, help="location this was installed")
     # from_menu T/F
     # menu_dir
     args =  parser.parse_args()
@@ -43,20 +48,20 @@ def main():
 
     role_stats = adm.get_roles_status()
 
-    do_preset(this_preset_dir)
+    do_preset(this_preset_dir, args.title, args.description, args.lang, args.location)
     do_menu(this_preset_dir, args.menu)
     do_vars(this_preset_dir)
     do_content(this_preset_dir, args.noscan)
 
     sys.exit()
 
-def do_preset(this_preset_dir):
+def do_preset(this_preset_dir, title=None, description=None, lang=None, location=None):
     preset_file = this_preset_dir + 'preset.json'
     preset = {}
-    preset["name"] = "Put a name or title here"
-    preset["description"] = "Put a longer description here"
-    preset["default_lang"] = "en or another code"
-    preset["location"] = "Optional location this was installed"
+    preset["name"] = title if title else "Put a name or title here"
+    preset["description"] = description if description else ""
+    preset["default_lang"] = lang if lang else ""
+    preset["location"] = location if location else ""
     space_avail = adm.calc_space_avail()
     root_size_in_k = int(space_avail['root']['size_in_k']) - int(space_avail['root']['avail_in_k'] )
     if 'library' in space_avail:
@@ -118,6 +123,14 @@ def do_content(this_preset_dir, noscan):
         get_kalite_complete('khan/', lang)
         content["kalite"]["topics"] = kalite_topics
 
+
+    content["kolibri"] = old_content.get("kolibri", {})
+    if role_stats['kolibri']['active']:
+        lang = get_kolibri_lang()
+        content["kolibri"]["channels"] = get_kolibri_channels()
+        if lang:
+            content["kolibri"]["lang_code"] = lang
+
     adm.write_json_file(content, content_file)
 
 def content_from_files():
@@ -150,6 +163,22 @@ def content_from_menu(this_preset_dir):
                  content["modules"].append(all_menu_defs[menu_def]["moddir"])
             elif all_menu_defs[menu_def]["intended_use"] == "zim":
                 content["zims"].append(all_menu_defs[menu_def]["zim_name"])
+
+def get_kolibri_channels():
+    kolibri_db = '/library/kolibri/db.sqlite3'
+    conn = sqlite3.connect(kolibri_db)
+    cur = conn.execute('SELECT id FROM content_channelmetadata WHERE partial = 0')  # partial = 0 means fully downloaded
+    rows = cur.fetchall()
+    conn.close()
+    return [{'channel_id': row[0]} for row in rows]
+
+def get_kolibri_lang():
+    kolibri_db = '/library/kolibri/db.sqlite3'
+    conn = sqlite3.connect(kolibri_db)
+    cur = conn.execute('SELECT language_id FROM device_devicesettings LIMIT 1')
+    row = cur.fetchone()
+    conn.close()
+    return row[0] if row and row[0] else None
 
 def get_kalite_lang():
     # assumes normal, not PRESETS install

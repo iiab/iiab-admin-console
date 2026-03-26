@@ -23,10 +23,8 @@
       "satellite_z0-z9_2020.mbtiles",
       "osm-planet_z0-z10_2020.mbtiles"
     ],
-    "kalite": {
+    "kolibri": {
       "lang_code": "fr",
-      "topics": [
-        "khan/"
-      ]
+      "channels": [{"channel_id": "878ec2e6f88c5c268b1be6f202833cd4"}]
     }
   }
