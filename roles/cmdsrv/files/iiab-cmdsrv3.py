@@ -2444,10 +2444,23 @@ def get_preset_list(cmd_info):
     for item in top_list: # put these at the top
         preset_dict[item] = {}
 
+    zim_sizes = {v['perma_ref']: int(v['size']) * 1024 for v in kiwix_catalog.values()}
+    catalogs = {
+        'zim_sizes': zim_sizes,
+        'module_catalog': oer2go_catalog,
+        'maps_catalog': maps_catalog,
+    }
+
     preset_list = glob("presets/*")
     for preset in preset_list:
         preset_id = preset.split('/')[-1]
         preset_info = adm.read_json_file(preset + '/preset.json')
+        try:
+            breakdown = adm.get_preset_size_breakdown(preset_id, catalogs)
+            total = breakdown['zims'] + breakdown['modules'] + breakdown['maps'] + breakdown['kolibri']
+            preset_info['size_in_gb'] = round(total / (1024 ** 3), 1)
+        except Exception:
+            pass
         preset_dict[preset_id] = preset_info
 
     resp = json.dumps(preset_dict)

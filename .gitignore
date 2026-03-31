@@ -2,3 +2,5 @@
 *.patches
 *.log
 *.retry
+__pycache__/
+*.pyc
