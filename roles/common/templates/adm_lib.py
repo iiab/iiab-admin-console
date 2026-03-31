@@ -1233,6 +1233,51 @@ def jinja2_subst(src_dict, dflt_dict=None):
             dest_dict[k] = v
     return dest_dict
 
+def get_preset_size_breakdown(preset_name, catalogs, presets_dir=None):
+    if presets_dir is None:
+        presets_dir = '/opt/admin/cmdsrv/presets/'
+    content = read_json_file(presets_dir + preset_name + '/content.json')
+
+    zim_sizes = catalogs['zim_sizes']
+    module_catalog = catalogs['module_catalog']
+    maps_catalog = catalogs['maps_catalog']
+
+    zims_bytes = 0
+    modules_bytes = 0
+    maps_bytes = 0
+    missing = {'zims': [], 'modules': [], 'maps': []}
+
+    for perma_ref in content.get('zims', []):
+        if perma_ref in zim_sizes:
+            zims_bytes += zim_sizes[perma_ref]
+        else:
+            missing['zims'].append(perma_ref)
+
+    for moddir in content.get('modules', []):
+        if moddir in module_catalog:
+            modules_bytes += int(float(module_catalog[moddir]['ksize']) * 1024)
+        else:
+            missing['modules'].append(moddir)
+
+    for filename in content.get('maps', []):
+        if filename in maps_catalog:
+            maps_bytes += int(maps_catalog[filename]['size'])
+        else:
+            missing['maps'].append(filename)
+
+    kolibri_bytes = 0
+    for channel in content.get('kolibri', {}).get('channels', []):
+        if 'size' in channel:
+            kolibri_bytes += channel['size']
+
+    return {
+        'zims': zims_bytes,
+        'modules': modules_bytes,
+        'maps': maps_bytes,
+        'kolibri': kolibri_bytes,
+        'missing': missing,
+    }
+
 def subproc_run(cmdstr, shell=False, check=False, timeout=CONST.cmdsrv_proc_timeout):
     args = shlex.split(cmdstr)
     try:
