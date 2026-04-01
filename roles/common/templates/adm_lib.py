@@ -18,6 +18,7 @@ import base64
 import fnmatch
 import re
 import shutil
+import sqlite3
 import requests
 import yaml
 import jinja2
@@ -1272,8 +1273,8 @@ def get_preset_size_breakdown(preset_name, catalogs, presets_dir=None):
         if not channel_id:
             continue
         try:
-            import sqlite3 as _sqlite3
-            conn = _sqlite3.connect(kolibri_db)
+            conn = sqlite3.connect(kolibri_db)
+            # Try published_size first, set by the publisher on Kolibri Studio
             row = conn.execute(
                 'SELECT published_size FROM content_channelmetadata WHERE id = ?',
                 (channel_id,)
@@ -1281,6 +1282,8 @@ def get_preset_size_breakdown(preset_name, catalogs, presets_dir=None):
             if row and row[0]:
                 kolibri_bytes += int(row[0])
             else:
+                # If no published_size, walk through the metadata tree
+                # Requires importchannel to have been run at least once
                 total = conn.execute(
                     'SELECT SUM(file_size) FROM content_localfile'
                     ' WHERE id IN ('
@@ -1294,6 +1297,7 @@ def get_preset_size_breakdown(preset_name, catalogs, presets_dir=None):
                     kolibri_bytes += int(total)
             conn.close()
         except Exception:
+            # DB missing or channel not yet imported
             pass
 
     return {
