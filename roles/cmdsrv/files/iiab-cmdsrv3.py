@@ -2458,7 +2458,9 @@ def get_preset_list(cmd_info):
         try:
             breakdown = adm.get_preset_size_breakdown(preset_id, catalogs)
             total = breakdown['zims'] + breakdown['modules'] + breakdown['maps'] + breakdown['kolibri']
-            preset_info['size_in_gb'] = round(total / (1024 ** 3), 1)
+            dynamic_size = round(total / (1024 ** 3), 1)
+            if dynamic_size > preset_info.get('size_in_gb', 0):
+                preset_info['size_in_gb'] = dynamic_size
         except Exception:
             pass
         preset_dict[preset_id] = preset_info

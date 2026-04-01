@@ -1266,9 +1266,35 @@ def get_preset_size_breakdown(preset_name, catalogs, presets_dir=None):
             missing['maps'].append(filename)
 
     kolibri_bytes = 0
+    kolibri_db = '/library/kolibri/db.sqlite3'
     for channel in content.get('kolibri', {}).get('channels', []):
-        if 'size' in channel:
-            kolibri_bytes += channel['size']
+        channel_id = channel.get('channel_id')
+        if not channel_id:
+            continue
+        try:
+            import sqlite3 as _sqlite3
+            conn = _sqlite3.connect(kolibri_db)
+            row = conn.execute(
+                'SELECT published_size FROM content_channelmetadata WHERE id = ?',
+                (channel_id,)
+            ).fetchone()
+            if row and row[0]:
+                kolibri_bytes += int(row[0])
+            else:
+                total = conn.execute(
+                    'SELECT SUM(file_size) FROM content_localfile'
+                    ' WHERE id IN ('
+                    '  SELECT DISTINCT cf.local_file_id FROM content_file cf'
+                    '  JOIN content_contentnode cn ON cn.id = cf.contentnode_id'
+                    '  WHERE cn.channel_id = ?'
+                    ')',
+                    (channel_id,)
+                ).fetchone()[0]
+                if total:
+                    kolibri_bytes += int(total)
+            conn.close()
+        except Exception:
+            pass
 
     return {
         'zims': zims_bytes,
