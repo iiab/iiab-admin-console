@@ -2459,6 +2459,8 @@ def get_preset_list(cmd_info):
             breakdown = adm.get_preset_size_breakdown(preset_id, catalogs)
             total = breakdown['zims'] + breakdown['modules'] + breakdown['maps'] + breakdown['kolibri']
             dynamic_size = round(total / (1024 ** 3), 1)
+            # Only override preset.json if dynamic size is larger
+            # Fallback for fresh installs where Kolibri channel metadata has not been imported yet
             if dynamic_size > preset_info.get('size_in_gb', 0):
                 preset_info['size_in_gb'] = dynamic_size
         except Exception:
