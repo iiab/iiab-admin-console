@@ -167,10 +167,16 @@ def content_from_menu(this_preset_dir):
 def get_kolibri_channels():
     kolibri_db = '/library/kolibri/db.sqlite3'
     conn = sqlite3.connect(kolibri_db)
-    cur = conn.execute('SELECT id FROM content_channelmetadata WHERE partial = 0')  # partial = 0 means fully downloaded
+    cur = conn.execute('SELECT id, published_size FROM content_channelmetadata WHERE partial = 0')  # partial = 0 means fully downloaded
     rows = cur.fetchall()
     conn.close()
-    return [{'channel_id': row[0]} for row in rows]
+    channels = []
+    for row in rows:
+        channel = {'channel_id': row[0]}
+        if row[1]:
+            channel['size'] = int(row[1])
+        channels.append(channel)
+    return channels
 
 def get_kolibri_lang():
     kolibri_db = '/library/kolibri/db.sqlite3'
