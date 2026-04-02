@@ -601,7 +601,8 @@ function utilButtonsEvents() {
   $("#CANCEL-JOBS").click(function(){
   	var cmdList = [];
     make_button_disabled("#CANCEL-JOBS", true);
-    $('#jobStatTable input').each( function(){
+    // Prevent iteration over the "select all" checkbox to avoid "Malformed Command CANCEL-JOB" error
+    $('#jobStatTable tbody input').each( function(){
       if (this.type == "checkbox")
         if (this.checked){
           var job_idArr = this.id.split('-');
@@ -626,6 +627,11 @@ function utilButtonsEvents() {
     $.when.apply($, cmdList).then(getJobStat, procZimCatalog);
     alert ("Jobs marked for Cancellation.\n\nPlease click Refresh to see the results.");
     make_button_disabled("#CANCEL-JOBS", false);
+  });
+
+  $("#selectAllJobs").click(function() {
+    var checked = this.checked;
+    $('#jobStatTable input[type="checkbox"]:not([disabled])').prop('checked', checked);
   });
 
   $("#GET-INET-SPEED").click(function(){
@@ -1668,12 +1674,14 @@ function procJobStat(data)
 
   data.forEach(function(statusJob) {
     //console.log(statusJob);
-    html += "<tr>";
+    var terminalStatuses = ['SUCCEEDED', 'FAILED', 'CANCELLED'];
+    var isTerminal = terminalStatuses.indexOf(statusJob.job_status) >= 0;
+    html += isTerminal ? '<tr class="job-complete">' : "<tr>";
     //var job_info = {};
 
     //job_info['job_no'] = entry[0];
     html += "<td>";
-    html += '<input type="checkbox" id="' + statusJob.job_id + '">';
+    html += '<input type="checkbox" id="' + statusJob.job_id + '"' + (isTerminal ? ' disabled' : '') + '>';
     html += '<span style="vertical-align: text-bottom;">&nbsp;&nbsp;' + statusJob.job_id + '</span>';
     html += "</td>";
     html += '<td style="overflow: hidden; text-overflow: ellipsis">' + statusJob.job_command + "</td>";
@@ -1728,6 +1736,8 @@ function procJobStat(data)
     make_button_disabled("#JOB-STATUS-MORE", true);
   else
     make_button_disabled("#JOB-STATUS-MORE", false);
+
+  $('#selectAllJobs').prop('checked', false);
 
 }
 

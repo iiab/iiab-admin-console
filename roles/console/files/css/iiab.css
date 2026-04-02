@@ -236,6 +236,10 @@ text-align: center;
 	margin-top: 20px;
 }
 
+.job-complete {
+	opacity: 0.70;
+}
+
 .jobTable {
 	width:100%;
 	padding: 4px;
