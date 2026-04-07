@@ -20,6 +20,7 @@ var iiab_ini = {};
 var allJobsStatus = {};
 var jobActiveSum = {};
 var jobStatusLastRowid = 1 // trigger refresh
+var jobStatusAgeDays = 3;
 var langCodes = {}; // iso code, local name and English name for all languages we support, read from file
 var langCodesXRef = {}; // lookup langCodes key by iso2
 var zimCatalog = {}; // working composite catalog of kiwix, installed, and wip zims
@@ -633,6 +634,20 @@ function utilButtonsEvents() {
     var checked = this.checked;
     $('#jobStatTable input[type="checkbox"]:not([disabled])').prop('checked', checked);
   });
+
+  $(".job-status-filter").change(function() {
+    saveJobFilterPrefs();
+    applyJobStatusFilter();
+  });
+
+  $("#jobStatusAge").change(function() {
+    jobStatusAgeDays = parseInt($(this).val()) || 0;
+    saveJobFilterPrefs();
+    jobStatusLastRowid = 1;
+    getJobStat();
+  });
+
+  loadJobFilterPrefs();
 
   $("#GET-INET-SPEED").click(function(){
     getInetSpeed();
@@ -1659,6 +1674,7 @@ function getJobStat()
   var cmd_args = {};
 
   cmd_args['last_rowid'] = jobStatusLastRowid;
+  cmd_args['since_days'] = jobStatusAgeDays;
   cmd = command + " " + JSON.stringify(cmd_args);
   sendCmdSrvCmd(cmd, procJobStat);
   return true;
@@ -1669,11 +1685,31 @@ function procJobStat(data)
   allJobsStatus = {};
   jobStatusLastRowid = 1
 
+  data.forEach(function(statusJob) {
+    consoleLog(statusJob);
+    allJobsStatus[statusJob.job_id] = statusJob;
+    jobStatusLastRowid = statusJob.job_id // save lowest rowid seen
+  });
+
+  applyJobStatusFilter();
+
+  today = new Date();
+  $( "#statusJobsRefreshTime" ).html("Last Refreshed: <b>" + today.toLocaleString() + "</b>");
+  if (jobStatusLastRowid == 1)
+    make_button_disabled("#JOB-STATUS-MORE", true);
+  else
+    make_button_disabled("#JOB-STATUS-MORE", false);
+
+  $('#selectAllJobs').prop('checked', false);
+
+}
+
+function renderJobRows(jobs)
+{
   var html = "";
   var html_break = '<br>';
 
-  data.forEach(function(statusJob) {
-    //console.log(statusJob);
+  jobs.forEach(function(statusJob) {
     var terminalStatuses = ['SUCCEEDED', 'FAILED', 'CANCELLED'];
     var isTerminal = terminalStatuses.indexOf(statusJob.job_status) >= 0;
     html += isTerminal ? '<tr class="job-complete">' : "<tr>";
@@ -1721,24 +1757,60 @@ function procJobStat(data)
     //else
     //  statusJob['cmd_args'] = JSON.parse(cmd_parse[1]);
 
-    consoleLog(statusJob);
-    allJobsStatus[statusJob.job_id] = statusJob;
-    jobStatusLastRowid = statusJob.job_id // save lowest rowid seen
-
   });
   $( "#jobStatTable tbody" ).html(html);
   $( "#jobStatTable div.statusJobResult" ).each(function( index ) {
     $(this).scrollTop(this.scrollHeight);
   });
-  today = new Date();
-  $( "#statusJobsRefreshTime" ).html("Last Refreshed: <b>" + today.toLocaleString() + "</b>");
-  if (jobStatusLastRowid == 1)
-    make_button_disabled("#JOB-STATUS-MORE", true);
-  else
-    make_button_disabled("#JOB-STATUS-MORE", false);
+}
 
-  $('#selectAllJobs').prop('checked', false);
+function getActiveStatusFilters()
+{
+  var statuses = [];
+  $('.job-status-filter:checked').each(function() {
+    var s = $(this).data('statuses').split(',');
+    statuses = statuses.concat(s);
+  });
+  return statuses;
+}
 
+function applyJobStatusFilter()
+{
+  var activeStatuses = getActiveStatusFilters();
+  var jobs = Object.values(allJobsStatus);
+  jobs.sort(function(a, b) { return b.job_id - a.job_id; });
+  // if all or none are checked, show everything
+  if (activeStatuses.length > 0 && activeStatuses.length < 6) {
+    jobs = jobs.filter(function(j) {
+      return activeStatuses.indexOf(j.job_status) >= 0;
+    });
+  }
+  renderJobRows(jobs);
+}
+
+function loadJobFilterPrefs()
+{
+  var savedStatuses = localStorage.getItem("jobStatusFilter");
+  if (savedStatuses !== null) {
+    var activeList = savedStatuses === "" ? [] : savedStatuses.split(',');
+    $('.job-status-filter').each(function() {
+      var checkboxStatuses = $(this).data('statuses').split(',');
+      var anyMatch = checkboxStatuses.some(function(s) { return activeList.indexOf(s) >= 0; });
+      $(this).prop('checked', anyMatch);
+    });
+  }
+  var savedAge = localStorage.getItem("jobStatusAgeDays");
+  if (savedAge !== null) {
+    jobStatusAgeDays = parseInt(savedAge) || 0;
+    $('#jobStatusAge').val(String(jobStatusAgeDays));
+  }
+}
+
+function saveJobFilterPrefs()
+{
+  var statuses = getActiveStatusFilters();
+  localStorage.setItem("jobStatusFilter", statuses.join(','));
+  localStorage.setItem("jobStatusAgeDays", String(jobStatusAgeDays));
 }
 
 function cancelJob(job_id)
