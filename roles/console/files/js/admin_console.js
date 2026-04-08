@@ -625,8 +625,15 @@ function utilButtonsEvents() {
         }
     });
     //consoleLog(cmdList);
-    $.when.apply($, cmdList).then(getJobStat, procZimCatalog);
-    alert ("Jobs marked for Cancellation.\n\nPlease click Refresh to see the results.");
+    // use Promise.all to wait for all cancels
+    // delay 1.5s so backend has time to update job status before we refresh
+    Promise.all(cmdList).then(function() {
+      setTimeout(function() {
+        jobStatusLastRowid = 1; // trigger refresh from most recent
+        getJobStat();
+      }, 1500);
+    });
+    alert ("Jobs marked for Cancellation.");
     make_button_disabled("#CANCEL-JOBS", false);
   });
 
@@ -1704,6 +1711,7 @@ function procJobStat(data)
 
 }
 
+// split from procJobStat so filters can re-render without re-fetching from server
 function renderJobRows(jobs)
 {
   var html = "";
@@ -1779,8 +1787,8 @@ function applyJobStatusFilter()
   var activeStatuses = getActiveStatusFilters();
   var jobs = Object.values(allJobsStatus);
   jobs.sort(function(a, b) { return b.job_id - a.job_id; });
-  // if all or none are checked, show everything
-  if (activeStatuses.length > 0 && activeStatuses.length < 6) {
+  // 6 = total statuses, update this if new statuses are added to the filter
+  if (activeStatuses.length < 6) {
     jobs = jobs.filter(function(j) {
       return activeStatuses.indexOf(j.job_status) >= 0;
     });
@@ -1829,10 +1837,7 @@ function cancelJobFunc(job_id)
   var cmd_args = {}
   cmd_args['job_id'] = job_id;
   cmd = command + " " + JSON.stringify(cmd_args);
-  return $.Deferred( function () {
-  	var self = this;
-  	sendCmdSrvCmd(cmd, genericCmdHandler);
-  	});
+  return sendCmdSrvCmd(cmd, genericCmdHandler);
 }
 
 function getRpiState()
