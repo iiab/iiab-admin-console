@@ -625,13 +625,9 @@ function utilButtonsEvents() {
         }
     });
     //consoleLog(cmdList);
-    // use Promise.all to wait for all cancels
-    // delay 1.5s so backend has time to update job status before we refresh
-    Promise.all(cmdList).then(function() {
-      setTimeout(function() {
-        jobStatusLastRowid = 1; // trigger refresh from most recent
-        getJobStat();
-      }, 1500);
+    $.when.apply($, cmdList).then(function() {
+      jobStatusLastRowid = 1; // trigger refresh from most recent
+      getJobStat();
     });
     alert ("Jobs marked for Cancellation.");
     make_button_disabled("#CANCEL-JOBS", false);
@@ -1837,7 +1833,12 @@ function cancelJobFunc(job_id)
   var cmd_args = {}
   cmd_args['job_id'] = job_id;
   cmd = command + " " + JSON.stringify(cmd_args);
-  return sendCmdSrvCmd(cmd, genericCmdHandler);
+  var deferred = $.Deferred();
+  sendCmdSrvCmd(cmd, function(data) {
+    genericCmdHandler(data);
+    deferred.resolve();
+  });
+  return deferred.promise();
 }
 
 function getRpiState()
