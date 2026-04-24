@@ -67,6 +67,27 @@
 							</div>
 						</div>
 					</div>
+					<div class="row" style="margin-top:8px;">
+						<div class="col-sm-12">
+							<div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+								<span><b>Show:</b></span>
+								<label style="margin:0; cursor:pointer;"><input type="checkbox" class="job-status-filter" data-statuses="SCHEDULED" checked> Scheduled</label>
+								<label style="margin:0; cursor:pointer;"><input type="checkbox" class="job-status-filter" data-statuses="STARTED,RESTARTED" checked> In Progress</label>
+								<label style="margin:0; cursor:pointer;"><input type="checkbox" class="job-status-filter" data-statuses="SUCCEEDED" checked> Succeeded</label>
+								<label style="margin:0; cursor:pointer;"><input type="checkbox" class="job-status-filter" data-statuses="FAILED" checked> Failed</label>
+								<label style="margin:0; cursor:pointer;"><input type="checkbox" class="job-status-filter" data-statuses="CANCELLED" checked> Cancelled</label>
+								<span style="border-left:1px solid #ccc; height:18px; display:inline-block;"></span>
+								<label style="margin:0;">Age:
+									<select id="jobStatusAge">
+										<option value="1">Last 24h</option>
+										<option value="3" selected>Last 3 days</option>
+										<option value="7">Last week</option>
+										<option value="0">All time</option>
+									</select>
+								</label>
+							</div>
+						</div>
+					</div>
 					<div id=jobStatTable> <!--  Start jobStatTable -->
 						<table class="jobTable table-striped table-bordered">
 							<thead>
