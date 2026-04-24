@@ -11,6 +11,7 @@ import urllib.request, urllib.error, urllib.parse
 from bs4 import BeautifulSoup
 import time
 import decimal
+import iiab.iiab_lib as iiab
 
 # requires
 # pip3 install beautifulsoup4
@@ -148,6 +149,8 @@ def main():
     sys.exit(0)
 
 def parse_root_attr(entity):
+    # definitely a shortcut to have a separate function for parsing the OPDS catalog
+    # we should revisit this
 
     # zim catalog keys
     # dict_keys(['path', 'title', 'description', 'language', 'creator', 'publisher', 'name', 'tags', 'date', 'url', 'articleCount', 'mediaCount', 'size', 'download_url', 'file_ref', 'perma_ref', 'category', 'sequence', 'has_embedded_index', 'has_details', 'has_pictures', 'has_videos', 'uses_socket_workers', 'source'])
@@ -207,16 +210,10 @@ def parse_root_attr(entity):
 
     url = zim.find('link', type = "application/x-zim")['href']
     zim_attr['url'] = url
-
     urlSlash = url.split('/')
     urlEnd = urlSlash[-1] # last element
     fileRef = urlEnd.split('.zim')[0] # true for both internal and external index
-    permaRefParts = urlEnd.split('_')
-    permaRefParts = permaRefParts[0:len(permaRefParts) - 1]
-    permaRef = permaRefParts[0]
-    for part in permaRefParts[1:]:
-       if not part.isdigit():
-          permaRef += "_" + part
+    permaRef = iiab.calc_zim_perma_ref(zim_attr['url'])
 
     size = zim.find('link', type = "application/x-zim")['length']
     # size = str(round(int(size) / 1024)) # size in K - not sure if fits in 32 bit OS
@@ -291,15 +288,12 @@ def parse_attr(attributes):
         has_videos = False
 
     url = attributes['url']
+    permaRef = iiab.calc_zim_perma_ref(url)
+
     urlSlash = url.split('/')
     urlEnd = urlSlash[-1] # last element
     fileRef = urlEnd.split('.zim')[0] # true for both internal and external index
-    permaRefParts = urlEnd.split('_')
-    permaRefParts = permaRefParts[0:len(permaRefParts) - 1]
-    permaRef = permaRefParts[0]
-    for part in permaRefParts[1:]:
-       if not part.isdigit():
-          permaRef += "_" + part
+    permaRef = iiab.calc_zim_perma_ref(url)
     category = urlSlash[4].replace('_',' ').title()
     sequence = 8 - (4 * has_videos + 2 * has_pictures + 1 * has_details)
 

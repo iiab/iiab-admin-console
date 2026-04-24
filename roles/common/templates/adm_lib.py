@@ -618,7 +618,7 @@ def put_kiwix_enabled_into_menu_json():
     # list of zim languages converted to iso2 by perma ref
     zim_perma_ref_iso2 = {}
     for zim in zims_installed:
-        perma_ref = iiab.calc_perma_ref(zims_installed[zim]['path']) # N.B. 4/25/2023 first use of this function
+        perma_ref = iiab.calc_zim_perma_ref(zims_installed[zim]['path'])
         zim_lang_code = zims_installed[zim]['language']
         zim_iso2_code = kiwix_lang_to_iso2(zim_lang_code)
         zim_perma_ref_iso2[perma_ref] = zim_iso2_code
