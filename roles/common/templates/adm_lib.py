@@ -18,6 +18,7 @@ import base64
 import fnmatch
 import re
 import shutil
+import sqlite3
 import requests
 import yaml
 import jinja2
@@ -1232,6 +1233,80 @@ def jinja2_subst(src_dict, dflt_dict=None):
         except:
             dest_dict[k] = v
     return dest_dict
+
+def get_preset_size_breakdown(preset_name, catalogs, presets_dir=None):
+    if presets_dir is None:
+        presets_dir = '/opt/admin/cmdsrv/presets/'
+    content = read_json_file(presets_dir + preset_name + '/content.json')
+
+    zim_sizes = catalogs['zim_sizes']
+    module_catalog = catalogs['module_catalog']
+    maps_catalog = catalogs['maps_catalog']
+
+    zims_bytes = 0
+    modules_bytes = 0
+    maps_bytes = 0
+    missing = {'zims': [], 'modules': [], 'maps': []}
+
+    for perma_ref in content.get('zims', []):
+        if perma_ref in zim_sizes:
+            zims_bytes += zim_sizes[perma_ref]
+        else:
+            missing['zims'].append(perma_ref)
+
+    for moddir in content.get('modules', []):
+        if moddir in module_catalog:
+            modules_bytes += int(float(module_catalog[moddir]['ksize']) * 1024)
+        else:
+            missing['modules'].append(moddir)
+
+    for filename in content.get('maps', []):
+        if filename in maps_catalog:
+            maps_bytes += int(maps_catalog[filename]['size'])
+        else:
+            missing['maps'].append(filename)
+
+    kolibri_bytes = 0
+    kolibri_db = '/library/kolibri/db.sqlite3'
+    for channel in content.get('kolibri', {}).get('channels', []):
+        channel_id = channel.get('channel_id')
+        if not channel_id:
+            continue
+        try:
+            conn = sqlite3.connect(kolibri_db)
+            # Try published_size first, set by the publisher on Kolibri Studio
+            row = conn.execute(
+                'SELECT published_size FROM content_channelmetadata WHERE id = ?',
+                (channel_id,)
+            ).fetchone()
+            if row and row[0]:
+                kolibri_bytes += int(row[0])
+            else:
+                # If no published_size, walk through the metadata tree
+                # Requires importchannel to have been run at least once
+                total = conn.execute(
+                    'SELECT SUM(file_size) FROM content_localfile'
+                    ' WHERE id IN ('
+                    '  SELECT DISTINCT cf.local_file_id FROM content_file cf'
+                    '  JOIN content_contentnode cn ON cn.id = cf.contentnode_id'
+                    '  WHERE cn.channel_id = ?'
+                    ')',
+                    (channel_id,)
+                ).fetchone()[0]
+                if total:
+                    kolibri_bytes += int(total)
+            conn.close()
+        except Exception:
+            # DB missing or channel not yet imported
+            pass
+
+    return {
+        'zims': zims_bytes,
+        'modules': modules_bytes,
+        'maps': maps_bytes,
+        'kolibri': kolibri_bytes,
+        'missing': missing,
+    }
 
 def subproc_run(cmdstr, shell=False, check=False, timeout=CONST.cmdsrv_proc_timeout):
     args = shlex.split(cmdstr)
