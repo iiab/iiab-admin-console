@@ -148,14 +148,15 @@
     - { src: 'scripts/iiab-update-map3.py', dest: '{{ cmdsrv_dir }}/scripts/iiab-update-map.py'}
     - { src: 'scripts/upgrade-zims.py', dest: '{{ cmdsrv_dir }}/scripts/upgrade-zims.py'}
 
-- name: Copy assets
-  copy: src={{ item }}
+- name: Copy templated assets
+  template: src={{ item }}
             dest="{{ cmdsrv_dir }}/assets"
             mode=0755
             owner=root
             group=root
-  with_fileglob:
-            - assets/*
+  with_items:
+            - assets/run-roles-base.yml
+            - assets/adm_ansible_vars.yml
 
 - name: Copy presets recursively
   copy: src=presets

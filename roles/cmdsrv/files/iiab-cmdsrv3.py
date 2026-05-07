@@ -3568,9 +3568,16 @@ def get_last_jobs_stat(cmd_info):
     if last_rowid == 1:
         last_rowid = 10000 # wrap to refresh
 
+    try:
+        since_days = int(cmd_info['cmd_args'].get('since_days', 0))
+    except:
+        since_days = 0
+
     sql_cmd = "SELECT jobs.rowid, job_command, job_output, job_status, strftime('%m-%d %H:%M', jobs.create_datetime), "
     sql_cmd += "strftime('%s', jobs.create_datetime), strftime('%s',last_update_datetime), strftime('%s','now', 'localtime'), cmd_msg "
     sql_cmd += "FROM jobs, commands where cmd_rowid = commands.rowid AND jobs.rowid < " + str(last_rowid)
+    if since_days > 0:
+        sql_cmd += " AND jobs.create_datetime >= datetime('now', '-" + str(since_days) + " days', 'localtime')"
     sql_cmd += " ORDER BY jobs.rowid DESC LIMIT 50"
 
     db_lock.acquire() # will block if lock is already held

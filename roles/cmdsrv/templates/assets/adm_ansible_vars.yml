@@ -1,0 +1,8 @@
+# WARNING: DO NOT MODIFY THIS FILE.
+# CHANGES WILL BE LOST IF YOU DO A GIT PULL OR FETCH.
+
+# Preserve variable names that are used in the ansible playbooks and templates.
+kalite_install: False
+kalite_enabled: False
+kalite_server_port: 8008
+kalite_root: "{{ content_base }}/ka-lite"    # /library/ka-lite
