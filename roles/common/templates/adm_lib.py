@@ -1234,6 +1234,20 @@ def jinja2_subst(src_dict, dflt_dict=None):
             dest_dict[k] = v
     return dest_dict
 
+def load_catalogs():
+    # Load catalogs into dicts for get_preset_size_breakdown()
+    kiwix_data = read_json_file(CONST.kiwix_catalog_file)
+    zim_sizes = {v['perma_ref']: int(v['size']) * 1024 for v in kiwix_data.get('zims', {}).values()}
+
+    oer2go_data = read_json_file(CONST.oer2go_catalog_file)
+    module_catalog = oer2go_data.get('modules', {})
+
+    maps_data = read_maps_catalog()
+    maps_catalog = dict(maps_data.get('maps', {}))
+    maps_catalog.update(maps_data.get('base', {}))
+
+    return {'zim_sizes': zim_sizes, 'module_catalog': module_catalog, 'maps_catalog': maps_catalog}
+
 def get_preset_size_breakdown(preset_name, catalogs, presets_dir=None):
     if presets_dir is None:
         presets_dir = '/opt/admin/cmdsrv/presets/'

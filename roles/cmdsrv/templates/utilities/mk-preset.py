@@ -52,8 +52,24 @@ def main():
     do_menu(this_preset_dir, args.menu)
     do_vars(this_preset_dir)
     do_content(this_preset_dir, args.noscan)
+    update_preset_size(this_preset_dir)
 
     sys.exit()
+
+def update_preset_size(this_preset_dir):
+    preset_id = this_preset_dir.rstrip('/').split('/')[-1]
+    try:
+        catalogs = adm.load_catalogs()
+        breakdown = adm.get_preset_size_breakdown(preset_id, catalogs, presets_dir)
+        total = breakdown['zims'] + breakdown['modules'] + breakdown['maps'] + breakdown['kolibri']
+        calculated_gb = round(total / (1024 ** 3), 1)
+        if calculated_gb > 0:
+            preset_file = this_preset_dir + 'preset.json'
+            preset = adm.read_json_file(preset_file)
+            preset['size_in_gb'] = calculated_gb
+            adm.write_json_file(preset, preset_file)
+    except Exception:
+        pass  # use estimate from do_preset()
 
 def do_preset(this_preset_dir, title=None, description=None, lang=None, location=None):
     preset_file = this_preset_dir + 'preset.json'
