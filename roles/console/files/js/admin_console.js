@@ -1876,6 +1876,22 @@ function getSysMem()
   return true;
 }
 
+function getHwInfo()
+{
+  sendCmdSrvCmd("GET-HW-INFO", procHwInfo);
+  return true;
+}
+
+function procHwInfo(data)
+{
+  consoleLog(data);
+  var hwInfo = data['hw_info'];
+  var jstr = JSON.stringify(hwInfo, undefined, 2);
+  var html = jstr.replace(/\n/g, "<br>").replace(/[ ]/g, "&nbsp;");
+  $( "#hwInfo" ).html(html);
+  return true;
+}
+
 function procSysMem(data)
 {
   //alert ("in procSysMem");

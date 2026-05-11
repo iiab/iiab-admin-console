@@ -19,6 +19,7 @@
 					call-after="getRpiState">Display System Status</a></li>
 				<li><a href="#utilsMemory" call-after="getSysMem">Display System Memory</a></li>
 				<li><a href="#utilsStorage" call-after="getSysStorage">Display System Storage</a></li>
+				<li><a href="#utilsHwInfo" call-after="getHwInfo">Display Hardware Info</a></li>
 				<li><a href="#utilsSpeedTest">Perform Internet Speed Test</a></li>
 <!--				<li><a href="#utilsAnsTags">Run Ansible by Tag</a></li> -->
 <!--				<li><a href="#utilsResetNetwork">Troubleshoot Networking</a></li> -->
@@ -147,6 +148,10 @@
 					<pre><div id=sysStorage>
 					</div></pre>
 				</div> <!--  End utilsStorage pane -->
+				<div class="tab-pane" id="utilsHwInfo"> <!-- Start utilsHwInfo Pane -->
+					<h2>Hardware Information</h2>
+					<div id="hwInfo"></div>
+				</div> <!--  End utilsHwInfo pane -->
 				<div class="tab-pane" id="utilsSpeedTest"> <!-- Start utilsSpeedTest Pane -->
 					<h2>Internet Speed Test</h2>
 <!--					<p><b>WARNING:</b> The first test retrieves a 10M data file.  The second is more than 100M.  If you have a mobile internet connection this could be costly.</p>
