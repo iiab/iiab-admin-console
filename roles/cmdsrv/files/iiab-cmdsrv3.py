@@ -735,6 +735,7 @@ def cmd_handler(cmd_msg):
         "SET-CONF": {"funct": set_config_vars, "inet_req": False},
         "GET-RPI-STATE": {"funct": get_rpi_state, "inet_req": False},
         "GET-MEM-INFO": {"funct": get_mem_info, "inet_req": False},
+        "GET-HW-INFO": {"funct": get_hw_info, "inet_req": False},
         "GET-SPACE-AVAIL": {"funct": get_space_avail, "inet_req": False},
         "GET-STORAGE-INFO": {"funct": get_storage_info_lite, "inet_req": False},
         "GET-EXTDEV-INFO": {"funct": get_external_device_info, "inet_req": False},
@@ -1188,6 +1189,14 @@ def get_mem_info(cmd_info):
     outp = subproc_check_output(["/usr/bin/free", "-h"])
     json_outp = json_array("system_memory", outp)
     return (json_outp)
+
+def get_hw_info(cmd_info):
+    try:
+        outp = subproc_check_output(["/usr/bin/lshw", "-json", "-quiet", "-sanitize"])
+        resp = '{"hw_info": ' + outp + '}'
+    except Exception:
+        resp = cmd_error(cmd_info['cmd'], "Unable to read hardware info")
+    return (resp)
 
 def get_space_avail(cmd_info):
     space_avail = adm.calc_space_avail()
