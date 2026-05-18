@@ -30,7 +30,7 @@ Note some services listed below may not be installed and will not have a checkbo
 
     Khan Academy is a famous source of instructional videos originally on math topics, but now spanning numerous subjects.  KA Lite is an offline version of these videos with accompanying exercises.
 
-**Kolibri** - Multiple channels from many sources that provide offline access to a wide range of quality, openly licensed educational content.
+* **Kolibri** - Multiple channels from many sources that provide offline access to a wide range of quality, openly licensed educational content.
 
 * **IIAB Vector Maps** - From OpenStreetMap these are maps of the world and specific regions from 10 to 16 levels of zoom depending on the tiles you install.
 
@@ -148,38 +148,14 @@ Determines which if any ports will be open to the WAN
 
 Allows netowrk traffic to be routed from LAN to WAN
 
-Internet Caching/Filtering
---------------------------
-
-**Please Note**: These parameters only take effect when you have selected the Gateway Role on the previous screen and have the necessary Network Adapters.
-
-* Enable local Web Page storage for later fast access (Squid cache)
-
-* Restrict Web Page Access to a Specific List of Sites (Permitted URLs)
-
-* Block all HTTPS Access to Web Page
-
-When the Server acts as a **Gateway** between users and the Internet it can provide two main types of services.  The first is that it can make the connection to the Internet more efficient by caching or storing responses on the server so that the next request does not need to go to the Internet. You will usually want this.
-
-In addition, it can filter the sites that students are permitted to access in three ways.  The first is to only allow pages in the **Permitted URLs** list to be accessed; see below.  The second is that all sites accessed with https security can be blocked to prevent users from by-passing the previous filter.
-
 ## Internal Wi-Fi Appliance
 
 * Set various hotspot parameters
 
 * Turn on Captive Portal
 
-Edit Permitted URLs
--------------------
-
-Under **Configure** - **Internet Caching/Filtering** you can turn on Internet filtering to only permit access to URLs or web sites that are in this list. Here you can modify the list to add or remove sites.  To remove a site delete the line that has its URL. To add a site add a line with the site's URL.  The dot at the beginning of the line means to match anything up to that point, so .unleashkids.org is the same as www.unleashkids.org and download.unleashkids.org.
-
 Actions
 -------
-
-### Update Permitted URLs List
-
-Saves the list of permitted URLs edited above and makes them active.
 
 ### Save Configuration
 
