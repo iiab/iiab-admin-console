@@ -36,7 +36,6 @@ Install Content
 * Get ZIM Files from Kiwix
 * Upgrade ZIM Files
 * Get OER2Go(RACHEL) Modules
-* Get Kolibri Channels
 * Manage Content
 * Clone IIAB
 * Create a Content Collection

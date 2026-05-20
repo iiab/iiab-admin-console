@@ -19,7 +19,9 @@ Select one of the collections of content listed and the following will be perfor
 * Any listed OSM map packs will be downloaded and installed
 * Any listed Kolibri channels will be downloaded and installed
 
-Each preset displays its estimated total size so you can check that your server has enough storage before starting. 
+Each preset displays its estimated total size so you can check that your server has enough storage before starting.
+
+Kolibri channels included in a preset will be downloaded automatically.  The Admin Console will enable the Kolibri service if it is not already active.
 
 Get ZIM Files from Kiwix
 ------------------------
@@ -117,21 +119,6 @@ When you have made your selections click **Install Selected Modules**.  Jobs wil
 ### Don't Forget
 
 Downloaded Modules will appear on the server in a URL like /modules/Name of the Module. If you are using IIAB-Menu, there will already be a menu definition for most modules, but you may need to create your own. You may also need to add a reference to the module to your menu file.
-
-Get Kolibri Channels
---------------------
-
-### Overview
-
-Kolibri from Learning Equality provides offline access to Khan Academy videos, exercises, and other educational content in many languages.  Kolibri channels can be downloaded directly from the Kolibri Content Library.
-
-### How it works
-
-When you install a Quick Pick preset that includes Kolibri content, the Admin Console will automatically enable the Kolibri service and download the specified channels.  You can monitor progress under **Display Job Status** on the **Utilities** menu.
-
-### Don't Forget
-
-Make sure that the **Kolibri** service is enabled under **Configure** - **Services Enabled**.
 
 Create a Content Collection
 ---------------------------
