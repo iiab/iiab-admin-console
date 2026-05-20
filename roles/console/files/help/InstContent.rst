@@ -138,7 +138,7 @@ Create a Content Collection
 
 ### Overview
 
-This option lets you save the currently installed content as a named preset - a reusable collection that can be applied to other IIAB servers using Quick Pick.
+This option lets you save the currently installed content as a named preset - a reusable collection that can be applied to other IIAB installations using Quick Pick.
 
 ### How it works
 
