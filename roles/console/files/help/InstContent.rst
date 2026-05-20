@@ -17,11 +17,9 @@ Select one of the collections of content listed and the following will be perfor
 * Any listed ZIMs will be downloaded and installed
 * Any listed OER2Go modules will be downloaded and installed
 * Any listed OSM map packs will be downloaded and installed
-* Any listed Kolibri channels will be downloaded and installed
+* Any listed Kolibri channels will be downloaded and installed (the Kolibri service will be enabled automatically if not already active)
 
 Each preset displays its estimated total size so you can check that your server has enough storage before starting.
-
-Kolibri channels included in a preset will be downloaded automatically.  The Admin Console will enable the Kolibri service if it is not already active.
 
 Get ZIM Files from Kiwix
 ------------------------
