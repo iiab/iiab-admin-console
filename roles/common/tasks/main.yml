@@ -23,7 +23,7 @@
     # mode: '0755'
     state: directory
   with_items:
-    #- "{{ content_base }}/downloads"    # /library/downloads auto-created just below
+    - "{{ content_info }}"
     - "{{ content_base }}/downloads/zims"
     - "{{ content_base }}/downloads/maps"
     - "{{ content_base }}/downloads/rachel"    # STILL USED OR NOT?
