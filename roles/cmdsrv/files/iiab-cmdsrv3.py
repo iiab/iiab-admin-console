@@ -20,7 +20,7 @@ from systemd import journal
 import pwd, grp
 import time
 from datetime import date, datetime, timedelta
-import threading, subprocess
+import threading, subprocess, ctypes
 import shlex
 import shutil
 import zmq
@@ -3419,10 +3419,16 @@ def read_pw_hash(user):
             break
     return pw_hash
 
+_libcrypt = ctypes.CDLL('libcrypt.so.1')
+_libcrypt.crypt.restype = ctypes.c_char_p
+_libcrypt.crypt.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
+_crypt_lock = threading.Lock()  # prevents concurrent calls from corrupting each other
+
 def calc_passwd_hash(password, existing_hash):
-    # return calculated hash
     try:
-       return subprocess.run(['perl', '-e', f"print crypt('{password}', '{existing_hash}')"], capture_output=True, text=True).stdout
+        with _crypt_lock:
+            result = _libcrypt.crypt(password.encode(), existing_hash.encode())
+            return result.decode() if result else None  
     except:
         return None
 
