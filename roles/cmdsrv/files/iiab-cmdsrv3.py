@@ -31,6 +31,7 @@ import yaml
 import configparser
 import re
 import urllib.request, urllib.error, urllib.parse
+import ipaddress
 import string
 import mimetypes
 import cracklib
@@ -105,6 +106,7 @@ vector_map_tiles_path = None
 osm_version = None
 modules_dir = None
 small_device_size = 525000 # bigger than anticipated boot partition
+sync_content_inventory_path = "/common/assets/iiab-sync/content.json"
 js_menu_dir = None
 tailscale_login_url = 'https://controlplane.tailscale.com'
 tailscale_iiab_login_url = 'https://iiab.net'
@@ -739,6 +741,7 @@ def cmd_handler(cmd_msg):
         "GET-SPACE-AVAIL": {"funct": get_space_avail, "inet_req": False},
         "GET-STORAGE-INFO": {"funct": get_storage_info_lite, "inet_req": False},
         "GET-EXTDEV-INFO": {"funct": get_external_device_info, "inet_req": False},
+        "GET-SYNC-CONTENT": {"funct": get_sync_content, "inet_req": False},
         "GET-REM-DEV-LIST": {"funct": get_rem_dev_list, "inet_req": False},
         "GET-SYSTEM-INFO": {"funct": get_system_info, "inet_req": False},
         "GET-NETWORK-INFO": {"funct": get_network_info, "inet_req": False},
@@ -1212,6 +1215,61 @@ def get_storage_info_lite(cmd_info):
     outp = subproc_check_output(cmd_args)
     json_outp = json_array("system_fs", outp)
     return (json_outp)
+
+def validate_sync_source_host(source_host):
+    if not isinstance(source_host, str):
+        return None
+
+    source_host = source_host.strip()
+    if len(source_host) == 0 or len(source_host) > 253:
+        return None
+
+    try:
+        ip_addr = ipaddress.ip_address(source_host)
+        if ip_addr.version == 6:
+            return "[" + source_host + "]"
+        return source_host
+    except ValueError:
+        pass
+
+    hostname_re = re.compile(r"^(?=.{1,253}$)([A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)*[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?$")
+    if hostname_re.match(source_host):
+        return source_host
+
+    return None
+
+def get_sync_content(cmd_info):
+    try:
+        source_host = cmd_info['cmd_args']['source_host']
+    except:
+        return cmd_malformed(cmd_info['cmd'])
+
+    safe_source_host = validate_sync_source_host(source_host)
+    if safe_source_host == None:
+        return cmd_error(cmd=cmd_info['cmd'], msg='Invalid source host')
+
+    inventory_url = "http://" + safe_source_host + sync_content_inventory_path
+
+    try:
+        with urllib.request.urlopen(inventory_url, timeout=10) as response:
+            if response.status != 200:
+                return cmd_error(cmd=cmd_info['cmd'], msg='Unable to fetch sync content inventory')
+            inventory_bytes = response.read()
+    except urllib.error.HTTPError as exc:
+        if exc.code == 404:
+            return cmd_error(cmd=cmd_info['cmd'], msg='Sync content inventory not found')
+        return cmd_error(cmd=cmd_info['cmd'], msg='Unable to fetch sync content inventory')
+    except urllib.error.URLError:
+        return cmd_error(cmd=cmd_info['cmd'], msg='Unable to reach sync source server')
+    except socket.timeout:
+        return cmd_error(cmd=cmd_info['cmd'], msg='Timed out contacting sync source server')
+
+    try:
+        inventory = json.loads(inventory_bytes.decode('utf-8'))
+    except:
+        return cmd_error(cmd=cmd_info['cmd'], msg='Invalid sync content inventory JSON')
+
+    return json.dumps(inventory)
 
 def get_external_device_info(cmd_info):
     extdev_info = {}
