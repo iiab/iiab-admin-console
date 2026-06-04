@@ -1238,6 +1238,25 @@ def validate_sync_source_host(source_host):
 
     return None
 
+def validate_sync_content_inventory(inventory):
+    if not isinstance(inventory, dict):
+        return False
+
+    required_keys = {
+        "schema_version": int,
+        "server": dict,
+        "zims": list,
+        "modules": list
+    }
+
+    for key, expected_type in required_keys.items():
+        if key not in inventory:
+            return False
+        if not isinstance(inventory[key], expected_type):
+            return False
+
+    return True
+
 def get_sync_content(cmd_info):
     try:
         source_host = cmd_info['cmd_args']['source_host']
@@ -1268,6 +1287,9 @@ def get_sync_content(cmd_info):
         inventory = json.loads(inventory_bytes.decode('utf-8'))
     except:
         return cmd_error(cmd=cmd_info['cmd'], msg='Invalid sync content inventory JSON')
+
+    if not validate_sync_content_inventory(inventory):
+        return cmd_error(cmd=cmd_info['cmd'], msg='Invalid sync content inventory format')
 
     return json.dumps(inventory)
 
