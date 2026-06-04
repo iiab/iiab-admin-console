@@ -522,6 +522,113 @@ function renderExternalList() {
   }
 }
 
+function loadSyncContent(){
+  var sourceHost = $("#syncSourceHost").val().trim();
+
+  if (sourceHost == ""){
+    alert("Please enter a source server IP or hostname.");
+    return;
+  }
+
+  var cmdArgs = {"source_host": sourceHost};
+  var cmd = "GET-SYNC-CONTENT " + JSON.stringify(cmdArgs);
+
+  $("#syncContentStatus").html("Loading content from " + sourceHost + "...");
+  $("#syncZimModules").html("");
+  $("#syncOer2goModules").html("");
+
+  return sendCmdSrvCmd(cmd, procSyncContent, "LOAD-SYNC-CONTENT");
+}
+
+function procSyncContent(data){
+  syncContentInventory = data;
+
+  var sourceName = syncContentInventory.server.hostname || $("#syncSourceHost").val().trim();
+  $("#syncContentStatus").html("Loaded content from " + escapeSyncHtml(sourceName) + ".");
+
+  renderSyncZimList();
+  renderSyncOer2goModules();
+}
+
+function renderSyncZimList(){
+  var html = "";
+  var zims = syncContentInventory.zims || [];
+
+  if (zims.length == 0){
+    $("#syncZimModules").html("No ZIM files found.");
+    return;
+  }
+
+  zims.sort(function(a, b){
+    return (a.title || a.id).localeCompare(b.title || b.id);
+  });
+
+  zims.forEach(function(zim){
+    var zimId = zim.id || zim.file_ref || zim.path;
+    var title = zim.title || zimId;
+    var lang = zim.language || "";
+    var size = zim.size_k ? readableSize(zim.size_k) : "";
+    var details = [];
+
+    if (lang != "")
+      details.push(lang);
+    if (size != "")
+      details.push(size);
+
+    html += '<label><input type="checkbox" name="' + escapeSyncHtml(zimId) + '"></label>';
+    html += '<span class="zim-desc">&nbsp;&nbsp;' + escapeSyncHtml(title);
+    if (details.length > 0)
+      html += ' (' + escapeSyncHtml(details.join(", ")) + ')';
+    html += '</span><BR>';
+  });
+
+  $("#syncZimModules").html(html);
+}
+
+function renderSyncOer2goModules(){
+  var html = "";
+  var modules = syncContentInventory.modules || [];
+
+  if (modules.length == 0){
+    $("#syncOer2goModules").html("No OER2Go(RACHEL) modules found.");
+    return;
+  }
+
+  modules.sort(function(a, b){
+    return (a.title || a.moddir).localeCompare(b.title || b.moddir);
+  });
+
+  modules.forEach(function(mod){
+    var moddir = mod.moddir || mod.menu_item_name;
+    var title = mod.title || moddir;
+    var description = mod.description || "";
+    var size = mod.ksize ? readableSize(mod.ksize) : "";
+
+    html += '<label><input type="checkbox" name="' + escapeSyncHtml(moddir) + '"></label>';
+    html += '<span class="zim-desc">&nbsp;&nbsp;' + escapeSyncHtml(title);
+    if (description != "")
+      html += ': ' + escapeSyncHtml(description);
+    html += '</span>';
+    if (size != "")
+      html += '<span style="display:inline-block; width:120px;"> Size: ' + escapeSyncHtml(size) + '</span>';
+    html += '<BR>';
+  });
+
+  $("#syncOer2goModules").html(html);
+}
+
+function escapeSyncHtml(value){
+  return String(value).replace(/[&<>"']/g, function(char) {
+    return {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[char];
+  });
+}
+
 function delDownloadedFileList(id, sub_dir) {
   var delArgs = {}
 	var fileList = [];
