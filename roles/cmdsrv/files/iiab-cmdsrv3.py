@@ -742,6 +742,7 @@ def cmd_handler(cmd_msg):
         "GET-STORAGE-INFO": {"funct": get_storage_info_lite, "inet_req": False},
         "GET-EXTDEV-INFO": {"funct": get_external_device_info, "inet_req": False},
         "GET-SYNC-CONTENT": {"funct": get_sync_content, "inet_req": False},
+        "MAKE-SYNC-CONTENT": {"funct": make_sync_content, "inet_req": False},
         "GET-REM-DEV-LIST": {"funct": get_rem_dev_list, "inet_req": False},
         "GET-SYSTEM-INFO": {"funct": get_system_info, "inet_req": False},
         "GET-NETWORK-INFO": {"funct": get_network_info, "inet_req": False},
@@ -1292,6 +1293,104 @@ def get_sync_content(cmd_info):
         return cmd_error(cmd=cmd_info['cmd'], msg='Invalid sync content inventory format')
 
     return json.dumps(inventory)
+
+def make_sync_content(cmd_info):
+    modules, invalid_modules = build_sync_module_inventory()
+    inventory = {
+        "schema_version": 1,
+        "server": {
+            "hostname": socket.gethostname(),
+            "base_url": "http://" + socket.gethostname(),
+            "generated_at": datetime.utcnow().isoformat() + "Z",
+            "generated_by": "MAKE-SYNC-CONTENT"
+        },
+        "zims": build_sync_zim_inventory(),
+        "modules": modules,
+        "invalid_modules": invalid_modules
+    }
+
+    if not validate_sync_content_inventory(inventory):
+        return cmd_error(cmd=cmd_info['cmd'], msg='Generated sync content inventory has invalid format')
+
+    inventory_path = doc_root + sync_content_inventory_path
+    inventory_dir = os.path.dirname(inventory_path)
+
+    try:
+        os.makedirs(inventory_dir, exist_ok=True)
+        tmp_inventory_path = inventory_path + ".tmp"
+        with open(tmp_inventory_path, "w") as inventory_file:
+            json.dump(inventory, inventory_file, indent=2)
+        shutil.move(tmp_inventory_path, inventory_path)
+    except:
+        return cmd_error(cmd=cmd_info['cmd'], msg='Unable to write sync content inventory')
+
+    return json.dumps(inventory)
+
+def build_sync_zim_inventory():
+    zims = []
+    lib_xml_file = zim_dir + "/library.xml"
+    installed_zims = read_library_xml(lib_xml_file)
+
+    for zim_id in sorted(installed_zims):
+        zim = dict(installed_zims[zim_id])
+        zim["id"] = zim_id
+
+        if "path" in zim:
+            zim_file = os.path.basename(zim["path"])
+            zim["file_ref"] = zim_file.split(".zim")[0]
+
+        if "size" in zim:
+            try:
+                zim["size_k"] = int(zim["size"])
+            except:
+                pass
+
+        zims.append(zim)
+
+    return zims
+
+def build_sync_module_inventory():
+    modules = []
+    invalid_modules = []
+    dirlist = glob(modules_dir + "/*/")
+
+    for modpath in sorted(dirlist):
+        moddir = modpath.split('/')[-2]
+
+        if moddir in oer2go_catalog:
+            module = dict(oer2go_catalog[moddir])
+            module["moddir"] = moddir
+            module["source"] = "oer2go-catalog"
+            modules.append(module)
+            continue
+
+        meta_path = os.path.join(modpath, ".iiab-meta")
+        if not os.path.isfile(meta_path):
+            invalid_modules.append({
+                "moddir": moddir,
+                "reason": "missing .iiab-meta"
+            })
+            continue
+
+        try:
+            with open(meta_path, "r") as meta_file:
+                module = json.load(meta_file)
+            if not isinstance(module, dict):
+                invalid_modules.append({
+                    "moddir": moddir,
+                    "reason": "invalid .iiab-meta"
+                })
+                continue
+            module["moddir"] = module.get("moddir", moddir)
+            module["source"] = "iiab-meta"
+            modules.append(module)
+        except:
+            invalid_modules.append({
+                "moddir": moddir,
+                "reason": "invalid .iiab-meta"
+            })
+
+    return modules, invalid_modules
 
 def get_external_device_info(cmd_info):
     extdev_info = {}
