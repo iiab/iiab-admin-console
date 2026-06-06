@@ -107,6 +107,7 @@ osm_version = None
 modules_dir = None
 small_device_size = 525000 # bigger than anticipated boot partition
 sync_content_inventory_path = "/common/assets/iiab-sync/content.json"
+sync_module_meta_required_fields = ["moddir", "title", "description", "lang", "ksize", "menu_item_name", "intended_use"]
 js_menu_dir = None
 tailscale_login_url = 'https://controlplane.tailscale.com'
 tailscale_iiab_login_url = 'https://iiab.net'
@@ -1375,13 +1376,13 @@ def build_sync_module_inventory():
         try:
             with open(meta_path, "r") as meta_file:
                 module = json.load(meta_file)
-            if not isinstance(module, dict):
+            invalid_reason = validate_sync_module_meta(module, moddir)
+            if invalid_reason != None:
                 invalid_modules.append({
                     "moddir": moddir,
-                    "reason": "invalid .iiab-meta"
+                    "reason": invalid_reason
                 })
                 continue
-            module["moddir"] = module.get("moddir", moddir)
             module["source"] = "iiab-meta"
             modules.append(module)
         except:
@@ -1391,6 +1392,30 @@ def build_sync_module_inventory():
             })
 
     return modules, invalid_modules
+
+def validate_sync_module_meta(module, moddir):
+    if not isinstance(module, dict):
+        return "invalid .iiab-meta"
+
+    missing_fields = []
+    for field in sync_module_meta_required_fields:
+        if field not in module:
+            missing_fields.append(field)
+        elif isinstance(module[field], str) and module[field].strip() == "":
+            missing_fields.append(field)
+
+    if len(missing_fields) > 0:
+        return "missing .iiab-meta fields: " + ", ".join(missing_fields)
+
+    if module["moddir"] != moddir:
+        return ".iiab-meta moddir does not match module directory"
+
+    try:
+        int(module["ksize"])
+    except:
+        return ".iiab-meta ksize must be an integer"
+
+    return None
 
 def get_external_device_info(cmd_info):
     extdev_info = {}
