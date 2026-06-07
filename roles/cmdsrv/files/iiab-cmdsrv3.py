@@ -780,6 +780,7 @@ def cmd_handler(cmd_msg):
         "GET-OER2GO-CAT": {"funct": get_oer2go_catalog, "inet_req": True},
         "INST-OER2GO-MOD": {"funct": install_oer2go_mod, "inet_req": True},
         "COPY-OER2GO-MOD": {"funct": copy_oer2go_mod, "inet_req": False},
+        "SYNC-OER2GO-MOD": {"funct": sync_oer2go_mod, "inet_req": False},
         "GET-OER2GO-STAT": {"funct": get_oer2go_stat, "inet_req": False},
         "GET-RACHEL-STAT": {"funct": get_rachel_stat, "inet_req": False},
         "INST-RACHEL": {"funct": install_rachel, "inet_req": True},
@@ -3150,6 +3151,66 @@ def copy_oer2go_mod(cmd_info):
         job_id = request_one_job(cmd_info, job_command, 1, -1, "Y")
         job_command = "scripts/oer2go_install_move.sh " + file_ref
         resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=2, depend_on_job_id=job_id, has_dependent="N")
+    return resp
+
+def validate_sync_module_id(moddir):
+    if not isinstance(moddir, str):
+        return None
+    moddir = moddir.strip()
+    if re.match(r"^[A-Za-z0-9._-]+$", moddir):
+        return moddir
+    return None
+
+def validate_sync_source_user(source_user):
+    if source_user == None:
+        return None
+    if not isinstance(source_user, str):
+        return None
+    source_user = source_user.strip()
+    if re.match(r"^[A-Za-z0-9._-]+$", source_user):
+        return source_user
+    return None
+
+def sync_oer2go_mod(cmd_info):
+    try:
+        source_host = cmd_info['cmd_args']['source_host']
+        moddir = cmd_info['cmd_args']['moddir']
+    except:
+        return cmd_malformed(cmd_info['cmd'])
+
+    safe_source_host = validate_sync_source_host(source_host)
+    safe_moddir = validate_sync_module_id(moddir)
+    source_user = cmd_info['cmd_args'].get('source_user')
+    safe_source_user = validate_sync_source_user(source_user)
+
+    if safe_source_host == None:
+        return cmd_error(cmd=cmd_info['cmd'], msg='Invalid source host')
+    if safe_moddir == None:
+        return cmd_error(cmd=cmd_info['cmd'], msg='Invalid module id')
+    if source_user != None and safe_source_user == None:
+        return cmd_error(cmd=cmd_info['cmd'], msg='Invalid source user')
+
+    refresh_oer2go_installed()
+    if safe_moddir in oer2go_installed:
+        return cmd_error(cmd=cmd_info['cmd'], msg='Module already installed')
+
+    try:
+        os.makedirs(rachel_working_dir, exist_ok=True)
+    except:
+        return cmd_error(cmd=cmd_info['cmd'], msg='Error creating module working directory')
+
+    remote_host = safe_source_host
+    if safe_source_user != None:
+        remote_host = safe_source_user + "@" + safe_source_host
+
+    remote_source = remote_host + ":" + modules_dir + safe_moddir
+    job_command = "/usr/bin/rsync -rPt --size-only -e " + shlex.quote("ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new")
+    job_command += " " + shlex.quote(remote_source)
+    job_command += " " + shlex.quote(rachel_working_dir)
+
+    job_id = request_one_job(cmd_info, job_command, 1, -1, "Y")
+    job_command = "scripts/oer2go_install_move.sh " + shlex.quote(safe_moddir)
+    resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=2, depend_on_job_id=job_id, has_dependent="N")
     return resp
 
 def get_oer2go_stat(cmd_info):
