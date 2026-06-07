@@ -775,6 +775,7 @@ def cmd_handler(cmd_msg):
         "GET-UPGRADEABLE-ZIMS": {"funct": get_upgradeable_zims, "inet_req": False},
         "UPGRADE-ZIMS": {"funct": upgrade_zims, "inet_req": True},
         "COPY-ZIMS": {"funct": copy_zims, "inet_req": False},
+        "SYNC-ZIMS": {"funct": sync_zims, "inet_req": False},
         "MAKE-KIWIX-LIB": {"funct": make_kiwix_lib, "inet_req": False}, # runs as job
         "RESTART-KIWIX": {"funct": restart_kiwix, "inet_req": False}, # runs immediately
         "GET-OER2GO-CAT": {"funct": get_oer2go_catalog, "inet_req": True},
@@ -3170,6 +3171,86 @@ def validate_sync_source_user(source_user):
     if re.match(r"^[A-Za-z0-9._-]+$", source_user):
         return source_user
     return None
+
+def validate_sync_zim_file_ref(file_ref):
+    if not isinstance(file_ref, str):
+        return None
+    file_ref = file_ref.strip()
+    if re.match(r"^[A-Za-z0-9._-]+$", file_ref):
+        return file_ref
+    return None
+
+def sync_zim_content_exists(file_ref):
+    return len(glob(zim_content_dir + file_ref + ".zim*")) > 0
+
+def sync_zim_installed(file_ref, zim_id=None):
+    installed_zims = read_library_xml(zim_dir + "/library.xml")
+
+    if zim_id != None and zim_id in installed_zims:
+        return sync_zim_content_exists(file_ref)
+
+    for installed_zim_id in installed_zims:
+        installed_zim = installed_zims[installed_zim_id]
+        if "path" not in installed_zim:
+            continue
+        installed_file = os.path.basename(installed_zim["path"]).split(".zim")[0]
+        if installed_file == file_ref and sync_zim_content_exists(file_ref):
+            return True
+
+    return False
+
+def sync_zims(cmd_info):
+    try:
+        source_host = cmd_info['cmd_args']['source_host']
+        file_ref = cmd_info['cmd_args']['file_ref']
+    except:
+        return cmd_malformed(cmd_info['cmd'])
+
+    safe_source_host = validate_sync_source_host(source_host)
+    safe_file_ref = validate_sync_zim_file_ref(file_ref)
+    source_user = cmd_info['cmd_args'].get('source_user')
+    safe_source_user = validate_sync_source_user(source_user)
+    zim_id = cmd_info['cmd_args'].get('zim_id')
+
+    if safe_source_host == None:
+        return cmd_error(cmd=cmd_info['cmd'], msg='Invalid source host')
+    if safe_file_ref == None:
+        return cmd_error(cmd=cmd_info['cmd'], msg='Invalid ZIM file reference')
+    if source_user != None and safe_source_user == None:
+        return cmd_error(cmd=cmd_info['cmd'], msg='Invalid source user')
+    if zim_id != None and not isinstance(zim_id, str):
+        return cmd_error(cmd=cmd_info['cmd'], msg='Invalid ZIM id')
+
+    if sync_zim_installed(safe_file_ref, zim_id):
+        return cmd_error(cmd=cmd_info['cmd'], msg='ZIM already installed')
+
+    target_dir = zim_working_dir + safe_file_ref + "/data"
+    try:
+        os.makedirs(target_dir + "/content", exist_ok=True)
+        os.makedirs(target_dir + "/index", exist_ok=True)
+    except:
+        return cmd_error(cmd=cmd_info['cmd'], msg='Error creating ZIM working directory')
+
+    remote_host = safe_source_host
+    if safe_source_user != None:
+        remote_host = safe_source_user + "@" + safe_source_host
+
+    ssh_command = shlex.quote("ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new")
+    remote_zim_source = remote_host + ":" + zim_content_dir + safe_file_ref + ".zim*"
+    job_command = "/usr/bin/rsync -rPt --size-only -e " + ssh_command
+    job_command += " " + shlex.quote(remote_zim_source)
+    job_command += " " + shlex.quote(target_dir + "/content")
+    job_id = request_one_job(cmd_info, job_command, 1, -1, "Y")
+
+    remote_index_source = remote_host + ":" + zim_index_dir + safe_file_ref + ".zim.idx"
+    job_command = "/usr/bin/rsync -rPt --size-only --ignore-missing-args -e " + ssh_command
+    job_command += " " + shlex.quote(remote_index_source)
+    job_command += " " + shlex.quote(target_dir + "/index")
+    job_id = request_one_job(cmd_info, job_command, 2, job_id, "Y")
+
+    job_command = "scripts/zim_install_step3.sh " + shlex.quote(safe_file_ref)
+    resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=3, depend_on_job_id=job_id, has_dependent="N")
+    return resp
 
 def sync_oer2go_mod(cmd_info):
     try:
