@@ -516,6 +516,10 @@ function instContentButtonsEvents() {
     loadSyncContent();
   });
 
+  $("#SYNC-SELECTED-CONTENT").click(function(){
+    syncSelectedContent();
+  });
+
   $("#COPY-CONTENT").click(function(){
   	// assume that we can only get here if there are both internal and external devices
   	make_button_disabled("#COPY-CONTENT", true);

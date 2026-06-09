@@ -541,6 +541,19 @@ function loadSyncContent(){
 }
 
 function procSyncContent(data){
+  if (!data || typeof data !== "object"){
+    syncContentInventory = {};
+    $("#syncContentStatus").html("Error: invalid response from source server.");
+    return;
+  }
+
+  if (!data.server || typeof data.server !== "object")
+    data.server = {};
+  if (!Array.isArray(data.zims))
+    data.zims = [];
+  if (!Array.isArray(data.modules))
+    data.modules = [];
+
   syncContentInventory = data;
 
   var sourceName = syncContentInventory.server.hostname || $("#syncSourceHost").val().trim();
@@ -565,17 +578,23 @@ function renderSyncZimList(){
 
   zims.forEach(function(zim){
     var zimId = zim.id || zim.file_ref || zim.path;
+    var fileRef = getSyncZimFileRef(zim);
     var title = zim.title || zimId;
     var lang = zim.language || "";
     var size = zim.size_k ? readableSize(zim.size_k) : "";
     var details = [];
+
+    if (!fileRef)
+      return;
 
     if (lang != "")
       details.push(lang);
     if (size != "")
       details.push(size);
 
-    html += '<label><input type="checkbox" name="' + escapeSyncHtml(zimId) + '"></label>';
+    html += '<label><input type="checkbox" class="sync-zim-checkbox" name="' + escapeSyncHtml(zimId) + '"';
+    html += ' data-zim-id="' + escapeSyncHtml(zimId) + '"';
+    html += ' data-file-ref="' + escapeSyncHtml(fileRef) + '"></label>';
     html += '<span class="zim-desc">&nbsp;&nbsp;' + escapeSyncHtml(title);
     if (details.length > 0)
       html += ' (' + escapeSyncHtml(details.join(", ")) + ')';
@@ -604,7 +623,11 @@ function renderSyncOer2goModules(){
     var description = mod.description || "";
     var size = mod.ksize ? readableSize(mod.ksize) : "";
 
-    html += '<label><input type="checkbox" name="' + escapeSyncHtml(moddir) + '"></label>';
+    if (!moddir)
+      return;
+
+    html += '<label><input type="checkbox" class="sync-module-checkbox" name="' + escapeSyncHtml(moddir) + '"';
+    html += ' data-moddir="' + escapeSyncHtml(moddir) + '"></label>';
     html += '<span class="zim-desc">&nbsp;&nbsp;' + escapeSyncHtml(title);
     if (description != "")
       html += ': ' + escapeSyncHtml(description);
@@ -615,6 +638,92 @@ function renderSyncOer2goModules(){
   });
 
   $("#syncOer2goModules").html(html);
+}
+
+function getSyncZimFileRef(zim){
+  if (zim.file_ref)
+    return zim.file_ref;
+
+  if (zim.path){
+    var pathParts = zim.path.split("/");
+    var zimFile = pathParts[pathParts.length - 1];
+    return zimFile.split(".zim")[0];
+  }
+
+  return null;
+}
+
+function getSyncCommandArgs(){
+  var sourceHost = $("#syncSourceHost").val().trim();
+  var sourceUser = $("#syncSourceUser").val().trim();
+  var cmdArgs = {"source_host": sourceHost};
+
+  if (sourceUser != "")
+    cmdArgs["source_user"] = sourceUser;
+
+  return cmdArgs;
+}
+
+function getSelectedSyncZims(){
+  var zims = [];
+
+  $("#syncZimModules input.sync-zim-checkbox:checked").each(function(){
+    zims.push({
+      "zim_id": $(this).data("zim-id"),
+      "file_ref": $(this).data("file-ref")
+    });
+  });
+
+  return zims;
+}
+
+function getSelectedSyncModules(){
+  var modules = [];
+
+  $("#syncOer2goModules input.sync-module-checkbox:checked").each(function(){
+    modules.push({
+      "moddir": $(this).data("moddir")
+    });
+  });
+
+  return modules;
+}
+
+function syncSelectedContent(){
+  var baseArgs = getSyncCommandArgs();
+  var zims = getSelectedSyncZims();
+  var modules = getSelectedSyncModules();
+  var totalCount = zims.length + modules.length;
+
+  if (baseArgs.source_host == ""){
+    alert("Please enter a source server IP or hostname.");
+    return;
+  }
+
+  if (totalCount == 0){
+    alert("Please select at least one item to sync.");
+    return;
+  }
+
+  if (!confirm("Schedule " + totalCount + " selected item(s) to sync from " + baseArgs.source_host + "?"))
+    return;
+
+  zims.forEach(function(zim){
+    var cmdArgs = Object.assign({}, baseArgs);
+    cmdArgs["zim_id"] = zim.zim_id;
+    cmdArgs["file_ref"] = zim.file_ref;
+    sendCmdSrvCmd("SYNC-ZIMS " + JSON.stringify(cmdArgs), genericCmdHandler);
+  });
+
+  modules.forEach(function(mod){
+    var cmdArgs = Object.assign({}, baseArgs);
+    cmdArgs["moddir"] = mod.moddir;
+    sendCmdSrvCmd("SYNC-OER2GO-MOD " + JSON.stringify(cmdArgs), genericCmdHandler);
+  });
+
+  $("#syncZimModules input.sync-zim-checkbox").prop("checked", false);
+  $("#syncOer2goModules input.sync-module-checkbox").prop("checked", false);
+  $("#syncContentStatus").html("Selected content scheduled to sync. Please view Utilities-&gt;Display Job Status to see the results.");
 }
 
 function escapeSyncHtml(value){

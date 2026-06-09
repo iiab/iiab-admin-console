@@ -299,12 +299,19 @@
                 </div>
                 <div id="instManageContentSync" class="tab-pane">
                   <div class="row">
-                    <div class="col-sm-5">
+                    <div class="col-sm-4">
                       <label for="syncSourceHost">Source Server</label>
                       <input id="syncSourceHost" type="text" class="form-control" placeholder="192.168.1.118">
                     </div>
                     <div class="col-sm-3">
+                      <label for="syncSourceUser">Source SSH User (optional)</label>
+                      <input id="syncSourceUser" type="text" class="form-control" placeholder="garba">
+                    </div>
+                    <div class="col-sm-3">
                       <button id="LOAD-SYNC-CONTENT" type="button" class="btn btn-lg btn-primary">Load Content</button>
+                    </div>
+                    <div class="col-sm-2">
+                      <button id="SYNC-SELECTED-CONTENT" type="button" class="btn btn-lg btn-primary">Sync Selected</button>
                     </div>
                   </div>
                   <p></p>
