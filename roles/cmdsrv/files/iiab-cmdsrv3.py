@@ -3760,7 +3760,7 @@ def insert_command(cmd_msg):
     db_lock.acquire()
     try:
         conn = sqlite3.connect(cmdsrv_dbpath)
-        conn.execute ("INSERT INTO commands (rowid, cmd_msg, create_datetime) VALUES (?,?,?)", (cmd_id, cmd_msg, now))
+        conn.execute ("INSERT INTO commands (rowid, cmd_msg, create_datetime) VALUES (?,?,?)", (cmd_id, cmd_msg, now.isoformat()))
         conn.commit()
         conn.close()
     except sqlite3.Error as e:
@@ -3858,13 +3858,6 @@ def get_job_id():
         lock.release() # release lock, no matter what
 
     return(job_id)
-
-def escape_html(text):
-    """escape strings for display in HTML"""
-    return cgi.escape(text, quote=True).\
-           replace('\n', '<br />').\
-           replace('\t', '&emsp;').\
-           replace('  ', ' &nbsp;')
 
 def init():
     global last_command_rowid
