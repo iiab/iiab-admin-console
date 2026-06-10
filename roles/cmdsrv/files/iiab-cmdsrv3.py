@@ -495,12 +495,16 @@ def add_wip(job_info):
 
     cmd = job_info['cmd']
 
-    if cmd in {"INST-ZIMS", "COPY-ZIMS"}:
-        zim_id = job_info['cmd_args']['zim_id']
+    if cmd in {"INST-ZIMS", "COPY-ZIMS", "SYNC-ZIMS"}:
+        zim_id = job_info['cmd_args'].get('zim_id', job_info['cmd_args'].get('file_ref'))
         if cmd == "INST-ZIMS":
             action = "DOWNLOAD"
             dest = "internal"
             source = "kiwix"
+        elif cmd == "SYNC-ZIMS":
+            action = "IMPORT"
+            dest = "internal"
+            source = "server"
         else:
             dest = job_info['cmd_args']['dest']
             source = job_info['cmd_args']['source']
@@ -510,11 +514,14 @@ def add_wip(job_info):
                 action = "EXPORT"
         zims_wip[zim_id] = {"cmd":cmd, "action":action, "dest":dest, "source":source}
 
-    elif cmd in {"INST-OER2GO-MOD", "COPY-OER2GO-MOD"}:
+    elif cmd in {"INST-OER2GO-MOD", "COPY-OER2GO-MOD", "SYNC-OER2GO-MOD"}:
         moddir = job_info['cmd_args']['moddir']
         if cmd == "INST-OER2GO-MOD":
             action = "DOWNLOAD"
             source = "oer2go"
+        elif cmd == "SYNC-OER2GO-MOD":
+            action = "IMPORT"
+            source = "server"
         else:
             dest = job_info['cmd_args']['dest']
             source = job_info['cmd_args']['source']
@@ -543,9 +550,9 @@ def remove_wip(job_info):
     #print job_info
     #print "in remove_wip"
 
-    if job_info['cmd'] in ["INST-ZIMS", "COPY-ZIMS"]:
-        zims_wip.pop(job_info['cmd_args']['zim_id'], None)
-    elif job_info['cmd'] in ["INST-OER2GO-MOD", "COPY-OER2GO-MOD"]:
+    if job_info['cmd'] in ["INST-ZIMS", "COPY-ZIMS", "SYNC-ZIMS"]:
+        zims_wip.pop(job_info['cmd_args'].get('zim_id', job_info['cmd_args'].get('file_ref')), None)
+    elif job_info['cmd'] in ["INST-OER2GO-MOD", "COPY-OER2GO-MOD", "SYNC-OER2GO-MOD"]:
         oer2go_wip.pop(job_info['cmd_args']['moddir'], None)
     elif job_info['cmd'] in {"INST-OSM-VECT-SET"}:
         maps_wip.pop(job_info['cmd_args']['osm_vect_id'], None)
@@ -3172,6 +3179,22 @@ def validate_sync_source_user(source_user):
         return source_user
     return None
 
+def get_sync_remote_host(source_host, source_user=None):
+    if source_user != None:
+        return source_user + "@" + source_host
+    return source_host
+
+def get_sync_ssh_command():
+    return "ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=5"
+
+def check_sync_ssh_access(remote_host):
+    ssh_args = shlex.split(get_sync_ssh_command()) + [remote_host, "true"]
+    try:
+        result = subprocess.run(ssh_args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=8)
+        return result.returncode == 0
+    except:
+        return False
+
 def validate_sync_zim_file_ref(file_ref):
     if not isinstance(file_ref, str):
         return None
@@ -3182,6 +3205,9 @@ def validate_sync_zim_file_ref(file_ref):
 
 def sync_zim_content_exists(file_ref):
     return len(glob(zim_content_dir + file_ref + ".zim*")) > 0
+
+def sync_module_content_exists(moddir):
+    return os.path.isdir(os.path.join(modules_dir, moddir))
 
 def sync_zim_installed(file_ref, zim_id=None):
     installed_zims = read_library_xml(zim_dir + "/library.xml")
@@ -3231,11 +3257,11 @@ def sync_zims(cmd_info):
     except:
         return cmd_error(cmd=cmd_info['cmd'], msg='Error creating ZIM working directory')
 
-    remote_host = safe_source_host
-    if safe_source_user != None:
-        remote_host = safe_source_user + "@" + safe_source_host
+    remote_host = get_sync_remote_host(safe_source_host, safe_source_user)
+    if not check_sync_ssh_access(remote_host):
+        return cmd_error(cmd=cmd_info['cmd'], msg='Unable to connect to sync source over SSH')
 
-    ssh_command = shlex.quote("ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new")
+    ssh_command = shlex.quote(get_sync_ssh_command())
     remote_zim_source = remote_host + ":" + zim_content_dir + safe_file_ref + ".zim*"
     job_command = "/usr/bin/rsync -rPt --size-only -e " + ssh_command
     job_command += " " + shlex.quote(remote_zim_source)
@@ -3272,7 +3298,7 @@ def sync_oer2go_mod(cmd_info):
         return cmd_error(cmd=cmd_info['cmd'], msg='Invalid source user')
 
     refresh_oer2go_installed()
-    if safe_moddir in oer2go_installed:
+    if safe_moddir in oer2go_installed or sync_module_content_exists(safe_moddir):
         return cmd_error(cmd=cmd_info['cmd'], msg='Module already installed')
 
     try:
@@ -3280,12 +3306,12 @@ def sync_oer2go_mod(cmd_info):
     except:
         return cmd_error(cmd=cmd_info['cmd'], msg='Error creating module working directory')
 
-    remote_host = safe_source_host
-    if safe_source_user != None:
-        remote_host = safe_source_user + "@" + safe_source_host
+    remote_host = get_sync_remote_host(safe_source_host, safe_source_user)
+    if not check_sync_ssh_access(remote_host):
+        return cmd_error(cmd=cmd_info['cmd'], msg='Unable to connect to sync source over SSH')
 
     remote_source = remote_host + ":" + modules_dir + safe_moddir
-    job_command = "/usr/bin/rsync -rPt --size-only -e " + shlex.quote("ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new")
+    job_command = "/usr/bin/rsync -rPt --size-only -e " + shlex.quote(get_sync_ssh_command())
     job_command += " " + shlex.quote(remote_source)
     job_command += " " + shlex.quote(rachel_working_dir)
 
