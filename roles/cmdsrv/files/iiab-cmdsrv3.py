@@ -3319,7 +3319,7 @@ def calc_passwd_hash(password, existing_hash):
     # return calculated hash
     try:
         #return subprocess.run(['perl', '-e', f"print crypt('{password}', '{existing_hash}')"], capture_output=True, text=True).stdout
-        return subprocess.run(['scripts/perl-crypt.pl', password, existing_hash], capture_output=True, text=True).stdout
+        return subprocess.run(['perl', 'scripts/perl-crypt.pl', password, existing_hash], capture_output=True, text=True).stdout
     except:
         return None
 
