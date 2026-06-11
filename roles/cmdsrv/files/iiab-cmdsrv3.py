@@ -3652,12 +3652,12 @@ def insert_command(cmd_msg):
     finally:
         lock.release() # release lock, no matter what
 
-    now = datetime.now()
+    sql_now = datetime.now().isoformat()
 
     db_lock.acquire()
     try:
         conn = sqlite3.connect(cmdsrv_dbpath)
-        conn.execute ("INSERT INTO commands (rowid, cmd_msg, create_datetime) VALUES (?,?,?)", (cmd_id, cmd_msg, now.isoformat()))
+        conn.execute ("INSERT INTO commands (rowid, cmd_msg, create_datetime) VALUES (?,?,?)", (cmd_id, cmd_msg, sql_now))
         conn.commit()
         conn.close()
     except sqlite3.Error as e:
@@ -3672,7 +3672,7 @@ def insert_command(cmd_msg):
 
 def insert_job(job_id, cmd_rowid, job_command, opt_args_json, cmd_step_no, depend_on_job_id, has_dependent):
     #print "in insert job"
-    now = datetime.now()
+    sql_now = datetime.now().isoformat()
     job_pid=0
     job_output=""
     job_status="SCHEDULED"
@@ -3681,7 +3681,7 @@ def insert_job(job_id, cmd_rowid, job_command, opt_args_json, cmd_step_no, depen
     try:
         conn = sqlite3.connect(cmdsrv_dbpath)
         conn.execute ("INSERT INTO jobs (rowid, cmd_rowid, cmd_step_no, depend_on_job_id, has_dependent, job_command, opt_args_json, job_pid, job_output, job_status, create_datetime, last_update_datetime) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-                      (job_id, cmd_rowid, cmd_step_no, depend_on_job_id, has_dependent, job_command, opt_args_json, job_pid, job_output, job_status, now, now))
+                      (job_id, cmd_rowid, cmd_step_no, depend_on_job_id, has_dependent, job_command, opt_args_json, job_pid, job_output, job_status, sql_now, sql_now))
 
         conn.commit()
         conn.close()
@@ -3695,11 +3695,11 @@ def insert_job(job_id, cmd_rowid, job_command, opt_args_json, cmd_step_no, depen
 
 def upd_job_started(job_id, job_pid, job_status="STARTED"):
 
-    now = datetime.now()
+    sql_now = datetime.now().isoformat()
     db_lock.acquire()
     try:
         conn = sqlite3.connect(cmdsrv_dbpath)
-        conn.execute ("UPDATE jobs SET job_pid = ?, job_status = ?, last_update_datetime = ? WHERE rowid = ?", (job_pid, job_status, now, job_id))
+        conn.execute ("UPDATE jobs SET job_pid = ?, job_status = ?, last_update_datetime = ? WHERE rowid = ?", (job_pid, job_status, sql_now, job_id))
         conn.commit()
         conn.close()
     except sqlite3.Error as e:
@@ -3712,11 +3712,11 @@ def upd_job_started(job_id, job_pid, job_status="STARTED"):
 
 def upd_job_finished(job_id, job_output, job_status="FINISHED"):
 
-    now = datetime.now()
+    sql_now = datetime.now().isoformat()
     db_lock.acquire()
     try:
         conn = sqlite3.connect(cmdsrv_dbpath)
-        conn.execute ("UPDATE jobs SET job_status = ?, job_output = ?, last_update_datetime = ? WHERE rowid = ?", (job_status, job_output, now, job_id))
+        conn.execute ("UPDATE jobs SET job_status = ?, job_output = ?, last_update_datetime = ? WHERE rowid = ?", (job_status, job_output, sql_now, job_id))
         conn.commit()
         conn.close()
     except sqlite3.Error as e:
@@ -3729,11 +3729,11 @@ def upd_job_finished(job_id, job_output, job_status="FINISHED"):
 
 def upd_job_cancelled(job_id, job_status="CANCELLED"):
 
-    now = datetime.now()
+    sql_now = datetime.now().isoformat()
     db_lock.acquire()
     try:
         conn = sqlite3.connect(cmdsrv_dbpath)
-        conn.execute ("UPDATE jobs SET job_status = ?, last_update_datetime = ? WHERE rowid = ?", (job_status, now, job_id))
+        conn.execute ("UPDATE jobs SET job_status = ?, last_update_datetime = ? WHERE rowid = ?", (job_status, sql_now, job_id))
         conn.commit()
         conn.close()
     except sqlite3.Error as e:
