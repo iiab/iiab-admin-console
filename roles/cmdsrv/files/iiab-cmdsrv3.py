@@ -1161,10 +1161,6 @@ def get_install_vars(cmd_info):
     resp = json.dumps(effective_vars)
     return (resp)
 
-def OBSOL_get_install_vars_init():
-    # assumes default vars already read
-    read_iiab_local_vars() # any errors are raised
-
 def get_iiab_ini(cmd_info):
     read_iiab_ini_file()
     resp = json.dumps(iiab_ini)
@@ -1563,68 +1559,6 @@ def set_nmcli_connection(cmd, connect_wifi_ssid, connect_wifi_bssid, connect_wif
     else:
         return cmd_error(cmd=cmd, msg='Error Restarting Hotspot.')
 
-def set_nmcli_connection_OLD(cmd, connect_wifi_ssid, connect_wifi_password):
-    WIFI_DEV = 'wlan0' # get from somewhere, but this is rpi only
-    current_wifi_connection = None
-    add_flag = True
-    con_name = connect_wifi_ssid.replace(' ', '_')
-
-    cmdstr = 'nmcli -t -f device,name,type connection show'
-    rc = adm.subproc_run(cmdstr)
-    dev_arr = rc.stdout.split('\n')[:-1]
-
-    for devstr in dev_arr:
-        props = devstr.split(':')
-        if props[2] != '802-11-wireless':
-            continue
-        if props[0] == WIFI_DEV:
-            current_wifi_connection = props[1]
-        if props[1] == con_name:
-            add_flag = False
-
-    if connect_wifi_ssid == current_wifi_connection:
-        return cmd_error(cmd=cmd, msg='Already connected to ' + connect_wifi_ssid + '.')
-
-    if current_wifi_connection: # already connected to another router
-        rc = adm.subproc_run('nmcli device disconnect ' + WIFI_DEV)
-        if rc.returncode != 0:
-            return cmd_error(cmd=cmd, msg='Error disconnecting from ' + current_wifi_connection + '.')
-
-    psk = wpa_psk(connect_wifi_ssid, connect_wifi_password)
-
-    if add_flag:
-        cmdstr = 'nmcli con add type wifi con-name ' + con_name + ' ssid "' + connect_wifi_ssid + '" '
-        cmdstr += 'wifi-sec.auth-alg open wifi-sec.key-mgmt wpa-psk wifi-sec.psk ' + psk
-    else:
-        cmdstr = 'nmcli con modify ' + con_name + ' wifi-sec.psk '  + psk
-
-    print(cmdstr)
-
-    try:
-        rc = adm.subproc_run(cmdstr)
-        if rc.returncode != 0:
-            return cmd_error(cmd=cmd, msg='Error Connecting to Router.')
-    except:
-        return cmd_error(cmd=cmd, msg='Error Connecting to Router.')
-
-    try:
-        rc = adm.subproc_run('nmcli con up ' + con_name)
-        if rc.returncode == 0:
-            resp = cmd_success(cmd)
-            return resp
-        elif rc.returncode == 4:
-            resp = cmd_error(cmd=cmd, msg='Unable to Connect. Check credentials.')
-        elif rc.returncode == 10:
-            resp = cmd_error(cmd=cmd, msg='Unable to Find Router.')
-        else:
-            resp = cmd_error(cmd=cmd, msg='Unable to Connect.')
-    except:
-        resp = cmd_error(cmd=cmd, msg='Error Connecting to Router.')
-    if restart_hotspot():
-        return cmd_success(cmd)
-    else:
-        return cmd_error(cmd=cmd, msg='Error Restarting Hotspot.')
-
 def set_wpa_credentials (cmd, connect_wifi_ssid, connect_wifi_password):
 
     # this works for raspbian but maybe not for ubuntu
@@ -1940,44 +1874,6 @@ def get_ext_zim_catalog(dev_name):
     except: #skip things that don't work
         pass
     usb_catalog = read_library_xml(kiwix_library_xml_tmp)
-    return (usb_catalog)
-
-def get_ext_zim_catalog2(dev_name): # keeping for the moment, but not used
-    kiwix_manage = iiab_base + "/kiwix/bin/kiwix-manage"
-    kiwix_library_xml_tmp = "/tmp/library.xml"
-    kiwix_exclude_attr = ["favicon"]
-    iiab_zim_path = dev_name + zim_dir
-    content = iiab_zim_path + "/content/"
-    index = iiab_zim_path + "/index/"
-    usb_catalog = {}
-
-    files_processed = {}
-    flist = os.listdir(content)
-    flist.sort()
-    for filename in flist:
-        zimpos = filename.find(".zim")
-        if zimpos != -1:
-            filename = filename[:zimpos]
-            if filename not in files_processed:
-                files_processed[filename] = True
-                zimname = content + filename + ".zim"
-                zimidx = index + filename + ".zim.idx"
-                command = kiwix_manage + " " + kiwix_library_xml_tmp + " add " + zimname
-                if os.path.isdir (zimidx): # only declare index if exists (could be embedded)
-                    command += " -i " + zimidx
-                #print command
-                args = shlex.split(command)
-                try:
-                    outp = subproc_check_output(args)
-                except: #skip things that don't work
-                    #print 'skipping ' + filename
-                    pass
-
-    usb_catalog = read_library_xml(kiwix_library_xml_tmp, kiwix_exclude_attr)
-    try:
-        os.remove(kiwix_library_xml_tmp)
-    except OSError:
-        pass
     return (usb_catalog)
 
 def umount_usb(cmd_info):
@@ -3422,7 +3318,8 @@ def read_pw_hash(user):
 def calc_passwd_hash(password, existing_hash):
     # return calculated hash
     try:
-       return subprocess.run(['perl', '-e', f"print crypt('{password}', '{existing_hash}')"], capture_output=True, text=True).stdout
+        #return subprocess.run(['perl', '-e', f"print crypt('{password}', '{existing_hash}')"], capture_output=True, text=True).stdout
+        return subprocess.run(['perl', 'scripts/perl-crypt.pl', password, existing_hash], capture_output=True, text=True).stdout
     except:
         return None
 
@@ -3760,7 +3657,7 @@ def insert_command(cmd_msg):
     db_lock.acquire()
     try:
         conn = sqlite3.connect(cmdsrv_dbpath)
-        conn.execute ("INSERT INTO commands (rowid, cmd_msg, create_datetime) VALUES (?,?,?)", (cmd_id, cmd_msg, now))
+        conn.execute ("INSERT INTO commands (rowid, cmd_msg, create_datetime) VALUES (?,?,?)", (cmd_id, cmd_msg, now.isoformat()))
         conn.commit()
         conn.close()
     except sqlite3.Error as e:
@@ -3858,13 +3755,6 @@ def get_job_id():
         lock.release() # release lock, no matter what
 
     return(job_id)
-
-def escape_html(text):
-    """escape strings for display in HTML"""
-    return cgi.escape(text, quote=True).\
-           replace('\n', '<br />').\
-           replace('\t', '&emsp;').\
-           replace('  ', ' &nbsp;')
 
 def init():
     global last_command_rowid
@@ -3976,39 +3866,6 @@ def read_iiab_default_vars():
     global default_vars
     vars_dict = adm.read_yaml(iiab_repo + "/vars/default_vars.yml")
     default_vars = adm.jinja2_subst(vars_dict)
-
-def OBSOL_read_iiab_vars():
-    # retain for alternate ansible variable logic
-    # assumes default_vars was read in init()
-    # and role status
-    global default_vars
-    global local_vars
-    global effective_vars
-
-    default_vars = adm.read_yaml(iiab_repo + "/vars/default_vars.yml")
-    local_vars = adm.read_yaml(iiab_local_vars_file)
-
-    if local_vars == None:
-        local_vars = {}
-
-    # combine vars with local taking precedence
-    # exclude derived vars marked by {
-
-    for key in default_vars:
-        if isinstance(default_vars[key], str):
-            findpos = default_vars[key].find("{")
-            if findpos == -1:
-                effective_vars[key] = default_vars[key]
-        else:
-            effective_vars[key] = default_vars[key]
-
-    for key in local_vars:
-        if isinstance(local_vars[key], str):
-            findpos = local_vars[key].find("{")
-            if findpos == -1:
-                effective_vars[key] = local_vars[key]
-        else:
-            effective_vars[key] = local_vars[key]
 
 def get_ansible_facts():
     global ansible_facts
