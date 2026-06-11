@@ -14,6 +14,8 @@ Please note that there is no way to recover this password without logging direct
 
 Actions that will require more than a few seconds to complete are handled as long-running Jobs. In fact, some tasks create multiple jobs.  The progress and success or failure of these jobs may be monitored by visiting this menu option.  Click **Refresh Status** to update the display.
 
+Use the **status filter** checkboxes to show only jobs in certain states (e.g. running, succeeded, failed).  Use the **age dropdown** to limit the list to jobs created within a recent time window.  Use the **select all** checkbox to select or deselect all visible jobs at once.
+
 Jobs that are no longer desired may be cancelled and doing so will cancel any jobs that were created as part of the same task.  To cancel a job check the box beside it and click **Cancel Checked Jobs**.
 
 ###Display Commands Log
@@ -49,3 +51,7 @@ Just what it says, the amount of storage, allocated and unallocated in internal 
 There are two tests that can be performed.  One downloads a 10M file and the other downloads 100M and does a smaller upload. Even the 10M can take a long time on a **slow internet connection** to the point that it never returns a result to the console.
 
 **WARNING:** On mobile connections you should be careful not to consume excessive bandwidth as this **could lead to additional costs** from your network supplier.
+
+###Display Hardware Info
+
+Displays detailed information about the server's hardware components, including CPU, memory, storage devices, and network interfaces.  This can be useful for diagnosing hardware issues or verifying the server configuration.

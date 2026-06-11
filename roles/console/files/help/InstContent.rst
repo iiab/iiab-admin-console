@@ -17,7 +17,9 @@ Select one of the collections of content listed and the following will be perfor
 * Any listed ZIMs will be downloaded and installed
 * Any listed OER2Go modules will be downloaded and installed
 * Any listed OSM map packs will be downloaded and installed
-* Any listed KA-list topics will be downloaded and installed
+* Any listed Kolibri channels will be downloaded and installed (the Kolibri service will be enabled automatically if not already active)
+
+Each preset displays its estimated total size so you can check that your server has enough storage before starting.
 
 Get ZIM Files from Kiwix
 ------------------------
@@ -116,16 +118,20 @@ When you have made your selections click **Install Selected Modules**.  Jobs wil
 
 Downloaded Modules will appear on the server in a URL like /modules/Name of the Module. If you are using IIAB-Menu, there will already be a menu definition for most modules, but you may need to create your own. You may also need to add a reference to the module to your menu file.
 
-Download Khan Academy Videos
-----------------------------
+Create a Content Collection
+---------------------------
+
+### Overview
+
+This option lets you save the currently installed content as a named preset - a reusable collection that can be applied to other IIAB installations using Quick Pick.
 
 ### How it works
 
-KA Lite from the Learning Equality Foundation is installed on Internet-in-a-Box for offline viewing of Khan Academy videos and exercises.  It has its own options to select language and download videos.  To access this functionality simply click **Launch KA Lite** and another tab will open where you can login and manage content.
+Enter a short name (no spaces), a title, and a description for your collection.  The Admin Console will scan the installed Kolibri channels and other content and save them as a new preset.
 
-### Don't Forget
+If a preset with the same name already exists and was created by you, you will be asked to confirm before it is overwritten.  Presets supplied with the Admin Console cannot be overwritten.
 
-Make sure that the **KA Lite** and **KA Downloader** services are enabled under **Configure** - **Services Enabled**.
+Once saved, the new preset will appear in the **Quick Pick** list.
 
 Manage Content
 --------------

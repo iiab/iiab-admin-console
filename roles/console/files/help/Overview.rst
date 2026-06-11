@@ -25,11 +25,9 @@ Configure
 ---------
 
 * Network Parameters
-* Internet Caching/Filtering
 * Internal Wi-Fi AP
 * Server Portal
 * Services Enabled
-* Edit Permitted URLs
 
 Install Content
 ---------------
@@ -38,9 +36,9 @@ Install Content
 * Get ZIM Files from Kiwix
 * Upgrade ZIM Files
 * Get OER2Go(RACHEL) Modules
-* Download Khan Academy Videos
 * Manage Content
 * Clone IIAB
+* Create a Content Collection
 
 Content Menus
 -------------
@@ -60,3 +58,4 @@ Utilities
 * Display System Memory
 * Display System Storage
 * Perform Internet Speed Test
+* Display Hardware Info
