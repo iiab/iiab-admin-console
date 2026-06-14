@@ -516,6 +516,10 @@ function instContentButtonsEvents() {
     loadSyncContent();
   });
 
+  $("#DISCOVER-SYNC-SERVERS").click(function(){
+    discoverSyncServers();
+  });
+
   $("#SYNC-SELECTED-CONTENT").click(function(){
     syncSelectedContent();
   });

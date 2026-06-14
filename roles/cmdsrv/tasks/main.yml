@@ -12,6 +12,8 @@
     - python3-nacl
     - python3-bs4
     - python3-lxml
+    - avahi-daemon
+    - avahi-utils
     - uuid
     - aria2
   tags:
@@ -103,6 +105,27 @@
         mode=0700
         owner=root
         group=root
+
+- name: Create Avahi services directory
+  file: path=/etc/avahi/services
+        mode=0755
+        owner=root
+        group=root
+        state=directory
+
+- name: Install IIAB sync Avahi service
+  copy: src=iiab-sync.service
+        dest=/etc/avahi/services/iiab-sync.service
+        mode=0644
+        owner=root
+        group=root
+
+- name: Enable and restart Avahi daemon
+  systemd:
+    name: avahi-daemon
+    state: restarted
+    enabled: true
+  when: is_debuntu
 
 - name: Set permissions on sqlite db
   file: dest="{{ cmdsrv_dir }}/{{cmdsrv_dbname }}"

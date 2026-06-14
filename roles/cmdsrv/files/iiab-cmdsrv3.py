@@ -749,6 +749,7 @@ def cmd_handler(cmd_msg):
         "GET-SPACE-AVAIL": {"funct": get_space_avail, "inet_req": False},
         "GET-STORAGE-INFO": {"funct": get_storage_info_lite, "inet_req": False},
         "GET-EXTDEV-INFO": {"funct": get_external_device_info, "inet_req": False},
+        "GET-SYNC-SERVERS": {"funct": get_sync_servers, "inet_req": False},
         "GET-SYNC-CONTENT": {"funct": get_sync_content, "inet_req": False},
         "MAKE-SYNC-CONTENT": {"funct": make_sync_content, "inet_req": False},
         "GET-REM-DEV-LIST": {"funct": get_rem_dev_list, "inet_req": False},
@@ -1267,6 +1268,88 @@ def validate_sync_content_inventory(inventory):
             return False
 
     return True
+
+def get_local_ip_addresses():
+    try:
+        outp = subproc_check_output(["/bin/hostname", "-I"])
+        return set(outp.split())
+    except:
+        return set()
+
+def unescape_avahi_field(value):
+    def replace_match(match):
+        return chr(int(match.group(1), 10))
+    return re.sub(r"\\([0-7]{3})", replace_match, value)
+
+def is_sync_discovery_address_usable(address):
+    try:
+        ip_addr = ipaddress.ip_address(address)
+        return not ip_addr.is_loopback and not ip_addr.is_link_local
+    except ValueError:
+        return True
+
+def parse_avahi_sync_servers(outp):
+    servers = []
+    seen = set()
+    local_hostname = socket.gethostname()
+    local_names = {local_hostname, local_hostname + ".local"}
+    local_ips = get_local_ip_addresses()
+
+    for line in outp.splitlines():
+        if not line.startswith("="):
+            continue
+
+        parts = line.split(";")
+        if len(parts) < 9:
+            continue
+
+        service_name = unescape_avahi_field(parts[3])
+        service_type = parts[4]
+        host = parts[6].rstrip(".")
+        address = parts[7]
+        port = parts[8]
+
+        if service_type != "_iiab-sync._tcp":
+            continue
+        if not is_sync_discovery_address_usable(address):
+            continue
+        if host in local_names or address in local_ips:
+            continue
+
+        server_key = address + ":" + port
+        if server_key in seen:
+            continue
+        seen.add(server_key)
+
+        servers.append({
+            "service_name": service_name,
+            "host": host,
+            "address": address,
+            "port": port
+        })
+
+    return servers
+
+def get_sync_servers(cmd_info):
+    try:
+        result = subprocess.run(
+            ["/usr/bin/avahi-browse", "-rtp", "_iiab-sync._tcp"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            timeout=8
+        )
+    except FileNotFoundError:
+        return cmd_error(cmd=cmd_info['cmd'], msg='avahi-browse is not installed')
+    except subprocess.TimeoutExpired:
+        return cmd_error(cmd=cmd_info['cmd'], msg='Timed out discovering sync servers')
+    except:
+        return cmd_error(cmd=cmd_info['cmd'], msg='Unable to discover sync servers')
+
+    if result.returncode != 0 and result.stdout.strip() == "":
+        return cmd_error(cmd=cmd_info['cmd'], msg='Unable to discover sync servers')
+
+    return json.dumps({"servers": parse_avahi_sync_servers(result.stdout)})
 
 def get_sync_content(cmd_info):
     try:

@@ -1,0 +1,10 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE service-group SYSTEM "avahi-service.dtd">
+<service-group>
+  <name replace-wildcards="yes">IIAB Sync Server on %h</name>
+  <service>
+    <type>_iiab-sync._tcp</type>
+    <port>80</port>
+    <txt-record>path=/common/assets/iiab-sync/content.json</txt-record>
+  </service>
+</service-group>

@@ -540,6 +540,47 @@ function loadSyncContent(){
   return sendCmdSrvCmd(cmd, procSyncContent, "LOAD-SYNC-CONTENT");
 }
 
+function discoverSyncServers(){
+  $("#syncServersList").html("Discovering IIAB servers...");
+  return sendCmdSrvCmd("GET-SYNC-SERVERS", procSyncServers, "DISCOVER-SYNC-SERVERS");
+}
+
+function procSyncServers(data){
+  var servers = [];
+  var html = "";
+
+  if (data && Array.isArray(data.servers))
+    servers = data.servers;
+
+  if (servers.length == 0){
+    $("#syncServersList").html("No sync servers discovered. Enter a source server manually.");
+    return;
+  }
+
+  servers.sort(function(a, b){
+    return (a.host || a.address).localeCompare(b.host || b.address);
+  });
+
+  servers.forEach(function(server){
+    var address = server.address || "";
+    var host = server.host || address;
+    var serviceName = server.service_name || host;
+
+    if (address == "")
+      return;
+
+    html += '<label><input type="radio" class="sync-server-radio" name="sync-server"';
+    html += ' data-address="' + escapeSyncHtml(address) + '">';
+    html += '&nbsp;&nbsp;' + escapeSyncHtml(serviceName) + ' (' + escapeSyncHtml(address) + ')';
+    html += '</label><BR>';
+  });
+
+  $("#syncServersList").html(html);
+  $("#syncServersList input.sync-server-radio").change(function(){
+    $("#syncSourceHost").val($(this).data("address"));
+  });
+}
+
 function procSyncContent(data){
   if (!data || typeof data !== "object"){
     syncContentInventory = {};
