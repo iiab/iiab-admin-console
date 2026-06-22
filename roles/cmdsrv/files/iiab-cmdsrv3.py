@@ -2092,7 +2092,9 @@ def get_zim_stat(cmd_info):
     resp = json.dumps(all_zims)
     return (resp)
 
-def read_library_xml(lib_xml_file, kiwix_exclude_attr=[""]):
+def read_library_xml(lib_xml_file, kiwix_exclude_attr=None):
+    if kiwix_exclude_attr is None:
+        kiwix_exclude_attr = [""]
     kiwix_exclude_attr.append("id") # don't include id
     kiwix_exclude_attr.append("favicon") # don't include large favicon
     zims_installed = {}
