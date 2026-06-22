@@ -2977,7 +2977,7 @@ def install_osm_vect_set(cmd_info):
         job_command = wget_cmd + download_url + " -O " + download_file
 
     elif maps_download_src == 'contabo':
-        download_url = 'contabo:iiab-maps/' + map_id
+        download_url = 'contabo-maps:iiab-maps/' + map_id
         job_command = "rclone -P copy " + download_url + " " + maps_working_dir
 
     elif maps_download_src == 'bittorrent':
