@@ -2462,7 +2462,7 @@ def install_presets(cmd_info):
     zim_cmd_info = cmd_info
     for ref in perma_ref_idx:
         if perma_ref_idx[ref]['id'] in zims_installed:
-            tprint('Skipping already installed ' + ref)
+            log(syslog.LOG_INFO, 'Skipping already installed ' + ref)
             continue # skip already installed zims
         zim_cmd_info['cmd'] ='INST-ZIM'
         zim_cmd_info['cmd_args'] = {'zim_id': perma_ref_idx[ref]['id']}
@@ -2561,7 +2561,7 @@ def pseudo_cmd_handler(cmd_info, check_dup=True):
     if check_dup: # ansible does it's own check
         dup_cmd = next((job_id for job_id, active_cmd_msg in list(active_commands.items()) if active_cmd_msg == cmd_msg), None)
         if dup_cmd != None:
-            tprint('Skipping already running command.')
+            log(syslog.LOG_INFO, 'Skipping already running command.')
             return None
 
     cmd_rowid = insert_command(cmd_msg)
@@ -3286,7 +3286,7 @@ def authenticate (cmd_info):
 
     #print (user, passwd)
     if not auth_calcs(user, passwd):
-        tprint('Bad Password')
+        log(syslog.LOG_WARNING, 'Bad Password')
         return '"INVALID"'
     else:
         return '"VALID"'
@@ -3623,6 +3623,8 @@ def log(level, msg):
    #print level, msg
    #print journal_log.getEffectiveLevel()
    journal_log.log(levels[level], "IIAB-CMDSRV : " + msg)
+   if daemon_mode == False:
+       tprint(msg)
 
 def cmd_success(cmd):
    return (cmd_success_msg(cmd, ""))
