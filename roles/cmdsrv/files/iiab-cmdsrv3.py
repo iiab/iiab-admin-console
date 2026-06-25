@@ -2092,11 +2092,9 @@ def get_zim_stat(cmd_info):
     resp = json.dumps(all_zims)
     return (resp)
 
-def read_library_xml(lib_xml_file, kiwix_exclude_attr=None):
-    if kiwix_exclude_attr is None:
-        kiwix_exclude_attr = [""]
-    kiwix_exclude_attr.append("id") # don't include id
-    kiwix_exclude_attr.append("favicon") # don't include large favicon
+def read_library_xml(lib_xml_file, kiwix_exclude_attr=["favicon"]):
+    excluded_attr = {'id'} # use a set and never include the key
+    excluded_attr.update(kiwix_exclude_attr)
     zims_installed = {}
     try:
         tree = ET.parse(lib_xml_file)
@@ -2108,7 +2106,7 @@ def read_library_xml(lib_xml_file, kiwix_exclude_attr=None):
             if 'id' in child.attrib:
                 id = child.attrib['id']
                 for attr in child.attrib:
-                    if attr not in kiwix_exclude_attr:
+                    if attr not in excluded_attr:
                         attributes[attr] = child.attrib[attr] # copy if not id or in exclusion list
                 zims_installed[id] = attributes
     except IOError:
