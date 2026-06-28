@@ -6,5 +6,6 @@
     <type>_iiab-sync._tcp</type>
     <port>80</port>
     <txt-record>path=/common/assets/iiab-sync/content.json</txt-record>
+    <txt-record>ssh_user=iiab-admin</txt-record>
   </service>
 </service-group>

@@ -237,6 +237,22 @@ function installPreset(presetId){
 function manageContentInit(){
 	refreshAllInstalledList();
 	refreshExternalList();
+  initSyncSourceUser();
+}
+
+function initSyncSourceUser(){
+  var sourceUser = "iiab-admin";
+
+  try {
+    sourceUser = localStorage.getItem("iiabSyncSourceUser") || sourceUser;
+  } catch(e) {}
+
+  $("#syncSourceUser").val(sourceUser);
+  $("#syncSourceUser").change(function(){
+    try {
+      localStorage.setItem("iiabSyncSourceUser", $(this).val().trim());
+    } catch(e) {}
+  });
 }
 
 function getExternalDevInfo(){
@@ -565,12 +581,14 @@ function procSyncServers(data){
     var address = server.address || "";
     var host = server.host || address;
     var serviceName = server.service_name || host;
+    var sshUser = server.ssh_user || "";
 
     if (address == "")
       return;
 
     html += '<label><input type="radio" class="sync-server-radio" name="sync-server"';
-    html += ' data-address="' + escapeSyncHtml(address) + '">';
+    html += ' data-address="' + escapeSyncHtml(address) + '"';
+    html += ' data-ssh-user="' + escapeSyncHtml(sshUser) + '">';
     html += '&nbsp;&nbsp;' + escapeSyncHtml(serviceName) + ' (' + escapeSyncHtml(address) + ')';
     html += '</label><BR>';
   });
@@ -578,6 +596,8 @@ function procSyncServers(data){
   $("#syncServersList").html(html);
   $("#syncServersList input.sync-server-radio").change(function(){
     $("#syncSourceHost").val($(this).data("address"));
+    if ($(this).data("ssh-user"))
+      $("#syncSourceUser").val($(this).data("ssh-user"));
   });
 }
 
@@ -699,8 +719,12 @@ function getSyncCommandArgs(){
   var sourceUser = $("#syncSourceUser").val().trim();
   var cmdArgs = {"source_host": sourceHost};
 
-  if (sourceUser != "")
+  if (sourceUser != ""){
     cmdArgs["source_user"] = sourceUser;
+    try {
+      localStorage.setItem("iiabSyncSourceUser", sourceUser);
+    } catch(e) {}
+  }
 
   return cmdArgs;
 }

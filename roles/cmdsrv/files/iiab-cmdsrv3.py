@@ -1288,6 +1288,18 @@ def is_sync_discovery_address_usable(address):
     except ValueError:
         return True
 
+def parse_avahi_txt_records(parts):
+    txt_records = {}
+
+    for value in parts[9:]:
+        value = unescape_avahi_field(value).strip('"')
+        if "=" not in value:
+            continue
+        key, record_value = value.split("=", 1)
+        txt_records[key] = record_value
+
+    return txt_records
+
 def parse_avahi_sync_servers(outp):
     servers = []
     seen = set()
@@ -1308,6 +1320,7 @@ def parse_avahi_sync_servers(outp):
         host = parts[6].rstrip(".")
         address = parts[7]
         port = parts[8]
+        txt_records = parse_avahi_txt_records(parts)
 
         if service_type != "_iiab-sync._tcp":
             continue
@@ -1321,12 +1334,19 @@ def parse_avahi_sync_servers(outp):
             continue
         seen.add(server_key)
 
-        servers.append({
+        server = {
             "service_name": service_name,
             "host": host,
             "address": address,
             "port": port
-        })
+        }
+
+        if "path" in txt_records:
+            server["path"] = txt_records["path"]
+        if "ssh_user" in txt_records:
+            server["ssh_user"] = txt_records["ssh_user"]
+
+        servers.append(server)
 
     return servers
 
