@@ -2,9 +2,10 @@
 #  include: packages.yml
 
 - name: Install packages for cmdsrv on python 3
-  package: name={{ item }}
-           state=present
-  with_items:
+  package:
+    name: "{{ item }}"
+    state: present
+  loop:
     - python3-systemd
     - python3-zmq
     - python3-yaml
@@ -49,7 +50,7 @@
     section: wasabi-iiab-share
     option: "{{ item.option }}"
     value: "{{ item.value | string }}"
-  with_items:
+  loop:
     - option: type
       value: s3
     - option: provider
@@ -73,7 +74,7 @@
     section: contabo
     option: "{{ item.option }}"
     value: "{{ item.value | string }}"
-  with_items:
+  loop:
     - option: type
       value: s3
     - option: provider
@@ -86,60 +87,66 @@
       value: 2045d93fc26405d48ac409cb78bd0133
 
 - name: Create cmdsrv directory
-  file: path={{ item }}
-        mode=0700
-        owner=root
-        group=root
-        state=directory
-  with_items:
+  file:
+    path: "{{ item }}"
+    mode: '0700'
+    owner: root
+    group: root
+    state: directory
+  loop:
     - "{{ cmdsrv_dir }}"
     - "{{ cmdsrv_dir }}/scripts"
     - "{{ cmdsrv_dir }}/assets"
     - "{{ cmdsrv_dir }}/presets"
 
 - name: Install Command Server Executable
-  copy: src=iiab-cmdsrv3.py
-        dest="{{ cmdsrv_dir }}/iiab-cmdsrv3.py"
-        mode=0700
-        owner=root
-        group=root
+  copy:
+    src: iiab-cmdsrv3.py
+    dest: "{{ cmdsrv_dir }}/iiab-cmdsrv3.py"
+    mode: '0700'
+    owner: root
+    group: root
 
 - name: Set permissions on sqlite db
-  file: dest="{{ cmdsrv_dir }}/{{cmdsrv_dbname }}"
-        mode=0600
-        owner=root
-        group=root
-        state=touch
+  file:
+    dest: "{{ cmdsrv_dir }}/{{cmdsrv_dbname }}"
+    mode: '0600'
+    owner: root
+    group: root
+    state: touch
 
 - name: Copy scripts
-  copy: src={{ item }}
-            dest="{{ cmdsrv_dir }}/scripts"
-            mode=0755
-            owner=root
-            group=root
+  copy:
+    src: "{{ item }}"
+    dest: "{{ cmdsrv_dir }}/scripts"
+    mode: '0755'
+    owner: root
+    group: root
   with_fileglob:
             - scripts/*
 
 - name: Copy templated scripts
-  template: src={{ item }}
-            dest="{{ cmdsrv_dir }}/scripts"
-            mode=0755
-            owner=root
-            group=root
-  with_items:
+  template:
+    src: "{{ item }}"
+    dest: "{{ cmdsrv_dir }}/scripts"
+    mode: '0755'
+    owner: root
+    group: root
+  loop:
             # scripts/get_kiwix_catalog
             - scripts/constants.sh
             - scripts/install_menu_defs.py
             - scripts/sync_menu_defs.py
 
 - name: Copy and rename templated scripts
-  template: backup=yes
-            src={{ item.src }}
-            dest={{ item.dest }}
-            owner=root
-            group=root
-            mode=0755
-  with_items:
+  template:
+    backup: true
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: root
+    group: root
+    mode: '0755'
+  loop:
     #- { src: 'scripts/get_kiwix_catalog_libxml.py', dest: '{{ cmdsrv_dir }}/scripts/get_kiwix_catalog'}
     # - { src: 'scripts/get_kiwix_catalog_rootxml.py', dest: '{{ cmdsrv_dir }}/scripts/get_kiwix_catalog'}
     - { src: 'scripts/get_kiwix_catalog_opds_v2.py', dest: '{{ cmdsrv_dir }}/scripts/get_kiwix_catalog'}
@@ -149,21 +156,23 @@
     - { src: 'scripts/upgrade-zims.py', dest: '{{ cmdsrv_dir }}/scripts/upgrade-zims.py'}
 
 - name: Copy templated assets
-  template: src={{ item }}
-            dest="{{ cmdsrv_dir }}/assets"
-            mode=0755
-            owner=root
-            group=root
-  with_items:
+  template:
+    src: "{{ item }}"
+    dest: "{{ cmdsrv_dir }}/assets"
+    mode: '0755'
+    owner: root
+    group: root
+  loop:
             - assets/run-roles-base.yml
             - assets/adm_ansible_vars.yml
 
 - name: Copy presets recursively
-  copy: src=presets
-            dest="{{ cmdsrv_dir }}"
-            mode=0755
-            owner=root
-            group=root
+  copy:
+    src: presets
+    dest: "{{ cmdsrv_dir }}"
+    mode: '0755'
+    owner: root
+    group: root
 
 #- name: Allow running iiab_update_menus from the command line
 #  file: src="{{ cmdsrv_dir }}/scripts/iiab_update_menus.py"
@@ -171,12 +180,13 @@
 #        state=link
 
 - name: Copy templated utilies
-  template: src={{ item }}
-            dest="/usr/bin/"
-            mode=0755
-            owner=root
-            group=root
-  with_items:
+  template:
+    src: "{{ item }}"
+    dest: "/usr/bin/"
+    mode: '0755'
+    owner: root
+    group: root
+  loop:
             - utilities/iiab-get-kiwix-cat
             - utilities/iiab-get-oer2go-cat
             - utilities/iiab-install-oer2go-mod
@@ -186,12 +196,13 @@
             - utilities/mk-preset.py
 
 - name: Copy default kiwix_catalog.json
-  copy: src="json/kiwix_catalog.json"
-        dest="/etc/iiab/kiwix_catalog.json"
-        mode=0644
-        force=no
-        owner=root
-        group=root
+  copy:
+    src: "json/kiwix_catalog.json"
+    dest: "/etc/iiab/kiwix_catalog.json"
+    mode: '0644'
+    force: false
+    owner: root
+    group: root
 
 #- name: Create fresh kiwix_catalog.json
 #  shell: "iiab-get-kiwix-cat -v"
@@ -200,58 +211,64 @@
 #- debug: var=kiwix_cat.stdout_lines
 
 - name: Copy default oer2go_catalog.json
-  copy: src="json/oer2go_catalog.json"
-        dest="/etc/iiab/oer2go_catalog.json"
-        mode=0644
-        force=yes
-        owner=root
-        group=root
+  copy:
+    src: "json/oer2go_catalog.json"
+    dest: "/etc/iiab/oer2go_catalog.json"
+    mode: '0644'
+    force: true
+    owner: root
+    group: root
 
 #- name: Create fresh oer2go_catalog.json
 #  shell: "iiab-get-oer2go-cat"
 #  register: oer2go_cat
 
 - name: Create symlink from /common/assets to kiwix_catalog.json
-  file: src=/etc/iiab/kiwix_catalog.json
-        dest={{ doc_root }}/common/assets/kiwix_catalog.json
-        owner=root
-        group=root
-        state=link
+  file:
+    src: /etc/iiab/kiwix_catalog.json
+    dest: "{{ doc_root }}/common/assets/kiwix_catalog.json"
+    owner: root
+    group: root
+    state: link
 
 - name: Create symlink from /common/assets to oer2go_catalog.json
-  file: src=/etc/iiab/oer2go_catalog.json
-        dest={{ doc_root }}/common/assets/oer2go_catalog.json
-        owner=root
-        group=root
-        state=link
+  file:
+    src: /etc/iiab/oer2go_catalog.json
+    dest: "{{ doc_root }}/common/assets/oer2go_catalog.json"
+    owner: root
+    group: root
+    state: link
 
 - name: Create cmdsrv.conf file
-  template: backup=yes
-            src=cmdsrv.conf.j2
-            dest="{{ cmdsrv_dir }}/cmdsrv.conf"
-            owner=root
-            group=root
-            mode=0644
+  template:
+    backup: true
+    src: cmdsrv.conf.j2
+    dest: "{{ cmdsrv_dir }}/cmdsrv.conf"
+    owner: root
+    group: root
+    mode: '0644'
 
 # Create iiab-cmdsrv service
 
 - name: Create iiab-cmdsrv service
-  template: backup=yes
-            src={{ item.src }}
-            dest={{ item.dest }}
-            owner=root
-            group=root
-            mode={{ item.mode }}
-  with_items:
+  template:
+    backup: true
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: root
+    group: root
+    mode: "{{ item.mode }}"
+  loop:
     - { src: 'iiab-cmdsrv.service.j2', dest: '/etc/systemd/system/iiab-cmdsrv.service', mode: '0644'}
     - { src: 'iiab-cmdsrv-ctl.j2', dest: '/usr/bin/iiab-cmdsrv-ctl', mode: '0755'}
 
 - name: Create ansible.cfg # stop logging ansible runs to /opt/iiab/iiab/iiab-install.log
-  template: src=ansible.cfg.j2
-            dest="{{ cmdsrv_dir }}/ansible.cfg"
-            owner=root
-            group=root
-            mode=0644
+  template:
+    src: ansible.cfg.j2
+    dest: "{{ cmdsrv_dir }}/ansible.cfg"
+    owner: root
+    group: root
+    mode: '0644'
 
 - name: Ask systemd to reread the unit files, picks up changes done
   shell: systemctl daemon-reload
