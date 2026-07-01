@@ -75,7 +75,7 @@
     dest: "{{ item.dest }}"
     owner: root
     group: root
-    mode: 0644
+    mode: '0644'
   loop:
     - { src: 'adm_const.py.j2', dest: '{{ py3_dist_path }}/iiab/adm_const.py' }
     - { src: 'adm_lib.py', dest: '{{ py3_dist_path }}/iiab/adm_lib.py' }
@@ -85,12 +85,12 @@
   get_url:
     url: "{{ iiab_download_url }}/heart-beat.txt"
     dest: /tmp/heart-beat.txt
-  ignore_errors: True
+  ignore_errors: true
   register: internet_access_test
 
 - name: Set internet_available if download succeeded and not disregard_network
   set_fact:
-    internet_available: True
+    internet_available: true
   when: not internet_access_test.failed
 
 - name: Remove downloaded Internet test file /tmp/heart-beat.txt
@@ -112,8 +112,8 @@
     dest: "{{ doc_root }}/common/assets/vector-map-idx.json"
     owner: root
     group: root
-    mode: 0644
-    force: yes
+    mode: '0644'
+    force: true
   when: not osm_vector_maps_enabled
 
 # Put dummy idx file in place only if it does not already exist and until calculated in js-menu if osm_vector_maps is enabled
@@ -123,8 +123,8 @@
     dest: "{{ doc_root }}/common/assets/vector-map-idx.json"
     owner: root
     group: root
-    mode: 0644
-    force: no
+    mode: '0644'
+    force: false
   when: osm_vector_maps_enabled
 
 # Copy Map Catalog used by Admin Console
@@ -134,6 +134,6 @@
     dest: "{{ doc_root }}/common/assets/{{ adm_maps_catalog_file }}"
     owner: root
     group: root
-    mode: 0644
-    force: yes
+    mode: '0644'
+    force: true
   # when: osm_vector_maps_enabled - always install so cmdsrv has it

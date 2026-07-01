@@ -28,7 +28,7 @@
   pip:
     name: speedtest-cli
     virtualenv: /usr/local/speedtest
-    virtualenv_site_packages: no
+    virtualenv_site_packages: false
     virtualenv_command: python3 -m venv /usr/local/speedtest
     extra_args: "--no-cache-dir"
 

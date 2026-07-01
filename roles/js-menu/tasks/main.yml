@@ -144,7 +144,7 @@
   template:
     src: 021_www_data_set_time.j2
     dest: /etc/sudoers.d/021_www_data_set_time
-    mode: 0440
+    mode: '0440'
 
 # Now always enabled
 #- name: Remove above
