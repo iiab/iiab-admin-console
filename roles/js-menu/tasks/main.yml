@@ -1,12 +1,13 @@
 # all packages and jquery/bootstrap assumed installed by iiab install
 
 - name: Create js-menu directory tree and dummy module
-  file: path={{ item }}
-        mode=0755
-        owner=root
-        group=root
-        state=directory
-  with_items:
+  file:
+    path: "{{ item }}"
+    mode: '0755'
+    owner: root
+    group: root
+    state: directory
+  loop:
     - "{{ js_menu_dir }}"
     - "{{ js_menu_dir }}menu-files"
     - "{{ js_menu_dir }}menu-files/css"
@@ -17,48 +18,53 @@
     - "{{ doc_root }}/modules/en-test_mod"
 
 - name: Copy js-menu css files
-  copy: src={{ item }}
-        dest="{{ js_menu_dir }}menu-files/css"
-        mode=0644
-        owner=root
-        group=root
+  copy:
+    src: "{{ item }}"
+    dest: "{{ js_menu_dir }}menu-files/css"
+    mode: '0644'
+    owner: root
+    group: root
   with_fileglob:
         - menu-files/css/*.css
 
 - name: Copy js-menu html files
-  copy: src={{ item }}
-        dest="{{ js_menu_dir }}menu-files/html"
-        mode=0644
-        owner=root
-        group=root
+  copy:
+    src: "{{ item }}"
+    dest: "{{ js_menu_dir }}menu-files/html"
+    mode: '0644'
+    owner: root
+    group: root
   with_fileglob:
         - menu-files/html/*
 
 - name: Copy js-menu javascript files
-  copy: src={{ item }}
-        dest="{{ js_menu_dir }}menu-files/js"
-        mode=0644
-        owner=root
-        group=root
+  copy:
+    src: "{{ item }}"
+    dest: "{{ js_menu_dir }}menu-files/js"
+    mode: '0644'
+    owner: root
+    group: root
   with_fileglob:
         - menu-files/js/*
 
 - name: Copy js-menu services files
-  copy: src={{ item }}
-        dest="{{ js_menu_dir }}menu-files/services"
-        mode=0644
-        owner=root
-        group=root
+  copy:
+    src: "{{ item }}"
+    dest: "{{ js_menu_dir }}menu-files/services"
+    mode: '0644'
+    owner: root
+    group: root
   with_fileglob:
         - menu-files/services/*
 
 - name: Copy a dummy file
-  copy: src=security/index.html
-        dest={{ item }}
-        mode=0644
-        owner=root
-        group=root
-  with_items:
+  copy:
+    src: security/index.html
+    dest: "{{ item }}"
+    mode: '0644'
+    owner: root
+    group: root
+  loop:
     - "{{ js_menu_dir }}"
     - "{{ js_menu_dir }}menu-files"
     - "{{ js_menu_dir }}menu-files/css"
@@ -67,12 +73,13 @@
     - "{{ js_menu_dir }}menu-files/services"
 
 - name: Copy a dummy module for oob menu
-  copy: src=en-test_mod/index.html
-        dest="{{ doc_root }}/modules/en-test_mod"
-        owner=root
-        group=root
-        mode=0644
-        force=no
+  copy:
+    src: en-test_mod/index.html
+    dest: "{{ doc_root }}/modules/en-test_mod"
+    owner: root
+    group: root
+    mode: '0644'
+    force: false
 
 - name: Synchronize/Copy menu-files
   synchronize:
@@ -80,26 +87,29 @@
     dest: "{{ js_menu_dir }}/sample-menus"
 
 - name: Install js-menu config file
-  template: src=config.json.j2
-            dest={{ js_menu_dir }}/config.json
-            owner=root
-            group=root
-            mode=0644
+  template:
+    src: config.json.j2
+    dest: "{{ js_menu_dir }}/config.json"
+    owner: root
+    group: root
+    mode: '0644'
 
 - name: Install index.html in home
-  copy: src=index.html
-        dest="{{ doc_root }}/home/index.html"
-        owner=root
-        group=root
-        mode=0644
+  copy:
+    src: index.html
+    dest: "{{ doc_root }}/home/index.html"
+    owner: root
+    group: root
+    mode: '0644'
 
 - name: Install menu.json in home
-  copy: src=menu.json
-        dest="{{ doc_root }}/home/menu.json"
-        owner=root
-        group=root
-        mode=0644
-        force=no
+  copy:
+    src: menu.json
+    dest: "{{ doc_root }}/home/menu.json"
+    owner: root
+    group: root
+    mode: '0644'
+    force: false
 
 - name: Does "{{ js_menu_dir }}menu-files/menu-defs" directory exist?
   stat:
@@ -115,12 +125,13 @@
   when: menu_defs_dir.stat.exists
 
 - name: Make web server user owner of images after copying
-  file: path="{{ js_menu_dir }}menu-files/images/"
-        mode=u=rwX,g=rX,o=rX
-        owner="{{ apache_user }}"
-        group="{{ apache_user }}"
-        state=directory
-        recurse=true
+  file:
+    path: "{{ js_menu_dir }}menu-files/images/"
+    mode: 'u=rwX,g=rX,o=rX'
+    owner: "{{ apache_user }}"
+    group: "{{ apache_user }}"
+    state: directory
+    recurse: true
 
 #- name: Make sure iiab-make-kiwix-lib has been run
 #  shell: "/usr/bin/iiab-make-kiwix-lib"
@@ -133,7 +144,7 @@
   template:
     src: 021_www_data_set_time.j2
     dest: /etc/sudoers.d/021_www_data_set_time
-    mode: 0440
+    mode: '0440'
 
 # Now always enabled
 #- name: Remove above

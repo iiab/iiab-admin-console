@@ -1,10 +1,11 @@
 - name: Create admin-console directory tree
-  file: path={{ item }}
-        mode=0755
-        owner=root
-        group=root
-        state=directory
-  with_items:
+  file:
+    path: "{{ item }}"
+    mode: '0755'
+    owner: root
+    group: root
+    state: directory
+  loop:
     - "{{ admin_console_dir }}"
     - "{{ admin_console_dir }}/css"
     - "{{ admin_console_dir }}/help"
@@ -13,84 +14,93 @@
     - "{{ admin_console_dir }}/map"
 
 - name: Copy admin-console css files
-  copy: src={{ item }}
-        dest="{{ admin_console_dir }}/css"
-        mode=0644
-        owner=root
-        group=root
+  copy:
+    src: "{{ item }}"
+    dest: "{{ admin_console_dir }}/css"
+    mode: '0644'
+    owner: root
+    group: root
   with_fileglob:
         - css/*.css
 
 - name: Copy admin-console help files
-  copy: src={{ item }}
-        dest="{{ admin_console_dir }}/help"
-        mode=0644
-        owner=root
-        group=root
+  copy:
+    src: "{{ item }}"
+    dest: "{{ admin_console_dir }}/help"
+    mode: '0644'
+    owner: root
+    group: root
   with_fileglob:
         - help/*
 
 - name: Copy admin-console javascript files
-  copy: src={{ item }}
-        dest="{{ admin_console_dir }}/js"
-        mode=0644
-        owner=root
-        group=root
+  copy:
+    src: "{{ item }}"
+    dest: "{{ admin_console_dir }}/js"
+    mode: '0644'
+    owner: root
+    group: root
   with_fileglob:
         - js/*
 
 - name: Copy admin-console html fragment files
-  copy: src={{ item }}
-        dest="{{ admin_console_dir }}/htmlf"
-        mode=0644
-        owner=root
-        group=root
+  copy:
+    src: "{{ item }}"
+    dest: "{{ admin_console_dir }}/htmlf"
+    mode: '0644'
+    owner: root
+    group: root
   with_fileglob:
         - htmlf/*
 
 - name: Install admin-console config file for web server (now only supports nginx)
-  template: src=admin-console-nginx.conf.j2
-            dest={{ nginx_conf_dir }}/admin-console.conf
-            owner=root
-            group=root
-            mode=0644
+  template:
+    src: admin-console-nginx.conf.j2
+    dest: "{{ nginx_conf_dir }}/admin-console.conf"
+    owner: root
+    group: root
+    mode: '0644'
   when: not adm_cons_force_ssl
 
 - name: Install admin-console wsgi service
-  template: src=cmd-service3.wsgi.j2
-            dest="{{ admin_console_dir }}/cmd-service3.wsgi"
-            owner=root
-            group=root
-            mode=0644
+  template:
+    src: cmd-service3.wsgi.j2
+    dest: "{{ admin_console_dir }}/cmd-service3.wsgi"
+    owner: root
+    group: root
+    mode: '0644'
 
 - name: Put the uswgi file in place
   template:
       src: '{{ item.src}}'
       dest: '{{ item.dest }}'
-  with_items:
+  loop:
     - { src: "admin-console.ini.j2",dest: "/etc/uwsgi/apps-enabled/admin-console.ini" }
   when: nginx_enabled
 
 - name: Install admin-console server info service
-  template: src=server-info.php
-            dest="{{ admin_console_dir }}/server-info.php"
-            owner=root
-            group=root
-            mode=0644
+  template:
+    src: server-info.php
+    dest: "{{ admin_console_dir }}/server-info.php"
+    owner: root
+    group: root
+    mode: '0644'
 
 - name: Install image upload service
-  template: src=upload-image.php
-            dest="{{ admin_console_dir }}/upload-image.php"
-            owner=root
-            group=root
-            mode=0644
+  template:
+    src: upload-image.php
+    dest: "{{ admin_console_dir }}/upload-image.php"
+    owner: root
+    group: root
+    mode: '0644'
 
 - name: Install admin-console app
-  copy: src=index.html
-        dest="{{ admin_console_dir }}/index.html"
-        owner=root
-        group=root
-        mode=0644
+  copy:
+    src: index.html
+    dest: "{{ admin_console_dir }}/index.html"
+    owner: root
+    group: root
+    mode: '0644'
 
 - name: Restart nginx to pick up the config files installed
   systemd:
