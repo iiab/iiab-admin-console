@@ -192,9 +192,9 @@ def read_kiwix_catalog(KIWIX_CAT):
     zims_catalog = download['zims']
     return zims_catalog
 
-def read_library_xml(lib_xml_file, kiwix_exclude_attr=[""]): # duplicated from iiab-cmdsrv
-    kiwix_exclude_attr.append("id") # don't include id
-    kiwix_exclude_attr.append("favicon") # don't include large favicon
+def read_library_xml(lib_xml_file, kiwix_exclude_attr=["favicon"]): # duplicated from iiab-cmdsrv
+    excluded_attr = {'id'} # use a set and never include the key
+    excluded_attr.update(kiwix_exclude_attr)
     zims_installed = {}
     path_to_id_map = {}
     try:
@@ -208,7 +208,7 @@ def read_library_xml(lib_xml_file, kiwix_exclude_attr=[""]): # duplicated from i
                   print ("xml record missing Book Id")
             id = child.attrib['id']
             for attr in child.attrib:
-                if attr not in kiwix_exclude_attr:
+                if attr not in excluded_attr:
                     attributes[attr] = child.attrib[attr] # copy if not id or in exclusion list
             zims_installed[id] = attributes
             path_to_id_map[child.attrib['path']] = id
