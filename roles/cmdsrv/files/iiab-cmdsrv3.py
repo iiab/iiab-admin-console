@@ -2787,7 +2787,7 @@ def install_oer2go_mod(cmd_info):
     targetDir = rachel_working_dir # /library/working/rachel/
 
     if 'rclone' in oer2go_catalog[moddir]:
-        job_command = "/usr/bin/rclone -v sync " + oer2go_catalog[moddir]['rclone'] + " " + targetDir + moddir
+        job_command = "/usr/bin/rclone -P copy " + oer2go_catalog[moddir]['rclone'] + " " + targetDir + moddir
     else:
         oer2go_download_src = oer2go_catalog[moddir]['rsync_url']
         job_command = "/usr/bin/rsync -Pavz --size-only " + oer2go_download_src + " " + targetDir
