@@ -3991,7 +3991,8 @@ def get_incomplete_jobs():
     for row in cur.fetchall():
         job_id, cmd_rowid, cmd_step_no, depend_on_job_id, has_dependent, job_command, opt_args_json, job_pid, job_output, job_status, create_datetime, cmd_msg = row
 
-        job_created_time = datetime.strptime(create_datetime, "%Y-%m-%d %H:%M:%S.%f") # create_datetime to datetime type
+        # job_created_time = datetime.strptime(create_datetime, "%Y-%m-%d %H:%M:%S.%f") # create_datetime to datetime type
+        job_created_time = datetime.fromisoformat(create_datetime) # create_datetime to datetime type
 
         # Kill any jobs hanging around. In future we might try to monitor them since we have the job_output.
         # But make sure they are since last reboot or might not be ours
