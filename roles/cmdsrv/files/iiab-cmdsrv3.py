@@ -31,6 +31,7 @@ import yaml
 import configparser
 import re
 import urllib.request, urllib.error, urllib.parse
+import ipaddress
 import string
 import mimetypes
 import cracklib
@@ -105,6 +106,8 @@ vector_map_tiles_path = None
 osm_version = None
 modules_dir = None
 small_device_size = 525000 # bigger than anticipated boot partition
+sync_content_inventory_path = "/common/assets/iiab-sync/content.json"
+sync_module_meta_required_fields = ["moddir", "title", "description", "lang", "ksize", "menu_item_name", "intended_use"]
 js_menu_dir = None
 tailscale_login_url = 'https://controlplane.tailscale.com'
 tailscale_iiab_login_url = 'https://iiab.net'
@@ -492,12 +495,16 @@ def add_wip(job_info):
 
     cmd = job_info['cmd']
 
-    if cmd in {"INST-ZIMS", "COPY-ZIMS"}:
-        zim_id = job_info['cmd_args']['zim_id']
+    if cmd in {"INST-ZIMS", "COPY-ZIMS", "SYNC-ZIMS"}:
+        zim_id = job_info['cmd_args'].get('zim_id', job_info['cmd_args'].get('file_ref'))
         if cmd == "INST-ZIMS":
             action = "DOWNLOAD"
             dest = "internal"
             source = "kiwix"
+        elif cmd == "SYNC-ZIMS":
+            action = "IMPORT"
+            dest = "internal"
+            source = "server"
         else:
             dest = job_info['cmd_args']['dest']
             source = job_info['cmd_args']['source']
@@ -507,11 +514,14 @@ def add_wip(job_info):
                 action = "EXPORT"
         zims_wip[zim_id] = {"cmd":cmd, "action":action, "dest":dest, "source":source}
 
-    elif cmd in {"INST-OER2GO-MOD", "COPY-OER2GO-MOD"}:
+    elif cmd in {"INST-OER2GO-MOD", "COPY-OER2GO-MOD", "SYNC-OER2GO-MOD"}:
         moddir = job_info['cmd_args']['moddir']
         if cmd == "INST-OER2GO-MOD":
             action = "DOWNLOAD"
             source = "oer2go"
+        elif cmd == "SYNC-OER2GO-MOD":
+            action = "IMPORT"
+            source = "server"
         else:
             dest = job_info['cmd_args']['dest']
             source = job_info['cmd_args']['source']
@@ -540,9 +550,9 @@ def remove_wip(job_info):
     #print job_info
     #print "in remove_wip"
 
-    if job_info['cmd'] in ["INST-ZIMS", "COPY-ZIMS"]:
-        zims_wip.pop(job_info['cmd_args']['zim_id'], None)
-    elif job_info['cmd'] in ["INST-OER2GO-MOD", "COPY-OER2GO-MOD"]:
+    if job_info['cmd'] in ["INST-ZIMS", "COPY-ZIMS", "SYNC-ZIMS"]:
+        zims_wip.pop(job_info['cmd_args'].get('zim_id', job_info['cmd_args'].get('file_ref')), None)
+    elif job_info['cmd'] in ["INST-OER2GO-MOD", "COPY-OER2GO-MOD", "SYNC-OER2GO-MOD"]:
         oer2go_wip.pop(job_info['cmd_args']['moddir'], None)
     elif job_info['cmd'] in {"INST-OSM-VECT-SET"}:
         maps_wip.pop(job_info['cmd_args']['osm_vect_id'], None)
@@ -739,6 +749,9 @@ def cmd_handler(cmd_msg):
         "GET-SPACE-AVAIL": {"funct": get_space_avail, "inet_req": False},
         "GET-STORAGE-INFO": {"funct": get_storage_info_lite, "inet_req": False},
         "GET-EXTDEV-INFO": {"funct": get_external_device_info, "inet_req": False},
+        "GET-SYNC-SERVERS": {"funct": get_sync_servers, "inet_req": False},
+        "GET-SYNC-CONTENT": {"funct": get_sync_content, "inet_req": False},
+        "MAKE-SYNC-CONTENT": {"funct": make_sync_content, "inet_req": False},
         "GET-REM-DEV-LIST": {"funct": get_rem_dev_list, "inet_req": False},
         "GET-SYSTEM-INFO": {"funct": get_system_info, "inet_req": False},
         "GET-NETWORK-INFO": {"funct": get_network_info, "inet_req": False},
@@ -770,11 +783,13 @@ def cmd_handler(cmd_msg):
         "GET-UPGRADEABLE-ZIMS": {"funct": get_upgradeable_zims, "inet_req": False},
         "UPGRADE-ZIMS": {"funct": upgrade_zims, "inet_req": True},
         "COPY-ZIMS": {"funct": copy_zims, "inet_req": False},
+        "SYNC-ZIMS": {"funct": sync_zims, "inet_req": False},
         "MAKE-KIWIX-LIB": {"funct": make_kiwix_lib, "inet_req": False}, # runs as job
         "RESTART-KIWIX": {"funct": restart_kiwix, "inet_req": False}, # runs immediately
         "GET-OER2GO-CAT": {"funct": get_oer2go_catalog, "inet_req": True},
         "INST-OER2GO-MOD": {"funct": install_oer2go_mod, "inet_req": True},
         "COPY-OER2GO-MOD": {"funct": copy_oer2go_mod, "inet_req": False},
+        "SYNC-OER2GO-MOD": {"funct": sync_oer2go_mod, "inet_req": False},
         "GET-OER2GO-STAT": {"funct": get_oer2go_stat, "inet_req": False},
         "GET-RACHEL-STAT": {"funct": get_rachel_stat, "inet_req": False},
         "INST-RACHEL": {"funct": install_rachel, "inet_req": True},
@@ -1208,6 +1223,307 @@ def get_storage_info_lite(cmd_info):
     outp = subproc_check_output(cmd_args)
     json_outp = json_array("system_fs", outp)
     return (json_outp)
+
+def validate_sync_source_host(source_host):
+    if not isinstance(source_host, str):
+        return None
+
+    source_host = source_host.strip()
+    if len(source_host) == 0 or len(source_host) > 253:
+        return None
+
+    try:
+        ip_addr = ipaddress.ip_address(source_host)
+        if ip_addr.version == 6:
+            return "[" + source_host + "]"
+        return source_host
+    except ValueError:
+        pass
+
+    hostname_re = re.compile(r"^(?=.{1,253}$)([A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)*[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?$")
+    if hostname_re.match(source_host):
+        return source_host
+
+    return None
+
+def validate_sync_content_inventory(inventory):
+    if not isinstance(inventory, dict):
+        return False
+
+    required_keys = {
+        "schema_version": int,
+        "server": dict,
+        "zims": list,
+        "modules": list
+    }
+
+    for key, expected_type in required_keys.items():
+        if key not in inventory:
+            return False
+        if not isinstance(inventory[key], expected_type):
+            return False
+
+    return True
+
+def get_local_ip_addresses():
+    try:
+        outp = subproc_check_output(["/bin/hostname", "-I"])
+        return set(outp.split())
+    except:
+        return set()
+
+def unescape_avahi_field(value):
+    def replace_match(match):
+        return chr(int(match.group(1), 10))
+    return re.sub(r"\\([0-7]{3})", replace_match, value)
+
+def is_sync_discovery_address_usable(address):
+    try:
+        ip_addr = ipaddress.ip_address(address)
+        return not ip_addr.is_loopback and not ip_addr.is_link_local
+    except ValueError:
+        return True
+
+def parse_avahi_txt_records(parts):
+    txt_records = {}
+
+    for value in parts[9:]:
+        value = unescape_avahi_field(value).strip('"')
+        if "=" not in value:
+            continue
+        key, record_value = value.split("=", 1)
+        txt_records[key] = record_value
+
+    return txt_records
+
+def parse_avahi_sync_servers(outp):
+    servers = []
+    seen = set()
+    local_hostname = socket.gethostname()
+    local_names = {local_hostname, local_hostname + ".local"}
+    local_ips = get_local_ip_addresses()
+
+    for line in outp.splitlines():
+        if not line.startswith("="):
+            continue
+
+        parts = line.split(";")
+        if len(parts) < 9:
+            continue
+
+        service_name = unescape_avahi_field(parts[3])
+        service_type = parts[4]
+        host = parts[6].rstrip(".")
+        address = parts[7]
+        port = parts[8]
+        txt_records = parse_avahi_txt_records(parts)
+
+        if service_type != "_iiab-sync._tcp":
+            continue
+        if not is_sync_discovery_address_usable(address):
+            continue
+        if host in local_names or address in local_ips:
+            continue
+
+        server_key = address + ":" + port
+        if server_key in seen:
+            continue
+        seen.add(server_key)
+
+        server = {
+            "service_name": service_name,
+            "host": host,
+            "address": address,
+            "port": port
+        }
+
+        if "path" in txt_records:
+            server["path"] = txt_records["path"]
+        if "ssh_user" in txt_records:
+            server["ssh_user"] = txt_records["ssh_user"]
+
+        servers.append(server)
+
+    return servers
+
+def get_sync_servers(cmd_info):
+    try:
+        result = subprocess.run(
+            ["/usr/bin/avahi-browse", "-rtp", "_iiab-sync._tcp"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            timeout=8
+        )
+    except FileNotFoundError:
+        return cmd_error(cmd=cmd_info['cmd'], msg='avahi-browse is not installed')
+    except subprocess.TimeoutExpired:
+        return cmd_error(cmd=cmd_info['cmd'], msg='Timed out discovering sync servers')
+    except:
+        return cmd_error(cmd=cmd_info['cmd'], msg='Unable to discover sync servers')
+
+    if result.returncode != 0 and result.stdout.strip() == "":
+        return cmd_error(cmd=cmd_info['cmd'], msg='Unable to discover sync servers')
+
+    return json.dumps({"servers": parse_avahi_sync_servers(result.stdout)})
+
+def get_sync_content(cmd_info):
+    try:
+        source_host = cmd_info['cmd_args']['source_host']
+    except:
+        return cmd_malformed(cmd_info['cmd'])
+
+    safe_source_host = validate_sync_source_host(source_host)
+    if safe_source_host == None:
+        return cmd_error(cmd=cmd_info['cmd'], msg='Invalid source host')
+
+    inventory_url = "http://" + safe_source_host + sync_content_inventory_path
+
+    try:
+        with urllib.request.urlopen(inventory_url, timeout=10) as response:
+            if response.status != 200:
+                return cmd_error(cmd=cmd_info['cmd'], msg='Unable to fetch sync content inventory')
+            inventory_bytes = response.read()
+    except urllib.error.HTTPError as exc:
+        if exc.code == 404:
+            return cmd_error(cmd=cmd_info['cmd'], msg='Sync content inventory not found')
+        return cmd_error(cmd=cmd_info['cmd'], msg='Unable to fetch sync content inventory')
+    except urllib.error.URLError:
+        return cmd_error(cmd=cmd_info['cmd'], msg='Unable to reach sync source server')
+    except socket.timeout:
+        return cmd_error(cmd=cmd_info['cmd'], msg='Timed out contacting sync source server')
+
+    try:
+        inventory = json.loads(inventory_bytes.decode('utf-8'))
+    except:
+        return cmd_error(cmd=cmd_info['cmd'], msg='Invalid sync content inventory JSON')
+
+    if not validate_sync_content_inventory(inventory):
+        return cmd_error(cmd=cmd_info['cmd'], msg='Invalid sync content inventory format')
+
+    return json.dumps(inventory)
+
+def make_sync_content(cmd_info):
+    modules, invalid_modules = build_sync_module_inventory()
+    inventory = {
+        "schema_version": 1,
+        "server": {
+            "hostname": socket.gethostname(),
+            "base_url": "http://" + socket.gethostname(),
+            "generated_at": datetime.utcnow().isoformat() + "Z",
+            "generated_by": "MAKE-SYNC-CONTENT"
+        },
+        "zims": build_sync_zim_inventory(),
+        "modules": modules,
+        "invalid_modules": invalid_modules
+    }
+
+    if not validate_sync_content_inventory(inventory):
+        return cmd_error(cmd=cmd_info['cmd'], msg='Generated sync content inventory has invalid format')
+
+    inventory_path = doc_root + sync_content_inventory_path
+    inventory_dir = os.path.dirname(inventory_path)
+
+    try:
+        os.makedirs(inventory_dir, exist_ok=True)
+        tmp_inventory_path = inventory_path + ".tmp"
+        with open(tmp_inventory_path, "w") as inventory_file:
+            json.dump(inventory, inventory_file, indent=2)
+        shutil.move(tmp_inventory_path, inventory_path)
+    except:
+        return cmd_error(cmd=cmd_info['cmd'], msg='Unable to write sync content inventory')
+
+    return json.dumps(inventory)
+
+def build_sync_zim_inventory():
+    zims = []
+    lib_xml_file = zim_dir + "/library.xml"
+    installed_zims = read_library_xml(lib_xml_file)
+
+    for zim_id in sorted(installed_zims):
+        zim = dict(installed_zims[zim_id])
+        zim["id"] = zim_id
+
+        if "path" in zim:
+            zim_file = os.path.basename(zim["path"])
+            zim["file_ref"] = zim_file.split(".zim")[0]
+
+        if "size" in zim:
+            try:
+                zim["size_k"] = int(zim["size"])
+            except:
+                pass
+
+        zims.append(zim)
+
+    return zims
+
+def build_sync_module_inventory():
+    modules = []
+    invalid_modules = []
+    dirlist = glob(modules_dir + "/*/")
+
+    for modpath in sorted(dirlist):
+        moddir = modpath.split('/')[-2]
+
+        if moddir in oer2go_catalog:
+            module = dict(oer2go_catalog[moddir])
+            module["moddir"] = moddir
+            module["source"] = "oer2go-catalog"
+            modules.append(module)
+            continue
+
+        meta_path = os.path.join(modpath, ".iiab-meta")
+        if not os.path.isfile(meta_path):
+            invalid_modules.append({
+                "moddir": moddir,
+                "reason": "missing .iiab-meta"
+            })
+            continue
+
+        try:
+            with open(meta_path, "r") as meta_file:
+                module = json.load(meta_file)
+            invalid_reason = validate_sync_module_meta(module, moddir)
+            if invalid_reason != None:
+                invalid_modules.append({
+                    "moddir": moddir,
+                    "reason": invalid_reason
+                })
+                continue
+            module["source"] = "iiab-meta"
+            modules.append(module)
+        except:
+            invalid_modules.append({
+                "moddir": moddir,
+                "reason": "invalid .iiab-meta"
+            })
+
+    return modules, invalid_modules
+
+def validate_sync_module_meta(module, moddir):
+    if not isinstance(module, dict):
+        return "invalid .iiab-meta"
+
+    missing_fields = []
+    for field in sync_module_meta_required_fields:
+        if field not in module:
+            missing_fields.append(field)
+        elif isinstance(module[field], str) and module[field].strip() == "":
+            missing_fields.append(field)
+
+    if len(missing_fields) > 0:
+        return "missing .iiab-meta fields: " + ", ".join(missing_fields)
+
+    if module["moddir"] != moddir:
+        return ".iiab-meta moddir does not match module directory"
+
+    try:
+        int(module["ksize"])
+    except:
+        return ".iiab-meta ksize must be an integer"
+
+    return None
 
 def get_external_device_info(cmd_info):
     extdev_info = {}
@@ -2842,6 +3158,165 @@ def copy_oer2go_mod(cmd_info):
         job_id = request_one_job(cmd_info, job_command, 1, -1, "Y")
         job_command = "scripts/oer2go_install_move.sh " + file_ref
         resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=2, depend_on_job_id=job_id, has_dependent="N")
+    return resp
+
+def validate_sync_module_id(moddir):
+    if not isinstance(moddir, str):
+        return None
+    moddir = moddir.strip()
+    if re.match(r"^[A-Za-z0-9._-]+$", moddir):
+        return moddir
+    return None
+
+def validate_sync_source_user(source_user):
+    if source_user == None:
+        return None
+    if not isinstance(source_user, str):
+        return None
+    source_user = source_user.strip()
+    if re.match(r"^[A-Za-z0-9._-]+$", source_user):
+        return source_user
+    return None
+
+def get_sync_remote_host(source_host, source_user=None):
+    if source_user != None:
+        return source_user + "@" + source_host
+    return source_host
+
+def get_sync_ssh_command():
+    return "ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=5"
+
+def check_sync_ssh_access(remote_host):
+    ssh_args = shlex.split(get_sync_ssh_command()) + [remote_host, "true"]
+    try:
+        result = subprocess.run(ssh_args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=8)
+        return result.returncode == 0
+    except:
+        return False
+
+def validate_sync_zim_file_ref(file_ref):
+    if not isinstance(file_ref, str):
+        return None
+    file_ref = file_ref.strip()
+    if re.match(r"^[A-Za-z0-9._-]+$", file_ref):
+        return file_ref
+    return None
+
+def sync_zim_content_exists(file_ref):
+    return len(glob(zim_content_dir + file_ref + ".zim*")) > 0
+
+def sync_module_content_exists(moddir):
+    return os.path.isdir(os.path.join(modules_dir, moddir))
+
+def sync_zim_installed(file_ref, zim_id=None):
+    installed_zims = read_library_xml(zim_dir + "/library.xml")
+
+    if zim_id != None and zim_id in installed_zims:
+        return sync_zim_content_exists(file_ref)
+
+    for installed_zim_id in installed_zims:
+        installed_zim = installed_zims[installed_zim_id]
+        if "path" not in installed_zim:
+            continue
+        installed_file = os.path.basename(installed_zim["path"]).split(".zim")[0]
+        if installed_file == file_ref and sync_zim_content_exists(file_ref):
+            return True
+
+    return False
+
+def sync_zims(cmd_info):
+    try:
+        source_host = cmd_info['cmd_args']['source_host']
+        file_ref = cmd_info['cmd_args']['file_ref']
+    except:
+        return cmd_malformed(cmd_info['cmd'])
+
+    safe_source_host = validate_sync_source_host(source_host)
+    safe_file_ref = validate_sync_zim_file_ref(file_ref)
+    source_user = cmd_info['cmd_args'].get('source_user')
+    safe_source_user = validate_sync_source_user(source_user)
+    zim_id = cmd_info['cmd_args'].get('zim_id')
+
+    if safe_source_host == None:
+        return cmd_error(cmd=cmd_info['cmd'], msg='Invalid source host')
+    if safe_file_ref == None:
+        return cmd_error(cmd=cmd_info['cmd'], msg='Invalid ZIM file reference')
+    if source_user != None and safe_source_user == None:
+        return cmd_error(cmd=cmd_info['cmd'], msg='Invalid source user')
+    if zim_id != None and not isinstance(zim_id, str):
+        return cmd_error(cmd=cmd_info['cmd'], msg='Invalid ZIM id')
+
+    if sync_zim_installed(safe_file_ref, zim_id):
+        return cmd_error(cmd=cmd_info['cmd'], msg='ZIM already installed')
+
+    target_dir = zim_working_dir + safe_file_ref + "/data"
+    try:
+        os.makedirs(target_dir + "/content", exist_ok=True)
+        os.makedirs(target_dir + "/index", exist_ok=True)
+    except:
+        return cmd_error(cmd=cmd_info['cmd'], msg='Error creating ZIM working directory')
+
+    remote_host = get_sync_remote_host(safe_source_host, safe_source_user)
+    if not check_sync_ssh_access(remote_host):
+        return cmd_error(cmd=cmd_info['cmd'], msg='Unable to connect to sync source over SSH')
+
+    ssh_command = shlex.quote(get_sync_ssh_command())
+    remote_zim_source = remote_host + ":" + zim_content_dir + safe_file_ref + ".zim*"
+    job_command = "/usr/bin/rsync -rPt --size-only -e " + ssh_command
+    job_command += " " + shlex.quote(remote_zim_source)
+    job_command += " " + shlex.quote(target_dir + "/content")
+    job_id = request_one_job(cmd_info, job_command, 1, -1, "Y")
+
+    remote_index_source = remote_host + ":" + zim_index_dir + safe_file_ref + ".zim.idx"
+    job_command = "/usr/bin/rsync -rPt --size-only --ignore-missing-args -e " + ssh_command
+    job_command += " " + shlex.quote(remote_index_source)
+    job_command += " " + shlex.quote(target_dir + "/index")
+    job_id = request_one_job(cmd_info, job_command, 2, job_id, "Y")
+
+    job_command = "scripts/zim_install_step3.sh " + shlex.quote(safe_file_ref)
+    resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=3, depend_on_job_id=job_id, has_dependent="N")
+    return resp
+
+def sync_oer2go_mod(cmd_info):
+    try:
+        source_host = cmd_info['cmd_args']['source_host']
+        moddir = cmd_info['cmd_args']['moddir']
+    except:
+        return cmd_malformed(cmd_info['cmd'])
+
+    safe_source_host = validate_sync_source_host(source_host)
+    safe_moddir = validate_sync_module_id(moddir)
+    source_user = cmd_info['cmd_args'].get('source_user')
+    safe_source_user = validate_sync_source_user(source_user)
+
+    if safe_source_host == None:
+        return cmd_error(cmd=cmd_info['cmd'], msg='Invalid source host')
+    if safe_moddir == None:
+        return cmd_error(cmd=cmd_info['cmd'], msg='Invalid module id')
+    if source_user != None and safe_source_user == None:
+        return cmd_error(cmd=cmd_info['cmd'], msg='Invalid source user')
+
+    refresh_oer2go_installed()
+    if safe_moddir in oer2go_installed or sync_module_content_exists(safe_moddir):
+        return cmd_error(cmd=cmd_info['cmd'], msg='Module already installed')
+
+    try:
+        os.makedirs(rachel_working_dir, exist_ok=True)
+    except:
+        return cmd_error(cmd=cmd_info['cmd'], msg='Error creating module working directory')
+
+    remote_host = get_sync_remote_host(safe_source_host, safe_source_user)
+    if not check_sync_ssh_access(remote_host):
+        return cmd_error(cmd=cmd_info['cmd'], msg='Unable to connect to sync source over SSH')
+
+    remote_source = remote_host + ":" + modules_dir + safe_moddir
+    job_command = "/usr/bin/rsync -rPt --size-only -e " + shlex.quote(get_sync_ssh_command())
+    job_command += " " + shlex.quote(remote_source)
+    job_command += " " + shlex.quote(rachel_working_dir)
+
+    job_id = request_one_job(cmd_info, job_command, 1, -1, "Y")
+    job_command = "scripts/oer2go_install_move.sh " + shlex.quote(safe_moddir)
+    resp = request_job(cmd_info=cmd_info, job_command=job_command, cmd_step_no=2, depend_on_job_id=job_id, has_dependent="N")
     return resp
 
 def get_oer2go_stat(cmd_info):
