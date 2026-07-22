@@ -1667,7 +1667,7 @@ def remove_wifi_connection_params_nm(cmd_info):
         for devstr in dev_arr:
             props = devstr.split(':')
             if props[0] == '802-11-wireless':
-                cmdstr = 'nmcli con delete ' + props[1]
+                cmdstr = 'nmcli con delete ' + shlex.quote(props[1])
                 rc = adm.subproc_run(cmdstr)
                 if rc.returncode != 0:
                     return cmd_error(cmd=cmd, msg='Error removing Router Connection ' + props[1] + '.')
