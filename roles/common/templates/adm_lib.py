@@ -126,15 +126,29 @@ def get_substitution_data(perma_ref, zim_versions, zims_installed, path_to_id_ma
 
 # Menu Def functions
 
+def get_repo_contents(path):
+    # Fetch and parse a file listing from the js-menu-files repo via the GitHub API.
+    # Returns [] on failure so callers degrade gracefully (e.g. when the
+    # GitHub API is rate limited or the network is down).
+    url = CONST.menu_def_base_url + 'contents/' + path
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+        response.raise_for_status()
+        contents = json.loads(response._content)
+        if not isinstance(contents, list):
+            raise Exception('unexpected response: ' + str(contents)[:200])
+        return contents
+    except Exception as e:
+        print('Warning: could not list ' + path + ' from GitHub API (' + url + '): ' + str(e))
+        return []
+
 def get_menu_def_repo_data():
     repo_data = {}
     repo_data['defs'] = {}
     repo_data['html'] = {}
     repo_data ['icons']= {}
 
-    response = requests.get(CONST.menu_def_base_url + 'contents/' + CONST.menu_def_path, headers=headers)
-    file_list = json.loads(response._content)
-    for item in file_list:
+    for item in get_repo_contents(CONST.menu_def_path):
         if item['type'] == 'file':
             if item['name'].endswith('.json'):
                 menu_item_def_name = item['name'].split('.json')[0] # trim .json
@@ -142,9 +156,7 @@ def get_menu_def_repo_data():
             elif item['name'].endswith('.html'):
                 repo_data['html'][item['name']] = item
 
-    response = requests.get(CONST.menu_def_base_url + 'contents/' + CONST.menu_def_icon_path, headers=headers)
-    file_list = json.loads(response._content)
-    for item in file_list:
+    for item in get_repo_contents(CONST.menu_def_icon_path):
         if item['type'] == 'file':
             repo_data['icons'][item['name']] = item
 
@@ -152,9 +164,7 @@ def get_menu_def_repo_data():
 
 def get_repo_menu_item_defs():
     menu_item_defs = {}
-    response = requests.get(CONST.menu_def_base_url + 'contents/' + CONST.menu_def_path, headers=headers)
-    menu_item_def_list = json.loads(response._content)
-    for item in menu_item_def_list:
+    for item in get_repo_contents(CONST.menu_def_path):
         if item['type'] == 'file':
             if '.json' in item['name']:
                 menu_item_def_name = item['name'].split('.json')[0] # trim .json
