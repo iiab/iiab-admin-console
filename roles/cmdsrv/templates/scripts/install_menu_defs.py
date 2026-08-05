@@ -2,7 +2,7 @@
 # install_menu_defs.py
 # after pull/clone of js-menu-files repo, fix up commit_sha and any other fields in local files
 
-import os, sys, syslog
+import os, syslog
 from glob import glob
 import requests
 import json
@@ -12,11 +12,7 @@ from datetime import date
 import base64
 import iiab.adm_lib as adm
 
-try:
-    adm.pcgvtd9()
-except:
-    print("Unable to contact Server")
-    sys.exit(1)
+adm.pcgvtd9()
 
 local_menu_item_defs = adm.get_local_menu_item_defs() # returns dict
 repo_menu_item_defs = adm.get_repo_menu_item_defs() # returns dict

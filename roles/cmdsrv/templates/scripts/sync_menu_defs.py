@@ -2,7 +2,7 @@
 # sync_menu_defs.py
 # try to put js-menu-files repo and local files in sync
 
-import os, sys, syslog
+import os, syslog
 from glob import glob
 import requests
 import json
@@ -13,11 +13,7 @@ import base64
 import iiab.iiab_lib as iiab
 import iiab.adm_lib as adm
 
-try:
-    adm.pcgvtd9()
-except:
-    print("Unable to contact Server")
-    sys.exit(1)
+adm.pcgvtd9()
 
 # load lang codes
 iiab.read_lang_codes()

@@ -498,7 +498,7 @@ def generate_module_extra_html(module, working_dir):
     # get rachel index for parsing for 'extra-html'
     # print "Downloading rachel-index.php"
     cmdstr = "rsync -Pavz " + module['rsync_url'] + "/rachel-index.php " + working_dir
-    php_parser = re.compile('\<\?php echo .+? \?>')
+    php_parser = re.compile(r'\<\?php echo .+? \?>')
     args = shlex.split(cmdstr)
     try:
         outp = subprocess.check_output(args)
@@ -999,11 +999,20 @@ def is_service_active(service):
 def pcgvtd9():
     global headers
     global git_committer_handle
-    response = requests.get(CONST.iiab_pat_url)
-    data = json.loads(response._content)
-    headers = {'Content-Type':'application/json',
-               'Authorization': 'token ' + data['pat']}
-    git_committer_handle = data['iiab_user_ip']
+    try:
+        response = requests.get(CONST.iiab_pat_url, timeout=10)
+        response.raise_for_status()
+        data = json.loads(response._content)
+        headers = {'Content-Type':'application/json',
+                   'Authorization': 'token ' + data['pat']}
+        git_committer_handle = data['iiab_user_ip']
+    except Exception as e:
+        # Write operations (uploads/deletes) will fail with a 401 until the
+        # PAT server is reachable again.
+        headers = {'Content-Type':'application/json'}
+        git_committer_handle = ''
+        print('Warning: could not obtain GitHub token from ' + CONST.iiab_pat_url + ': ' + str(e))
+        print('Continuing with unauthenticated GitHub API access (read-only).')
 
 def fetch_menu_json_value(key):
     menu_json = read_json_file(CONST.menu_json_file, fix_json=True)
