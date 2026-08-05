@@ -177,24 +177,15 @@ def get_repo_item_defs_from_clone(clone_dir):
     # Returns a dict of {'en-test_zim': {'sha': 'abc123...'}, ...}.
     menu_item_defs = {}
     try:
-        result = subprocess.run(
+        lines = subprocess.check_output(
             ['git', '-C', clone_dir, 'ls-tree', '-r', 'HEAD', '--', 'menu-defs/'],
-            capture_output=True, text=True, timeout=30)
-        result.check_returncode()
-        for line in result.stdout.strip().split('\n'):
-            if not line:
-                continue
-            # line format: "100644 blob <sha>\t<path>"
-            parts = line.split('\t')
-            if len(parts) < 2:
-                continue
-            sha = parts[0].split()[-1]
-            filepath = os.path.basename(parts[1])
-            if filepath.endswith('.json'):
-                menu_item_def_name = filepath.split('.json')[0]
-                menu_item_defs[menu_item_def_name] = {'sha': sha}
+            text=True, timeout=30).splitlines()
+        for line in lines:
+            sha, _, path = line.rpartition('\t')   # "...<sha>\t<path>"
+            if path.endswith('.json'):
+                menu_item_defs[os.path.basename(path)[:-5]] = {'sha': sha.split()[-1]}
     except Exception as e:
-        print('Warning: could not get menu defs from local clone (' + clone_dir + '): ' + str(e))
+        print(f'Warning: could not get menu defs from local clone ({clone_dir}): {e}')
     return menu_item_defs
 
 def get_local_menu_item_defs():
