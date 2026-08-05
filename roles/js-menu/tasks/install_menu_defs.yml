@@ -1,18 +1,38 @@
-- name: Clone js-menu-files for images and menu defs
-  git:
-    repo: "https://github.com/{{ menu_files_repo }}"
-    dest: "{{ downloads_dir }}/js-menu-files"
-    depth: 1
+- name: Fetch latest menu defs and images from js-menu-files repo
+  block:
+    - name: Clone js-menu-files for images and menu defs
+      git:
+        repo: "https://github.com/{{ menu_files_repo }}"
+        dest: "{{ downloads_dir }}/js-menu-files"
+        depth: 1
 
-- name: Synchronize/Copy menu-defs
-  synchronize:
-    src: "{{ downloads_dir }}/js-menu-files/menu-defs"
-    dest: "{{ js_menu_dir }}/menu-files"
+    - name: Synchronize/Copy menu-defs
+      synchronize:
+        src: "{{ downloads_dir }}/js-menu-files/menu-defs"
+        dest: "{{ js_menu_dir }}/menu-files"
 
-- name: Synchronize/Copy images
-  synchronize:
-    src: "{{ downloads_dir }}/js-menu-files/images"
-    dest: "{{ js_menu_dir }}/menu-files"
+    - name: Synchronize/Copy images
+      synchronize:
+        src: "{{ downloads_dir }}/js-menu-files/images"
+        dest: "{{ js_menu_dir }}/menu-files"
 
-- name: Post process the downloaded menu defs
-  shell: "{{ cmdsrv_dir }}/scripts/install_menu_defs.py"
+    - set_fact:
+        clone_successful: true
+  rescue:
+    - name: Copy bundled default menu defs (GitHub unreachable)
+      synchronize:
+        src: menu-files/menu-defs
+        dest: "{{ js_menu_dir }}/menu-files"
+
+    - name: Copy bundled default images (GitHub unreachable)
+      synchronize:
+        src: menu-files/images
+        dest: "{{ js_menu_dir }}/menu-files"
+
+    - name: Note that bundled default menu defs are being used
+      debug:
+        msg: "Unable to reach {{ menu_files_repo }} on GitHub - using the bundled default menu defs and images. Run '{{ cmdsrv_dir }}/scripts/sync_menu_defs.py' later to fetch the latest versions."
+
+- name: Post process the downloaded menu defs (local clone provides SHAs, no API needed)
+  shell: "{{ cmdsrv_dir }}/scripts/install_menu_defs.py {{ downloads_dir }}/js-menu-files"
+  when: clone_successful | default(false)

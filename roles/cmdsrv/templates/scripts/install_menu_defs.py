@@ -2,7 +2,7 @@
 # install_menu_defs.py
 # after pull/clone of js-menu-files repo, fix up commit_sha and any other fields in local files
 
-import os, syslog
+import os, sys
 from glob import glob
 import requests
 import json
@@ -12,10 +12,15 @@ from datetime import date
 import base64
 import iiab.adm_lib as adm
 
-adm.pcgvtd9()
+# SHAs are read from the local git clone — no GitHub API or PAT server needed.
+# The clone dir is passed by the Ansible task that invokes this script.
+clone_dir = sys.argv[1] if len(sys.argv) > 1 else None
+if clone_dir and os.path.isdir(clone_dir):
+    repo_menu_item_defs = adm.get_repo_item_defs_from_clone(clone_dir)
+else:
+    repo_menu_item_defs = {}
 
 local_menu_item_defs = adm.get_local_menu_item_defs() # returns dict
-repo_menu_item_defs = adm.get_repo_menu_item_defs() # returns dict
 obsolete_menu_item_defs = adm.read_json(adm.CONST.obsolete_menu_defs)
 
 # update commit_sha for cloned or pulled menu item defs
