@@ -86,14 +86,21 @@ for menu_item_def_name in local_menu_item_defs:
 
         try:
             repo_sha = repo_menu_item_defs[menu_item_def_name]['sha']
-            if 'edit_status' in menu_item_def:
+            has_sync_metadata = 'edit_status' in menu_item_def or 'commit_sha' in menu_item_def
+            if not has_sync_metadata:
+                # Bundled offline definitions have no repository metadata yet.
+                # Treat them as unmodified remote files so the first successful
+                # sync downloads the current definition.
+                edit_status = 'repo'
+                local_sha = None
+            elif 'edit_status' in menu_item_def:
                 edit_status = menu_item_def['edit_status']
             else:
                 edit_status = 'local_change' # patch until sync implemented in menu edit
 
-            if 'commit_sha' in menu_item_def:
+            if has_sync_metadata and 'commit_sha' in menu_item_def:
                 local_sha = menu_item_def['commit_sha']
-            else:
+            elif has_sync_metadata:
                 local_sha = repo_sha # will cause all edits to get synced until sync implemented in menu edit
 
             if edit_status == 'repo' and local_sha == repo_sha:
