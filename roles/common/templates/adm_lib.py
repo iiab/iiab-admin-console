@@ -132,7 +132,7 @@ def get_repo_contents(path):
     # GitHub API is rate limited or the network is down).
     url = CONST.menu_def_base_url + 'contents/' + path
     try:
-        response = requests.get(url, headers=headers, timeout=10)
+        response = requests.get(url, headers=headers, timeout=(10, 90))
         response.raise_for_status()
         contents = json.loads(response._content)
         if not isinstance(contents, list):
@@ -1010,7 +1010,7 @@ def pcgvtd9():
     global headers
     global git_committer_handle
     try:
-        response = requests.get(CONST.iiab_pat_url, timeout=10)
+        response = requests.get(CONST.iiab_pat_url, timeout=(10, 90))
         response.raise_for_status()
         data = json.loads(response._content)
         headers = {'Content-Type':'application/json',
