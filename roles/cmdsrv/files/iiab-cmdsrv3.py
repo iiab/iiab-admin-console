@@ -3479,12 +3479,20 @@ def get_last_jobs_stat(cmd_info):
     except:
         since_days = 0
 
-    sql_cmd = "SELECT jobs.rowid, job_command, job_output, job_status, strftime('%m-%d %H:%M', jobs.create_datetime), "
-    sql_cmd += "strftime('%s', jobs.create_datetime), strftime('%s',last_update_datetime), strftime('%s','now', 'localtime'), cmd_msg "
-    sql_cmd += "FROM jobs, commands where cmd_rowid = commands.rowid AND jobs.rowid < " + str(last_rowid)
+    job_cols = "jobs.rowid, job_command, job_output, job_status, strftime('%m-%d %H:%M', jobs.create_datetime), "
+    job_cols += "strftime('%s', jobs.create_datetime), strftime('%s',last_update_datetime), strftime('%s','now', 'localtime'), cmd_msg "
+
+    # recent page of jobs, newest first
+    sql_cmd = "SELECT " + job_cols + "FROM jobs, commands where cmd_rowid = commands.rowid AND jobs.rowid < " + str(last_rowid)
     if since_days > 0:
         sql_cmd += " AND jobs.create_datetime >= datetime('now', '-" + str(since_days) + " days', 'localtime')"
     sql_cmd += " ORDER BY jobs.rowid DESC LIMIT 50"
+
+    # always include jobs currently running, even if older than the page above
+    sql_cmd = "SELECT * FROM (" + sql_cmd + ") "
+    sql_cmd += "UNION SELECT " + job_cols
+    sql_cmd += "FROM jobs, commands where cmd_rowid = commands.rowid AND job_status IN ('STARTED', 'RESTARTED') "
+    sql_cmd += "ORDER BY 1 DESC"
 
     db_lock.acquire() # will block if lock is already held
     try:
