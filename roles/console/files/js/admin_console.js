@@ -473,7 +473,7 @@ function instContentButtonsEvents() {
       alert("Description is required.");
       return;
     }
-    var suppliedPresets = ['en-school', 'es-school', 'fr-school', 'en-medical', 'en-school-256-base', 'en-starter', 'test'];
+    var suppliedPresets = ['en-school', 'es-school', 'fr-school', 'en-medical', 'en-school-256-base', 'en-starter', 'en-tech', 'test'];
     // skip confirm for supplied presets to avoid two dialogs
     if (presetName in presetList && suppliedPresets.indexOf(presetName) === -1) {
       if (!confirm("Preset '" + presetName + "' already exists. Overwrite?"))
