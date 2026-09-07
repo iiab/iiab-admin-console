@@ -1,4 +1,2 @@
 kiwix_install: True
 kiwix_enabled: True
-osm_vector_maps_install: True
-osm_vector_maps_enabled: True

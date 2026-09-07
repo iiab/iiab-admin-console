@@ -245,7 +245,5 @@
     "devdocs_en_zsh"
   ],
   "modules": [],
-  "maps": [
-    "satellite_z0-z9_2020.mbtiles"
-  ]
+  "maps": []
 }
