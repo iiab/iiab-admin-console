@@ -213,7 +213,7 @@ def main():
     clients = context.socket(zmq.ROUTER)
     clients.bind(client_url)
     os.chown(ipc_sock, owner.pw_uid, group.gr_gid)
-    os.chmod(ipc_sock, 0o770)
+    os.chmod(ipc_sock, 0o700)
 
     # Socket to talk to workers
     workers_data = context.socket(zmq.DEALER)
