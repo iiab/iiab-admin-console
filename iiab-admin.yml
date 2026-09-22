@@ -54,6 +54,9 @@
   - name: console
     include_role:
       name: console
+    when:
+      - nginx_enabled
+      - not is_proot
 
   - name: js-menu
     include_role:
