@@ -11,3 +11,9 @@
 
   roles:
     - { role: 0-init }
+
+  post_tasks:
+    - name: "Remove /usr/sbin/policy-rc.d (installed by 0-init) so later manual 'apt install' behaves normally"
+      file:
+        path: /usr/sbin/policy-rc.d
+        state: absent
