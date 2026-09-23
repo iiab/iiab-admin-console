@@ -2268,13 +2268,14 @@ def run_ansible_roles(cmd_info):
         adm.write_iiab_local_vars(changed_local_vars)
 
     # assemble playbook
-    with open('assets/run-roles-post.yml') as f:
-        lines.extend(f.readlines())
-    with open(iiab_repo + '/adm-run-roles-tmp.yml', 'w') as f:
-        f.writelines(lines)
+    tmp_playbook = iiab_repo + '/adm-run-roles-tmp.yml'
+    with open(tmp_playbook, 'w') as dest:
+        dest.writelines(lines)
+    with open('assets/run-roles-post.yml', 'rb') as src, open(tmp_playbook, 'ab') as dest:
+        shutil.copyfileobj(src, dest)
 
     # first step run ansible
-    job_command = ansible_playbook_program + " -M " + iiab_repo + "/modules" + " -i " + iiab_repo + "/ansible_hosts " + iiab_repo + "/adm-run-roles-tmp.yml --connection=local"
+    job_command = ansible_playbook_program + " -M " + iiab_repo + "/modules" + " -i " + iiab_repo + "/ansible_hosts " + tmp_playbook + " --connection=local"
     job_id = request_one_job(cmd_info, job_command, 1, -1, "Y")
 
     # second step update home menu
