@@ -77,6 +77,24 @@
   loop:
     - { src: "admin-console.ini.j2",dest: "/etc/uwsgi/apps-available/admin-console.ini" }
 
+- name: Gather service facts
+  service_facts:
+
+- name: Stop and disable legacy uWSGI services
+  systemd_service:
+    name: "{{ item }}"
+    state: stopped
+    enabled: false
+  loop:
+    - uwsgi.service
+    - uwsgi-emperor.service
+  when: item in ansible_facts.services
+
+- name: Remove the legacy Admin Console uWSGI app config
+  file:
+    path: /etc/uwsgi/apps-enabled/admin-console.ini
+    state: absent
+
 - name: Install admin-console server info service
   template:
     src: server-info.php
@@ -113,15 +131,33 @@
     dest: /etc/systemd/system/uwsgi-app@admin-console.service.d/iiab.conf
     mode: '0644'
 
+- name: Install Admin Console uWSGI socket override directory
+  file:
+    path: /etc/systemd/system/uwsgi-app@admin-console.socket.d
+    state: directory
+    mode: '0755'
+
+- name: Configure Admin Console uWSGI socket access for {{ apache_user }}
+  template:
+    src: uwsgi-app@admin-console.socket.d/iiab.conf.j2
+    dest: /etc/systemd/system/uwsgi-app@admin-console.socket.d/iiab.conf
+    mode: '0644'
+
 - name: Restart nginx to pick up the config files installed
   systemd:
     name: nginx
     state: restarted
     enabled: true
 
-- name: Enable and start the Admin Console uWSGI socket
+- name: Enable and restart the Admin Console uWSGI socket
   systemd_service:
     name: uwsgi-app@admin-console.socket
-    daemon_reload: yes
+    daemon_reload: true
     enabled: true
-    state: started
+    state: restarted
+
+- name: Restart the Admin Console uWSGI service
+  systemd_service:
+    name: uwsgi-app@admin-console.service
+    daemon_reload: true
+    state: restarted
