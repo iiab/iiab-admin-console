@@ -2222,6 +2222,7 @@ def run_ansible_roles(cmd_info):
      # get playbook preamble
     with open('assets/run-roles-base.yml') as f:
         lines = f.readlines()
+    role_lines = []
 
     role_cnt = 0
     for role in iiab_roles_status:
@@ -2244,19 +2245,19 @@ def run_ansible_roles(cmd_info):
                     resp = cmd_error(msg='Internet is Required to install a Service, but is Not Available.')
                     return resp
                 else:
-                    lines.append('    - { role: ' + run_role + ' }\n')
+                    role_lines.append('    - { role: ' + run_role + ' }\n')
                     role_cnt += 1
             else: # installed, but not desired. we can't uninstall
                 if enabled == True: # just disable it
                     changed_local_vars[role + '_enabled'] = False
-                    lines.append('    - { role: ' + run_role + ' }\n')
+                    role_lines.append('    - { role: ' + run_role + ' }\n')
                     role_cnt += 1
         else: # enabled status has changed
-            lines.append('    - { role: ' + run_role + ' }\n')
+            role_lines.append('    - { role: ' + run_role + ' }\n')
             role_cnt += 1
 
     if add_network:
-        lines.append('    - { role: network }\n')
+        role_lines.append('    - { role: network }\n')
         role_cnt += 1
 
     if role_cnt == 0:
@@ -2268,6 +2269,11 @@ def run_ansible_roles(cmd_info):
         adm.write_iiab_local_vars(changed_local_vars)
 
     # assemble playbook
+    post_tasks_index = next(
+        (index for index, line in enumerate(lines) if line.strip() == 'post_tasks:'),
+        len(lines),
+    )
+    lines[post_tasks_index:post_tasks_index] = role_lines
     with open(iiab_repo + '/adm-run-roles-tmp.yml', 'w') as f:
         f.writelines(lines)
 
