@@ -2271,8 +2271,6 @@ def run_ansible_roles(cmd_info):
     tmp_playbook = iiab_repo + '/adm-run-roles-tmp.yml'
     with open(tmp_playbook, 'w') as dest:
         dest.writelines(lines)
-    with open('assets/run-roles-post.yml', 'rb') as src, open(tmp_playbook, 'ab') as dest:
-        shutil.copyfileobj(src, dest)
 
     # first step run ansible
     job_command = ansible_playbook_program + " -M " + iiab_repo + "/modules" + " -i " + iiab_repo + "/ansible_hosts " + tmp_playbook + " --connection=local"

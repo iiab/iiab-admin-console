@@ -164,7 +164,6 @@
     group: root
   loop:
             - assets/run-roles-base.yml
-            - assets/run-roles-post.yml
             - assets/adm_ansible_vars.yml
 
 - name: Copy presets recursively
