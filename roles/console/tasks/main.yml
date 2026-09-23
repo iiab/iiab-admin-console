@@ -131,18 +131,6 @@
     dest: /etc/systemd/system/uwsgi-app@admin-console.service.d/iiab.conf
     mode: '0644'
 
-- name: Install Admin Console uWSGI socket override directory
-  file:
-    path: /etc/systemd/system/uwsgi-app@admin-console.socket.d
-    state: directory
-    mode: '0755'
-
-- name: Configure Admin Console uWSGI socket access for {{ apache_user }}
-  template:
-    src: uwsgi-app@admin-console.socket.d/iiab.conf.j2
-    dest: /etc/systemd/system/uwsgi-app@admin-console.socket.d/iiab.conf
-    mode: '0644'
-
 - name: Restart nginx to pick up the config files installed
   systemd:
     name: nginx
