@@ -77,24 +77,6 @@
   loop:
     - { src: "admin-console.ini.j2",dest: "/etc/uwsgi/apps-available/admin-console.ini" }
 
-- name: Gather service facts
-  service_facts:
-
-- name: Stop and disable legacy uWSGI services
-  systemd_service:
-    name: "{{ item }}"
-    state: stopped
-    enabled: false
-  loop:
-    - uwsgi.service
-    - uwsgi-emperor.service
-  when: item in ansible_facts.services
-
-- name: Remove the legacy Admin Console uWSGI app config
-  file:
-    path: /etc/uwsgi/apps-enabled/admin-console.ini
-    state: absent
-
 - name: Install admin-console server info service
   template:
     src: server-info.php
