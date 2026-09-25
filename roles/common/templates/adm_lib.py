@@ -111,7 +111,7 @@ def get_substitution_data(perma_ref, zim_versions, zims_installed, path_to_id_ma
         print('Error on ' + path)
         print("library.xml has no record of this zim, so its properties are unknown.")
         print("Try rerunning iiab-make-kiwix-lib, and if the error remains,")
-        print("delete library.xml and rerun iiab-make-kiwix-lib -f.")
+        print("delete library.xml and rerun iiab-make-kiwix-lib -f")
         raise
 
     if len(item) != 0 or perma_ref == 'test':
