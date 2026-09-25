@@ -17,7 +17,7 @@ location ~ ^/admin/(.*)\.php$ {
 
 location /iiab-cmd-service {
    include uwsgi_params;
-   uwsgi_pass unix:///tmp/admin-console.sock;
+   uwsgi_pass unix:///run/uwsgi/admin-console.socket;
 }
 
 # we need a list of images for adm cons
