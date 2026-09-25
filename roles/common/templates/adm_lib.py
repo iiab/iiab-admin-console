@@ -737,7 +737,9 @@ def kiwix_lang_to_iso2(zim_lang_code): # 2/13/2024 moved from iiab_lib where not
     # zims like gutenberg_mul_xxx can have a list of languages separated by commas
     # always take the first item in the list
     zim_lang = zim_lang_code.split(',')[0]
-    return iiab.lang_codes[zim_lang]['iso2']
+    if zim_lang in iiab.lang_codes:
+        return iiab.lang_codes[zim_lang]['iso2']
+    return 'und' # unknown or missing language code, ISO 639 for undetermined
 
 def get_default_logo(logo_selector, lang):
     # Note we could also get the logo for a zim out of the catalog
