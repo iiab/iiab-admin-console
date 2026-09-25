@@ -26,7 +26,6 @@ import shutil
 import zmq
 import sqlite3
 import json
-import xml.etree.ElementTree as ET
 import yaml
 import configparser
 import re
@@ -37,6 +36,7 @@ import cracklib
 import socket
 import hashlib
 import binascii
+import iiab.iiab_lib as iiab
 import iiab.adm_lib as adm
 
 
@@ -2093,24 +2093,10 @@ def get_zim_stat(cmd_info):
     return (resp)
 
 def read_library_xml(lib_xml_file, kiwix_exclude_attr=["favicon"]):
-    excluded_attr = {'id'} # use a set and never include the key
-    excluded_attr.update(kiwix_exclude_attr)
-    zims_installed = {}
-    try:
-        tree = ET.parse(lib_xml_file)
-        root = tree.getroot()
-        for child in root:
-            attributes = {}
-            if len(child.attrib['language'].split(',')) > 1: # change multi language list to 'mul'
-                child.attrib['language'] = 'mul'
-            if 'id' in child.attrib:
-                id = child.attrib['id']
-                for attr in child.attrib:
-                    if attr not in excluded_attr:
-                        attributes[attr] = child.attrib[attr] # copy if not id or in exclusion list
-                zims_installed[id] = attributes
-    except IOError:
-        zims_installed = {}
+    zims_installed, _ = iiab.read_library_xml(lib_xml_file, kiwix_exclude_attr) # both library.xml formats
+    for zim_id in zims_installed:
+        if len(zims_installed[zim_id].get('language', '').split(',')) > 1: # change multi language list to 'mul'
+            zims_installed[zim_id]['language'] = 'mul'
     return zims_installed
 
 def get_oer2go_catalog(cmd_info):

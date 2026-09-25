@@ -107,10 +107,11 @@ def get_substitution_data(perma_ref, zim_versions, zims_installed, path_to_id_ma
     try:
         zim_id = path_to_id_map[path]
         item = zims_installed[zim_id]
-    except:
+    except KeyError:
         print('Error on ' + path)
-        print("zim_version_idx.json and library.xml are now out of sync.")
-        print("Try removing the file and rerunning iiab-make-kiwix-lib.")
+        print("library.xml has no record of this zim, so its properties are unknown.")
+        print("Try rerunning iiab-make-kiwix-lib, and if the error remains,")
+        print("delete library.xml and rerun iiab-make-kiwix-lib -f")
         raise
 
     if len(item) != 0 or perma_ref == 'test':
@@ -118,7 +119,7 @@ def get_substitution_data(perma_ref, zim_versions, zims_installed, path_to_id_ma
         articlecount = item.get('articleCount', '')
         size = item.get('size', '')
         tags = item.get('tags', '')
-        zim_lang = item.get('language')
+        zim_lang = item.get('language', '')
         menu_def_lang = kiwix_lang_to_iso2(zim_lang)
         date = item.get('date', '')
         return (articlecount, mediacount, size, tags, menu_def_lang, date)
@@ -736,7 +737,9 @@ def kiwix_lang_to_iso2(zim_lang_code): # 2/13/2024 moved from iiab_lib where not
     # zims like gutenberg_mul_xxx can have a list of languages separated by commas
     # always take the first item in the list
     zim_lang = zim_lang_code.split(',')[0]
-    return iiab.lang_codes[zim_lang]['iso2']
+    if zim_lang in iiab.lang_codes:
+        return iiab.lang_codes[zim_lang]['iso2']
+    return 'und' # unknown or missing language code, ISO 639 for undetermined
 
 def get_default_logo(logo_selector, lang):
     # Note we could also get the logo for a zim out of the catalog
