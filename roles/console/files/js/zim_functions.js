@@ -150,7 +150,8 @@ var missingZimLangCodes = []; // used to track missing language codes in zim cat
 
       installedZimCatalog[section][id]['category'] = creator; // best we can do
       installedZimCatalog[section][id]['sequence'] = 1; // put these first
-      var permRef = installedZimCatalog[section][id]['path'];
+      var path = installedZimCatalog[section][id]['path'];
+      var permRef = (typeof path !== 'undefined') ? path : id; // remote only zims have no path
       if (permRef.indexOf('/') != -1)
         permRef = permRef.split("/")[1]
       installedZimCatalog[section][id]['perma_ref'] = permRef;
@@ -257,13 +258,15 @@ function genZimItem(zimId, zim, preChecked=true, onChangeFunc="updateZimDiskSpac
 
   if (typeof zim.perma_ref !== 'undefined')
   	permaref = zim.perma_ref;
-  else{
+  else if (typeof zim.path !== 'undefined'){
   	permaref = zim.path.split("/").pop();
   	permaref = permaref.substring(0, permaref.lastIndexOf("_"));
   }
+  else
+  	permaref = zimId;
 
   html += '<label ';
-  html += '><input type="checkbox" name="' + zimId + '" zim_perma_ref="'+ zim.perma_ref + '"';
+  html += '><input type="checkbox" name="' + zimId + '" zim_perma_ref="'+ ((typeof zim.perma_ref !== 'undefined') ? zim.perma_ref : permaref) + '"';
   //html += '><img src="images/' + zimId + '.png' + '"><input type="checkbox" name="' + zimId + '"';
   if (preChecked && zimStat.checkable) {
       html += ' disabled="disabled" checked="checked"';
@@ -292,8 +295,10 @@ function genZimTooltip(zim) {
   zimToolTip += 'Media: ' + Intl.NumberFormat().format(zim.mediaCount) + '<BR>';
   if (typeof zim.download_url !== 'undefined')
   	zimToolTip += 'Download URL: ' + zim.download_url + '<BR>';
-  else
+  else if (typeof zim.path !== 'undefined')
   	zimToolTip += 'Path: ' + zim.path + '<BR>';
+  else if (typeof zim.url !== 'undefined')
+  	zimToolTip += 'URL: ' + zim.url + '<BR>';
 
   zimToolTip += 'With:<ul>';
   zimToolTip += zim.has_embedded_index ? '<li>Internal Full Text Index</li>' : '';
