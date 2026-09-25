@@ -10,7 +10,6 @@ import re
 import subprocess
 import shlex
 import configparser
-import xml.etree.ElementTree as ET
 import argparse
 import fnmatch
 import argparse
@@ -61,7 +60,7 @@ def main():
     version_idx = read_zim_version_idx(zim_version_idx_dir + zim_version_idx_file)
     zims_cat = read_kiwix_catalog(KIWIX_CAT)
     cat_perm_ref_id_map, cat_perm_ref_url_map = calc_cat_perm_ref_idx(zims_cat)
-    zims_installed, path_to_id_map = read_library_xml(lib_xml_file)
+    zims_installed, path_to_id_map = iiab.read_library_xml(lib_xml_file, kiwix_exclude_attr=["favicon"])
 
     when_to_remove_old = 'after' # default
     if args.delete:
@@ -191,30 +190,6 @@ def read_kiwix_catalog(KIWIX_CAT):
     download = json.loads(json_data)
     zims_catalog = download['zims']
     return zims_catalog
-
-def read_library_xml(lib_xml_file, kiwix_exclude_attr=["favicon"]): # duplicated from iiab-cmdsrv
-    excluded_attr = {'id'} # use a set and never include the key
-    excluded_attr.update(kiwix_exclude_attr)
-    zims_installed = {}
-    path_to_id_map = {}
-    try:
-        tree = ET.parse(lib_xml_file)
-        root = tree.getroot()
-        xml_item_no = 0
-        for child in root:
-            #xml_item_no += 1 # hopefully this is the array number
-            attributes = {}
-            if 'id' not in child.attrib: # is this necessary? implies there are records with no book id which would break index for removal
-                  print ("xml record missing Book Id")
-            id = child.attrib['id']
-            for attr in child.attrib:
-                if attr not in excluded_attr:
-                    attributes[attr] = child.attrib[attr] # copy if not id or in exclusion list
-            zims_installed[id] = attributes
-            path_to_id_map[child.attrib['path']] = id
-    except IOError:
-        zims_installed = {}
-    return zims_installed, path_to_id_map
 
 def read_zim_version_idx(zim_version_idx_file):
     # Read the zim_version_idx_file
