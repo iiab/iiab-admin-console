@@ -107,10 +107,11 @@ def get_substitution_data(perma_ref, zim_versions, zims_installed, path_to_id_ma
     try:
         zim_id = path_to_id_map[path]
         item = zims_installed[zim_id]
-    except:
+    except KeyError:
         print('Error on ' + path)
-        print("zim_version_idx.json and library.xml are now out of sync.")
-        print("Try removing the file and rerunning iiab-make-kiwix-lib.")
+        print("library.xml has no record of this zim, so its properties are unknown.")
+        print("Try rerunning iiab-make-kiwix-lib, and if the error remains,")
+        print("delete library.xml and rerun iiab-make-kiwix-lib -f.")
         raise
 
     if len(item) != 0 or perma_ref == 'test':
@@ -118,7 +119,7 @@ def get_substitution_data(perma_ref, zim_versions, zims_installed, path_to_id_ma
         articlecount = item.get('articleCount', '')
         size = item.get('size', '')
         tags = item.get('tags', '')
-        zim_lang = item.get('language')
+        zim_lang = item.get('language', '')
         menu_def_lang = kiwix_lang_to_iso2(zim_lang)
         date = item.get('date', '')
         return (articlecount, mediacount, size, tags, menu_def_lang, date)
