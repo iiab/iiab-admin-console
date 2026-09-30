@@ -57,7 +57,7 @@ if verbose:
 
 cat_error = False
 try:
-    r = requests.get(kiwix_catalog_url, timeout=45)
+    r = requests.get(kiwix_catalog_url)
     r.raise_for_status()
 except requests.exceptions.HTTPError as errh:
     print ("Http Error:",errh)
