@@ -2072,7 +2072,11 @@ def set_white_list(cmd_info):
     return (resp)
 
 def get_kiwix_catalog(cmd_info):
-    outp = subproc_check_output(["scripts/get_kiwix_catalog"])
+    try:
+        outp = subproc_check_output(["scripts/get_kiwix_catalog"])
+    except subprocess.CalledProcessError:
+        log(syslog.LOG_ERR, "Error: Failed to download Kiwix catalog.")
+        return ('{"Error": "Failed to download Kiwix catalog. Please try again after a few minutes."}')
     if outp == "SUCCESS":
         read_kiwix_catalog()
         resp = cmd_success("GET-KIWIX-CAT")
