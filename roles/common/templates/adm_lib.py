@@ -621,8 +621,11 @@ def put_kiwix_enabled_into_menu_json():
     # list of zim languages converted to iso2 by perma ref
     zim_perma_ref_iso2 = {}
     for zim in zims_installed:
-        perma_ref = iiab.calc_zim_perma_ref(zims_installed[zim]['path'])
-        zim_lang_code = zims_installed[zim]['language']
+        zim_path = zims_installed[zim].get('path', '')
+        if zim_path == '': # remote-only zims have no local path to derive a perma_ref
+            continue
+        perma_ref = iiab.calc_zim_perma_ref(zim_path)
+        zim_lang_code = zims_installed[zim].get('language', '') # OPDS entries may omit it
         zim_iso2_code = kiwix_lang_to_iso2(zim_lang_code)
         zim_perma_ref_iso2[perma_ref] = zim_iso2_code
 
@@ -639,7 +642,7 @@ def put_kiwix_enabled_into_menu_json():
 
         # check if menu def exists for this perma_ref
         #num_defs =  len(defs_per_perma_ref[perma_ref])
-        expected_name =  zim_perma_ref_iso2[perma_ref] + '-' + perma_ref.replace('.','_')
+        expected_name = zim_perma_ref_iso2.get(perma_ref, 'und') + '-' + perma_ref.replace('.','_')
 
         if expected_name not in defs_per_perma_ref.get(perma_ref, []):
             # create canonical menu def name
@@ -705,7 +708,7 @@ def generate_zim_menu_def(perma_ref, menu_def_name, zim_info):
     # do not generate a menuDef for the test zim
     if perma_ref == 'test': return ""
 
-    zim_lang = zim_info['language']
+    zim_lang = zim_info.get('language', '') # OPDS entries may omit it
     menu_def_lang = kiwix_lang_to_iso2(zim_lang)
     #filename = menu_def_lang + '-' + perma_ref + '.json'
     # create a stub for this zim
