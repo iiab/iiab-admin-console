@@ -18,6 +18,7 @@ location ~ ^/admin/(.*)\.php$ {
 location /iiab-cmd-service {
    include uwsgi_params;
    uwsgi_pass unix:///run/uwsgi/admin-console.socket;
+   uwsgi_read_timeout {{ (iiab_cmd_service_timeout / 1000 + 10) | int }}s;
 }
 
 # we need a list of images for adm cons
