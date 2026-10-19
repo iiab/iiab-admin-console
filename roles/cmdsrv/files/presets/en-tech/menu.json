@@ -15,7 +15,7 @@
   "allow_kiwix_search": true,
   "allow_poweroff": false,
   "poweroff_prompt": "Power Off",
-  "autoupdate_menu": true,
+  "autoupdate_menu": false,
   "allow_server_time_update": true,
   "multi_tab": false,
   "tab_names": [
@@ -34,6 +34,7 @@
     "en-iot_stackexchange_com_en_all",
     "en-3dprinting_stackexchange_com_en_all",
     "en-robotics_stackexchange_com_en_all",
+    "en-kiwix-devdocs",
     "en-credits"
   ]
 }
