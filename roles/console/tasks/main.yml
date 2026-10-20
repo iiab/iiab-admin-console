@@ -60,7 +60,7 @@
     owner: root
     group: root
     mode: '0644'
-  when: not adm_cons_force_ssl
+  when: not (adm_cons_force_ssl | default(false) | bool)
 
 - name: Install admin-console wsgi service
   template:
@@ -113,12 +113,6 @@
     dest: /etc/systemd/system/uwsgi-app@admin-console.service.d/iiab.conf
     mode: '0644'
 
-- name: Restart nginx to pick up the config files installed
-  systemd:
-    name: nginx
-    state: restarted
-    enabled: true
-
 - name: Enable and restart the Admin Console uWSGI socket
   systemd_service:
     name: uwsgi-app@admin-console.socket
@@ -131,3 +125,24 @@
     name: uwsgi-app@admin-console.service
     daemon_reload: true
     state: started
+
+- name: Restart nginx to pick up the config files installed
+  systemd:
+    name: nginx
+    state: restarted
+    enabled: true
+
+- name: Check Admin Console uWSGI authentication endpoint
+  uri:
+    # nginx_port is 80 normally, but 8085 under PRoot-Distro (Android)
+    url: "http://127.0.0.1:{{ nginx_port }}{{ iiab_cmd_service_url }}/auth/get_pubkey"
+    method: GET
+    status_code: 200
+    timeout: 5
+    return_content: false
+  register: admin_console_auth_health
+  retries: 10
+  delay: 1
+  until: admin_console_auth_health.status | default(0) == 200
+  changed_when: false
+  when: not (adm_cons_force_ssl | default(false) | bool)
