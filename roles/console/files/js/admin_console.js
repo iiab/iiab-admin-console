@@ -1491,7 +1491,7 @@ function setAuthUnavailableMessage(){
 function setInvalidLoginMessage(){
   if ($('#iiabAdminUserName').val() === 'iiab-admin'){
     setLoginMessage(
-      'If you are using an IIAB Daily image, there is no default iiab-admin user. ' +
+      'If you are using an IIAB Daily Image, there is no default iiab-admin user. ' +
       'Use the username and password that you set up in Raspberry Pi Imager.'
     );
   } else {
