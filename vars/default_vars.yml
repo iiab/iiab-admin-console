@@ -24,6 +24,7 @@ rachel_mods_url : rsync://dev.worldpossible.org/rachelmods/
 oer2go_mods_url : "{{ rachel_mods_url }}"
 #iiab_map_url : http://download.iiab.io/content/OSM/vector-tiles/maplist/hidden
 iiab_modules_dir : "{{ doc_root }}/modules/"
+js_menu_clone : "{{ downloads_dir }}/js-menu-files/"
 js_menu_dir : "{{ doc_root }}/js-menu/"
 js_menu_assets : "{{ doc_root }}/common/assets/"
 menu_files_repo : iiab-share/js-menu-files/
