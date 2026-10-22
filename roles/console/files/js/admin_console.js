@@ -1482,6 +1482,7 @@ function setLoginMessage(msg){
 }
 
 function setAuthUnavailableMessage(){
+  $('#ADMIN-CONSOLE-LOGIN').text('Retry');
   setLoginMessage(
     'The Admin Console service is unavailable. Please make sure your device is configured ' +
     'to use the correct Wi-Fi network (e.g. "Internet in a Box"), then click Retry.'
