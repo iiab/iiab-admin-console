@@ -119,7 +119,7 @@
     state: restarted
     enabled: true
 
-- name: Enable and restart the Admin Console uWSGI socket
+- name: Enable and start the Admin Console uWSGI socket
   systemd_service:
     name: uwsgi-app@admin-console.socket
     daemon_reload: true
