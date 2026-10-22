@@ -498,7 +498,8 @@ def generate_module_extra_html(module, working_dir):
     # get rachel index for parsing for 'extra-html'
     # print "Downloading rachel-index.php"
     cmdstr = "rsync -Pavz " + module['rsync_url'] + "/rachel-index.php " + working_dir
-    php_parser = re.compile('\<\?php echo .+? \?>')
+    # php_parser = re.compile('\<\?php echo .+? \?>')
+    php_parser = re.compile(r'\<\?php echo .+? \?>')
     args = shlex.split(cmdstr)
     try:
         outp = subprocess.check_output(args)
