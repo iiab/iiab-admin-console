@@ -1488,6 +1488,17 @@ function setAuthUnavailableMessage(){
   );
 }
 
+function setInvalidLoginMessage(){
+  if ($('#iiabAdminUserName').val() === 'iiab-admin'){
+    setLoginMessage(
+      'If you are using an IIAB Daily image, there is no default iiab-admin user. ' +
+      'Use the username and password that you set up in Raspberry Pi Imager.'
+    );
+  } else {
+    setLoginMessage('Invalid Login');
+  }
+}
+
 function launchcmdServerLoginForm(loginMsg){
   authData.keepLogin = true; // prevent closing of form until logged in
   authData.loginMessage = loginMsg; // remember it, so it can be restored later
@@ -1561,7 +1572,7 @@ async function cmdServerLogin(credentials, retryOnStaleKey = true){
     }
     logAuthRequestFailure(endpoint, jqXHR, textStatus, errorThrown);
     if (jqXHR.status == 403)
-      setLoginMessage('Invalid Login');
+      setInvalidLoginMessage();
     else
       setAuthUnavailableMessage();
   });
