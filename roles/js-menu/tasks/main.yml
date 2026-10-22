@@ -121,9 +121,10 @@
   include_tasks: install_menu_defs.yml
   when: not menu_defs_dir.stat.exists
 
-- name: Otherwise sync local menu defs with repo
-  shell: "{{ cmdsrv_dir }}/scripts/sync_menu_defs.py"
-  when: menu_defs_dir.stat.exists
+# Make menu def sync manual
+#- name: Otherwise sync local menu defs with repo
+#  shell: "{{ cmdsrv_dir }}/scripts/sync_menu_defs.py"
+#  when: menu_defs_dir.stat.exists
 
 - name: Make web server user owner of images after copying
   file:
