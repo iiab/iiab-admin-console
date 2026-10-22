@@ -135,7 +135,7 @@
   loop:
             # scripts/get_kiwix_catalog
             - scripts/constants.sh
-            - scripts/install_menu_defs.py
+            - scripts/install_cloned_menu_defs.py
             - scripts/sync_menu_defs.py
 
 - name: Copy and rename templated scripts
