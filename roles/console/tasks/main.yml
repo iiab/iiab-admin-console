@@ -113,6 +113,12 @@
     dest: /etc/systemd/system/uwsgi-app@admin-console.service.d/iiab.conf
     mode: '0644'
 
+- name: Restart nginx to pick up the config files installed
+  systemd:
+    name: nginx
+    state: restarted
+    enabled: true
+
 - name: Enable and restart the Admin Console uWSGI socket
   systemd_service:
     name: uwsgi-app@admin-console.socket
@@ -125,12 +131,6 @@
     name: uwsgi-app@admin-console.service
     daemon_reload: true
     state: started
-
-- name: Restart nginx to pick up the config files installed
-  systemd:
-    name: nginx
-    state: restarted
-    enabled: true
 
 - name: Check Admin Console uWSGI authentication endpoint
   uri:
