@@ -20,7 +20,7 @@ repo = Repo(adm.CONST.js_menu_clone)
 
 # update commit_sha for cloned or pulled menu item defs and copy to destination
 for menu_item_def_path in menu_item_def_list:
-    'menu-defs/ = menu_item_def_path.split('/menu-defs/')[1].split('.json')[0]
+    menu_item_def_name = menu_item_def_path.split('/menu-defs/')[1].split('.json')[0]
     if menu_item_def_name in obsolete_menu_item_defs:
         print('Skipping ' + menu_item_def_name)
         continue
