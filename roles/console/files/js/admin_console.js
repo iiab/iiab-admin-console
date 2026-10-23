@@ -1426,38 +1426,85 @@ function validateChangedVars(changedVars){
   return true;
 }
 
-function getServerPublicKey(){
-  $.get( iiabAuthService + '/get_pubkey', function( data ) {
-    authData['serverPKey'] = nacl.util.decodeBase64(data);
-    //consoleLog(data, typeof data);
+function logAuthRequestFailure (endpoint, jqXHR, textStatus, errorThrown){
+  consoleLog({
+    endpoint: endpoint,
+    status: jqXHR && jqXHR.status,
+    textStatus: textStatus,
+    errorThrown: errorThrown
+  });
+}
+
+function getServerPublicKey(onSuccess){
+  var endpoint = iiabAuthService + '/get_pubkey';
+  authData['serverPKey'] = '';
+  $.get(endpoint, function(data) {
+    try {
+      var serverPKey = nacl.util.decodeBase64(data);
+      if (serverPKey.length != (nacl.box.publicKeyLength || 32))
+        throw new Error('Unexpected server public key length');
+      authData['serverPKey'] = serverPKey;
+      $('#ADMIN-CONSOLE-LOGIN').text('Login');
+      displayServerCommandStatus('Connection to Uwsgi Server <span style="color:green">READY</span>.');
+      $('#adminConsoleLoginError').text(authData.loginMessage || '');
+      if (typeof onSuccess == 'function')
+        onSuccess();
+    } catch (error) {
+      getServerPublicKeyError(
+        {status: 200, statusText: 'OK'}, 'parsererror', error
+      );
+    }
   })
   .fail(getServerPublicKeyError);
-  return true;
 }
 
 function getServerPublicKeyError (jqXHR, textStatus, errorThrown){
-  jsonErrhandler (jqXHR, textStatus, errorThrown); //check for json errors
   authData['serverPKey'] = '';
-  consoleLog("Connection to Uwsgi Server failed.");
-  displayServerCommandStatus('Connection to Uwsgi Server <span style="color:red">FAILED</span>.');
-  alert ("Connection to Uwsgi Server failed.\n Please make sure your network settings are correct,\n that the server is turned on,\n and that the web server is running.");
-  init();
+  logAuthRequestFailure(
+    iiabAuthService + '/get_pubkey', jqXHR, textStatus, errorThrown
+  );
+  setAuthUnavailableMessage();
+  $('#ADMIN-CONSOLE-LOGIN').text('Retry');
 }
 
-async function getServerNonceAsync(){
-  try{
-    let response = await fetch(iiabAuthService + '/get_nonce');
-    return await response.text(); // should be base64
-  }catch(err){
-    console.error(err);
-    // Handle errors here
+function getServerNonceAsync(){
+  var endpoint = iiabAuthService + '/get_nonce';
+  return fetch(endpoint).then(function(response){
+    if (!response.ok)
+      throw new Error('Authentication request failed: HTTP ' + response.status);
+    return response.text();
+  });
+}
+
+// Show a persistent message in the login form.
+function setLoginMessage(msg){
+  $('#adminConsoleLoginError').text(msg);
+}
+
+function setAuthUnavailableMessage(){
+  $('#ADMIN-CONSOLE-LOGIN').text('Retry');
+  setLoginMessage(
+    'Cannot reach Admin Console: Connect your device to the right Wi-Fi network ' +
+    '(e.g. "Internet in a Box"), then click Refresh/Reload (↻) in your browser.'
+  );
+}
+
+function setInvalidLoginMessage(){
+  if ($('#iiabAdminUserName').val() === 'iiab-admin'){
+    setLoginMessage(
+      'If you are using an IIAB Daily Image, there is no default iiab-admin user. ' +
+      'Use the username and password that you set up in Raspberry Pi Imager.'
+    );
+  } else {
+    setLoginMessage('Invalid Login');
   }
 }
 
 function launchcmdServerLoginForm(loginMsg){
   authData.keepLogin = true; // prevent closing of form until logged in
+  authData.loginMessage = loginMsg; // remember it, so it can be restored later
   $('#adminConsoleLoginModal').on('hide.bs.modal', onHideLoginModalEvent);
-  $('#adminConsoleLoginError').html(loginMsg);
+  setLoginMessage(loginMsg);
   $('#adminConsoleLoginModal').modal('show');
 }
 
@@ -1468,19 +1515,34 @@ function onHideLoginModalEvent(e){
 }
 
 function cmdServerLoginSubmit(){
+  if (!authData.serverPKey){
+    setLoginMessage('Retrying connection to the Admin Console service.');
+    getServerPublicKey();
+    return false;
+  }
   var credentials = $('#iiabAdminUserName').val() + ':' + $('#iiabAdminUserPassword').val();
   //$('#adminConsoleLoginModal').modal('hide');
   authData['credentials'] = credentials;
   cmdServerLogin(credentials);
 }
 
-async function cmdServerLogin(credentials){
+async function cmdServerLogin(credentials, retryOnStaleKey = true){
   //credentials = "iiab-admin:g0adm1n";
   // ? kill token
 
-  var nonce64 = await getServerNonceAsync();
-  consoleLog(nonce64)
-  var encryptedCredentials64 = naclEncryptText(credentials, nonce64);
+  var nonce64;
+  var encryptedCredentials64;
+  try {
+    nonce64 = await getServerNonceAsync();
+    encryptedCredentials64 = naclEncryptText(credentials, nonce64);
+  } catch (error) {
+    // request failures have already been logged by logAuthRequestFailure();
+    // log anything else (e.g. encryption errors) so the cause isn't lost
+    if (!error || typeof error.endpoint == 'undefined')
+      consoleLog(error);
+    setAuthUnavailableMessage();
+    return false;
+  }
   $.ajax({
     type: 'GET',
     cache: false,
@@ -1492,20 +1554,37 @@ async function cmdServerLogin(credentials){
     //dataType: 'json'
   })
   .done(function( data ) {
-    consoleLog(data);
     authData['token'] = data;
     authData.keepLogin = false; // now allow form to close
     $('#adminConsoleLoginModal').modal('hide');
     make_button_disabled("#LOGOUT", false);
     if (!initStat.complete)
       initPostLogin();
+  }).fail(function(jqXHR, textStatus, errorThrown) {
+    var endpoint = iiabAuthService + '/login';
+    // The server answers 403 both for a bad password and for credentials it
+    // cannot decrypt.  The latter happens when our cached server public key
+    // is stale, i.e. when the uwsgi service was restarted (it generates a new
+    // key pair every time it starts).  Refresh the key once before blaming
+    // the password or another transient auth failure.
+    if (retryOnStaleKey && jqXHR.status == 403){
+      retryLoginWithFreshServerKey(credentials);
+      return;
+    }
+    logAuthRequestFailure(endpoint, jqXHR, textStatus, errorThrown);
+    if (jqXHR.status == 403)
+      setInvalidLoginMessage();
+    else
+      setAuthUnavailableMessage();
+  });
+}
 
-  }).fail(function(data, textStatus, xhr) {
-    $('#adminConsoleLoginError').html('Invalid Login');
-    //This shows status code eg. 403
-    console.log("error", data.status);
-    //This shows status message eg. Forbidden
-    console.log("STATUS: " + xhr);
+// Fetch a fresh server public key (the cached one may be stale) and retry the
+// login once with it.
+function retryLoginWithFreshServerKey(credentials){
+  setLoginMessage('Server key has changed. Retrying login...');
+  getServerPublicKey(function(){
+    cmdServerLogin(credentials, false);
   });
 }
 
@@ -2533,7 +2612,6 @@ async function sendCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdA
     if (jqXHR.status == 403){ // not logged in
       // probably need to reinitialize
       init ('Server Password Reset. Please Sign in Again');
-
     } else {
       jsonErrhandler(jqXHR, textStatus, errorThrown);
     }
