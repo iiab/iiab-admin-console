@@ -642,7 +642,7 @@ def put_kiwix_enabled_into_menu_json():
 
         # check if menu def exists for this perma_ref
         #num_defs =  len(defs_per_perma_ref[perma_ref])
-        expected_name = zim_perma_ref_iso2.get(perma_ref, 'und') + '-' + perma_ref.replace('.','_')
+        expected_name = zim_perma_ref_iso2.get(perma_ref, 'en') + '-' + perma_ref.replace('.','_')
 
         if expected_name not in defs_per_perma_ref.get(perma_ref, []):
             # create canonical menu def name
@@ -743,7 +743,7 @@ def kiwix_lang_to_iso2(zim_lang_code): # 2/13/2024 moved from iiab_lib where not
     zim_lang = zim_lang_code.split(',')[0]
     if zim_lang in iiab.lang_codes:
         return iiab.lang_codes[zim_lang]['iso2']
-    return 'und' # unknown or missing language code, ISO 639 for undetermined
+    return 'en' # unknown or missing language code, fall back to English
 
 def get_default_logo(logo_selector, lang):
     # Note we could also get the logo for a zim out of the catalog
