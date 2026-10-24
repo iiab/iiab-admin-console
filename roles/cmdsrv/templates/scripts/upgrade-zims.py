@@ -1,25 +1,17 @@
 #!/usr/bin/python3
 
-import os, sys, syslog
-import pwd, grp
-import time
-from datetime import date, datetime
-import json
-import yaml
-import re
-import subprocess
-import shlex
-import configparser
-import argparse
-import fnmatch
 import argparse
 import concurrent.futures
-import iiab.iiab_lib as iiab
+import json
+import os
+import re
+import sys
+
 import iiab.adm_lib as adm
+import iiab.iiab_lib as iiab
 
 KIWIX_CAT = iiab.CONST.kiwix_cat_path
-lib_xml_file = getattr(iiab.CONST, 'kiwix_library_path',
-                       iiab.CONST.kiwix_library_xml)
+lib_xml_file = adm.get_kiwix_library_path()
 doc_root = iiab.CONST.doc_root
 zim_version_idx_dir = doc_root + "/common/assets/"
 zim_version_idx_file = "zim_version_idx.json"
@@ -89,8 +81,7 @@ def main():
         # do not honor args.threads, but do one at a time for safety
         zims_to_upgrade = args.zim
         for zim_to_upgrade in zims_to_upgrade:
-            if zim_to_upgrade.endswith('.zim'):
-                zim_to_upgrade = zim_to_upgrade[:-4]
+            zim_to_upgrade = zim_to_upgrade.removesuffix('.zim')
             if re.match(r'.*_[0-9]{4}-[0-9]{2}$', zim_to_upgrade):
                 zim_to_upgrade = '_'.join(zim_to_upgrade.split('_')[:-1])
             if zim_to_upgrade not in version_idx:
@@ -237,7 +228,6 @@ def remove_old_zim(installed_perma_ref_path):
         os.remove(installed_perma_ref_path)
     except:
         print("Failed to remove " + installed_perma_ref_path)
-        pass
 
 # Handle any Kiwix renaming issues
 def rewrite_perma_ref(installed_perma_ref):

@@ -13,32 +13,36 @@
 
 """
 
-import os, sys, syslog, signal
-from glob import glob
+import binascii
+import grp
+import hashlib
+import json
 import logging
-from systemd import journal
-import pwd, grp
-import time
-from datetime import date, datetime, timedelta
-import threading, subprocess
+import mimetypes
+import os
+import pwd
+import re
 import shlex
 import shutil
-import zmq
-import sqlite3
-import json
-import yaml
-import configparser
-import re
-import urllib.request, urllib.error, urllib.parse
-import string
-import mimetypes
-import cracklib
+import signal
 import socket
-import hashlib
-import binascii
-import iiab.iiab_lib as iiab
-import iiab.adm_lib as adm
+import sqlite3
+import subprocess
+import sys
+import syslog
+import threading
+import time
+import urllib.error
+import urllib.request
+from datetime import date, datetime, timedelta
+from glob import glob
 
+import cracklib
+import iiab.adm_lib as adm
+import iiab.iiab_lib as iiab
+import yaml
+import zmq
+from systemd import journal
 
 # import cgi # keep to escape html in future
 
@@ -639,8 +643,7 @@ def end_job(job_id, job_info, status): # modify to use tail of job_output
         read_iiab_roles_stat() # refresh global iiab_roles_status
 
     running_job_count -= 1
-    if running_job_count < 0:
-        running_job_count = 0
+    running_job_count = max(running_job_count, 0)
 
     return (job_info)
 
@@ -991,7 +994,6 @@ def del_downloads(cmd_info):
         except:
             # ignore for now but report
             error_flag = True
-            pass
 
     if error_flag:
         resp = cmd_success_msg(cmd_info['cmd'], "- Some errors occurred")
@@ -1032,7 +1034,6 @@ def del_content(cmd_info): # includes zims
             except:
                 # ignore for now but report
                 error_flag = True
-                pass
 
         if content_type == "zims" and device == "internal":
             make_kiwix_lib(cmd_info) # create job to reindex kiwix
@@ -1098,7 +1099,6 @@ def del_modules(cmd_info): # includes zims
         except:
             # ignore for now but report
             error_flag = True
-            pass
 
     if mod_type == "zims" and device == "internal":
         make_kiwix_lib(cmd_info) # create job to reindex kiwix
@@ -1430,8 +1430,7 @@ def ctl_hotspot(cmd_info):
     attr_list[target_index] = 'wpa_passphrase=' + password
     try:
         with open(HOSTAPD_CONF, 'w') as f:
-            for line in attr_list:
-                f.write(line + '\n')
+            f.writelines(line + '\n' for line in attr_list)
     except:
         return cmd_error(cmd=cmd_info['cmd'], msg='Unknown error writing to Hotspot conf file.')
     rc = systemctl_wrapper('restart', 'hostapd')
@@ -1577,7 +1576,7 @@ def write_wpa_supplicant_file(connect_wifi_ssid, connect_wifi_password):
     wpa_sup_file = '/etc/wpa_supplicant/wpa_supplicant.conf'
     try:
         with open(wpa_sup_file, 'r') as f: wpa_txt = f.read()
-    except IOError: # for now patch missing file
+    except OSError: # for now patch missing file
         wpa_txt = 'ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1\ncountry=US\n'
 
     # if ssid in wpa remove it
@@ -1734,7 +1733,7 @@ def ctl_vpn(cmd_info):
     try:
         stream = open('/etc/iiab/openvpn_handle', 'w')
         stream.write(vpn_handle)
-    except IOError:
+    except OSError:
         resp = cmd_error
     finally:
         stream.close()
@@ -1972,7 +1971,7 @@ def get_storage_info_parted(dev):
     dev_info = {'device':dev, 'desc':'', 'log_sect_size':'', 'part_tbl':'', 'phys_sect_size':'', 'size':'', 'type':'', 'blocks':[]}
     try:
         parts = subproc_check_output(["parted", dev, "-ms", "print", "free"])
-    except subprocess.CalledProcessError as e:
+    except subprocess.CalledProcessError:
         #skip devices that cause problems
         pass
     else:
@@ -2056,7 +2055,7 @@ def get_white_list(cmd_info):
         stream = open(squid_whitelist, 'r')
         whlist = stream.read()
         stream.close()
-    except IOError:
+    except OSError:
         whlist = "[]"
 
     resp = json_array("iiab_whitelist", whlist)
@@ -2068,9 +2067,8 @@ def set_white_list(cmd_info):
     resp = cmd_success(cmd_info['cmd'])
     try:
         stream =  open(squid_whitelist, 'w')
-        for item in whlist:
-            stream.write(item + '\n')
-    except IOError:
+        stream.writelines(item + '\n' for item in whlist)
+    except OSError:
         resp = cmd_error
     finally:
         stream.close()
@@ -2095,8 +2093,7 @@ def get_zim_stat(cmd_info):
 
     all_zims['INSTALLED'] = {}
 
-    lib_xml_file = getattr(iiab.CONST, 'kiwix_library_path',
-                           zim_dir + "/library.xml")
+    lib_xml_file = adm.get_kiwix_library_path()
     all_zims['INSTALLED'] = read_library_xml(lib_xml_file)
 
     resp = json.dumps(all_zims)
@@ -2126,7 +2123,7 @@ def get_oer2go_catalog(cmd_info):
         if compl_proc.returncode !=0: # but we still report the error
             resp = cmd_error(cmd='GET-OER2GO-CAT', msg=err_msg[str(compl_proc.returncode)])
             return resp
-    except subprocess.CalledProcessError as e:
+    except subprocess.CalledProcessError:
         resp = cmd_error(cmd='GET-OER2GO-CAT', msg='Failed to read OER2go Catalog.')
         return resp
 
@@ -2443,8 +2440,7 @@ def install_presets(cmd_info):
     # create list of ids using most recent url
     # check if zim already installed
 
-    lib_xml_file = getattr(iiab.CONST, 'kiwix_library_path',
-                           zim_dir + "/library.xml")
+    lib_xml_file = adm.get_kiwix_library_path()
     zims_installed = read_library_xml(lib_xml_file)
 
     zim_list = content['zims']
@@ -2890,7 +2886,7 @@ def install_rachel(cmd_info):
     try:
         rc = urllib.request.urlopen(downloadSrcFile)
         rc.close()
-    except (urllib.error.URLError) as exc:
+    except (urllib.error.URLError):
         errmsg = str("Can't access " + downloadSrcFile + " Cmd")
         resp = cmd_error(cmd='INST-RACHEL', msg=errmsg)
         return resp
@@ -3145,7 +3141,7 @@ def save_menu_def(cmd_info):
     try:
         with open(menu_path, 'w') as outfile:
             outfile.write(json.dumps(menu_def, indent=2))
-    except OSError as e:
+    except OSError:
         resp = cmd_error(cmd_info['cmd'], msg='Error writing to Menu Definition File.')
         return (resp)
 
@@ -3932,7 +3928,6 @@ def read_kiwix_catalog():
     except:
         init_error = True
         log(syslog.LOG_ERR, 'Kiwix Catalog json file not found' )
-        pass
 
 def read_oer2go_catalog():
     global oer2go_catalog
@@ -3946,7 +3941,6 @@ def read_oer2go_catalog():
     except:
         init_error = True
         log(syslog.LOG_ERR, 'OER2GO Catalog json file not found' )
-        pass
 
 def read_maps_catalog():
     global maps_catalog
@@ -3959,7 +3953,6 @@ def read_maps_catalog():
     except:
         init_error = True
         log(syslog.LOG_ERR, 'Maps Catalog json file not found' )
-        pass
     #print maps_catalog
 
 # moved to iiab.adm_lib.py
@@ -4200,7 +4193,6 @@ def compute_vars():
 
     adm_conf['osm_version'] = 'V3'
     osm_version = adm_conf['osm_version']
-    return
 
 def set_ready_flag(on_off):
     if on_off == "ON":
@@ -4221,7 +4213,7 @@ def set_ready_flag(on_off):
             syslog.openlog( 'iiab_cmdsrv', 0, syslog.LOG_USER )
             syslog.syslog( syslog.LOG_ALERT, "Removing Ready file: %s [%d]" % (e.strerror, e.errno) )
             syslog.closelog()
-            pass # log and keep going; we're just trying to shut down
+            # log and keep going; we're just trying to shut down
 
 def createDaemon(pidfilename):
     """Detach a process from the controlling terminal and run it in the
@@ -4257,7 +4249,7 @@ def createDaemon(pidfilename):
     # number that can be opened by this process.  If there is not limit
     # on the resource, use the default value.
     #
-    import resource     # Resource usage information.
+    import resource  # Resource usage information.
     maxfd = resource.getrlimit(resource.RLIMIT_NOFILE)[1]
 
     # This is a bug, but no idea what the value of MAXFD should be
@@ -4265,7 +4257,7 @@ def createDaemon(pidfilename):
         maxfd = MAXFD
 
     # Iterate through and close all file descriptors.
-    for fd in range(0, maxfd):
+    for fd in range(maxfd):
         try:
             os.close(fd)
         except OSError: # ERROR, fd wasn't open to begin with (ignored)

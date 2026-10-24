@@ -10,12 +10,13 @@
 
 """
 
-import os, sys, syslog
-import pwd, grp
 import argparse
+import os
+import sys
+
+import iiab.adm_lib as adm
 import iiab.iiab_lib as iiab
 import iiab.iiab_zim_catalog as zim_catalog
-import iiab.adm_lib as adm
 
 download_source = 'http://med.iiab.me/downloads/zims/'
 zim_path = iiab.CONST.zim_path + '/content'

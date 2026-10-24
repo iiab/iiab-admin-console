@@ -7,32 +7,44 @@
 # IIAB functions are in iiab_lib.py
 # import iiab.adm_lib as adm
 
-import os
-import sys
-from glob import glob
-import json
-import subprocess
-import shlex
-from datetime import date
 import base64
+import configparser
 import fnmatch
+import json
+import os
 import re
+import shlex
 import shutil
 import sqlite3
+import subprocess
+import sys
+from datetime import date
+from glob import glob
+
+import iiab.adm_const as CONST
+import iiab.iiab_const as IIAB_CONST
+import iiab.iiab_lib as iiab
+import jinja2
 import requests
 import yaml
-import jinja2
-import configparser
-
-import iiab.iiab_lib as iiab
-import iiab.iiab_const as IIAB_CONST
-import iiab.adm_const as CONST
 
 headers = {}
 git_committer_handle = ''
 map_catalog = {}
 
 # ZIM functions
+
+def get_kiwix_library_path():
+    library_path = getattr(iiab.CONST, 'kiwix_library_path',
+                           getattr(iiab.CONST, 'kiwix_library_xml',
+                                   os.path.join(iiab.CONST.zim_path,
+                                                'library.xml')))
+    legacy_path = os.path.join(iiab.CONST.zim_path, 'library.xml')
+    if (os.path.abspath(library_path) != os.path.abspath(legacy_path)
+            and not os.path.exists(library_path)
+            and os.path.exists(legacy_path)):
+        return legacy_path
+    return library_path
 
 def write_zim_versions_idx(zim_versions, kiwix_library_xml, zim_version_idx_dir, zim_menu_defs):
     read_library = getattr(iiab, 'read_library', iiab.read_library_xml)
@@ -82,7 +94,6 @@ def get_zim_menu_defs():
             except:
                 print("failed to parse %s"%filename)
                 #print(readstr)
-                pass
             #print(menu_def)
             if menu_def.get('intended_use', '') != 'zim':
                 continue
@@ -181,7 +192,6 @@ def get_local_menu_item_defs():
             menu_item_defs[menu_item_def_name] = menu_item_def
         except:
             print("Skipping corrupt " + item)
-            pass
     return menu_item_defs
 
 def get_menu_item_def_from_repo_by_name(menu_item_name):
@@ -605,8 +615,7 @@ def put_kiwix_enabled_into_menu_json():
     zim_menu_defs = get_all_menu_defs(filter='zim') # read zim menu defs
 
     zim_files, zim_versions = iiab.get_zim_list(iiab.CONST.zim_path)
-    library_path = getattr(iiab.CONST, 'kiwix_library_path',
-                           iiab.CONST.kiwix_library_xml)
+    library_path = get_kiwix_library_path()
     write_zim_versions_idx(zim_versions, library_path, CONST.zim_version_idx_dir, zim_menu_defs)
     read_library = getattr(iiab, 'read_library', iiab.read_library_xml)
     zims_installed, path_to_id_map = read_library(library_path)
@@ -679,8 +688,7 @@ def put_kiwix_enabled_into_menu_json_SAVE(): # unused since 2024-06-10
     iiab.read_lang_codes() # initialize
     zim_menu_defs = get_zim_menu_defs() # read all menu defs
     zim_files, zim_versions = iiab.get_zim_list(iiab.CONST.zim_path)
-    library_path = getattr(iiab.CONST, 'kiwix_library_path',
-                           iiab.CONST.kiwix_library_xml)
+    library_path = get_kiwix_library_path()
     write_zim_versions_idx(zim_versions, library_path, CONST.zim_version_idx_dir, zim_menu_defs)
     read_library = getattr(iiab, 'read_library', iiab.read_library_xml)
     zims_installed, path_to_id_map = read_library(library_path)
@@ -881,7 +889,6 @@ def read_vector_map_idx():
         previous_idx = read_json(CONST.vector_map_idx_dir + '/vector-map-idx.json')
         return previous_idx
     except:
-        pass
         return {}
 
 def write_vector_map_idx(installed_maps):
@@ -1060,7 +1067,7 @@ def read_json_file(file_path, verbose=True, fix_json=False):
                 if verbose:
                     print('WARNING: ' + file_path + ' Patched in memory but not updatged.')
                 return json_dict
-            except json.JSONDecodeError as e2:
+            except json.JSONDecodeError:
                 if verbose:
                     print('Unable to repair json file', e)
                 raise e
@@ -1070,8 +1077,7 @@ def read_json_file(file_path, verbose=True, fix_json=False):
 def write_iiab_local_vars(delta_vars, strip_comments=False, strip_defaults=False):
     output_lines = merge_local_vars(IIAB_CONST.iiab_local_vars_file, delta_vars, strip_comments=strip_comments, strip_defaults=strip_defaults)
     with open(IIAB_CONST.iiab_local_vars_file, 'w') as f:
-        for line in output_lines:
-            f.write(line)
+        f.writelines(output_lines)
 
 def merge_local_vars(target_vars_file, delta_vars, strip_comments=False, strip_defaults=False):
     default_vars_file = IIAB_CONST.iiab_repo_dir + '/vars/default_vars.yml'
@@ -1192,7 +1198,7 @@ def write_json_file(src_dict, target_file, sort_keys=False):
         with open(target_file, 'w', encoding='utf8') as json_file:
             json.dump(src_dict, json_file, ensure_ascii=False, indent=2, sort_keys=sort_keys)
             json_file.write("\n")  # Add newline cause Py JSON does not
-    except OSError as e:
+    except OSError:
         raise
 
 def read_yaml(file_name, loader=yaml.SafeLoader):
@@ -1346,7 +1352,7 @@ def subproc_run(cmdstr, shell=False, check=False, timeout=CONST.cmdsrv_proc_time
     args = shlex.split(cmdstr)
     try:
         compl_proc = subprocess.run(args, shell=shell, check=check, timeout=timeout,
-                                    universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                                    text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     except:
         raise
     return compl_proc
