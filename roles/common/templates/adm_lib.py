@@ -35,9 +35,18 @@ map_catalog = {}
 # ZIM functions
 
 def write_zim_versions_idx(zim_versions, kiwix_library_xml, zim_version_idx_dir, zim_menu_defs):
-    zims_installed, path_to_id_map = iiab.read_library_xml(kiwix_library_xml)
+    read_library = getattr(iiab, 'read_library', iiab.read_library_xml)
+    zims_installed, path_to_id_map = read_library(kiwix_library_xml)
 
     # drives off of zim_versions which is what is in file system
+
+    # Drop ZIMs the catalog could not read (invalid, truncated, permission
+    # denied, etc.) instead of publishing zero-valued menu entries for them.
+    for perma_ref in list(zim_versions):
+        path = 'content/' + zim_versions[perma_ref].get('file_name', '') + '.zim'
+        if path not in path_to_id_map:
+            print('Warning: skipping unindexed ZIM ' + path)
+            del zim_versions[perma_ref]
 
     for perma_ref in zim_versions:
         zim_versions[perma_ref]['menu_item'] = zim_menu_defs.get(perma_ref, {}).get('name')
@@ -108,11 +117,9 @@ def get_substitution_data(perma_ref, zim_versions, zims_installed, path_to_id_ma
         zim_id = path_to_id_map[path]
         item = zims_installed[zim_id]
     except KeyError:
-        print('Error on ' + path)
-        print("library.xml has no record of this zim, so its properties are unknown.")
-        print("Try rerunning iiab-make-kiwix-lib, and if the error remains,")
-        print("delete library.xml and rerun iiab-make-kiwix-lib -f")
-        raise
+        print('Warning: the ZIM catalog has no record of ' + path)
+        print('Run iiab-make-kiwix-lib (or iiab-make-kiwix-lib -f) to rescan.')
+        return ('0', '0', '0', '0', '0', '0')
 
     if len(item) != 0 or perma_ref == 'test':
         mediacount = item.get('mediaCount', '')
@@ -589,7 +596,7 @@ def put_kiwix_enabled_into_menu_json():
         If not use a menu def of the form <zim language>-<zim permaref> if it exists
         If it does not exist create it
         There are some edge cases of non-canonical zim names that must be monitored
-        Uses parameters of install zims in library.xml and zim_version_idx.json
+        Uses parameters of installed zims in the ZIM catalog and zim_version_idx.json
         And paramters of install menu defs
         Creates additional working indices to aid lookups
     '''
@@ -598,8 +605,11 @@ def put_kiwix_enabled_into_menu_json():
     zim_menu_defs = get_all_menu_defs(filter='zim') # read zim menu defs
 
     zim_files, zim_versions = iiab.get_zim_list(iiab.CONST.zim_path)
-    write_zim_versions_idx(zim_versions, iiab.CONST.kiwix_library_xml, CONST.zim_version_idx_dir, zim_menu_defs)
-    zims_installed, path_to_id_map = iiab.read_library_xml(iiab.CONST.kiwix_library_xml)
+    library_path = getattr(iiab.CONST, 'kiwix_library_path',
+                           iiab.CONST.kiwix_library_xml)
+    write_zim_versions_idx(zim_versions, library_path, CONST.zim_version_idx_dir, zim_menu_defs)
+    read_library = getattr(iiab, 'read_library', iiab.read_library_xml)
+    zims_installed, path_to_id_map = read_library(library_path)
     home_menu = read_json_file(CONST.menu_json_file, verbose=True, fix_json=True)
 
     # convenience lists of zim menudefs and permarefs already in menu
@@ -669,8 +679,11 @@ def put_kiwix_enabled_into_menu_json_SAVE(): # unused since 2024-06-10
     iiab.read_lang_codes() # initialize
     zim_menu_defs = get_zim_menu_defs() # read all menu defs
     zim_files, zim_versions = iiab.get_zim_list(iiab.CONST.zim_path)
-    write_zim_versions_idx(zim_versions, iiab.CONST.kiwix_library_xml, CONST.zim_version_idx_dir, zim_menu_defs)
-    zims_installed, path_to_id_map = iiab.read_library_xml(iiab.CONST.kiwix_library_xml)
+    library_path = getattr(iiab.CONST, 'kiwix_library_path',
+                           iiab.CONST.kiwix_library_xml)
+    write_zim_versions_idx(zim_versions, library_path, CONST.zim_version_idx_dir, zim_menu_defs)
+    read_library = getattr(iiab, 'read_library', iiab.read_library_xml)
+    zims_installed, path_to_id_map = read_library(library_path)
 
     # use that data
     zim_idx = CONST.zim_version_idx_dir + CONST.zim_version_idx_file

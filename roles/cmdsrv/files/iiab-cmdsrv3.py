@@ -1865,16 +1865,21 @@ def ctl_tailscale(cmd_info):
     # after a couple of minutes, still has old name in status
 
 def get_ext_zim_catalog(dev_name):
-    iiab_zim_path = dev_name + zim_dir
-    kiwix_library_xml_tmp = iiab_zim_path + "/library.xml"
-    command = "/usr/bin/iiab-make-kiwix-lib.py --no_tmp --device " + dev_name
+    # Scan the device into a /tmp catalog cache and return the book dict as
+    # JSON.  Nothing is written to the USB device, so read-only sticks work.
+    # For a portable library file, run iiab-make-kiwix-lib.py --device manually.
+    command = "/usr/bin/iiab-make-kiwix-lib.py --json --device " + dev_name
     args = shlex.split(command)
     try:
         outp = subproc_check_output(args)
-    except: #skip things that don't work
-        pass
-    usb_catalog = read_library_xml(kiwix_library_xml_tmp)
-    return (usb_catalog)
+        usb_catalog = json.loads(outp)
+        for zim_id in usb_catalog:
+            if len(usb_catalog[zim_id].get('language', '').split(',')) > 1:
+                usb_catalog[zim_id]['language'] = 'mul'
+        return usb_catalog
+    except Exception as error:
+        log(syslog.LOG_ERR, "Error reading external ZIM catalog: %s" % error)
+        return {}
 
 def umount_usb(cmd_info):
     if 'device' in cmd_info['cmd_args']:
@@ -2090,14 +2095,18 @@ def get_zim_stat(cmd_info):
 
     all_zims['INSTALLED'] = {}
 
-    lib_xml_file = zim_dir + "/library.xml"
+    lib_xml_file = getattr(iiab.CONST, 'kiwix_library_path',
+                           zim_dir + "/library.xml")
     all_zims['INSTALLED'] = read_library_xml(lib_xml_file)
 
     resp = json.dumps(all_zims)
     return (resp)
 
 def read_library_xml(lib_xml_file, kiwix_exclude_attr=["favicon"]):
-    zims_installed, _ = iiab.read_library_xml(lib_xml_file, kiwix_exclude_attr) # both library.xml formats
+    # Prefer the SQLite catalog for the internal library; parse OPDS/XML for
+    # external devices and legacy files.
+    read_library = getattr(iiab, 'read_library', iiab.read_library_xml)
+    zims_installed, _ = read_library(lib_xml_file, kiwix_exclude_attr=kiwix_exclude_attr)
     for zim_id in zims_installed:
         if len(zims_installed[zim_id].get('language', '').split(',')) > 1: # change multi language list to 'mul'
             zims_installed[zim_id]['language'] = 'mul'
@@ -2434,7 +2443,8 @@ def install_presets(cmd_info):
     # create list of ids using most recent url
     # check if zim already installed
 
-    lib_xml_file = zim_dir + "/library.xml"
+    lib_xml_file = getattr(iiab.CONST, 'kiwix_library_path',
+                           zim_dir + "/library.xml")
     zims_installed = read_library_xml(lib_xml_file)
 
     zim_list = content['zims']

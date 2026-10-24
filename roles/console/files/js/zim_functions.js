@@ -143,7 +143,7 @@ var missingZimLangCodes = []; // used to track missing language codes in zim cat
 
   function addZimStatAttr(section) {
   	var creatorToCategoryMap = {"University of Colorado":"Phet"}; // we are fudging category as it is not in kiwix catalog
-    for (var id in installedZimCatalog[section]){                 // our fudge is not carried into local library.xml
+    for (var id in installedZimCatalog[section]){                 // our fudge is not carried into the local ZIM catalog
     	var creator = installedZimCatalog[section][id]['creator'];
     	if (creator in creatorToCategoryMap)
     	  creator = creatorToCategoryMap[creator];
