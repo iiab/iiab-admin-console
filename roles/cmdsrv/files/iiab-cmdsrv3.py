@@ -2104,6 +2104,13 @@ def read_library_xml(lib_xml_file, kiwix_exclude_attr=["favicon"]):
     # external devices and legacy files.
     read_library = getattr(iiab, 'read_library', iiab.read_library_xml)
     zims_installed, _ = read_library(lib_xml_file, kiwix_exclude_attr=kiwix_exclude_attr)
+    # Remote-only entries have no local file, so they cannot be copied or
+    # removed from Manage Content.  Keep them out of the installed catalog.
+    zims_installed = {
+        zim_id: attributes
+        for zim_id, attributes in zims_installed.items()
+        if attributes.get('path')
+    }
     for zim_id in zims_installed:
         if len(zims_installed[zim_id].get('language', '').split(',')) > 1: # change multi language list to 'mul'
             zims_installed[zim_id]['language'] = 'mul'

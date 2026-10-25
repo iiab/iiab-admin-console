@@ -46,19 +46,43 @@ def get_kiwix_library_path():
         return legacy_path
     return library_path
 
-def write_zim_versions_idx(zim_versions, kiwix_library_xml, zim_version_idx_dir, zim_menu_defs):
+def write_zim_versions_idx(zim_versions, kiwix_library_xml, zim_version_idx_dir,
+                           zim_menu_defs, zim_files=None):
     read_library = getattr(iiab, 'read_library', iiab.read_library_xml)
     zims_installed, path_to_id_map = read_library(kiwix_library_xml)
 
     # drives off of zim_versions which is what is in file system
 
+    # Index every file by perma-ref, so an unreadable newer file can fall back
+    # to an older readable version instead of dropping the whole book.
+    if zim_files is None:
+        zim_files, _ = iiab.get_zim_list(iiab.CONST.zim_path)
+    files_by_perma_ref = {}
+    for zim_path in sorted(zim_files):
+        perma_ref = iiab.calc_zim_perma_ref(zim_path)
+        files_by_perma_ref.setdefault(perma_ref, []).append(zim_path)
+
     # Drop ZIMs the catalog could not read (invalid, truncated, permission
     # denied, etc.) instead of publishing zero-valued menu entries for them.
     for perma_ref in list(zim_versions):
         path = 'content/' + zim_versions[perma_ref].get('file_name', '') + '.zim'
-        if path not in path_to_id_map:
-            print('Warning: skipping unindexed ZIM ' + path)
+        if path in path_to_id_map:
+            continue
+        # get_zim_list() keeps only the newest file for each perma-ref.  If
+        # that file is unreadable, prefer the newest readable older version.
+        fallback = next((candidate for candidate in
+                         reversed(files_by_perma_ref.get(perma_ref, []))
+                         if candidate in path_to_id_map), None)
+        if fallback is None:
+            print('Warning: skipping ZIM that is missing from the catalog '
+                  '(unreadable or a duplicate copy): ' + path)
             del zim_versions[perma_ref]
+            continue
+        fallback_name = os.path.basename(fallback)
+        if fallback_name.endswith('.zim'):
+            fallback_name = fallback_name[:-len('.zim')]
+        print('Warning: ' + path + ' is not in the catalog; using ' + fallback)
+        zim_versions[perma_ref]['file_name'] = fallback_name
 
     for perma_ref in zim_versions:
         zim_versions[perma_ref]['menu_item'] = zim_menu_defs.get(perma_ref, {}).get('name')
@@ -616,7 +640,8 @@ def put_kiwix_enabled_into_menu_json():
 
     zim_files, zim_versions = iiab.get_zim_list(iiab.CONST.zim_path)
     library_path = get_kiwix_library_path()
-    write_zim_versions_idx(zim_versions, library_path, CONST.zim_version_idx_dir, zim_menu_defs)
+    write_zim_versions_idx(zim_versions, library_path, CONST.zim_version_idx_dir,
+                           zim_menu_defs, zim_files)
     read_library = getattr(iiab, 'read_library', iiab.read_library_xml)
     zims_installed, path_to_id_map = read_library(library_path)
     home_menu = read_json_file(CONST.menu_json_file, verbose=True, fix_json=True)
@@ -669,8 +694,12 @@ def put_kiwix_enabled_into_menu_json():
             # as we did before
             new_def_name = expected_name
             path = zim_versions[perma_ref].get('file_name') + '.zim'
-            zim_id = path_to_id_map['content/' + path]
-            zim_info = zims_installed[zim_id]
+            zim_id = path_to_id_map.get('content/' + path)
+            zim_info = zims_installed.get(zim_id)
+            if zim_info is None:
+                print('Warning: cannot create a menu definition for ' +
+                      perma_ref + ': content/' + path + ' is not in the catalog')
+                continue
             new_menu_def = generate_zim_menu_def(perma_ref, new_def_name, zim_info)
             new_menu_def = format_menu_item_def(new_def_name, new_menu_def)
             print("Creating %s"%new_def_name)
@@ -689,7 +718,8 @@ def put_kiwix_enabled_into_menu_json_SAVE(): # unused since 2024-06-10
     zim_menu_defs = get_zim_menu_defs() # read all menu defs
     zim_files, zim_versions = iiab.get_zim_list(iiab.CONST.zim_path)
     library_path = get_kiwix_library_path()
-    write_zim_versions_idx(zim_versions, library_path, CONST.zim_version_idx_dir, zim_menu_defs)
+    write_zim_versions_idx(zim_versions, library_path, CONST.zim_version_idx_dir,
+                           zim_menu_defs, zim_files)
     read_library = getattr(iiab, 'read_library', iiab.read_library_xml)
     zims_installed, path_to_id_map = read_library(library_path)
 
