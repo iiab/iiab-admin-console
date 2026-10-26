@@ -39,6 +39,21 @@ def write_zim_versions_idx(zim_versions, kiwix_library_xml, zim_version_idx_dir,
 
     # drives off of zim_versions which is what is in file system
 
+    # kiwix-manage skips unreadable zims. Use the newest one in the library, else leave it out
+    if path_to_id_map: # empty library still fails below
+        for perma_ref in list(zim_versions):
+            path = 'content/' + zim_versions[perma_ref]['file_name'] + '.zim'
+            if path in path_to_id_map:
+                continue
+            readable = sorted(lib_path for lib_path in path_to_id_map if iiab.calc_zim_perma_ref(lib_path) == perma_ref)
+            if readable:
+                print('Warning: ' + path + ' is not in the library, using ' + readable[-1])
+                file_name = os.path.basename(readable[-1])
+                zim_versions[perma_ref]['file_name'] = file_name[:file_name.find('.zim')]
+            else:
+                print('Warning: leaving ' + path + ' out of the index as it is not in the library (unreadable?)')
+                del zim_versions[perma_ref]
+
     for perma_ref in zim_versions:
         zim_versions[perma_ref]['menu_item'] = zim_menu_defs.get(perma_ref, {}).get('name')
         articlecount, mediacount, size, tags, lang, date = \
@@ -118,7 +133,7 @@ def get_substitution_data(perma_ref, zim_versions, zims_installed, path_to_id_ma
         articlecount = item.get('articleCount', '')
         size = item.get('size', '')
         tags = item.get('tags', '')
-        zim_lang = item.get('language')
+        zim_lang = item.get('language', '')
         menu_def_lang = kiwix_lang_to_iso2(zim_lang)
         date = item.get('date', '')
         return (articlecount, mediacount, size, tags, menu_def_lang, date)
@@ -621,7 +636,7 @@ def put_kiwix_enabled_into_menu_json():
     zim_perma_ref_iso2 = {}
     for zim in zims_installed:
         perma_ref = iiab.calc_zim_perma_ref(zims_installed[zim]['path'])
-        zim_lang_code = zims_installed[zim]['language']
+        zim_lang_code = zims_installed[zim].get('language', '')
         zim_iso2_code = kiwix_lang_to_iso2(zim_lang_code)
         zim_perma_ref_iso2[perma_ref] = zim_iso2_code
 
@@ -704,7 +719,7 @@ def generate_zim_menu_def(perma_ref, menu_def_name, zim_info):
     # do not generate a menuDef for the test zim
     if perma_ref == 'test': return ""
 
-    zim_lang = zim_info['language']
+    zim_lang = zim_info.get('language', '')
     menu_def_lang = kiwix_lang_to_iso2(zim_lang)
     #filename = menu_def_lang + '-' + perma_ref + '.json'
     # create a stub for this zim
@@ -737,6 +752,9 @@ def kiwix_lang_to_iso2(zim_lang_code): # 2/13/2024 moved from iiab_lib where not
     # zims like gutenberg_mul_xxx can have a list of languages separated by commas
     # always take the first item in the list
     zim_lang = zim_lang_code.split(',')[0]
+    if zim_lang not in iiab.lang_codes: # e.g. 'und'
+        print('Warning: unknown zim language code "' + zim_lang + '", using en')
+        return 'en'
     return iiab.lang_codes[zim_lang]['iso2']
 
 def get_default_logo(logo_selector, lang):
