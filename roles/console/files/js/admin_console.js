@@ -960,8 +960,8 @@ function procSystemInfo(data){
   html += '<div>Internet Access</div>';
   html += '<div>Gateway Address</div>';
   html += '<div>Gateway Device</div>';
-  html += '<div>User pi Password is Published</div>';
-  html += '<div>User iiab-admin Password is Published</div>';
+  html += '<div>User pi Password Is Default</div>';
+  html += '<div>User iiab-admin Uses Legacy Password</div>';
   html += '</div>';
   html += '<div class="col-sm-4">';
   html += '<div>' + serverInfo.bt_pan_status + '</div>';
@@ -1475,7 +1475,6 @@ function cmdServerLoginSubmit(){
 }
 
 async function cmdServerLogin(credentials){
-  //credentials = "iiab-admin:g0adm1n";
   // ? kill token
 
   var nonce64 = await getServerNonceAsync();

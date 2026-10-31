@@ -1271,7 +1271,25 @@ def get_system_info(cmd_info):
 def check_known_passwords():
     known_passwords = {}
     known_passwords['pi_passwd_known'] = auth_calcs('pi', 'raspberry', sleep_time=0)
-    known_passwords['admin_passwd_known'] = auth_calcs(effective_vars['iiab_admin_user'], effective_vars['iiab_admin_published_pwd'], sleep_time=0)
+    # IIAB never sets the admin password.  Check the legacy published password
+    # only so upgraded installs can still be warned.
+    legacy_pwd = effective_vars.get('iiab_admin_legacy_pwd')
+    if legacy_pwd is None:
+        # Compatibility with older /opt/iiab/iiab vars files.
+        legacy_pwd = effective_vars.get('iiab_admin_published_pwd')
+    # /etc/iiab/iiab.ini records the account the role actually managed.  The
+    # vars files may leave iiab_admin_user empty to mean "the invoking user".
+    admin_user = ''
+    try:
+        admin_user = iiab_ini.get('iiab-admin', {}).get('iiab_admin_user', '')
+    except Exception:
+        pass
+    if not admin_user:
+        admin_user = effective_vars.get('iiab_admin_user') or 'iiab-admin'
+    legacy_known = False
+    if legacy_pwd:
+        legacy_known = auth_calcs(admin_user, legacy_pwd, sleep_time=0)
+    known_passwords['admin_passwd_known'] = bool(legacy_known)
     return known_passwords
 
 def get_network_info(cmd_info):

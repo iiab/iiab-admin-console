@@ -8,7 +8,21 @@ The restriction for authorization only applies to access to the Command Server (
 
 ### Authentication
 
-You can login as any sudoer or member of the admin_console_group, but Change Password only allows changing the password of the currently logged in useras the user field is read only.
+Membership in the ``iiab-admin`` group (``admin_console_group``) is enough to log in.  Membership in the ``sudo`` group is no longer required: IIAB installs narrow sudo rules in ``/etc/sudoers.d/iiab-support`` for its own support commands, and the admin user is not added to ``sudo`` by default.
+
+By default the administrator is the account that ran ``sudo iiab`` (``SUDO_USER``), falling back to the current user.  That account is added to ``admin_console_group``, so the operator can log in with the OS password they already use.  Set ``iiab_admin_user`` in ``/etc/iiab/local_vars.yml`` to manage a different account.
+
+The Console accepts members of ``sudo`` or ``admin_console_group``.  It does not check ``wheel``; on a system that uses ``wheel`` for sudo, add the operator to ``admin_console_group`` (IIAB does this when it manages that account).
+
+You can log in as any member of ``admin_console_group``, but Change Password only allows changing the password of the currently logged in user, as the user field is read only.
+
+### Initial credentials
+
+IIAB does not set or generate the admin password.  The account and password are expected to exist before IIAB runs: the OS installer, Raspberry Pi Imager, cloud-init, or an explicit ``passwd`` run.  IIAB only adds the account to ``admin_console_group``.
+
+If the configured account does not exist, IIAB creates it locked and prints an instruction to run ``sudo passwd <user>``.  An existing account is reused as-is; IIAB does not change its password or shell.
+
+Upgraded installs that still use the old published password are reported in the server status panel.  That password is never assigned by current IIAB releases.
 
 ## Authentication Process
 
@@ -42,7 +56,8 @@ You can login as any sudoer or member of the admin_console_group, but Change Pas
 ### Change Password
 * Ux is as before.
 * Credentials are encrypted before sending to server.
-* uwsgi decrypts before sending to CMDSRV.
+* uwsgi decrypts before sending it to CMDSRV.
+* A successful change updates the account through ``chpasswd -e``; IIAB keeps no separate copy of the password.
 
 ### Icon File Upload
 
