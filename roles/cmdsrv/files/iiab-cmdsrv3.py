@@ -1277,13 +1277,18 @@ def check_known_passwords():
     if legacy_pwd is None:
         # Compatibility with older /opt/iiab/iiab vars files.
         legacy_pwd = effective_vars.get('iiab_admin_published_pwd')
+    # /etc/iiab/iiab.ini records the account the role actually managed.  The
+    # vars files may leave iiab_admin_user empty to mean "the invoking user".
+    admin_user = ''
+    try:
+        admin_user = iiab_ini.get('iiab-admin', {}).get('iiab_admin_user', '')
+    except Exception:
+        pass
+    if not admin_user:
+        admin_user = effective_vars.get('iiab_admin_user') or 'iiab-admin'
     legacy_known = False
     if legacy_pwd:
-        legacy_known = auth_calcs(
-            effective_vars.get('iiab_admin_user', 'iiab-admin'),
-            legacy_pwd,
-            sleep_time=0,
-        )
+        legacy_known = auth_calcs(admin_user, legacy_pwd, sleep_time=0)
     known_passwords['admin_passwd_known'] = bool(legacy_known)
     return known_passwords
 

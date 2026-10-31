@@ -10,6 +10,10 @@ The restriction for authorization only applies to access to the Command Server (
 
 Membership in the ``iiab-admin`` group (``admin_console_group``) is enough to log in.  Membership in the ``sudo`` group is no longer required: IIAB installs narrow sudo rules in ``/etc/sudoers.d/iiab-support`` for its own support commands, and the admin user is not added to ``sudo`` by default.
 
+By default the administrator is the account that ran ``sudo iiab`` (``SUDO_USER``), falling back to the current user.  That account is added to ``admin_console_group``, so the operator can log in with the OS password they already use.  Set ``iiab_admin_user`` in ``/etc/iiab/local_vars.yml`` to manage a different account.
+
+The Console accepts members of ``sudo`` or ``admin_console_group``.  It does not check ``wheel``; on a system that uses ``wheel`` for sudo, add the operator to ``admin_console_group`` (IIAB does this when it manages that account).
+
 You can log in as any member of ``admin_console_group``, but Change Password only allows changing the password of the currently logged in user, as the user field is read only.
 
 ### Initial credentials
