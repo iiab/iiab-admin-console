@@ -92,6 +92,8 @@ var rpiThrottleStates = {
 var serverInfo = {"iiab_server_ip":"","iiab_client_ip":"","iiab_server_found":"TRUE","iiab_cmdsrv_running":"FALSE"};
 var authData = {};
 authData['keepLogin'] = true; // don't allow closing of login form
+authData['loginInFlight'] = false;
+authData['loginAttemptId'] = 0;
 var is_rpi = false;
 var undef = undefined; // convenience variable
 var initStat = {};
@@ -1435,36 +1437,58 @@ function logAuthRequestFailure (endpoint, jqXHR, textStatus, errorThrown){
   });
 }
 
-function getServerPublicKey(onSuccess){
+// Shared in-flight request, so concurrent callers cannot clobber the key or
+// start a fetch storm.
+var serverKeyRequest = null;
+
+function getServerPublicKey(){
+  if (serverKeyRequest)
+    return serverKeyRequest;
+
   var endpoint = iiabAuthService + '/get_pubkey';
-  authData['serverPKey'] = '';
-  $.get(endpoint, function(data) {
-    try {
-      var serverPKey = nacl.util.decodeBase64(data);
-      if (serverPKey.length != (nacl.box.publicKeyLength || 32))
-        throw new Error('Unexpected server public key length');
-      authData['serverPKey'] = serverPKey;
-      $('#ADMIN-CONSOLE-LOGIN').text('Login');
-      displayServerCommandStatus('Connection to Uwsgi Server <span style="color:green">READY</span>.');
-      $('#adminConsoleLoginError').text(authData.loginMessage || '');
-      if (typeof onSuccess == 'function')
-        onSuccess();
-    } catch (error) {
-      getServerPublicKeyError(
-        {status: 200, statusText: 'OK'}, 'parsererror', error
-      );
-    }
-  })
-  .fail(getServerPublicKeyError);
+  serverKeyRequest = new Promise(function(resolve, reject){
+    $.get(endpoint, function(data) {
+      try {
+        var serverPKey = nacl.util.decodeBase64(data);
+        if (serverPKey.length != (nacl.box.publicKeyLength || 32))
+          throw new Error('Unexpected server public key length');
+        // Only replace the cached key after a successful fetch. A failed
+        // refresh must not wipe a key that another request is using.
+        authData['serverPKey'] = serverPKey;
+        $('#ADMIN-CONSOLE-LOGIN').text('Login');
+        displayServerCommandStatus('Connection to Uwsgi Server <span style="color:green">READY</span>.');
+        $('#adminConsoleLoginError').text(authData.loginMessage || '');
+        resolve(serverPKey);
+      } catch (error) {
+        reject({
+          jqXHR: {status: 200, statusText: 'OK'},
+          textStatus: 'parsererror',
+          errorThrown: error
+        });
+      }
+    }).fail(function(jqXHR, textStatus, errorThrown){
+      reject({jqXHR: jqXHR, textStatus: textStatus, errorThrown: errorThrown});
+    });
+  }).then(function(serverPKey){
+    serverKeyRequest = null;
+    return serverPKey;
+  }, function(error){
+    serverKeyRequest = null;
+    handleServerPublicKeyError(error);
+    throw error;
+  });
+
+  return serverKeyRequest;
 }
 
-function getServerPublicKeyError (jqXHR, textStatus, errorThrown){
-  authData['serverPKey'] = '';
+function handleServerPublicKeyError(error){
+  var jqXHR = error && error.jqXHR ? error.jqXHR : error;
+  var textStatus = error && error.textStatus ? error.textStatus : '';
+  var errorThrown = error && error.errorThrown ? error.errorThrown : error;
   logAuthRequestFailure(
     iiabAuthService + '/get_pubkey', jqXHR, textStatus, errorThrown
   );
   setAuthUnavailableMessage();
-  $('#ADMIN-CONSOLE-LOGIN').text('Retry');
 }
 
 function getServerNonceAsync(){
@@ -1490,6 +1514,7 @@ function setAuthUnavailableMessage(){
 }
 
 function setInvalidLoginMessage(){
+  $('#ADMIN-CONSOLE-LOGIN').text('Login');
   if ($('#iiabAdminUserName').val() === 'iiab-admin'){
     setLoginMessage(
       'If you are using an IIAB Daily Image, there is no default iiab-admin user. ' +
@@ -1514,28 +1539,59 @@ function onHideLoginModalEvent(e){
     e.preventDefault();
 }
 
-function cmdServerLoginSubmit(){
-  if (!authData.serverPKey){
-    setLoginMessage('Retrying connection to the Admin Console service.');
-    getServerPublicKey();
-    return false;
+async function cmdServerLoginSubmit(){
+  if (authData.loginInFlight)
+    return false; // one login attempt at a time
+
+  authData.loginInFlight = true;
+  var attemptId = ++authData.loginAttemptId;
+  make_button_disabled('#ADMIN-CONSOLE-LOGIN', true);
+
+  try {
+    if (!authData.serverPKey){
+      // The initial key request may still be running. Wait for it instead of
+      // dropping the click, then continue with the credentials just entered.
+      setLoginMessage('Connecting to the Admin Console service...');
+      try{
+        await getServerPublicKey();
+      }catch(error){
+        return false; // handleServerPublicKeyError already updated the form
+      }
+    }
+    if (attemptId !== authData.loginAttemptId)
+      return false;
+
+    var credentials = $('#iiabAdminUserName').val() + ':' + $('#iiabAdminUserPassword').val();
+    //$('#adminConsoleLoginModal').modal('hide');
+    authData['credentials'] = credentials;
+    return await cmdServerLogin(credentials, attemptId);
+  } finally {
+    if (attemptId === authData.loginAttemptId){
+      authData.loginInFlight = false;
+      make_button_disabled('#ADMIN-CONSOLE-LOGIN', false);
+    }
   }
-  var credentials = $('#iiabAdminUserName').val() + ':' + $('#iiabAdminUserPassword').val();
-  //$('#adminConsoleLoginModal').modal('hide');
-  authData['credentials'] = credentials;
-  cmdServerLogin(credentials);
 }
 
-async function cmdServerLogin(credentials, retryOnStaleKey = true){
+async function cmdServerLogin(credentials, attemptId, retryOnStaleKey = true){
   //credentials = "iiab-admin:g0adm1n";
   // ? kill token
 
+  if (attemptId !== authData.loginAttemptId)
+    return false;
+
   var nonce64;
   var encryptedCredentials64;
+  var serverPKeyUsed;
   try {
     nonce64 = await getServerNonceAsync();
+    if (attemptId !== authData.loginAttemptId)
+      return false;
+    serverPKeyUsed = authData.serverPKey; // key actually used for this request
     encryptedCredentials64 = naclEncryptText(credentials, nonce64);
   } catch (error) {
+    if (attemptId !== authData.loginAttemptId)
+      return false;
     // request failures have already been logged by logAuthRequestFailure();
     // log anything else (e.g. encryption errors) so the cause isn't lost
     if (!error || typeof error.endpoint == 'undefined')
@@ -1543,49 +1599,74 @@ async function cmdServerLogin(credentials, retryOnStaleKey = true){
     setAuthUnavailableMessage();
     return false;
   }
-  $.ajax({
-    type: 'GET',
-    cache: false,
-    global: false, // don't trigger global error handler
-    url: iiabAuthService + '/login',
-    headers: {"X-IIAB-Credentials": encryptedCredentials64,
-              "X-IIAB-Nonce": nonce64,
-              "X-IIAB-ClientKey": authData.clientPubKey64}
-    //dataType: 'json'
-  })
-  .done(function( data ) {
-    authData['token'] = data;
+
+  var endpoint = iiabAuthService + '/login';
+  var response = await new Promise(function(resolve){
+    $.ajax({
+      type: 'GET',
+      cache: false,
+      global: false, // don't trigger global error handler
+      url: endpoint,
+      headers: {"X-IIAB-Credentials": encryptedCredentials64,
+                "X-IIAB-Nonce": nonce64,
+                "X-IIAB-ClientKey": authData.clientPubKey64}
+      //dataType: 'json'
+    })
+    .done(function(data) {
+      resolve({ok: true, data: data});
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+      resolve({ok: false, jqXHR: jqXHR, textStatus: textStatus, errorThrown: errorThrown});
+    });
+  });
+
+  if (attemptId !== authData.loginAttemptId)
+    return false;
+
+  if (response.ok){
+    authData['token'] = response.data;
     authData.keepLogin = false; // now allow form to close
+    setLoginMessage('');
+    $('#ADMIN-CONSOLE-LOGIN').text('Login');
     $('#adminConsoleLoginModal').modal('hide');
     make_button_disabled("#LOGOUT", false);
-    if (!initStat.complete)
+    if (!initStat.complete && !initStat.postLoginStarted){
+      initStat.postLoginStarted = true;
       initPostLogin();
-  }).fail(function(jqXHR, textStatus, errorThrown) {
-    var endpoint = iiabAuthService + '/login';
-    // The server answers 403 both for a bad password and for credentials it
-    // cannot decrypt.  The latter happens when our cached server public key
-    // is stale, i.e. when the uwsgi service was restarted (it generates a new
-    // key pair every time it starts).  Refresh the key once before blaming
-    // the password or another transient auth failure.
-    if (retryOnStaleKey && jqXHR.status == 403){
-      retryLoginWithFreshServerKey(credentials);
-      return;
     }
-    logAuthRequestFailure(endpoint, jqXHR, textStatus, errorThrown);
-    if (jqXHR.status == 403)
-      setInvalidLoginMessage();
-    else
-      setAuthUnavailableMessage();
-  });
-}
+    return true;
+  }
 
-// Fetch a fresh server public key (the cached one may be stale) and retry the
-// login once with it.
-function retryLoginWithFreshServerKey(credentials){
-  setLoginMessage('Server key has changed. Retrying login...');
-  getServerPublicKey(function(){
-    cmdServerLogin(credentials, false);
-  });
+  var jqXHR = response.jqXHR;
+  // The server answers 403 both for a bad password and for credentials it
+  // cannot decrypt.  The latter happens when our cached server public key
+  // is stale, i.e. when the uwsgi service was restarted (it generates a new
+  // key pair every time it starts).  Refresh the key once, but only retry if
+  // the key actually changed.  Otherwise a wrong password would cost two
+  // login attempts.
+  if (retryOnStaleKey && jqXHR.status == 403){
+    var newKey;
+    try{
+      newKey = await getServerPublicKey();
+    }catch(error){
+      return false; // handleServerPublicKeyError already updated the form
+    }
+    if (attemptId !== authData.loginAttemptId)
+      return false;
+    if (!serverPKeyUsed || !newKey ||
+        nacl.util.encodeBase64(serverPKeyUsed) !== nacl.util.encodeBase64(newKey)){
+      setLoginMessage('Server key has changed. Retrying login...');
+      return await cmdServerLogin(credentials, attemptId, false);
+    }
+  }
+
+  if (attemptId !== authData.loginAttemptId)
+    return false;
+  logAuthRequestFailure(endpoint, jqXHR, response.textStatus, response.errorThrown);
+  if (jqXHR.status == 403)
+    setInvalidLoginMessage();
+  else
+    setAuthUnavailableMessage();
+  return false;
 }
 
 function naclEncryptText(text, nonce64){ // nacl
@@ -2768,6 +2849,12 @@ function init (loginMsg='')
   initStat["complete"] = false;
   initStat["error"] = false;
   initStat["alerted"] = {};
+  initStat["postLoginStarted"] = false;
+
+  // Invalidate any login attempt left over from before this init.
+  authData.loginInFlight = false;
+  authData.loginAttemptId += 1;
+  make_button_disabled('#ADMIN-CONSOLE-LOGIN', false);
 
   displayServerCommandStatus("Starting init");
 
@@ -2779,7 +2866,7 @@ function init (loginMsg='')
   authData['credentials'] = ':';
   authData.keepLogin = true;
 
-  getServerPublicKey();
+  getServerPublicKey().catch(function(){}); // errors are reported by the helper
   launchcmdServerLoginForm(loginMsg) //force login
   // on success will continue with initPostLogin()
 }
