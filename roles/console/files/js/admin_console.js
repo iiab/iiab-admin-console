@@ -961,7 +961,7 @@ function procSystemInfo(data){
   html += '<div>Gateway Address</div>';
   html += '<div>Gateway Device</div>';
   html += '<div>User pi Password Is Default</div>';
-  html += '<div>User iiab-admin Password Is Default</div>';
+  html += '<div>User iiab-admin Uses Legacy Password</div>';
   html += '</div>';
   html += '<div class="col-sm-4">';
   html += '<div>' + serverInfo.bt_pan_status + '</div>';

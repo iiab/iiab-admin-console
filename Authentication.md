@@ -14,9 +14,11 @@ You can log in as any member of ``admin_console_group``, but Change Password onl
 
 ### Initial credentials
 
-New IIAB installs create the admin account with a random password and write it, root-only, to ``/etc/iiab/iiab-admin-password``.  The password is expired, so a shell login must change it; the Admin Console can change it through Utilities > Change Password.  A successful console password change removes the file and clears the expiry.
+IIAB does not set or generate the admin password.  The account and password are expected to exist before IIAB runs: the OS installer, Raspberry Pi Imager, cloud-init, or an explicit ``passwd`` run.  IIAB only adds the account to ``admin_console_group``.
 
-Upgraded installs that still use the old published password are reported in the server status panel.  That password is never assigned to a new account.
+If the configured account does not exist, IIAB creates it locked and prints an instruction to run ``sudo passwd <user>``.  An existing account is reused as-is; IIAB does not change its password or shell.
+
+Upgraded installs that still use the old published password are reported in the server status panel.  That password is never assigned by current IIAB releases.
 
 ## Authentication Process
 
@@ -51,7 +53,7 @@ Upgraded installs that still use the old published password are reported in the 
 * Ux is as before.
 * Credentials are encrypted before sending to server.
 * uwsgi decrypts before sending it to CMDSRV.
-* A successful change removes ``/etc/iiab/iiab-admin-password`` (when it belongs to the admin user) and clears any forced-change expiry.
+* A successful change updates the account through ``chpasswd -e``; IIAB keeps no separate copy of the password.
 
 ### Icon File Upload
 

@@ -60,10 +60,6 @@ iiab_config_file = None
 iiab_ini_file = None
 iiab_local_vars_file = None
 
-# Root-only file written when IIAB generates the admin password at install.
-# Its presence means the account still uses the installation password.
-GENERATED_PASSWORD_FILE = "/etc/iiab/iiab-admin-password"
-
 # Variables that should be read from config file
 # All of these variables will be read from config files and recomputed in init()
 iiab_repo = None
@@ -1275,9 +1271,8 @@ def get_system_info(cmd_info):
 def check_known_passwords():
     known_passwords = {}
     known_passwords['pi_passwd_known'] = auth_calcs('pi', 'raspberry', sleep_time=0)
-    # New accounts receive a generated password, recorded root-only at install
-    # time.  The legacy published password is checked only so upgraded installs
-    # can still be warned.
+    # IIAB never sets the admin password.  Check the legacy published password
+    # only so upgraded installs can still be warned.
     legacy_pwd = effective_vars.get('iiab_admin_legacy_pwd')
     if legacy_pwd is None:
         # Compatibility with older /opt/iiab/iiab vars files.
@@ -1289,9 +1284,7 @@ def check_known_passwords():
             legacy_pwd,
             sleep_time=0,
         )
-    generated = os.path.exists(GENERATED_PASSWORD_FILE)
-    known_passwords['admin_passwd_known'] = bool(legacy_known or generated)
-    known_passwords['admin_pwd_generated'] = generated
+    known_passwords['admin_passwd_known'] = bool(legacy_known)
     return known_passwords
 
 def get_network_info(cmd_info):
@@ -3403,30 +3396,8 @@ def change_password(cmd_info):
     if rc != 0:
         resp = cmd_error(cmd=cmd_info['cmd'], msg='System Error: Failure to change password')
     else:
-        clear_generated_password(user)
         resp = cmd_success_msg(cmd=cmd_info['cmd'], msg='Password Changed')
     return resp
-
-def clear_generated_password(user):
-    """Retire the install-time password marker after a successful change."""
-    if user != effective_vars.get('iiab_admin_user', 'iiab-admin'):
-        return
-    try:
-        os.unlink(GENERATED_PASSWORD_FILE)
-    except FileNotFoundError:
-        pass
-    except OSError:
-        pass
-    # Clear the "must change at next login" expiry set at install time.
-    try:
-        subprocess.run(
-            ['chage', '-d', date.today().isoformat(), user],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            check=False,
-        )
-    except OSError:
-        pass
 
 def isStrongPassword(password):
     message = ""
