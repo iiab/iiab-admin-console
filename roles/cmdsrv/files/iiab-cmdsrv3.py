@@ -37,7 +37,6 @@ import socket
 import hashlib
 import binascii
 import iiab.adm_lib as adm
-import iiab.iiab_lib as iiab
 
 
 # import cgi # keep to escape html in future
@@ -1865,16 +1864,8 @@ def ctl_tailscale(cmd_info):
     # after a couple of minutes, still has old name in status
 
 def get_ext_zim_catalog(dev_name):
-    iiab_zim_path = dev_name + zim_dir
-    kiwix_library_xml_tmp = iiab_zim_path + "/library.xml"
-    command = "/usr/bin/iiab-make-kiwix-lib.py --no_tmp --device " + dev_name
-    args = shlex.split(command)
-    try:
-        outp = subproc_check_output(args)
-    except: #skip things that don't work
-        pass
-    usb_catalog = read_library_xml(kiwix_library_xml_tmp)
-    return (usb_catalog)
+    usb_catalog = adm.read_ext_library_xml(dev_name)
+    return (set_mul_language(usb_catalog))
 
 def umount_usb(cmd_info):
     if 'device' in cmd_info['cmd_args']:
@@ -2097,7 +2088,10 @@ def get_zim_stat(cmd_info):
     return (resp)
 
 def read_library_xml(lib_xml_file, kiwix_exclude_attr=["favicon"]):
-    zims_installed, _ = iiab.read_library_xml(lib_xml_file, kiwix_exclude_attr) # classic or OPDS
+    zims_installed, _ = adm.read_library_xml(lib_xml_file, kiwix_exclude_attr)
+    return set_mul_language(zims_installed)
+
+def set_mul_language(zims_installed):
     for zim_id in zims_installed:
         if len(zims_installed[zim_id].get('language', '').split(',')) > 1: # change multi language list to 'mul'
             zims_installed[zim_id]['language'] = 'mul'

@@ -194,6 +194,7 @@
             - utilities/iiab-update-menus
             - utilities/iiab-upgrade-zims
             - utilities/mk-preset.py
+            - utilities/iiab-proc-kiwix-lib.py
 
 - name: Copy default kiwix_catalog.json
   copy:

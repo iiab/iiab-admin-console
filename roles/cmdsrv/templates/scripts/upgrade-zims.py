@@ -60,7 +60,7 @@ def main():
     version_idx = read_zim_version_idx(zim_version_idx_dir + zim_version_idx_file)
     zims_cat = read_kiwix_catalog(KIWIX_CAT)
     cat_perm_ref_id_map, cat_perm_ref_url_map = calc_cat_perm_ref_idx(zims_cat)
-    zims_installed, path_to_id_map = iiab.read_library_xml(lib_xml_file)
+    zims_installed, path_to_id_map = adm.read_library_xml(lib_xml_file)
 
     when_to_remove_old = 'after' # default
     if args.delete:
