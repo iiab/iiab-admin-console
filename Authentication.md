@@ -8,7 +8,15 @@ The restriction for authorization only applies to access to the Command Server (
 
 ### Authentication
 
-You can login as any sudoer or member of the admin_console_group, but Change Password only allows changing the password of the currently logged in useras the user field is read only.
+Membership in the ``iiab-admin`` group (``admin_console_group``) is enough to log in.  Membership in the ``sudo`` group is no longer required: IIAB installs narrow sudo rules in ``/etc/sudoers.d/iiab-support`` for its own support commands, and the admin user is not added to ``sudo`` by default.
+
+You can log in as any member of ``admin_console_group``, but Change Password only allows changing the password of the currently logged in user, as the user field is read only.
+
+### Initial credentials
+
+New IIAB installs create the admin account with a random password and write it, root-only, to ``/etc/iiab/iiab-admin-password``.  The password is expired, so a shell login must change it; the Admin Console can change it through Utilities > Change Password.  A successful console password change removes the file and clears the expiry.
+
+Upgraded installs that still use the old published password are reported in the server status panel.  That password is never assigned to a new account.
 
 ## Authentication Process
 
@@ -42,7 +50,8 @@ You can login as any sudoer or member of the admin_console_group, but Change Pas
 ### Change Password
 * Ux is as before.
 * Credentials are encrypted before sending to server.
-* uwsgi decrypts before sending to CMDSRV.
+* uwsgi decrypts before sending it to CMDSRV.
+* A successful change removes ``/etc/iiab/iiab-admin-password`` (when it belongs to the admin user) and clears any forced-change expiry.
 
 ### Icon File Upload
 
