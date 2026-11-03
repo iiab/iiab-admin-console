@@ -119,22 +119,26 @@
     state: restarted
     enabled: true
 
-- name: Stop the Admin Console uWSGI service before restarting its socket
-  systemd_service:
-    name: uwsgi-app@admin-console.service
-    daemon_reload: true
-    state: stopped
-
-- name: Enable and restart the Admin Console uWSGI socket
+- name: Stop and disable the legacy Admin Console uWSGI socket
   systemd_service:
     name: uwsgi-app@admin-console.socket
-    enabled: true
-    state: restarted
+    daemon_reload: true
+    state: stopped
+    enabled: false
 
-- name: Start the Admin Console uWSGI service
+- name: Ensure the Admin Console uWSGI runtime directory exists
+  file:
+    path: /run/uwsgi
+    state: directory
+    owner: "{{ apache_user }}"
+    group: "{{ apache_user }}"
+    mode: "0755"
+
+- name: Enable and restart the Admin Console uWSGI service
   systemd_service:
     name: uwsgi-app@admin-console.service
-    state: started
+    enabled: true
+    state: restarted
 
 - name: Check Admin Console uWSGI authentication endpoint
   uri:

@@ -5,4 +5,7 @@
 	processes = 1
 	threads = 4
 	master = true
+	socket = /run/uwsgi/admin-console.socket
+	chmod-socket = 0600
+	vacuum = true
   	plugins = python3
