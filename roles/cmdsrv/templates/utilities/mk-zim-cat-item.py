@@ -46,7 +46,7 @@ def main():
         pass
 
     iiab.add_libr_xml(kiwix_library_xml, zim_path, zim_fname, '')
-    zims_installed, _ = iiab.read_library_xml(kiwix_library_xml, kiwix_exclude_attr=[''])
+    zims_installed, _ = adm.read_library_xml(kiwix_library_xml, kiwix_exclude_attr=[''])
 
     zim_id = list(zims_installed)[0]
 
