@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "server": {
+    "hostname": "iiab-source",
+    "role": "source",
+    "base_url": "http://<source-ip>",
+    "generated_by": "manual-inventory-test"
+  },
+  "zims": [
+    {
+      "id": "test-zim",
+      "title": "Test ZIM",
+      "file_ref": "test",
+      "path": "/library/zims/content/test.zim",
+      "size_k": 1024,
+      "language": "eng"
+    }
+  ],
+  "modules": [
+    {
+      "moddir": "en-test-module",
+      "title": "English Test Module",
+      "description": "Small static module used for sync testing.",
+      "lang": "en",
+      "ksize": 1024,
+      "menu_item_name": "en-test-module",
+      "intended_use": "html",
+      "source": "iiab-meta"
+    }
+  ]
+}

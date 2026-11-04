@@ -237,6 +237,22 @@ function installPreset(presetId){
 function manageContentInit(){
 	refreshAllInstalledList();
 	refreshExternalList();
+  initSyncSourceUser();
+}
+
+function initSyncSourceUser(){
+  var sourceUser = "iiab-admin";
+
+  try {
+    sourceUser = localStorage.getItem("iiabSyncSourceUser") || sourceUser;
+  } catch(e) {}
+
+  $("#syncSourceUser").val(sourceUser);
+  $("#syncSourceUser").change(function(){
+    try {
+      localStorage.setItem("iiabSyncSourceUser", $(this).val().trim());
+    } catch(e) {}
+  });
 }
 
 function getExternalDevInfo(){
@@ -520,6 +536,271 @@ function renderExternalList() {
 	  renderExternalOer2goModules();
 	  renderZimInstalledList(); // update ON USB messages
   }
+}
+
+function loadSyncContent(){
+  var sourceHost = $("#syncSourceHost").val().trim();
+
+  if (sourceHost == ""){
+    alert("Please enter a source server IP or hostname.");
+    return;
+  }
+
+  var cmdArgs = {"source_host": sourceHost};
+  var cmd = "GET-SYNC-CONTENT " + JSON.stringify(cmdArgs);
+
+  $("#syncContentStatus").html("Loading content from " + sourceHost + "...");
+  $("#syncZimModules").html("");
+  $("#syncOer2goModules").html("");
+
+  return sendCmdSrvCmd(cmd, procSyncContent, "LOAD-SYNC-CONTENT");
+}
+
+function discoverSyncServers(){
+  $("#syncServersList").html("Discovering IIAB servers...");
+  return sendCmdSrvCmd("GET-SYNC-SERVERS", procSyncServers, "DISCOVER-SYNC-SERVERS");
+}
+
+function procSyncServers(data){
+  var servers = [];
+  var html = "";
+
+  if (data && Array.isArray(data.servers))
+    servers = data.servers;
+
+  if (servers.length == 0){
+    $("#syncServersList").html("No sync servers discovered. Enter a source server manually.");
+    return;
+  }
+
+  servers.sort(function(a, b){
+    return (a.host || a.address).localeCompare(b.host || b.address);
+  });
+
+  servers.forEach(function(server){
+    var address = server.address || "";
+    var host = server.host || address;
+    var serviceName = server.service_name || host;
+    var sshUser = server.ssh_user || "";
+
+    if (address == "")
+      return;
+
+    html += '<label><input type="radio" class="sync-server-radio" name="sync-server"';
+    html += ' data-address="' + escapeSyncHtml(address) + '"';
+    html += ' data-ssh-user="' + escapeSyncHtml(sshUser) + '">';
+    html += '&nbsp;&nbsp;' + escapeSyncHtml(serviceName) + ' (' + escapeSyncHtml(address) + ')';
+    html += '</label><BR>';
+  });
+
+  $("#syncServersList").html(html);
+  $("#syncServersList input.sync-server-radio").change(function(){
+    $("#syncSourceHost").val($(this).data("address"));
+    if ($(this).data("ssh-user"))
+      $("#syncSourceUser").val($(this).data("ssh-user"));
+  });
+}
+
+function procSyncContent(data){
+  if (!data || typeof data !== "object"){
+    syncContentInventory = {};
+    $("#syncContentStatus").html("Error: invalid response from source server.");
+    return;
+  }
+
+  if (!data.server || typeof data.server !== "object")
+    data.server = {};
+  if (!Array.isArray(data.zims))
+    data.zims = [];
+  if (!Array.isArray(data.modules))
+    data.modules = [];
+
+  syncContentInventory = data;
+
+  var sourceName = syncContentInventory.server.hostname || $("#syncSourceHost").val().trim();
+  $("#syncContentStatus").html("Loaded content from " + escapeSyncHtml(sourceName) + ".");
+
+  renderSyncZimList();
+  renderSyncOer2goModules();
+}
+
+function renderSyncZimList(){
+  var html = "";
+  var zims = syncContentInventory.zims || [];
+
+  if (zims.length == 0){
+    $("#syncZimModules").html("No ZIM files found.");
+    return;
+  }
+
+  zims.sort(function(a, b){
+    return (a.title || a.id).localeCompare(b.title || b.id);
+  });
+
+  zims.forEach(function(zim){
+    var zimId = zim.id || zim.file_ref || zim.path;
+    var fileRef = getSyncZimFileRef(zim);
+    var title = zim.title || zimId;
+    var lang = zim.language || "";
+    var size = zim.size_k ? readableSize(zim.size_k) : "";
+    var details = [];
+
+    if (!fileRef)
+      return;
+
+    if (lang != "")
+      details.push(lang);
+    if (size != "")
+      details.push(size);
+
+    html += '<label><input type="checkbox" class="sync-zim-checkbox" name="' + escapeSyncHtml(zimId) + '"';
+    html += ' data-zim-id="' + escapeSyncHtml(zimId) + '"';
+    html += ' data-file-ref="' + escapeSyncHtml(fileRef) + '"></label>';
+    html += '<span class="zim-desc">&nbsp;&nbsp;' + escapeSyncHtml(title);
+    if (details.length > 0)
+      html += ' (' + escapeSyncHtml(details.join(", ")) + ')';
+    html += '</span><BR>';
+  });
+
+  $("#syncZimModules").html(html);
+}
+
+function renderSyncOer2goModules(){
+  var html = "";
+  var modules = syncContentInventory.modules || [];
+
+  if (modules.length == 0){
+    $("#syncOer2goModules").html("No OER2Go(RACHEL) modules found.");
+    return;
+  }
+
+  modules.sort(function(a, b){
+    return (a.title || a.moddir).localeCompare(b.title || b.moddir);
+  });
+
+  modules.forEach(function(mod){
+    var moddir = mod.moddir || mod.menu_item_name;
+    var title = mod.title || moddir;
+    var description = mod.description || "";
+    var size = mod.ksize ? readableSize(mod.ksize) : "";
+
+    if (!moddir)
+      return;
+
+    html += '<label><input type="checkbox" class="sync-module-checkbox" name="' + escapeSyncHtml(moddir) + '"';
+    html += ' data-moddir="' + escapeSyncHtml(moddir) + '"></label>';
+    html += '<span class="zim-desc">&nbsp;&nbsp;' + escapeSyncHtml(title);
+    if (description != "")
+      html += ': ' + escapeSyncHtml(description);
+    html += '</span>';
+    if (size != "")
+      html += '<span style="display:inline-block; width:120px;"> Size: ' + escapeSyncHtml(size) + '</span>';
+    html += '<BR>';
+  });
+
+  $("#syncOer2goModules").html(html);
+}
+
+function getSyncZimFileRef(zim){
+  if (zim.file_ref)
+    return zim.file_ref;
+
+  if (zim.path){
+    var pathParts = zim.path.split("/");
+    var zimFile = pathParts[pathParts.length - 1];
+    return zimFile.split(".zim")[0];
+  }
+
+  return null;
+}
+
+function getSyncCommandArgs(){
+  var sourceHost = $("#syncSourceHost").val().trim();
+  var sourceUser = $("#syncSourceUser").val().trim();
+  var cmdArgs = {"source_host": sourceHost};
+
+  if (sourceUser != ""){
+    cmdArgs["source_user"] = sourceUser;
+    try {
+      localStorage.setItem("iiabSyncSourceUser", sourceUser);
+    } catch(e) {}
+  }
+
+  return cmdArgs;
+}
+
+function getSelectedSyncZims(){
+  var zims = [];
+
+  $("#syncZimModules input.sync-zim-checkbox:checked").each(function(){
+    zims.push({
+      "zim_id": $(this).data("zim-id"),
+      "file_ref": $(this).data("file-ref")
+    });
+  });
+
+  return zims;
+}
+
+function getSelectedSyncModules(){
+  var modules = [];
+
+  $("#syncOer2goModules input.sync-module-checkbox:checked").each(function(){
+    modules.push({
+      "moddir": $(this).data("moddir")
+    });
+  });
+
+  return modules;
+}
+
+function syncSelectedContent(){
+  var baseArgs = getSyncCommandArgs();
+  var zims = getSelectedSyncZims();
+  var modules = getSelectedSyncModules();
+  var totalCount = zims.length + modules.length;
+
+  if (baseArgs.source_host == ""){
+    alert("Please enter a source server IP or hostname.");
+    return;
+  }
+
+  if (totalCount == 0){
+    alert("Please select at least one item to sync.");
+    return;
+  }
+
+  if (!confirm("Schedule " + totalCount + " selected item(s) to sync from " + baseArgs.source_host + "?"))
+    return;
+
+  zims.forEach(function(zim){
+    var cmdArgs = Object.assign({}, baseArgs);
+    cmdArgs["zim_id"] = zim.zim_id;
+    cmdArgs["file_ref"] = zim.file_ref;
+    sendCmdSrvCmd("SYNC-ZIMS " + JSON.stringify(cmdArgs), genericCmdHandler);
+  });
+
+  modules.forEach(function(mod){
+    var cmdArgs = Object.assign({}, baseArgs);
+    cmdArgs["moddir"] = mod.moddir;
+    sendCmdSrvCmd("SYNC-OER2GO-MOD " + JSON.stringify(cmdArgs), genericCmdHandler);
+  });
+
+  $("#syncZimModules input.sync-zim-checkbox").prop("checked", false);
+  $("#syncOer2goModules input.sync-module-checkbox").prop("checked", false);
+  $("#syncContentStatus").html("Selected content scheduled to sync. Please view Utilities-&gt;Display Job Status to see the results.");
+}
+
+function escapeSyncHtml(value){
+  return String(value).replace(/[&<>"']/g, function(char) {
+    return {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[char];
+  });
 }
 
 function delDownloadedFileList(id, sub_dir) {
