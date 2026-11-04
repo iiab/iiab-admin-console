@@ -1,6 +1,8 @@
 {
   "kiwixPort" : {{ kiwix_port }},
   "kiwixUrl" : "{{ kiwix_url }}",
+  "zimanticUrl" : "{{ zimantic_url | default((zimantic_url_without_slash | default('/zimantic')) ~ '/') }}",
+  "zimanticEnabled" : {{ 'true' if (zimantic_enabled | default(false)) | bool else 'false' }},
   "en-kalitePort" : "8008",
   "es-kalitePort" : "8007",
   "fr-kalitePort" : "8006",

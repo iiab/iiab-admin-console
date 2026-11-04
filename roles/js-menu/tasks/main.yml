@@ -120,6 +120,21 @@
   include_tasks: install_menu_defs.yml
   when: not menu_defs_dir.stat.exists
 
+# The central menu-def repo may not have a Zimantic definition yet. Keep a
+# local copy so enabling zimantic can add it to the Home Page menu.
+- name: Install local Zimantic menu definition and icon
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: root
+    group: root
+    mode: '0644'
+  loop:
+    - src: menu-files/menu-defs/en-zimantic.json
+      dest: "{{ js_menu_dir }}menu-files/menu-defs/"
+    - src: menu-files/images/zimantic.svg
+      dest: "{{ js_menu_dir }}menu-files/images/"
+
 # Make menu def sync manual
 #- name: Otherwise sync local menu defs with repo
 #  shell: "{{ cmdsrv_dir }}/scripts/sync_menu_defs.py"

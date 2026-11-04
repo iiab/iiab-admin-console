@@ -534,10 +534,15 @@ def put_iiab_enabled_into_menu_json():
         print(str(e))
         sys.exit(1)
 
+    enabled_options = set(outp.split('\n'))
     for iiab_option in outp.split('\n'):
         if iiab_option == 'kiwix': continue
         if iiab_option in CONST.iiab_menu_items:
             update_menu_json(CONST.iiab_menu_items[iiab_option], no_lang=True) # accept same item in a different language
+
+    zimantic_menu_item = CONST.iiab_menu_items.get('zimantic')
+    if zimantic_menu_item and 'zimantic' not in enabled_options:
+        remove_menu_json_item(zimantic_menu_item, no_lang=True)
 
 def update_menu_json(new_item, no_lang=False):
     home_menu = read_json_file(CONST.menu_json_file, verbose=True, fix_json=True)
@@ -576,6 +581,23 @@ def update_menu_json(new_item, no_lang=False):
         home_menu['menu_items_1'].append(new_item)
         home_menu['menu_items_1'].append(last_item)
 
+    write_json_file(home_menu, CONST.menu_json_path)
+
+def remove_menu_json_item(item_name, no_lang=False):
+    home_menu = read_json_file(CONST.menu_json_file, verbose=True, fix_json=True)
+    item_list = home_menu['menu_items_1']
+    if no_lang:
+        item_suffix = item_name[3:]
+        filtered_items = [
+            item for item in item_list
+            if item != item_name and item[3:] != item_suffix
+        ]
+    else:
+        filtered_items = [item for item in item_list if item != item_name]
+    if len(filtered_items) == len(item_list):
+        return
+    home_menu['menu_items_1'] = filtered_items
+    print("Removing %s from Menu" % item_name)
     write_json_file(home_menu, CONST.menu_json_path)
 
 def put_kiwix_enabled_into_menu_json():
