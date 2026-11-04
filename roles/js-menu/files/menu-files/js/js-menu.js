@@ -509,15 +509,23 @@ function procMenuItem(module) {
 }
 
 function calcZimLink(module) {
-    // if kiwix_url is defined use it otherwise use port
+    // Prefer Zimantic when it is installed and enabled. It serves ZIM
+    // articles directly, while the Kiwix viewer URL loses the selected ZIM
+    // when Zimantic takes over /kiwix.
     var href = '';
     if (zimVersions.hasOwnProperty(module.zim_name) &&
         typeof zimVersions[module.zim_name].file_name != 'undefined') {
-        href = zimVersions[module.zim_name].file_name + '/';
-        if (menuConfig.hasOwnProperty('kiwixUrl'))
-            href = menuConfig.kiwixUrl + href;
-        else
-            href = host + ':' + menuConfig.kiwixPort + '/' + href;
+        var fileName = zimVersions[module.zim_name].file_name;
+        if (zimanticAvailable())
+            href = zimanticZimUrl(fileName);
+        else {
+            // if kiwix_url is defined use it otherwise use port
+            href = fileName + '/';
+            if (menuConfig.hasOwnProperty('kiwixUrl'))
+                href = menuConfig.kiwixUrl + href;
+            else
+                href = host + ':' + menuConfig.kiwixPort + '/' + href;
+        }
     }
     else
         href = undefinedPageUrl + '?menu_item=' + module.menu_item_name + '&zim_name=' + module.zim_name; //not defined in zimVersions
@@ -791,6 +799,19 @@ function getExtraHtml(module) {
 function zimanticBaseUrl() {
     var url = (menuConfig && menuConfig.zimanticUrl) ? menuConfig.zimanticUrl : '/zimantic/';
     return url.replace(/\/+$/, '') || '/zimantic';
+}
+
+function zimanticAvailable() {
+    // config.json reports whether the Zimantic role is enabled. Its NGINX
+    // route is removed when it is disabled, so a stale config.json must not
+    // send visitors to it.
+    return !!(menuConfig && menuConfig.zimanticEnabled === true);
+}
+
+function zimanticZimUrl(fileName) {
+    // Zimantic's /content/{zim} homepage route has no trailing slash; the
+    // /content/{zim}/{path} route treats an empty path as an error.
+    return zimanticBaseUrl() + '/content/' + encodeURIComponent(fileName);
 }
 
 function openSearchModal(query) {

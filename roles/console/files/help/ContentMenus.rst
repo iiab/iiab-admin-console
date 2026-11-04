@@ -52,7 +52,7 @@ The following apply to both layouts:
 
 **Check to Have the Menu Automatically Updated** - Services installed as well as ZIM files and OER2Go modules can be automatically added to the menu. **Be Careful** as some manual changes may be reverted by this option.
 
-**Check to Allow Search** - The home page can search all installed ZIMs. When Zimantic is enabled it provides meaning-based, title-word, and full-text search and serves the articles it finds. Otherwise the Kiwix server provides search across all ZIMs. **Please Note** that Kiwix search becomes slower the more ZIMs you have installed.
+**Check to Allow Search** - The home page can search all installed ZIMs. When Zimantic is enabled it provides meaning-based, title-word, and full-text search and serves the articles it finds. When Zimantic is installed and enabled, the ZIM links on the home page also open in Zimantic instead of the Kiwix viewer. Otherwise the Kiwix server provides search across all ZIMs. **Please Note** that Kiwix search becomes slower the more ZIMs you have installed.
 
 **Check to Allow Power Off Link** - If this is checked a link to power off the server will be included at the bottom of the home page. You must also have enable this when you installed Internet-in-a-Box.
 
