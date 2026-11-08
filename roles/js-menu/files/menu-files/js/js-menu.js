@@ -509,15 +509,14 @@ function procMenuItem(module) {
 }
 
 function calcZimLink(module) {
-    // Prefer Zimantic when it is installed and enabled. It serves ZIM
-    // articles directly, while the Kiwix viewer URL loses the selected ZIM
-    // when Zimantic takes over /kiwix.
+    // Prefer the installation-specific Zimantic URL generated in the index.
     var href = '';
     if (zimVersions.hasOwnProperty(module.zim_name) &&
         typeof zimVersions[module.zim_name].file_name != 'undefined') {
-        var fileName = zimVersions[module.zim_name].file_name;
-        if (zimanticAvailable())
-            href = zimanticZimUrl(fileName);
+        var zim = zimVersions[module.zim_name];
+        var fileName = zim.file_name;
+        if (zimanticAvailable() && zim.zimantic_url)
+            href = zim.zimantic_url;
         else {
             // if kiwix_url is defined use it otherwise use port
             href = fileName + '/';
@@ -806,12 +805,6 @@ function zimanticAvailable() {
     // route is removed when it is disabled, so a stale config.json must not
     // send visitors to it.
     return !!(menuConfig && menuConfig.zimanticEnabled === true);
-}
-
-function zimanticZimUrl(fileName) {
-    // Zimantic's /content/{zim} homepage route has no trailing slash; the
-    // /content/{zim}/{path} route treats an empty path as an error.
-    return zimanticBaseUrl() + '/content/' + encodeURIComponent(fileName);
 }
 
 function openSearchModal(query) {
