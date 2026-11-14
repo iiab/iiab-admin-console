@@ -866,30 +866,205 @@ function trySearchProvider(query, providers, index) {
     }
 }
 
+var ZIMANTIC_SEARCH_LIMIT = 20;
+var ZIMANTIC_SEARCH_TIMEOUT = 120000;
+var ZIMANTIC_STREAM_IDLE_TIMEOUT = 60000;
+
 function runZimanticSearch(query, onFail) {
+    // Zimantic streams progress and result snapshots as sources finish. Prefer
+    // that endpoint so a cold search on slow hardware shows partial results
+    // instead of tripping a fixed AJAX timeout. Older browsers and pre-stream
+    // Zimantic builds fall back to the one-shot JSON endpoint.
+    if (typeof fetch === 'function' && typeof TextDecoder === 'function')
+        runZimanticSearchStream(query, onFail);
+    else
+        runZimanticSearchJson(query, onFail);
+}
+
+function runZimanticSearchJson(query, onFail) {
     $.ajax({
         url: zimanticBaseUrl() + '/search',
-        data: { q: query, limit: 20, offset: 0 },
+        data: { q: query, limit: ZIMANTIC_SEARCH_LIMIT, offset: 0 },
         dataType: 'json',
-        timeout: 30000
+        // The server bounds its own search; leave room for a cold start and
+        // slow hardware instead of falling back to Kiwix after 30 s.
+        timeout: ZIMANTIC_SEARCH_TIMEOUT
     })
         .done(function (results, textStatus, jqXHR) {
-            renderZimanticResults(query, results, jqXHR);
+            var header = jqXHR.getResponseHeader('X-Total-Count');
+            var total = header === null ? results.length : parseInt(header, 10);
+            if (isNaN(total))
+                total = results.length;
+            renderZimanticResults(query, results, total, true);
         })
         .fail(function (jqXHR) {
-            if (jqXHR.status === 400 && jqXHR.responseJSON && jqXHR.responseJSON.detail) {
-                setSearchStatus(jqXHR.responseJSON.detail);
+            if (showZimanticQueryError(jqXHR))
                 return;
-            }
             onFail();
         });
 }
 
-function renderZimanticResults(query, results, jqXHR) {
+function showZimanticQueryError(jqXHR) {
+    if (jqXHR.status === 400 && jqXHR.responseJSON && jqXHR.responseJSON.detail) {
+        setSearchStatus(jqXHR.responseJSON.detail);
+        return true;
+    }
+    return false;
+}
+
+function runZimanticSearchStream(query, onFail) {
+    var url = zimanticBaseUrl() + '/search/stream?q=' + encodeURIComponent(query) +
+        '&limit=' + ZIMANTIC_SEARCH_LIMIT + '&offset=0';
+    var controller = typeof AbortController === 'function' ? new AbortController() : null;
+    var hardTimer = null;
+    var idleTimer = null;
+    var settled = false;
+    var results = [];
+    var total = null;
+
+    function clearTimers() {
+        if (hardTimer) clearTimeout(hardTimer);
+        if (idleTimer) clearTimeout(idleTimer);
+        hardTimer = null;
+        idleTimer = null;
+    }
+
+    function settle() {
+        if (settled)
+            return false;
+        settled = true;
+        clearTimers();
+        return true;
+    }
+
+    function abort() {
+        if (!settle())
+            return;
+        if (controller)
+            controller.abort();
+        onFail();
+    }
+
+    function armIdleTimer() {
+        if (idleTimer) clearTimeout(idleTimer);
+        idleTimer = setTimeout(abort, ZIMANTIC_STREAM_IDLE_TIMEOUT);
+    }
+
+    function fallbackToJson() {
+        if (!settle())
+            return;
+        if (controller)
+            controller.abort();
+        runZimanticSearchJson(query, onFail);
+    }
+
+    function handleEvent(event) {
+        if (settled || !event || typeof event !== 'object')
+            return;
+        if (event.type === 'started') {
+            setZimanticSearchProgress(0, event.total_sources);
+        } else if (event.type === 'snapshot' || event.type === 'done') {
+            if (Array.isArray(event.results))
+                results = event.results;
+            if (typeof event.total === 'number')
+                total = event.total;
+            if (event.type === 'done') {
+                renderZimanticResults(query, results, total, true);
+                settle();
+            } else {
+                renderZimanticResults(query, results, total, false);
+                setZimanticSearchProgress(event.completed, event.total_sources);
+            }
+        } else if (event.type === 'progress') {
+            setZimanticSearchProgress(event.completed, event.total_sources);
+        } else if (event.type === 'error') {
+            if (!settle())
+                return;
+            if (event.busy)
+                onFail();
+            else
+                setSearchStatus(event.error || 'Zimantic search failed.');
+        }
+    }
+
+    function readStream(response) {
+        var reader = response.body.getReader();
+        var decoder = new TextDecoder();
+        var buffer = "";
+        function pump() {
+            return reader.read().then(function (chunk) {
+                if (settled)
+                    return;
+                if (chunk.done) {
+                    if (buffer.trim())
+                        handleEvent(JSON.parse(buffer));
+                    return;
+                }
+                armIdleTimer();
+                buffer += decoder.decode(chunk.value, { stream: true });
+                var lines = buffer.split('\n');
+                buffer = lines.pop();
+                for (var i = 0; i < lines.length && !settled; i++) {
+                    var line = lines[i].trim();
+                    if (line)
+                        handleEvent(JSON.parse(line));
+                }
+                if (!settled)
+                    return pump();
+            });
+        }
+        return pump();
+    }
+
+    hardTimer = setTimeout(abort, ZIMANTIC_SEARCH_TIMEOUT);
+    fetch(url, {
+        headers: { 'Accept': 'application/x-ndjson' },
+        signal: controller ? controller.signal : undefined
+    })
+        .then(function (response) {
+            if (settled)
+                return;
+            if (response.status === 400) {
+                return response.json().then(function (body) {
+                    if (settle())
+                        setSearchStatus((body && body.detail) || 'Zimantic rejected the search.');
+                });
+            }
+            if (response.status === 404 || response.status === 405) {
+                fallbackToJson();
+                return;
+            }
+            if (!response.ok)
+                throw new Error('Zimantic search failed: ' + response.status);
+            if (!response.body || typeof response.body.getReader !== 'function') {
+                fallbackToJson();
+                return;
+            }
+            armIdleTimer();
+            return readStream(response).then(function () {
+                // A truncated stream still leaves any rendered page in place,
+                // but report the failure so the caller can try Kiwix.
+                if (!settled)
+                    abort();
+            });
+        })
+        .catch(function () {
+            if (!settled)
+                abort();
+        });
+}
+
+function setZimanticSearchProgress(completed, totalSources) {
+    if (typeof completed !== 'number' || typeof totalSources !== 'number')
+        return;
+    $("#searchResultsFooter").html('<p class="search-status">Searching ' +
+        escapeHtml(String(completed)) + ' of ' + escapeHtml(String(totalSources)) + ' sources...</p>');
+}
+
+function renderZimanticResults(query, results, total, complete) {
     if (!Array.isArray(results))
         results = [];
-    var total = jqXHR.getResponseHeader('X-Total-Count');
-    if (total === null)
+    if (typeof total !== 'number' || isNaN(total))
         total = results.length;
     var body = "";
     for (var i = 0; i < results.length; i++) {
@@ -904,10 +1079,24 @@ function renderZimanticResults(query, results, jqXHR) {
         body += '</div>';
     }
     if (!body)
-        body = '<p class="search-status">No results found.</p>';
-    $("#searchResultsHeader").html('<strong>' + escapeHtml(query) + '</strong> - ' +
-        escapeHtml(String(total)) + ' result(s) from <a href="' + escapeHtmlAttr(zimanticBaseUrl()) +
-        '/" target="_blank" rel="noopener">Zimantic</a>');
+        body = '<p class="search-status">' + (complete ? 'No results found.' : 'Searching...') + '</p>';
+    var summary;
+    if (!complete && total === 0)
+        summary = 'Searching';
+    else if (total === 0)
+        summary = 'No results';
+    else if (total > results.length)
+        summary = 'Showing ' + results.length + ' of ' + total + ' result(s)';
+    else
+        summary = total + ' result(s)';
+    var provider = '<a href="' + escapeHtmlAttr(zimanticBaseUrl() + '/?q=' + encodeURIComponent(query)) +
+        '" target="_blank" rel="noopener">Zimantic</a>';
+    var header;
+    if (summary === 'Searching')
+        header = '<strong>' + escapeHtml(query) + '</strong> - searching ' + provider + '...';
+    else
+        header = '<strong>' + escapeHtml(query) + '</strong> - ' + escapeHtml(summary) + ' from ' + provider;
+    $("#searchResultsHeader").html(header);
     $("#searchResultsBody").html(body);
     $("#searchResultsFooter").html("");
 }
