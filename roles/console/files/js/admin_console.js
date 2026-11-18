@@ -94,6 +94,34 @@ var authData = {};
 authData['keepLogin'] = true; // don't allow closing of login form
 authData['loginInFlight'] = false;
 authData['loginAttemptId'] = 0;
+
+// Session token from /auth/login.  Stored so Ctrl-R (and a new tab) does not
+// ask for the password again.  The server expires it after 12 idle hours.
+var AUTH_TOKEN_STORAGE_KEY = 'iiabAdminConsoleAuthToken';
+
+function loadStoredAuthToken(){
+  try {
+    return localStorage.getItem(AUTH_TOKEN_STORAGE_KEY) || '';
+  } catch (error) {
+    return ''; // storage can be disabled (private browsing, policy)
+  }
+}
+
+function storeAuthToken(token){
+  try {
+    if (token)
+      localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, token);
+    else
+      localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+  } catch (error) {
+    consoleLog(error); // the session still works, it just won't survive reload
+  }
+}
+
+function forgetAuthToken(){
+  authData['token'] = '';
+  storeAuthToken('');
+}
 var is_rpi = false;
 var undef = undefined; // convenience variable
 var initStat = {};
@@ -109,6 +137,17 @@ function main() {
   // type: 'POST',
   // headers: { "cache-control": "no-cache" }
   //});
+
+  // Logging out in one tab must not leave another tab logged in.
+  $(window).on('storage', function(e){
+    var original = e.originalEvent;
+    if (!original || original.key !== AUTH_TOKEN_STORAGE_KEY)
+      return;
+    if (!original.newValue && authData.token){
+      authData.token = '';
+      init();
+    }
+  });
 
 // declare generic ajax error handler called by all .fail events
  //$( document ).ajaxError(ajaxErrhandler); 2020-05-18 took this out. Maybe was never needed?
@@ -1624,15 +1663,10 @@ async function cmdServerLogin(credentials, attemptId, retryOnStaleKey = true){
 
   if (response.ok){
     authData['token'] = response.data;
-    authData.keepLogin = false; // now allow form to close
-    setLoginMessage('');
-    $('#ADMIN-CONSOLE-LOGIN').text('Login');
-    $('#adminConsoleLoginModal').modal('hide');
-    make_button_disabled("#LOGOUT", false);
-    if (!initStat.complete && !initStat.postLoginStarted){
-      initStat.postLoginStarted = true;
-      initPostLogin();
-    }
+    authData['user'] = credentials.split(':')[0];
+    storeAuthToken(authData.token);
+    authData.credentials = ''; // the password is not needed once a token exists
+    authSessionEstablished();
     return true;
   }
 
@@ -1667,6 +1701,51 @@ async function cmdServerLogin(credentials, attemptId, retryOnStaleKey = true){
   else
     setAuthUnavailableMessage();
   return false;
+}
+
+// Called once credentials or a restored token have established a session.
+function authSessionEstablished(){
+  authData.keepLogin = false; // now allow form to close
+  setLoginMessage('');
+  $('#ADMIN-CONSOLE-LOGIN').text('Login');
+  $('#adminConsoleLoginModal').modal('hide');
+  make_button_disabled("#LOGOUT", false);
+  if (!initStat.complete && !initStat.postLoginStarted){
+    initStat.postLoginStarted = true;
+    initPostLogin();
+  }
+}
+
+// Called from init() when a token from an earlier page load is available.
+// A successful check keeps the console logged in across reloads; a 403 means
+// the token expired or uwsgi restarted, so ask for the password again.
+function restoreAuthSession(loginMsg){
+  var token = authData.token;
+  $.ajax({
+    type: 'GET',
+    cache: false,
+    global: false, // don't trigger global error handler
+    url: iiabAuthService + '/check',
+    headers: {"X-IIAB-Token": token}
+  })
+  .done(function(user){
+    if (token !== authData.token)
+      return; // logged out, or re-initialized, while this was in flight
+    authData.user = user;
+    authSessionEstablished();
+  })
+  .fail(function(jqXHR){
+    if (token !== authData.token)
+      return;
+    if (jqXHR.status == 403){
+      forgetAuthToken();
+      launchcmdServerLoginForm('Session expired. Please sign in again.');
+    } else {
+      // Unreachable service: keep the token so a later reload can retry.
+      launchcmdServerLoginForm(loginMsg);
+      setAuthUnavailableMessage();
+    }
+  });
 }
 
 function naclEncryptText(text, nonce64){ // nacl
@@ -2502,8 +2581,20 @@ function procInetSpeed2(data){
 }
 
 function logOutUser(){
+  var token = authData.token;
+  if (token){
+    // Best effort: the token is also discarded locally below, so a failed
+    // request cannot keep this browser logged in.
+    $.ajax({
+      type: 'POST',
+      url: iiabAuthService + '/logout',
+      headers: {"X-IIAB-Token": token},
+      global: false
+    });
+  }
+  forgetAuthToken();
   authData.credentials = ':';
-  authData.token = ''; // possible future use
+  authData.user = '';
   $('#iiabAdminUserName').val('');
   $('#iiabAdminUserPassword').val('');
   $("#iiab_admin_old_password").val('');
@@ -2630,9 +2721,18 @@ async function sendCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdA
   //	return deferredObject.reject();
   //}
 
-  var nonce64 = await getServerNonceAsync();
-  var encryptedCredentials64 = naclEncryptText(authData.credentials, nonce64);
   var cmdVerb = command.split(" ")[0];
+  var headers = {};
+  var nonce64 = null;
+  if (authData.token){
+    // A session token authenticates the request.  No password, no nonce.
+    headers["X-IIAB-Token"] = authData.token;
+  } else {
+    nonce64 = await getServerNonceAsync();
+    headers["X-IIAB-Credentials"] = naclEncryptText(authData.credentials, nonce64);
+    headers["X-IIAB-Nonce"] = nonce64;
+    headers["X-IIAB-ClientKey"] = authData.clientPubKey64;
+  }
   // the ajax call escapes special characters, but converts space to plus sign
   // convert space to %20
 
@@ -2644,6 +2744,12 @@ async function sendCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdA
   //consoleLog ("enCommand: " + enCommand);
   var payload = {command: encodedCommand};
   if (encryptFlag){
+    // The command itself is still encrypted with a one-time nonce, even when
+    // the request is authenticated by token.
+    if (!nonce64)
+      nonce64 = await getServerNonceAsync();
+    headers["X-IIAB-Nonce"] = nonce64;
+    headers["X-IIAB-ClientKey"] = authData.clientPubKey64;
     encryptedCommand = naclEncryptText(encodedCommand, nonce64);
     payload = {encrypted_command: encryptedCommand};
   }
@@ -2657,9 +2763,7 @@ async function sendCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdA
   var resp = $.ajax({
     type: 'POST',
     url: iiabCmdService,
-    headers: {"X-IIAB-Credentials": encryptedCredentials64,
-            "X-IIAB-Nonce": nonce64,
-            "X-IIAB-ClientKey": authData.clientPubKey64},
+    headers: headers,
     data: payload,
     dataType: 'json',
     buttonId: buttonId
@@ -2692,6 +2796,7 @@ async function sendCmdSrvCmd(command, callback, buttonId = '', errCallback, cmdA
     consoleLog('in sendAuthCmdSrvCmd .fail');
     if (jqXHR.status == 403){ // not logged in
       // probably need to reinitialize
+      forgetAuthToken(); // a stored token that just failed must not be retried
       init ('Server Password Reset. Please Sign in Again');
     } else {
       jsonErrhandler(jqXHR, textStatus, errorThrown);
@@ -2864,10 +2969,17 @@ function init (loginMsg='')
   authData['clientKeyPair'] = nacl.box.keyPair();
   authData['clientPubKey64'] = nacl.util.encodeBase64(authData.clientKeyPair.publicKey);
   authData['credentials'] = ':';
+  authData['user'] = '';
   authData.keepLogin = true;
 
+  // A token saved by an earlier login lets this page load skip the form.
+  authData['token'] = loadStoredAuthToken();
+
   getServerPublicKey().catch(function(){}); // errors are reported by the helper
-  launchcmdServerLoginForm(loginMsg) //force login
+  if (authData.token)
+    restoreAuthSession(loginMsg);
+  else
+    launchcmdServerLoginForm(loginMsg); // force login
   // on success will continue with initPostLogin()
 }
 
@@ -2966,7 +3078,7 @@ function initDone (){
     //$('#initDataModal').modal('hide');
 
     // Set Password Change Fields
-    var user = authData.credentials.split(':')[0]
+    var user = authData.user || authData.credentials.split(':')[0]
     $( "#iiab_admin_user").val(user);
 
     consoleLog("Init Finished Successfully");
