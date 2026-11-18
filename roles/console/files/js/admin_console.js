@@ -138,15 +138,20 @@ function main() {
   // headers: { "cache-control": "no-cache" }
   //});
 
-  // Logging out in one tab must not leave another tab logged in.
+  // Share token changes across tabs.  A new token from another tab is picked
+  // up silently: no redirect, reload, or form reset, so in-flight work can be
+  // submitted with the fresh token.  Removing the key means another tab
+  // logged out, so this tab must do the same.
   $(window).on('storage', function(e){
     var original = e.originalEvent;
     if (!original || original.key !== AUTH_TOKEN_STORAGE_KEY)
       return;
-    if (!original.newValue && authData.token){
-      authData.token = '';
+    var newToken = original.newValue || '';
+    if (newToken === authData.token)
+      return;
+    authData.token = newToken;
+    if (!newToken)
       init();
-    }
   });
 
 // declare generic ajax error handler called by all .fail events
@@ -1738,10 +1743,15 @@ function restoreAuthSession(loginMsg){
     if (token !== authData.token)
       return;
     if (jqXHR.status == 403){
-      forgetAuthToken();
+      // Keep the stale token in localStorage.  Removing it would fire a
+      // storage event that logs out other tabs, which may hold unsaved work.
+      // A login in another tab replaces the token and we pick it up silently.
+      authData.token = '';
       launchcmdServerLoginForm('Session expired. Please sign in again.');
     } else {
-      // Unreachable service: keep the token so a later reload can retry.
+      // Unreachable service: keep the stored token so a later reload can
+      // retry, but stop using it in memory while the login form is up.
+      authData.token = '';
       launchcmdServerLoginForm(loginMsg);
       setAuthUnavailableMessage();
     }

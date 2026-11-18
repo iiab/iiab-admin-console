@@ -43,6 +43,7 @@ You can login as any sudoer or member of the admin_console_group, but Change Pas
 * Tokens are held in memory by the uwsgi app as `token -> (user, expiry)` with a 12 hour sliding expiry. Active use extends it; a restart of the admin console service (or the app's single worker process) invalidates all tokens and users are asked to sign in again.
 * `GET /auth/check` reports whether a stored token is still valid, which is how `init()` decides between restoring the session and showing the login form.
 * `POST /auth/logout` revokes the token; the client also removes it from `localStorage`. Removing the key notifies other open tabs via the browser `storage` event, so one logout signs out all tabs.
+* The `storage` event also shares new tokens: when one tab signs in, other tabs silently adopt the new token (no redirect or form reset), so work already in progress can still be submitted. An expired token is left in `localStorage` rather than removed on `/auth/check` failure, so another tab's re-login does not log out tabs with unsaved work.
 * A successful `CHGPW` (Change Password) revokes every token for that user, so other tabs and devices must sign in again with the new password.
 * Encrypted commands (Change Password) still use a one-time nonce even when the request is authenticated by token.
 * Trade-off: any script running on the console's origin can read the token from `localStorage`. The short sliding TTL bounds that exposure; the password itself is never stored in the browser.
