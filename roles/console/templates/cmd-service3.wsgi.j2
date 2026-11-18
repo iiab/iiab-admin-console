@@ -271,6 +271,21 @@ def nacl_decrpt(message64, client_public_key64, nonce64):
         decrypt_success = False
     return decrypt_success, plaintext.decode()
 
+def cmd_succeeded(response_body):
+    # send_command() wraps a successful cmdsrv reply as
+    # {"Data": <reply>, "Resp_time": ...}; errors are returned unwrapped.
+    try:
+        wrapper = json.loads(response_body)
+    except (ValueError, TypeError):
+        return False
+    reply = wrapper.get('Data') if isinstance(wrapper, dict) else None
+    if isinstance(reply, str):
+        try:
+            reply = json.loads(reply)
+        except (ValueError, TypeError):
+            return False
+    return isinstance(reply, dict) and 'Error' not in reply
+
 def handle_cmd(req_uri, environ, user):
     start_ms = time.time()
     try:
@@ -293,6 +308,12 @@ def handle_cmd(req_uri, environ, user):
             if cmd_type == 'encrypted_command':
                 client_public_key64 = environ['HTTP_X_IIAB_CLIENTKEY']
                 nonce64 = environ['HTTP_X_IIAB_NONCE']
+                # auth_login() normally consumes the nonce, but token auth
+                # skips that path.  Consume it here so encrypted commands
+                # remain one-time and valid_nonces cannot grow without bound.
+                nonce64_bytes = nonce64.encode()
+                if nonce64_bytes in valid_nonces:
+                    valid_nonces.remove(nonce64_bytes)
                 decrypt_success, cmd = nacl_decrpt(cmd, client_public_key64, nonce64)
 
             #cmd = urllib.parse.unquote(cmd)
@@ -303,7 +324,7 @@ def handle_cmd(req_uri, environ, user):
             else:
                 print('Handling ' + cmd)
                 response_body = send_command(cmd, start_ms)
-                if cmd_verb == 'CHGPW' and '"Error"' not in response_body:
+                if cmd_verb == 'CHGPW' and cmd_succeeded(response_body):
                     # A changed password must end every session for that user,
                     # including consoles on other devices and tabs.
                     revoke_user_tokens(user)
