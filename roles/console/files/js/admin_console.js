@@ -1715,10 +1715,23 @@ function authSessionEstablished(){
   $('#ADMIN-CONSOLE-LOGIN').text('Login');
   $('#adminConsoleLoginModal').modal('hide');
   make_button_disabled("#LOGOUT", false);
-  if (!initStat.complete && !initStat.postLoginStarted){
-    initStat.postLoginStarted = true;
-    initPostLogin();
+
+  if (initStat.postLoginStarted || initStat.complete)
+    return;
+
+  if ($('#Configure').children().length){
+    // Re-authenticated in this same page (e.g. after a 403).  The panels and
+    // their current field values are still in the DOM.  initPostLogin()
+    // would replace the fragments and re-apply server config, discarding
+    // in-progress edits, so just finish the init state instead.
+    initStat.complete = true;
+    initStat.active = false;
+    displayServerCommandStatus('<span style="color:green">Session restored</span>');
+    return;
   }
+
+  initStat.postLoginStarted = true;
+  initPostLogin();
 }
 
 // Called from init() when a token from an earlier page load is available.
