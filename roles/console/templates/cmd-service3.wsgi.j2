@@ -8,6 +8,7 @@ import grp
 import secrets
 import subprocess
 import base64
+import threading
 import nacl.utils
 from nacl.public import PrivateKey, PublicKey, Box
 from nacl.encoding import Base64Encoder
@@ -33,10 +34,13 @@ server_public_key_bytes = None
 # stored in base64 bytes for convenience
 valid_nonces = []
 
-# not used
-# future guard against attack against already logged in machine
-# ould add expiry, ip addr OR just alway use credentials
-valid_tokens = []
+# Login sessions, so a browser reload does not have to replay the password.
+# token -> (username, expiry).  Kept in memory on purpose: a uwsgi restart
+# regenerates the server key pair anyway, so old sessions cannot outlive it.
+# The lock matters because uwsgi runs several threads (see admin-console.ini).
+TOKEN_TTL_SECONDS = 12 * 60 * 60
+valid_tokens = {}
+token_lock = threading.Lock()
 
 # these commands can not be issued from the front end
 internal_commands = ['AUTHENTICATE']
@@ -58,12 +62,24 @@ def application(environ, start_response):
             token = ''
             status = '403 Invalid Login'
             #print(environ)
-            if authenticate(environ):
-                token = secrets.token_urlsafe(32)
+            user = authenticate(environ)
+            if user:
+                token = issue_token(user)
                 status = '200 OK'
             #print(status)
             start_response(status, response_headers)
             return token
+
+        elif req_uri == iiab_cmd_service + '/auth/check':
+            # Is this stored browser token still valid?  Nothing is issued;
+            # a valid session answers with its username.
+            response_headers = [('Content-type', 'text/plain')]
+            user = authenticate(environ)
+            if user:
+                start_response('200 OK', response_headers)
+                return user.encode()
+            start_response('403 Invalid Login', response_headers)
+            return b''
 
         else: # these are all gets
             response_headers = [('Content-type', 'text/plain')]
@@ -91,9 +107,18 @@ def application(environ, start_response):
                 return [response_body.encode()]
 
     elif req_method == 'POST':
+        if req_uri == iiab_cmd_service + '/auth/logout':
+            # Idempotent: no token or an already expired token is still 200.
+            token = environ.get('HTTP_X_IIAB_TOKEN')
+            if token:
+                revoke_token(token)
+            start_response('200 OK', [('Content-type', 'text/plain')])
+            return b''
+
         if req_uri == iiab_cmd_service + '/cmd':
-            if authenticate(environ):
-                response_body = handle_cmd(req_uri, environ)
+            user = authenticate(environ)
+            if user:
+                response_body = handle_cmd(req_uri, environ, user)
                 status = '200 OK'
                 response_headers = [('Content-type', 'application/json'), ('Content-Length', str(len(response_body)))]
                 start_response(status, response_headers)
@@ -107,13 +132,51 @@ def application(environ, start_response):
                 #return ['{"Error": "Invalid login"}'.encode()]
 
 def authenticate(environ):
+    # Prefer a session token: it never contains the password, and it is what
+    # lets the browser stay logged in across reloads.
+    token = environ.get('HTTP_X_IIAB_TOKEN')
+    if token:
+        return check_token(token)
+
     if 'HTTP_X_IIAB_CREDENTIALS' in environ and 'HTTP_X_IIAB_CLIENTKEY' in environ and 'HTTP_X_IIAB_NONCE' in environ:
         credentials64 = environ['HTTP_X_IIAB_CREDENTIALS']
         client_public_key64 = environ['HTTP_X_IIAB_CLIENTKEY']
         nonce64 = environ['HTTP_X_IIAB_NONCE']
         return auth_login(credentials64, client_public_key64, nonce64)
     else:
-        return False
+        return None
+
+def issue_token(user):
+    now = time.time()
+    token = secrets.token_urlsafe(32)
+    with token_lock:
+        for stale in [t for t, (_, expiry) in valid_tokens.items() if expiry < now]:
+            del valid_tokens[stale]
+        valid_tokens[token] = (user, now + TOKEN_TTL_SECONDS)
+    return token
+
+def check_token(token):
+    now = time.time()
+    with token_lock:
+        entry = valid_tokens.get(token)
+        if entry is None:
+            return None
+        user, expiry = entry
+        if expiry < now:
+            del valid_tokens[token]
+            return None
+        # Sliding expiry: active consoles stay logged in, idle ones expire.
+        valid_tokens[token] = (user, now + TOKEN_TTL_SECONDS)
+        return user
+
+def revoke_token(token):
+    with token_lock:
+        valid_tokens.pop(token, None)
+
+def revoke_user_tokens(user):
+    with token_lock:
+        for token in [t for t, (name, _) in valid_tokens.items() if name == user]:
+            del valid_tokens[token]
 
 def auth_login(credentials64, client_public_key64, nonce64): # candidate for adm_lib
     global valid_nonces
@@ -122,14 +185,14 @@ def auth_login(credentials64, client_public_key64, nonce64): # candidate for adm
 
     if nonce64_bytes not in valid_nonces:
         print('Invalid Nonce')
-        return False
+        return None
 
     valid_nonces.remove(nonce64_bytes) # enforce single use of nonce
     decrypt_success, credentials = nacl_decrpt(credentials64, client_public_key64, nonce64)
 
     if not decrypt_success:
         print('Decryption Failed')
-        return False
+        return None
 
     u_pw = credentials.split(':')
     user = u_pw[0]
@@ -137,7 +200,7 @@ def auth_login(credentials64, client_public_key64, nonce64): # candidate for adm
         password = u_pw[1]
     else:
         print('User:Password Failed')
-        return False
+        return None
 
     # see if user exists
     try:
@@ -145,7 +208,7 @@ def auth_login(credentials64, client_public_key64, nonce64): # candidate for adm
         user_info = pwd.getpwnam(user)
     except:
         print('Bad User')
-        return False
+        return None
 
     # must be in one of valid_group_list
     group_valid = False
@@ -164,7 +227,7 @@ def auth_login(credentials64, client_public_key64, nonce64): # candidate for adm
             continue
     if not group_valid:
         print('Bad Group')
-        return False
+        return None
 
     # 2021-09-26: Works with all hashes in /etc/shadow (SHA-512, yescrypt, etc) for #2985
     #read_pw_hash = spwddb[1]
@@ -191,9 +254,9 @@ def auth_login(credentials64, client_public_key64, nonce64): # candidate for adm
 
     if auth['Data'] != 'VALID':
         print('Bad Password')
-        return False
+        return None
     else:
-        return True
+        return user
 
 def nacl_decrpt(message64, client_public_key64, nonce64):
     decrypt_success = True
@@ -208,7 +271,22 @@ def nacl_decrpt(message64, client_public_key64, nonce64):
         decrypt_success = False
     return decrypt_success, plaintext.decode()
 
-def handle_cmd(req_uri, environ):
+def cmd_succeeded(response_body):
+    # send_command() wraps a successful cmdsrv reply as
+    # {"Data": <reply>, "Resp_time": ...}; errors are returned unwrapped.
+    try:
+        wrapper = json.loads(response_body)
+    except (ValueError, TypeError):
+        return False
+    reply = wrapper.get('Data') if isinstance(wrapper, dict) else None
+    if isinstance(reply, str):
+        try:
+            reply = json.loads(reply)
+        except (ValueError, TypeError):
+            return False
+    return isinstance(reply, dict) and 'Error' not in reply
+
+def handle_cmd(req_uri, environ, user):
     start_ms = time.time()
     try:
         request_body_size = int(environ.get('CONTENT_LENGTH', 0))
@@ -230,6 +308,12 @@ def handle_cmd(req_uri, environ):
             if cmd_type == 'encrypted_command':
                 client_public_key64 = environ['HTTP_X_IIAB_CLIENTKEY']
                 nonce64 = environ['HTTP_X_IIAB_NONCE']
+                # auth_login() normally consumes the nonce, but token auth
+                # skips that path.  Consume it here so encrypted commands
+                # remain one-time and valid_nonces cannot grow without bound.
+                nonce64_bytes = nonce64.encode()
+                if nonce64_bytes in valid_nonces:
+                    valid_nonces.remove(nonce64_bytes)
                 decrypt_success, cmd = nacl_decrpt(cmd, client_public_key64, nonce64)
 
             #cmd = urllib.parse.unquote(cmd)
@@ -240,6 +324,10 @@ def handle_cmd(req_uri, environ):
             else:
                 print('Handling ' + cmd)
                 response_body = send_command(cmd, start_ms)
+                if cmd_verb == 'CHGPW' and cmd_succeeded(response_body):
+                    # A changed password must end every session for that user,
+                    # including consoles on other devices and tabs.
+                    revoke_user_tokens(user)
         else:
             response_body = '{"Error": "CMDSRV has started but is not ready."' + alert_param
     else:
