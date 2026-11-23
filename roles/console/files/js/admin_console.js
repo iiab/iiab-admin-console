@@ -43,6 +43,7 @@ var zimsUpgradeable = {}; // list of permarefs of zims that can be upgraded with
 var zimsDownloading = []; // list of ids of zims being downloaded
 var zimsCopying = []; // list of zims being copied
 var zimsExternal = []; // list of zims on external device
+var syncContentInventory = {}; // content inventory loaded from another IIAB server
 var oer2goInstalled = []; // list of Oer2go items already installed
 var oer2goWip = {}; // list of copying, downloading, exporting
 var oer2goDownloading = []; // list of Oer2go items being downloaded
@@ -507,8 +508,20 @@ function instContentButtonsEvents() {
     make_button_disabled("#REMOVE-CONTENT", false);
   });
 
-    $("#FIND-USB").click(function(){
+  $("#FIND-USB").click(function(){
     refreshExternalList();
+  });
+
+  $("#LOAD-SYNC-CONTENT").click(function(){
+    loadSyncContent();
+  });
+
+  $("#DISCOVER-SYNC-SERVERS").click(function(){
+    discoverSyncServers();
+  });
+
+  $("#SYNC-SELECTED-CONTENT").click(function(){
+    syncSelectedContent();
   });
 
   $("#COPY-CONTENT").click(function(){
