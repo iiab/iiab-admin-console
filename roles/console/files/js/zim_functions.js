@@ -152,7 +152,7 @@ var missingZimLangCodes = []; // used to track missing language codes in zim cat
       installedZimCatalog[section][id]['sequence'] = 1; // put these first
       var permRef = installedZimCatalog[section][id]['path'];
       if (permRef.indexOf('/') != -1)
-        permRef = permRef.split("/")[1]
+        permRef = permRef.split("/").pop()
       installedZimCatalog[section][id]['perma_ref'] = permRef;
     }
   }
