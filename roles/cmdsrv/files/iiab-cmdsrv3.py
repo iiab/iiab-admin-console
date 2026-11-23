@@ -2591,6 +2591,12 @@ def install_zims(cmd_info):
 
         if 'service_required' in cmd_info['cmd_args']: # allow caller to supply
             cmd_info['service_required'] = cmd_info['cmd_args']['service_required']
+        elif iiab_roles_status.get('kiwix', {}).get('active'):
+            cmd_info['service_required'] = ['kiwix', 'active']
+        elif iiab_roles_status.get('zimantic', {}).get('active'):
+            # Zimantic can serve and search the same ZIM files, so content
+            # installation must still work when kiwix-serve is stopped.
+            cmd_info['service_required'] = ['zimantic', 'active']
         else:
             cmd_info['service_required'] = ['kiwix', 'active']
 

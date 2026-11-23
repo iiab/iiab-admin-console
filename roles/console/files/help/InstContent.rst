@@ -38,7 +38,7 @@ The words ZIM and Kiwix are probably unfamiliar, but the content is very familia
 * Wikivoyage
 * Others
 
-Kiwix.org supplies a server that is installed on Internet-in-a-Box and also hosts all of this content.
+Kiwix.org supplies a server that is installed on Internet-in-a-Box and also hosts all of this content.  If Zimantic is enabled it indexes and serves the same ZIM files.
 
 ### Do this First
 
@@ -56,9 +56,9 @@ When you have made your selections click **Install Selected ZIMs**.  Jobs will b
 
 ### Don't Forget
 
-When each of the ZIM files has been downloaded and installed the Kiwix server will be restarted automatically. This can also be done manuall by clicking **Reindex Kiwix Content**.
+When each of the ZIM files has been downloaded and installed the ZIM catalog will be reindexed automatically. This can also be done manuall by clicking **Reindex Kiwix Content**.
 
-Make sure that the **Kiwix** service is enabled under **Configure** - **Services Enabled**.
+Make sure that the **Kiwix** or **Zimantic** service is enabled under **Configure** - **Services Enabled**.
 
 Upgrade ZIM Files
 -----------------

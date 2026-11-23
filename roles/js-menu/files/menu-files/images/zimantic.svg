@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Zimantic">
+  <circle cx="42" cy="42" r="27" fill="#e8f4ff" stroke="#249" stroke-width="8"/>
+  <path d="M28 29h27L28 55h27" fill="none" stroke="#249" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="62" y1="62" x2="86" y2="86" stroke="#249" stroke-width="11" stroke-linecap="round"/>
+</svg>

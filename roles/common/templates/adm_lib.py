@@ -23,6 +23,8 @@ import requests
 import yaml
 import jinja2
 import configparser
+from urllib.parse import quote, urljoin
+from uuid import UUID
 
 import iiab.iiab_lib as iiab
 import iiab.iiab_const as IIAB_CONST
@@ -36,6 +38,7 @@ map_catalog = {}
 
 def write_zim_versions_idx(zim_versions, kiwix_library_xml, zim_version_idx_dir, zim_menu_defs):
     zims_installed, path_to_id_map = iiab.read_library_xml(kiwix_library_xml)
+    zimantic_urls = get_zimantic_urls()
 
     # drives off of zim_versions which is what is in file system
 
@@ -51,6 +54,14 @@ def write_zim_versions_idx(zim_versions, kiwix_library_xml, zim_version_idx_dir,
 
         zim_versions[perma_ref]['language'] = lang
         zim_versions[perma_ref]['zim_date'] = date
+        zim_versions[perma_ref].pop('zimantic_url', None)
+        zim_id = path_to_id_map['content/' + zim_versions[perma_ref]['file_name'] + '.zim']
+        try:
+            zimantic_url = zimantic_urls.get(str(UUID(zim_id)))
+        except ValueError:
+            zimantic_url = None
+        if zimantic_url:
+            zim_versions[perma_ref]['zimantic_url'] = zimantic_url
 
     # Write Version Map
     if os.path.isdir(zim_version_idx_dir):
@@ -59,6 +70,55 @@ def write_zim_versions_idx(zim_versions, kiwix_library_xml, zim_version_idx_dir,
             fp.close()
     else:
         print(zim_version_idx_dir + " not found.")
+
+def get_zimantic_urls():
+    try:
+        with open(os.path.join(CONST.js_menu_dir, 'config.json')) as fp:
+            config = json.load(fp)
+    except FileNotFoundError:
+        return {}
+    except (OSError, ValueError) as error:
+        print("Unable to read Zimantic menu config:", error)
+        return {}
+    if config.get('zimanticEnabled') is not True:
+        return {}
+
+    base_url = config.get('zimanticUrl', '/zimantic/').rstrip('/')
+    library_url = urljoin('http://127.0.0.1/', base_url + '/library.json')
+    urls = {}
+    offset = 0
+    snapshot = None
+    try:
+        while True:
+            response = requests.get(
+                library_url, params={'provider': 'zim', 'limit': 1000, 'offset': offset},
+                timeout=5)
+            response.raise_for_status()
+            sources = response.json()
+            if not isinstance(sources, list):
+                raise ValueError("Zimantic library is not a list")
+            page_snapshot = response.headers.get('X-Snapshot-Version')
+            if offset and page_snapshot != snapshot:
+                raise ValueError("Zimantic library changed during pagination; rerun the menu update")
+            snapshot = page_snapshot
+            for source in sources:
+                if source.get('provider') != 'zim' or not source.get('key'):
+                    continue
+                try:
+                    zim_id = str(UUID(source.get('provider_id') or ''))
+                except ValueError:
+                    continue
+                url = base_url + '/content/' + quote(source['key'], safe='')
+                # A UUID in multiple collections has no unique destination.
+                urls[zim_id] = url if zim_id not in urls else None
+            if response.headers.get('X-Has-More') != 'true':
+                return urls
+            if not sources:
+                raise ValueError("Zimantic library returned an empty page with more results")
+            offset += len(sources)
+    except (requests.RequestException, ValueError) as error:
+        print("Unable to generate Zimantic links; keeping Kiwix links:", error)
+        return {}
 
 def get_zim_menu_defs():
     zim_menu_defs = {}
@@ -534,10 +594,15 @@ def put_iiab_enabled_into_menu_json():
         print(str(e))
         sys.exit(1)
 
+    enabled_options = set(outp.split('\n'))
     for iiab_option in outp.split('\n'):
         if iiab_option == 'kiwix': continue
         if iiab_option in CONST.iiab_menu_items:
             update_menu_json(CONST.iiab_menu_items[iiab_option], no_lang=True) # accept same item in a different language
+
+    zimantic_menu_item = CONST.iiab_menu_items.get('zimantic')
+    if zimantic_menu_item and 'zimantic' not in enabled_options:
+        remove_menu_json_item(zimantic_menu_item, no_lang=True)
 
 def update_menu_json(new_item, no_lang=False):
     home_menu = read_json_file(CONST.menu_json_file, verbose=True, fix_json=True)
@@ -576,6 +641,23 @@ def update_menu_json(new_item, no_lang=False):
         home_menu['menu_items_1'].append(new_item)
         home_menu['menu_items_1'].append(last_item)
 
+    write_json_file(home_menu, CONST.menu_json_path)
+
+def remove_menu_json_item(item_name, no_lang=False):
+    home_menu = read_json_file(CONST.menu_json_file, verbose=True, fix_json=True)
+    item_list = home_menu['menu_items_1']
+    if no_lang:
+        item_suffix = item_name[3:]
+        filtered_items = [
+            item for item in item_list
+            if item != item_name and item[3:] != item_suffix
+        ]
+    else:
+        filtered_items = [item for item in item_list if item != item_name]
+    if len(filtered_items) == len(item_list):
+        return
+    home_menu['menu_items_1'] = filtered_items
+    print("Removing %s from Menu" % item_name)
     write_json_file(home_menu, CONST.menu_json_path)
 
 def put_kiwix_enabled_into_menu_json():

@@ -1,0 +1,10 @@
+{
+  "lang": "en",
+  "intended_use": "webroot",
+  "title": "Zimantic Search",
+  "description": "Search every installed ZIM by meaning, title, or full text. Zimantic also serves the articles it finds, so no separate Kiwix server is required.",
+  "start_url": "zimantic",
+  "menu_item_name": "en-zimantic",
+  "logo_url": "zimantic.svg",
+  "moddir": ""
+}

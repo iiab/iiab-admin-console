@@ -24,7 +24,11 @@ Note some services listed below may not be installed and will not have a checkbo
 
     If you want any Wiki content you problably want this.  Kiwix provides a server allows you to view and search a broad range of Wiki type material independent of the Internet.  This material is selected in **Install Content** - **Get ZIM Files from Kiwix**
 
-    The main reason you would not want this is if the server has very limited disk space.
+    The main reason you would not want this is if the server has very limited disk space.  Zimantic, below, is an alternative that can serve and search the same content.
+
+* **Zimantic** - An alternative to Kiwix for searching and viewing ZIM files.
+
+    Zimantic indexes the installed ZIM files for meaning-based, title-word, and full-text search, and serves the articles it finds.  When it is enabled, the home page uses Zimantic for search and opens ZIM links in Zimantic, so the Kiwix server can be stopped to save memory.  Both use the same ZIM files, installed from **Install Content** - **Get ZIM Files from Kiwix**.
 
 * **KA Lite Downloader** - This is only the downloader portion of the application which may be turned off if you don't plan to download videos.
 

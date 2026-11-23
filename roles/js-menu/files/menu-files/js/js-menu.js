@@ -279,14 +279,27 @@ function procPage() {
         gEBI("poweroffLink").style.display = "block";
     }
 
+    var search = searchEnabled();
+    var homeSearch = gEBI("homeSearch");
+    if (homeSearch)
+        homeSearch.style.display = search ? "block" : "none";
+    if (!search) {
+        var searchButton = gEBI("btn-kiwixSearch");
+        if (searchButton)
+            searchButton.style.display = "none";
+    }
+
     if (isMobile) {
         $('#headerMobile').css('display', 'flex');
-        if (!menuParams.allow_kiwix_search) {
-            gEBI("btn-kiwixSearch").style.display = "none";
-        }
     }
     else
         $('#headerDesktop').css('display', 'flex');
+}
+
+function searchEnabled() {
+    return !!(menuParams.allow_kiwix_search ||
+              menuParams.allow_zimantic_search ||
+              menuConfig.zimanticEnabled === true);
 }
 
 function updateServerTime() {
@@ -496,15 +509,22 @@ function procMenuItem(module) {
 }
 
 function calcZimLink(module) {
-    // if kiwix_url is defined use it otherwise use port
+    // Prefer the installation-specific Zimantic URL generated in the index.
     var href = '';
     if (zimVersions.hasOwnProperty(module.zim_name) &&
         typeof zimVersions[module.zim_name].file_name != 'undefined') {
-        href = zimVersions[module.zim_name].file_name + '/';
-        if (menuConfig.hasOwnProperty('kiwixUrl'))
-            href = menuConfig.kiwixUrl + href;
-        else
-            href = host + ':' + menuConfig.kiwixPort + '/' + href;
+        var zim = zimVersions[module.zim_name];
+        var fileName = zim.file_name;
+        if (zimanticAvailable() && zim.zimantic_url)
+            href = zim.zimantic_url;
+        else {
+            // if kiwix_url is defined use it otherwise use port
+            href = fileName + '/';
+            if (menuConfig.hasOwnProperty('kiwixUrl'))
+                href = menuConfig.kiwixUrl + href;
+            else
+                href = host + ':' + menuConfig.kiwixPort + '/' + href;
+        }
     }
     else
         href = undefinedPageUrl + '?menu_item=' + module.menu_item_name + '&zim_name=' + module.zim_name; //not defined in zimVersions
@@ -775,51 +795,357 @@ function getExtraHtml(module) {
     }
 }
 
-function getKiwixSearch() {
-    var searchArg = {};
-    searchArg["pattern"] = $("#kiwixsearchbox").val();
-    consoleLog(searchArg);
-    var resp = $.get("/kiwix/search", searchArg)
-        .always(function (responseText) {
-            var resultParts = parseKiwixSearchResults(responseText);
-            consoleLog(responseText);
-            $("#searchResultsHeader").html(resultParts.header);
-            $("#searchResultsBody").html(resultParts.results);
-            $("#searchResultsFooter").html(resultParts.footer);
-            //$('#searchResultsModal').modal('show');
-        });
-    //return resp;
+function zimanticBaseUrl() {
+    var url = (menuConfig && menuConfig.zimanticUrl) ? menuConfig.zimanticUrl : '/zimantic/';
+    return url.replace(/\/+$/, '') || '/zimantic';
 }
 
-function getKiwixSearchSlideMenu() {
-    var searchArg = {};
-    searchArg["pattern"] = $("#kiwixsearchbox2").val();
-    consoleLog(searchArg);
+function zimanticAvailable() {
+    // config.json reports whether the Zimantic role is enabled. Its NGINX
+    // route is removed when it is disabled, so a stale config.json must not
+    // send visitors to it.
+    return !!(menuConfig && menuConfig.zimanticEnabled === true);
+}
+
+function openSearchModal(query) {
+    query = (query || '').trim();
+    if (!query)
+        return;
+    $("#kiwixsearchbox").val(query);
+    $("#kiwixsearchbox2").val(query);
+    $("#homesearchbox").val(query);
     closeSlideMenu();
-    $("#kiwixsearchbox").val(searchArg["pattern"]);
+    $('#searchResultsModal').modal({ backdrop: 'static', keyboard: false });
     $('#searchResultsModal').modal('show');
-    var resp = $.get("/kiwix/search", searchArg)
-        .always(function (responseText) {
-            var resultParts = parseKiwixSearchResults(responseText);
-            consoleLog(responseText);
+    runSearch(query);
+}
+
+function getSearch() {
+    openSearchModal($("#kiwixsearchbox").val());
+}
+
+function getSearchSlideMenu() {
+    openSearchModal($("#kiwixsearchbox2").val());
+}
+
+function getHomeSearch() {
+    openSearchModal($("#homesearchbox").val());
+}
+
+function setSearchStatus(message) {
+    $("#searchResultsHeader").html("");
+    $("#searchResultsBody").html('<p class="search-status">' + escapeHtml(message) + '</p>');
+    $("#searchResultsFooter").html("");
+}
+
+function runSearch(query) {
+    setSearchStatus('Searching...');
+    // Try Zimantic first. Its NGINX route is removed when it is disabled, so
+    // this also handles a stale config.json after the role is enabled.
+    trySearchProvider(query, ['zimantic', 'kiwix'], 0);
+}
+
+function trySearchProvider(query, providers, index) {
+    if (index >= providers.length) {
+        setSearchStatus('Search is unavailable. Check that Kiwix or Zimantic is installed and running.');
+        return;
+    }
+    var provider = providers[index];
+    if (provider === 'zimantic') {
+        runZimanticSearch(query, function () {
+            trySearchProvider(query, providers, index + 1);
+        });
+    }
+    else if (!menuParams.allow_kiwix_search) {
+        trySearchProvider(query, providers, index + 1);
+    }
+    else {
+        runKiwixSearch(query, function () {
+            trySearchProvider(query, providers, index + 1);
+        });
+    }
+}
+
+var ZIMANTIC_SEARCH_LIMIT = 20;
+var ZIMANTIC_SEARCH_TIMEOUT = 120000;
+var ZIMANTIC_STREAM_IDLE_TIMEOUT = 60000;
+
+function runZimanticSearch(query, onFail) {
+    // Zimantic streams progress and result snapshots as sources finish. Prefer
+    // that endpoint so a cold search on slow hardware shows partial results
+    // instead of tripping a fixed AJAX timeout. Older browsers and pre-stream
+    // Zimantic builds fall back to the one-shot JSON endpoint.
+    if (typeof fetch === 'function' && typeof TextDecoder === 'function')
+        runZimanticSearchStream(query, onFail);
+    else
+        runZimanticSearchJson(query, onFail);
+}
+
+function runZimanticSearchJson(query, onFail) {
+    $.ajax({
+        url: zimanticBaseUrl() + '/search',
+        data: { q: query, limit: ZIMANTIC_SEARCH_LIMIT, offset: 0 },
+        dataType: 'json',
+        // The server bounds its own search; leave room for a cold start and
+        // slow hardware instead of falling back to Kiwix after 30 s.
+        timeout: ZIMANTIC_SEARCH_TIMEOUT
+    })
+        .done(function (results, textStatus, jqXHR) {
+            var header = jqXHR.getResponseHeader('X-Total-Count');
+            var total = header === null ? results.length : parseInt(header, 10);
+            if (isNaN(total))
+                total = results.length;
+            renderZimanticResults(query, results, total, true);
+        })
+        .fail(function (jqXHR) {
+            if (showZimanticQueryError(jqXHR))
+                return;
+            onFail();
+        });
+}
+
+function showZimanticQueryError(jqXHR) {
+    if (jqXHR.status === 400 && jqXHR.responseJSON && jqXHR.responseJSON.detail) {
+        setSearchStatus(jqXHR.responseJSON.detail);
+        return true;
+    }
+    return false;
+}
+
+function runZimanticSearchStream(query, onFail) {
+    var url = zimanticBaseUrl() + '/search/stream?q=' + encodeURIComponent(query) +
+        '&limit=' + ZIMANTIC_SEARCH_LIMIT + '&offset=0';
+    var controller = typeof AbortController === 'function' ? new AbortController() : null;
+    var hardTimer = null;
+    var idleTimer = null;
+    var settled = false;
+    var results = [];
+    var total = null;
+
+    function clearTimers() {
+        if (hardTimer) clearTimeout(hardTimer);
+        if (idleTimer) clearTimeout(idleTimer);
+        hardTimer = null;
+        idleTimer = null;
+    }
+
+    function settle() {
+        if (settled)
+            return false;
+        settled = true;
+        clearTimers();
+        return true;
+    }
+
+    function abort() {
+        if (!settle())
+            return;
+        if (controller)
+            controller.abort();
+        onFail();
+    }
+
+    function armIdleTimer() {
+        if (idleTimer) clearTimeout(idleTimer);
+        idleTimer = setTimeout(abort, ZIMANTIC_STREAM_IDLE_TIMEOUT);
+    }
+
+    function fallbackToJson() {
+        if (!settle())
+            return;
+        if (controller)
+            controller.abort();
+        runZimanticSearchJson(query, onFail);
+    }
+
+    function handleEvent(event) {
+        if (settled || !event || typeof event !== 'object')
+            return;
+        if (event.type === 'started') {
+            setZimanticSearchProgress(0, event.total_sources);
+        } else if (event.type === 'snapshot' || event.type === 'done') {
+            if (Array.isArray(event.results))
+                results = event.results;
+            if (typeof event.total === 'number')
+                total = event.total;
+            if (event.type === 'done') {
+                renderZimanticResults(query, results, total, true);
+                settle();
+            } else {
+                renderZimanticResults(query, results, total, false);
+                setZimanticSearchProgress(event.completed, event.total_sources);
+            }
+        } else if (event.type === 'progress') {
+            setZimanticSearchProgress(event.completed, event.total_sources);
+        } else if (event.type === 'error') {
+            if (!settle())
+                return;
+            if (event.busy)
+                onFail();
+            else
+                setSearchStatus(event.error || 'Zimantic search failed.');
+        }
+    }
+
+    function readStream(response) {
+        var reader = response.body.getReader();
+        var decoder = new TextDecoder();
+        var buffer = "";
+        function pump() {
+            return reader.read().then(function (chunk) {
+                if (settled)
+                    return;
+                if (chunk.done) {
+                    if (buffer.trim())
+                        handleEvent(JSON.parse(buffer));
+                    return;
+                }
+                armIdleTimer();
+                buffer += decoder.decode(chunk.value, { stream: true });
+                var lines = buffer.split('\n');
+                buffer = lines.pop();
+                for (var i = 0; i < lines.length && !settled; i++) {
+                    var line = lines[i].trim();
+                    if (line)
+                        handleEvent(JSON.parse(line));
+                }
+                if (!settled)
+                    return pump();
+            });
+        }
+        return pump();
+    }
+
+    hardTimer = setTimeout(abort, ZIMANTIC_SEARCH_TIMEOUT);
+    fetch(url, {
+        headers: { 'Accept': 'application/x-ndjson' },
+        signal: controller ? controller.signal : undefined
+    })
+        .then(function (response) {
+            if (settled)
+                return;
+            if (response.status === 400) {
+                return response.json().then(function (body) {
+                    if (settle())
+                        setSearchStatus((body && body.detail) || 'Zimantic rejected the search.');
+                });
+            }
+            if (response.status === 404 || response.status === 405) {
+                fallbackToJson();
+                return;
+            }
+            if (!response.ok)
+                throw new Error('Zimantic search failed: ' + response.status);
+            if (!response.body || typeof response.body.getReader !== 'function') {
+                fallbackToJson();
+                return;
+            }
+            armIdleTimer();
+            return readStream(response).then(function () {
+                // A truncated stream still leaves any rendered page in place,
+                // but report the failure so the caller can try Kiwix.
+                if (!settled)
+                    abort();
+            });
+        })
+        .catch(function () {
+            if (!settled)
+                abort();
+        });
+}
+
+function setZimanticSearchProgress(completed, totalSources) {
+    if (typeof completed !== 'number' || typeof totalSources !== 'number')
+        return;
+    $("#searchResultsFooter").html('<p class="search-status">Searching ' +
+        escapeHtml(String(completed)) + ' of ' + escapeHtml(String(totalSources)) + ' sources...</p>');
+}
+
+function renderZimanticResults(query, results, total, complete) {
+    if (!Array.isArray(results))
+        results = [];
+    if (typeof total !== 'number' || isNaN(total))
+        total = results.length;
+    var body = "";
+    for (var i = 0; i < results.length; i++) {
+        var result = results[i];
+        body += '<div class="search-result">';
+        body += '<div class="search-result-title"><a href="' + escapeHtmlAttr(result.url) +
+            '" target="_blank" rel="noopener">' + escapeHtml(result.title) + '</a></div>';
+        if (result.source)
+            body += '<div class="search-result-source">' + escapeHtml(result.source) + '</div>';
+        if (result.lead)
+            body += '<div class="search-result-lead">' + escapeHtml(result.lead) + '</div>';
+        body += '</div>';
+    }
+    if (!body)
+        body = '<p class="search-status">' + (complete ? 'No results found.' : 'Searching...') + '</p>';
+    var summary;
+    if (!complete && total === 0)
+        summary = 'Searching';
+    else if (total === 0)
+        summary = 'No results';
+    else if (total > results.length)
+        summary = 'Showing ' + results.length + ' of ' + total + ' result(s)';
+    else
+        summary = total + ' result(s)';
+    var provider = '<a href="' + escapeHtmlAttr(zimanticBaseUrl() + '/?q=' + encodeURIComponent(query)) +
+        '" target="_blank" rel="noopener">Zimantic</a>';
+    var header;
+    if (summary === 'Searching')
+        header = '<strong>' + escapeHtml(query) + '</strong> - searching ' + provider + '...';
+    else
+        header = '<strong>' + escapeHtml(query) + '</strong> - ' + escapeHtml(summary) + ' from ' + provider;
+    $("#searchResultsHeader").html(header);
+    $("#searchResultsBody").html(body);
+    $("#searchResultsFooter").html("");
+}
+
+function runKiwixSearch(query, onFail) {
+    $.ajax({
+        url: "/kiwix/search",
+        data: { pattern: query },
+        dataType: 'text'
+    })
+        .done(function (html) {
+            var resultParts = parseKiwixSearchResults(html);
             $("#searchResultsHeader").html(resultParts.header);
             $("#searchResultsBody").html(resultParts.results);
             $("#searchResultsFooter").html(resultParts.footer);
-            //$('#searchResultsModal').modal('show');
+        })
+        .fail(function () {
+            onFail();
         });
-    //return resp;
 }
 
 function parseKiwixSearchResults(searchRes) {
-    var parsedResults = {};
+    var parsedResults = { header: "", results: "", footer: "" };
     var body = searchRes.indexOf('<body');
     var header = searchRes.indexOf('<div class="header">', body);
     var results = searchRes.indexOf('<div class="results">', header);
     var footer = searchRes.indexOf('<div class="footer">', results);
-    parsedResults["header"] = searchRes.substring(header + '<div class="header">'.length, searchRes.indexOf('</div>', header));
-    parsedResults["results"] = searchRes.substring(results + '<div class="results">'.length, searchRes.lastIndexOf('</div>', footer));
-    parsedResults["footer"] = searchRes.substring(footer + '<div class="footer">'.length, searchRes.indexOf('</div>', footer));
+    if (header >= 0)
+        parsedResults["header"] = searchRes.substring(header + '<div class="header">'.length, searchRes.indexOf('</div>', header));
+    if (results >= 0 && footer >= 0)
+        parsedResults["results"] = searchRes.substring(results + '<div class="results">'.length, searchRes.lastIndexOf('</div>', footer));
+    if (footer >= 0)
+        parsedResults["footer"] = searchRes.substring(footer + '<div class="footer">'.length, searchRes.indexOf('</div>', footer));
+    if (!parsedResults["results"])
+        parsedResults["results"] = '<p class="search-status">No results found.</p>';
     return parsedResults;
+}
+
+function escapeHtml(text) {
+    if (text === null || text === undefined)
+        return "";
+    return $('<div>').text(String(text)).html();
+}
+
+function escapeHtmlAttr(text) {
+    if (text === null || text === undefined)
+        return "";
+    return String(text).replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 function getKiwixSearch2(searchStr) { // not used
@@ -897,7 +1223,7 @@ function openSlideMenu() {
         slideMenu.style.width = "120px";
     }
     else {
-        if (menuParams.allow_kiwix_search) { // in desktop show search if enabled
+        if (searchEnabled()) { // in desktop show search if enabled
             slideMenuSearch.style.display = "block";
             slideMenu.style.width = "250px";
         }

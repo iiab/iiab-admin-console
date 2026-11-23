@@ -89,6 +89,71 @@ height: 120px;
     margin: 10px auto;
 }
 
+/* Home page search bar */
+.home-search {
+    display: none;
+    padding: 10px 2vw 0 2vw;
+}
+
+.home-search-form {
+    display: flex;
+    max-width: 760px;
+    margin: 0 auto;
+}
+
+.home-search input[type="search"] {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: .55em .7em;
+    border: 1px solid #7d9fb8;
+    border-radius: 4px 0 0 4px;
+    font-size: 1em;
+}
+
+.home-search button {
+    flex: 0 0 auto;
+    padding: .55em .9em;
+    border: 1px solid #7d9fb8;
+    border-left: 0;
+    border-radius: 0 4px 4px 0;
+    background: #249;
+    color: #fff;
+    cursor: pointer;
+}
+
+.home-search button:hover {
+    background: #17a;
+}
+
+/* Search results (Kiwix fallback or Zimantic) */
+.search-result {
+    margin: 0 0 1em 0;
+}
+
+.search-result-title {
+    font-size: 1.1em;
+    font-weight: 600;
+}
+
+.search-result-source {
+    font-size: .85em;
+    color: #555;
+}
+
+.search-result-lead {
+    font-size: .95em;
+    margin-top: .25em;
+}
+
+.search-status {
+    margin: .5em 0;
+}
+
+#searchResultsHeader,
+#searchResultsFooter {
+    margin: .5em 0;
+}
+
 /* used on about.html page only - clean this up */
 .thumblist {
     /* automatically expands to fill container */
